@@ -1,0 +1,4 @@
+# Ignorar carpeta de resultado de integración
+Custom/2win_andes_salud_interfases/ingresos_ambulatorios_hospitalizados
+Custom/2win_andes_salud_interfases/Masivo
+Custom/2win_andes_salud_interfases/resultados_proceso_prefactura
