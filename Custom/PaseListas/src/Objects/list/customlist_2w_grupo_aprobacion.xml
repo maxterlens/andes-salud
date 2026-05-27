@@ -1,0 +1,34 @@
+<customlist scriptid="customlist_2w_grupo_aprobacion">
+  <description></description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>Grupo de aprobación</name>
+  <customvalues>
+    <customvalue scriptid="val_9854793_7115118_sb1_427">
+      <abbreviation>G</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Grupo 1</value>
+    </customvalue>
+    <customvalue scriptid="val_9854794_7115118_sb1_525">
+      <abbreviation>G</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Grupo 2</value>
+    </customvalue>
+    <customvalue scriptid="val_9854795_7115118_sb1_959">
+      <abbreviation>G</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Grupo 3</value>
+    </customvalue>
+    <customvalue scriptid="val_9854796_7115118_sb1_742">
+      <abbreviation>G</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Grupo 4</value>
+    </customvalue>
+    <customvalue scriptid="val_30272313_7115118_818">
+      <abbreviation>J</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Jefe de Abastecimiento</value>
+    </customvalue>
+  </customvalues>
+</customlist>

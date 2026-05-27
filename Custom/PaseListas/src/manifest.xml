@@ -1,0 +1,9 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>PaseListas</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="false">MATRIXITEMS</feature>
+    </features>
+  </dependencies>
+</manifest>

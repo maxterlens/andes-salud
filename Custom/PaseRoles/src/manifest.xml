@@ -1,0 +1,19 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>PaseRoles</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="false">WEBSERVICES</feature>
+      <feature required="false">SUBSIDIARIES</feature>
+    </features>
+    <objects>
+      <object>customrecord_ph4014_wtax_type_kind</object>
+      <object>customrecord_2w_as_prefactura</object>
+      <object>customrecord_ecsl_audit_trail_dtl</object>
+      <object>customrecord_ph4014_wtax_type_d</object>
+      <object>customrecord_ecsl_audit_trail_hdr</object>
+      <object>customrecord_4601_witaxtype</object>
+      <object>customrecord_ph4014_wtax_jrnl_type</object>
+    </objects>
+  </dependencies>
+</manifest>
