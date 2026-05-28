@@ -64,6 +64,23 @@
       <selectrecordtype>-4</selectrecordtype>
       <storevalue>T</storevalue>
     </workflowcustomfield>
+    <workflowcustomfield scriptid="custworkflow3_2_4">
+      <applyformatting>F</applyformatting>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description></description>
+      <displaytype>HIDDEN</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>CURRENCY</fieldtype>
+      <help></help>
+      <label>Monto de Referencia WF</label>
+      <linktext></linktext>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <selectrecordtype></selectrecordtype>
+      <storevalue>T</storevalue>
+    </workflowcustomfield>
   </workflowcustomfields>
   <workflowstates>
     <workflowstate scriptid="workflowstate14">
@@ -274,7 +291,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -326,6 +343,31 @@
           <valueselect>[scriptid=customlist_2w_grupo_aprobacion.val_30272313_7115118_818]</valueselect>
           <valuetext></valuetext>
           <valuetype>STATIC</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+        <setfieldvalueaction scriptid="workflowaction14000">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</field>
+          <isinactive>F</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTOTAL</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
           <initcondition>
             <formula></formula>
             <type>VISUAL_BUILDER</type>
@@ -627,7 +669,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -689,7 +731,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -796,6 +838,33 @@
           </initcondition>
         </addbuttonaction>
       </workflowactions>
+      <workflowactions triggertype="AFTERSUBMIT">
+        <setfieldvalueaction scriptid="workflowaction14001">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</field>
+          <isinactive>T</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTOTAL</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
       <workflowtransitions>
         <workflowtransition scriptid="workflowtransition296">
           <buttonaction>[scriptid=customworkflow2_2_4.workflowstate18.workflowaction68]</buttonaction>
@@ -831,6 +900,32 @@
               <parameter>
                 <name>Total</name>
                 <value>STDBODYTOTAL</value>
+              </parameter>
+            </parameters>
+          </initcondition>
+        </workflowtransition>
+        <workflowtransition scriptid="workflowtransition401">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4.workflowstate15]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula><![CDATA["Total" > "Monto Referencia WF"]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+              <parameter>
+                <name>Monto Referencia WF</name>
+                <value>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</value>
               </parameter>
             </parameters>
           </initcondition>
@@ -995,7 +1090,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -1032,7 +1127,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -1139,6 +1234,33 @@
           </initcondition>
         </addbuttonaction>
       </workflowactions>
+      <workflowactions triggertype="AFTERSUBMIT">
+        <setfieldvalueaction scriptid="workflowaction14002">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</field>
+          <isinactive>T</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTOTAL</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
       <workflowtransitions>
         <workflowtransition scriptid="workflowtransition298">
           <buttonaction>[scriptid=customworkflow2_2_4.workflowstate434.workflowaction13797]</buttonaction>
@@ -1244,6 +1366,32 @@
             </parameters>
           </initcondition>
         </workflowtransition>
+        <workflowtransition scriptid="workflowtransition402">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4.workflowstate15]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula><![CDATA["Total" > "Monto Referencia WF"]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+              <parameter>
+                <name>Monto Referencia WF</name>
+                <value>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</value>
+              </parameter>
+            </parameters>
+          </initcondition>
+        </workflowtransition>
       </workflowtransitions>
     </workflowstate>
     <workflowstate scriptid="workflowstate435">
@@ -1308,7 +1456,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -1345,7 +1493,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -1452,6 +1600,33 @@
           </initcondition>
         </addbuttonaction>
       </workflowactions>
+      <workflowactions triggertype="AFTERSUBMIT">
+        <setfieldvalueaction scriptid="workflowaction14003">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</field>
+          <isinactive>T</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTOTAL</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
       <workflowtransitions>
         <workflowtransition scriptid="workflowtransition316">
           <buttonaction>[scriptid=customworkflow2_2_4.workflowstate435.workflowaction13802]</buttonaction>
@@ -1487,6 +1662,32 @@
               <parameter>
                 <name>Total</name>
                 <value>STDBODYTOTAL</value>
+              </parameter>
+            </parameters>
+          </initcondition>
+        </workflowtransition>
+        <workflowtransition scriptid="workflowtransition403">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4.workflowstate15]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula><![CDATA["Total" > "Monto Referencia WF"]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+              <parameter>
+                <name>Monto Referencia WF</name>
+                <value>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</value>
               </parameter>
             </parameters>
           </initcondition>
@@ -1555,7 +1756,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -1592,7 +1793,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -1699,6 +1900,33 @@
           </initcondition>
         </addbuttonaction>
       </workflowactions>
+      <workflowactions triggertype="AFTERSUBMIT">
+        <setfieldvalueaction scriptid="workflowaction14004">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</field>
+          <isinactive>T</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTOTAL</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
       <workflowtransitions>
         <workflowtransition scriptid="workflowtransition299">
           <buttonaction>[scriptid=customworkflow2_2_4.workflowstate436.workflowaction13804]</buttonaction>
@@ -1730,6 +1958,32 @@
           <initcondition>
             <formula></formula>
             <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </workflowtransition>
+        <workflowtransition scriptid="workflowtransition404">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4.workflowstate15]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula><![CDATA["Total" > "Monto Referencia WF"]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+              <parameter>
+                <name>Monto Referencia WF</name>
+                <value>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</value>
+              </parameter>
+            </parameters>
           </initcondition>
         </workflowtransition>
       </workflowtransitions>
@@ -1796,7 +2050,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -1833,7 +2087,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -1940,6 +2194,33 @@
           </initcondition>
         </addbuttonaction>
       </workflowactions>
+      <workflowactions triggertype="AFTERSUBMIT">
+        <setfieldvalueaction scriptid="workflowaction14005">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</field>
+          <isinactive>T</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTOTAL</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
       <workflowtransitions>
         <workflowtransition scriptid="workflowtransition305">
           <buttonaction>[scriptid=customworkflow2_2_4.workflowstate437.workflowaction13807]</buttonaction>
@@ -1971,6 +2252,32 @@
           <initcondition>
             <formula></formula>
             <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </workflowtransition>
+        <workflowtransition scriptid="workflowtransition405">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4.workflowstate15]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula><![CDATA["Total" > "Monto Referencia WF"]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+              <parameter>
+                <name>Monto Referencia WF</name>
+                <value>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</value>
+              </parameter>
+            </parameters>
           </initcondition>
         </workflowtransition>
       </workflowtransitions>
@@ -2037,7 +2344,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -2074,7 +2381,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -2181,6 +2488,33 @@
           </initcondition>
         </addbuttonaction>
       </workflowactions>
+      <workflowactions triggertype="AFTERSUBMIT">
+        <setfieldvalueaction scriptid="workflowaction14006">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</field>
+          <isinactive>T</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTOTAL</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
       <workflowtransitions>
         <workflowtransition scriptid="workflowtransition372">
           <buttonaction>[scriptid=customworkflow2_2_4.workflowstate439.workflowaction13813]</buttonaction>
@@ -2212,6 +2546,32 @@
           <initcondition>
             <formula></formula>
             <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </workflowtransition>
+        <workflowtransition scriptid="workflowtransition406">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4.workflowstate15]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula><![CDATA["Total" > "Monto Referencia WF"]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+              <parameter>
+                <name>Monto Referencia WF</name>
+                <value>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</value>
+              </parameter>
+            </parameters>
           </initcondition>
         </workflowtransition>
       </workflowtransitions>
@@ -2278,7 +2638,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -2315,7 +2675,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -2422,6 +2782,33 @@
           </initcondition>
         </addbuttonaction>
       </workflowactions>
+      <workflowactions triggertype="AFTERSUBMIT">
+        <setfieldvalueaction scriptid="workflowaction14007">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</field>
+          <isinactive>T</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTOTAL</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
       <workflowtransitions>
         <workflowtransition scriptid="workflowtransition320">
           <buttonaction>[scriptid=customworkflow2_2_4.workflowstate440.workflowaction13816]</buttonaction>
@@ -2453,6 +2840,32 @@
           <initcondition>
             <formula></formula>
             <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </workflowtransition>
+        <workflowtransition scriptid="workflowtransition407">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4.workflowstate15]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula><![CDATA["Total" > "Monto Referencia WF"]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+              <parameter>
+                <name>Monto Referencia WF</name>
+                <value>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</value>
+              </parameter>
+            </parameters>
           </initcondition>
         </workflowtransition>
       </workflowtransitions>
@@ -2519,7 +2932,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -2626,6 +3039,33 @@
           </initcondition>
         </addbuttonaction>
       </workflowactions>
+      <workflowactions triggertype="AFTERSUBMIT">
+        <setfieldvalueaction scriptid="workflowaction14008">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</field>
+          <isinactive>T</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTOTAL</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
       <workflowtransitions>
         <workflowtransition scriptid="workflowtransition321">
           <buttonaction>[scriptid=customworkflow2_2_4.workflowstate441.workflowaction13819]</buttonaction>
@@ -2657,6 +3097,32 @@
           <initcondition>
             <formula></formula>
             <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </workflowtransition>
+        <workflowtransition scriptid="workflowtransition408">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4.workflowstate15]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula><![CDATA["Total" > "Monto Referencia WF"]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+              <parameter>
+                <name>Monto Referencia WF</name>
+                <value>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</value>
+              </parameter>
+            </parameters>
           </initcondition>
         </workflowtransition>
       </workflowtransitions>
@@ -2723,7 +3189,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -2830,6 +3296,33 @@
           </initcondition>
         </addbuttonaction>
       </workflowactions>
+      <workflowactions triggertype="AFTERSUBMIT">
+        <setfieldvalueaction scriptid="workflowaction14009">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</field>
+          <isinactive>T</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTOTAL</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
       <workflowtransitions>
         <workflowtransition scriptid="workflowtransition322">
           <buttonaction>[scriptid=customworkflow2_2_4.workflowstate442.workflowaction13822]</buttonaction>
@@ -2861,6 +3354,32 @@
           <initcondition>
             <formula></formula>
             <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </workflowtransition>
+        <workflowtransition scriptid="workflowtransition409">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4.workflowstate15]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula><![CDATA["Total" > "Monto Referencia WF"]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+              <parameter>
+                <name>Monto Referencia WF</name>
+                <value>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</value>
+              </parameter>
+            </parameters>
           </initcondition>
         </workflowtransition>
       </workflowtransitions>
@@ -2927,7 +3446,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -3034,6 +3553,33 @@
           </initcondition>
         </addbuttonaction>
       </workflowactions>
+      <workflowactions triggertype="AFTERSUBMIT">
+        <setfieldvalueaction scriptid="workflowaction14010">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</field>
+          <isinactive>T</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTOTAL</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
       <workflowtransitions>
         <workflowtransition scriptid="workflowtransition323">
           <buttonaction>[scriptid=customworkflow2_2_4.workflowstate443.workflowaction13824]</buttonaction>
@@ -3065,6 +3611,32 @@
           <initcondition>
             <formula></formula>
             <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </workflowtransition>
+        <workflowtransition scriptid="workflowtransition410">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4.workflowstate15]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula><![CDATA["Total" > "Monto Referencia WF"]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+              <parameter>
+                <name>Monto Referencia WF</name>
+                <value>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</value>
+              </parameter>
+            </parameters>
           </initcondition>
         </workflowtransition>
       </workflowtransitions>
@@ -3131,7 +3703,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -3168,7 +3740,7 @@
           <attachmentfile></attachmentfile>
           <attachmentjoinfield></attachmentjoinfield>
           <attachmenttype>SPECIFIC</attachmenttype>
-          <body>&lt;p&gt;Se emitió una Orden de Compra que requiere su aprobación. Si Ya aprobó en esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</body>
+          <body>&lt;div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;"&gt;&lt;div style="background-color:#003CA6;padding:22px 28px;"&gt;&lt;p style="color:#ffffff;font-size:17px;font-weight:700;margin:0;"&gt;Aprobación de Orden de Compra&lt;/p&gt;&lt;p style="color:#a8c4e8;font-size:12px;margin:4px 0 0 0;"&gt;Andes Salud · NetSuite&lt;/p&gt;&lt;/div&gt;&lt;div style="padding:26px 28px;background-color:#f9fafb;"&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 8px 0;"&gt;Estimado/a aprobador/a,&lt;/p&gt;&lt;p style="color:#374151;font-size:14px;margin:0 0 20px 0;"&gt;Se ha emitido una &lt;strong&gt;Orden de Compra&lt;/strong&gt; que requiere su aprobación. A continuación encontrará los datos de la transacción:&lt;/p&gt;&lt;table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;border:1px solid #e5e7eb;"&gt;&lt;thead&gt;&lt;tr style="background-color:#003CA6;"&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;width:42%;"&gt;Campo&lt;/th&gt;&lt;th style="padding:10px 14px;text-align:left;color:#e0e9f7;font-weight:600;"&gt;Valor&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;N° Orden de Compra&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{tranid}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Proveedor&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;"&gt;{entity}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#ffffff;"&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-weight:600;"&gt;Importe Total&lt;/td&gt;&lt;td style="padding:11px 14px;border-bottom:1px solid #e5e7eb;color:#111827;font-weight:700;"&gt;{total} {currency}&lt;/td&gt;&lt;/tr&gt;&lt;tr style="background-color:#f9fafb;"&gt;&lt;td style="padding:11px 14px;color:#6b7280;font-weight:600;"&gt;Subsidiaria&lt;/td&gt;&lt;td style="padding:11px 14px;color:#111827;"&gt;{subsidiary}&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;div style="background-color:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;"&gt;&lt;p style="color:#92400e;font-size:12px;margin:0;"&gt;&lt;strong&gt;Nota:&lt;/strong&gt; Si ya aprobó esta orden previamente, no es necesario que vuelva a hacerlo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div style="padding:12px 28px;background-color:#f3f4f6;border-top:1px solid #e5e7eb;text-align:center;"&gt;&lt;p style="color:#9ca3af;font-size:11px;margin:0;"&gt;Mensaje automático generado por NetSuite · Andes Salud — No responder este correo.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;</body>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
@@ -3275,6 +3847,33 @@
           </initcondition>
         </addbuttonaction>
       </workflowactions>
+      <workflowactions triggertype="AFTERSUBMIT">
+        <setfieldvalueaction scriptid="workflowaction14011">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</field>
+          <isinactive>T</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTOTAL</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
       <workflowtransitions>
         <workflowtransition scriptid="workflowtransition373">
           <buttonaction>[scriptid=customworkflow2_2_4.workflowstate13798.workflowaction13907]</buttonaction>
@@ -3303,12 +3902,30 @@
           <triggertype></triggertype>
           <waitforworkflow></waitforworkflow>
           <waitforworkflowstate></waitforworkflowstate>
+          <workflowtransition scriptid="workflowtransition411">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4.workflowstate15]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
           <initcondition>
-            <formula></formula>
+            <formula><![CDATA["Total" > "Monto Referencia WF"]]></formula>
             <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+              <parameter>
+                <name>Monto Referencia WF</name>
+                <value>[scriptid=customworkflow2_2_4.custworkflow3_2_4]</value>
+              </parameter>
+            </parameters>
           </initcondition>
         </workflowtransition>
-      </workflowtransitions>
-    </workflowstate>
-  </workflowstates>
-</workflow>
+tc
