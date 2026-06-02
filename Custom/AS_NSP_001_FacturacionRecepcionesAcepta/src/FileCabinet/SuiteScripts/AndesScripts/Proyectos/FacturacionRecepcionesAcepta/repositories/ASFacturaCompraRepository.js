@@ -1,7 +1,8 @@
 /**
  * @module ASFacturaCompraRepository
  * @description Acceso a datos de facturas de compra (Vendor Bill) en NetSuite.
- *              Provee búsqueda por tranId, lectura de campos de cabecera y líneas.
+ *              Provee búsqueda por tranId, lectura de campos de cabecera,
+ *              líneas de ítem y líneas de gasto (expense).
  */
 define([
     'N/search',
@@ -35,13 +36,13 @@ define([
      * definidos en C.CAMPOS_CABECERA_A_COPIAR.
      *
      * @param   {string|number} id - Internal ID de la factura
-     * @returns {Object}           Mapa fieldId → valor (ej: { memo: 'Texto', terms: 3 })
+     * @returns {Object}           Mapa fieldId → valor
      */
     function obtenerCamposCabecera(id) {
         var factura = record.load({
-            type:                   C.TIPOS_TRANSACCION.FACTURA_COMPRA,
-            id:                     id,
-            isDynamic:              false,
+            type:      C.TIPOS_TRANSACCION.FACTURA_COMPRA,
+            id:        id,
+            isDynamic: false,
         });
 
         var campos = {};
@@ -53,11 +54,10 @@ define([
 
     /**
      * Carga la factura de compra y extrae las líneas del sublist 'item'.
-     * Retorna un mapa indexado por item internal ID para facilitar la comparación.
+     * Retorna un mapa indexado por item internal ID.
      *
      * @param   {string|number} id - Internal ID de la factura
      * @returns {Object}           Mapa itemId → { line, rate, amount }
-     *                             donde line es el índice 0-based de la línea
      */
     function obtenerLineasPorItem(id) {
         var factura = record.load({
@@ -66,15 +66,11 @@ define([
             isDynamic: false,
         });
 
-        var lineas = {};
+        var lineas      = {};
         var totalLineas = factura.getLineCount({ sublistId: 'item' });
 
         for (var i = 0; i < totalLineas; i++) {
-            var itemId = factura.getSublistValue({
-                sublistId: 'item',
-                fieldId:   'item',
-                line:      i,
-            });
+            var itemId = factura.getSublistValue({ sublistId: 'item', fieldId: 'item', line: i });
             if (!itemId) continue;
 
             lineas[itemId] = {
@@ -86,9 +82,64 @@ define([
         return lineas;
     }
 
+    /**
+     * Carga la factura de compra y construye un conjunto de claves únicas
+     * para cada línea del sublist 'expense', usando el formato 'accountId|amount'.
+     *
+     * Se utiliza para filtrar los gastos del vendorbill generado desde la OC:
+     * solo se conservan las líneas expense cuya combinación account+importe
+     * exista en la factura del CSV de referencia.
+     *
+     * @param   {string|number} id - Internal ID de la factura del CSV
+     * @returns {Object}           Mapa de claves 'accountId|amount' → true
+     */
+    function obtenerGastosPorClave(id) {
+        var factura = record.load({
+            type:      C.TIPOS_TRANSACCION.FACTURA_COMPRA,
+            id:        id,
+            isDynamic: false,
+        });
+
+        var claves      = {};
+        var totalLineas = factura.getLineCount({ sublistId: 'expense' });
+
+        for (var i = 0; i < totalLineas; i++) {
+            var accountId = factura.getSublistValue({ sublistId: 'expense', fieldId: 'account', line: i });
+            if (!accountId) continue;
+
+            var amount = parseFloat(factura.getSublistValue({ sublistId: 'expense', fieldId: 'amount', line: i })) || 0;
+            claves[accountId + '|' + amount] = true;
+        }
+        return claves;
+    }
+
+    /**
+     * Actualiza el campo tranid de una factura de compra ya guardada
+     * con el tranid de la factura de origen del CSV.
+     * Se ejecuta con submitFields y triggers desactivados para evitar
+     * efectos secundarios sobre la numeración interna de NetSuite.
+     *
+     * @param {string|number} nuevaFacturaId     - Internal ID de la factura recién creada
+     * @param {string}        facturaOrigenTranId - TranId de la factura del CSV de referencia
+     */
+    function actualizarTranId(nuevaFacturaId, facturaOrigenTranId) {
+        record.submitFields({
+            type:   C.TIPOS_TRANSACCION.FACTURA_COMPRA,
+            id:     nuevaFacturaId,
+            values: { tranid: facturaOrigenTranId },
+            options: {
+                enableSourcing:        false,
+                disableTriggers:       true,
+                ignoreMandatoryFields: true,
+            },
+        });
+    }
+
     return {
         obtenerIdPorTranId,
         obtenerCamposCabecera,
         obtenerLineasPorItem,
+        obtenerGastosPorClave,
+        actualizarTranId,
     };
 });

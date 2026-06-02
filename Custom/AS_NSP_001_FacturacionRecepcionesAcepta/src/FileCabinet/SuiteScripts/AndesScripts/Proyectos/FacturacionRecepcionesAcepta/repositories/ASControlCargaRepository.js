@@ -83,7 +83,7 @@ define([
         var resultados = search.create({
             type: C.RECORDS.CONTROL_CARGA,
             filters: [
-                [C.FIELDS_CONTROL_CARGA.FIELDS_CONTROL_CARGA, search.Operator.ANYOF, controlCargaId],
+                [C.FIELDS_CONTROL_CARGA.ID_INTERNO, search.Operator.ANYOF, controlCargaId],
                 'AND',
                 [C.FIELDS_CONTROL_CARGA.ESTADO, search.Operator.ANYOF, idPendiente],
             ],

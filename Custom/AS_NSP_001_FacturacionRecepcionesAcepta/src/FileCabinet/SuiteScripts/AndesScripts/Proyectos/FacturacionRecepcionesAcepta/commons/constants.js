@@ -27,6 +27,7 @@ define([], function () {
         ID_ARCHIVO:  'custrecord_as_control_carga_id_archivo',
         USUARIO:     'custrecord_as_control_carga_usuario',
         DETALLE:     'custrecord_as_control_carga_detalle',
+        FOLIO:       'tranid'
     };
 
     /** ScriptIds de campos del record AS Detalle Control de Carga */
@@ -55,6 +56,7 @@ define([], function () {
     /** Tipos de transacción NetSuite usados en este proyecto */
     var TIPOS_TRANSACCION = {
         RECEPCION:      'itemreceipt',
+        ORDEN_COMPRA:   'purchaseorder',
         FACTURA_COMPRA: 'vendorbill',
     };
 
@@ -91,6 +93,14 @@ define([], function () {
      */
     var CAMPO_IMPORTE_LINEA = 'rate';
 
+    /** Valores por defecto aplicados a la nueva factura generada desde la recepción */
+    var DEFAULTS_FACTURA_NUEVA = {
+        /** Forma de pago aplicada cuando el campo viene vacío desde la factura del CSV (2 = Crédito) */
+        FORMA_PAGO: '2',
+        /** Estado de aprobación de la nueva factura (2 = Aprobada) */
+        APPROVAL_STATUS: '2',
+    };
+
     return {
         RECORDS:                  RECORDS,
         FIELDS_CONTROL_CARGA:     FIELDS_CONTROL_CARGA,
@@ -99,5 +109,6 @@ define([], function () {
         TIPOS_TRANSACCION:        TIPOS_TRANSACCION,
         CAMPOS_CABECERA_A_COPIAR: CAMPOS_CABECERA_A_COPIAR,
         CAMPO_IMPORTE_LINEA:      CAMPO_IMPORTE_LINEA,
+        DEFAULTS_FACTURA_NUEVA:   DEFAULTS_FACTURA_NUEVA,
     };
 });

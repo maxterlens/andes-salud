@@ -56,30 +56,40 @@ define([
      * @returns {Array<{ tranidRecepcion: string, tranidFactura: string }>}
      */
     function _parsearCsv(contenido) {
-        const filas = contenido.split(/\r?\n/).filter(function (l) { return l.trim(); });
-        const resultado = [];
+        try {
+            const filas = contenido.split(/\r?\n/).filter(function (l) { return l.trim(); });
+            log.error('filas', filas);
+            if (!filas.length) return [];
 
-        const comaCount = filas[0].split(',').length;
-        const puntoComaCount = filas[0].split(';').length;
-        const delimitador = puntoComaCount > puntoComaCount ? ';' : ',';
+            const resultado = [];
+            const comaCount = filas[0].split(',').length;
+            const puntoComaCount = filas[0].split(';').length;
+            const delimitador = puntoComaCount > comaCount ? ';' : ',';
+            log.error('delimitador', delimitador);
+            
+            filas.forEach(function (fila, index) {
+                var columnas = fila.split(delimitador).map(function (c) { return c.trim(); });
+                log.error('columnas', columnas);
+                if (columnas.length < 2) return;
 
-        filas.forEach(function (fila, index) {
-            var columnas = fila.split(delimitador).map(function (c) { return c.trim().replace(/^"|"$/g, ''); });
-            if (columnas.length < 2) return;
+                // Ignorar fila de cabecera detectando si la primera columna no tiene formato de tranId
+                var primerValor = columnas[0].toLowerCase();
+                log.error('primerValor', primerValor);
+                if (index === 0 && (primerValor === 'recepcion' || primerValor === 'factura')) {
+                    return;
+                }
 
-            // Ignorar fila de cabecera detectando si la primera columna no tiene formato de tranId
-            var primerValor = columnas[0].toLowerCase();
-            if (index === 0 && (primerValor === 'recepcion' || primerValor === 'factura')) {
-                return;
-            }
-
-            resultado.push({
-                tranidRecepcion: columnas[0],
-                tranidFactura:   columnas[1],
+                resultado.push({
+                    tranidRecepcion: columnas[0],
+                    tranidFactura:   columnas[1],
+                });
             });
-        });
 
-        return resultado;
+            log.error('resultado', resultado);
+            return resultado;
+        } catch (e) {
+            log.error('An error was ocurred in function [_parsearCsv]', e);
+        }
     }
 
     /**
@@ -130,11 +140,11 @@ define([
             const cabecera = controlCargaId ? ControlCargaRepo.obtenerPendientePorId(controlCargaId) : ControlCargaRepo.obtenerPendiente();
            
             if (!cabecera) {
-                log.audit({ title: 'getInputData', details: 'No se encontraron registros AS Control de Carga en estado Pendiente.' });
+                log.error({ title: 'getInputData', details: 'No se encontraron registros AS Control de Carga en estado Pendiente.' });
                 return [];
             }
 
-            log.audit({ title: 'getInputData', details: 'Procesando Control de Carga ID: ' + cabecera.id });
+            log.error({ title: 'getInputData', details: 'Procesando Control de Carga ID: ' + cabecera.id });
 
             // Marcar como En Proceso para evitar doble ejecución
             ControlCargaRepo.actualizarEstado(cabecera.id, C.ESTADOS.EN_PROCESO);
@@ -148,9 +158,10 @@ define([
 
             // Cargar y parsear el CSV
             const archivoCSV = file.load({ id: cabecera.idArchivo });
+            log.error('archivoCSV', archivoCSV);
             const filas = _parsearCsv(archivoCSV.getContents());
 
-            log.audit({ title: 'getInputData', details: 'Filas a procesar: ' + filas.length });
+            log.error({ title: 'getInputData', details: 'Filas a procesar: ' + filas.length });
 
             // Adjuntar el ID de cabecera a cada fila para disponibilizarlo en reduce
             return filas.map(function (fila) {
@@ -177,7 +188,7 @@ define([
         try {
             var fila = JSON.parse(value);
 
-            log.debug({ title: 'map', details: 'Procesando: ' + fila.tranidRecepcion + ' / ' + fila.tranidFactura });
+            log.error({ title: 'map', details: 'Procesando: ' + fila.tranidRecepcion + ' / ' + fila.tranidFactura });
 
             var recepcionId = RecepcionRepo.obtenerIdPorTranId(fila.tranidRecepcion);
             var facturaOrigenId = FacturaCompraRepo.obtenerIdPorTranId(fila.tranidFactura);
@@ -206,7 +217,7 @@ define([
     function reduce(context) {
         var datos = JSON.parse(context.values[0]);
 
-        log.debug({ title: 'reduce', details: 'Transformando recepción: ' + datos.tranidRecepcion });
+        log.error({ title: 'reduce', details: 'Transformando recepción: ' + datos.tranidRecepcion });
 
         if (!datos.recepcionId) {
             var msgRecepcion = 'No se encontró la recepción con tranId: ' + datos.tranidRecepcion;
@@ -242,7 +253,7 @@ define([
                 datos.facturaOrigenId
             );
 
-            log.audit({ title: 'reduce', details: 'Factura generada ID: ' + nuevaFacturaId + ' | Recepción: ' + datos.tranidRecepcion });
+            log.error({ title: 'reduce', details: 'Factura generada ID: ' + nuevaFacturaId + ' | Recepción: ' + datos.tranidRecepcion });
 
             _crearDetalle({
                 controlCargaId:  datos.controlCargaId,
@@ -309,7 +320,7 @@ define([
             ControlCargaRepo.actualizarEstadoYDetalle(cabeceraId, estadoFinal, detalleFinal);
         }
 
-        log.audit({ title: 'summarize', details: estadoFinal + ' | ' + detalleFinal });
+        log.error({ title: 'summarize', details: estadoFinal + ' | ' + detalleFinal });
     }
 
     return {
