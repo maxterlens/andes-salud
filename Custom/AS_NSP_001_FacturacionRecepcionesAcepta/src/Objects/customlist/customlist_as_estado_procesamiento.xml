@@ -1,0 +1,34 @@
+<customlist scriptid="customlist_as_estado_procesamiento">
+  <description>Pendiente, En Proceso, Completado, Completado con Errores</description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>AS Estados de Procesamiento</name>
+  <customvalues>
+    <customvalue scriptid="val_37208178_7115118_893">
+      <abbreviation>P</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Pendiente</value>
+    </customvalue>
+    <customvalue scriptid="val_37208179_7115118_837">
+      <abbreviation>E</abbreviation>
+      <isinactive>F</isinactive>
+      <value>En Proceso</value>
+    </customvalue>
+    <customvalue scriptid="val_37208181_7115118_852">
+      <abbreviation>C</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Completado</value>
+    </customvalue>
+    <customvalue scriptid="val_37208182_7115118_771">
+      <abbreviation>E</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Completado con Errores</value>
+    </customvalue>
+    <customvalue scriptid="val_37208183_7115118_723">
+      <abbreviation>E</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Error</value>
+    </customvalue>
+  </customvalues>
+</customlist>
