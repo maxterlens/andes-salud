@@ -73,8 +73,6 @@ define([], function () {
         'trandate',
         'duedate',
         'custbody_2w_forma_pago',
-        'currency',
-        'exchangerate',
         'memo',
         'custbody_2win_url',
         'custbody_2win_estado_compras',

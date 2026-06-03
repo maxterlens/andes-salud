@@ -189,8 +189,8 @@ define([
         _filtrarYAjustarLineasItem(nuevaFactura, lineasRecepcion);
 
         // 5. Filtrar sublist expense: conservar solo los gastos que coincidan
-        //    en account + importe con los de la factura del CSV de referencia
-        var gastosOrigenClave = FacturaCompraRepo.obtenerGastosPorClave(facturaOrigenId);
+        //    en account + importe con los de la recepción
+        var gastosOrigenClave = RecepcionRepo.obtenerGastosPorClave(recepcionId);
         _filtrarGastosSegunFacturaCsv(nuevaFactura, gastosOrigenClave);
 
         // 6. Copiar campos de cabecera desde la factura del CSV

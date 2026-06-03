@@ -267,6 +267,7 @@ define([
         } catch (e) {
             var msgError = 'Error al transformar recepción ' + datos.tranidRecepcion + ': ' + e.message;
             log.error({ title: 'reduce', details: msgError });
+            log.error('An error was ocurred in function [reduce]', e);
             _crearDetalle({
                 controlCargaId:  datos.controlCargaId,
                 recepcionId:     datos.recepcionId,

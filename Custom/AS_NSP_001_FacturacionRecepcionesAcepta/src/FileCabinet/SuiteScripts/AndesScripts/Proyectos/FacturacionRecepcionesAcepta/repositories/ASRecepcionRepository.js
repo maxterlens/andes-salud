@@ -95,9 +95,47 @@ define([
         return lineas;
     }
 
+    /**
+     * Carga la recepción y construye un conjunto de claves únicas para cada línea
+     * del sublist 'expense', usando el formato 'accountId|amount'.
+     *
+     * Se utiliza para filtrar los gastos del vendorbill generado desde la OC:
+     * solo se conservan las líneas expense cuya combinación account+importe
+     * exista en la recepción.
+     *
+     * @param   {string|number} recepcionId - Internal ID de la recepción
+     * @returns {Object}  Mapa de claves 'accountId|amount' → true
+     */
+    function obtenerGastosPorClave(recepcionId) {
+        var recepcion   = record.load({
+            type:      C.TIPOS_TRANSACCION.RECEPCION,
+            id:        recepcionId,
+            isDynamic: false,
+        });
+
+        var claves      = {};
+        var totalLineas = recepcion.getLineCount({ sublistId: 'expense' });
+
+        for (var i = 0; i < totalLineas; i++) {
+            var accountId = recepcion.getSublistValue({ sublistId: 'expense', fieldId: 'account', line: i });
+            if (!accountId) continue;
+
+            var amount = parseFloat(recepcion.getSublistValue({
+                sublistId: 'expense',
+                fieldId:   'amount',
+                line:      i,
+            })) || 0;
+
+            claves[accountId + '|' + amount] = true;
+        }
+
+        return claves;
+    }
+
     return {
         obtenerIdPorTranId,
         obtenerOcId,
         obtenerLineasPorItem,
+        obtenerGastosPorClave,
     };
 });
