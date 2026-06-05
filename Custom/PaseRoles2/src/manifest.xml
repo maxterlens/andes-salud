@@ -1,0 +1,14 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>PaseRoles2</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="false">WEBSERVICES</feature>
+      <feature required="false">SUBSIDIARIES</feature>
+    </features>
+    <objects>
+      <object>customrecord_2win_auditoria</object>
+      <object>customrecord_2win_solicitud_consumo</object>
+    </objects>
+  </dependencies>
+</manifest>
