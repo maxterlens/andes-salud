@@ -132,10 +132,33 @@ define([
         return claves;
     }
 
+    /**
+     * Retorna el proveedor (entity) y la subsidiaria de la recepción.
+     * Usa lookupFields para evitar cargar el record completo.
+     * Ambos campos son SELECT en NetSuite, por lo que lookupFields
+     * los retorna como arrays de { value, text }.
+     *
+     * @param   {string|number} recepcionId - Internal ID de la recepción
+     * @returns {{ entity: string|null, subsidiary: string|null }}
+     */
+    function obtenerVendorYSubsidiaria(recepcionId) {
+        var campos = search.lookupFields({
+            type:    C.TIPOS_TRANSACCION.RECEPCION,
+            id:      recepcionId,
+            columns: ['entity', 'subsidiary'],
+        });
+
+        var entity     = campos.entity     && campos.entity.length     ? campos.entity[0].value     : null;
+        var subsidiary = campos.subsidiary && campos.subsidiary.length ? campos.subsidiary[0].value : null;
+
+        return { entity: entity, subsidiary: subsidiary };
+    }
+
     return {
         obtenerIdPorTranId,
         obtenerOcId,
         obtenerLineasPorItem,
         obtenerGastosPorClave,
+        obtenerVendorYSubsidiaria,
     };
 });

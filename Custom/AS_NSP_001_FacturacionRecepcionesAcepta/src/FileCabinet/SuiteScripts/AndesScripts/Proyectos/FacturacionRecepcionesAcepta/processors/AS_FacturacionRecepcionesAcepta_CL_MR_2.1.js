@@ -190,8 +190,13 @@ define([
 
             log.error({ title: 'map', details: 'Procesando: ' + fila.tranidRecepcion + ' / ' + fila.tranidFactura });
 
-            var recepcionId = RecepcionRepo.obtenerIdPorTranId(fila.tranidRecepcion);
-            var facturaOrigenId = FacturaCompraRepo.obtenerIdPorTranId(fila.tranidFactura);
+            var recepcionId        = RecepcionRepo.obtenerIdPorTranId(fila.tranidRecepcion);
+            var vendorYSubsidiaria = recepcionId ? RecepcionRepo.obtenerVendorYSubsidiaria(recepcionId) : {};
+            var facturaOrigenId    = FacturaCompraRepo.obtenerIdPorTranId(
+                fila.tranidFactura,
+                vendorYSubsidiaria.entity,
+                vendorYSubsidiaria.subsidiary
+            );
 
             context.write({
                 key:   fila.tranidRecepcion,

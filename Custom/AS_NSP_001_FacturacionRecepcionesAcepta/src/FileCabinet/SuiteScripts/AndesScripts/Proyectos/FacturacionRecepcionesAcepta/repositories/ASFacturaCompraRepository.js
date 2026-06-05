@@ -12,18 +12,34 @@ define([
 
     /**
      * Busca una factura de compra por su tranId y retorna su internal ID.
+     * Si se proporcionan entity y/o subsidiary, se agregan como filtros adicionales
+     * para acotar la búsqueda al proveedor y subsidiaria de la recepción de origen.
      *
-     * @param   {string} tranId - Número de documento (ej: 'FC-0001')
-     * @returns {string|null}   Internal ID de la factura, o null si no se encuentra
+     * @param   {string}      tranId     - Número de documento (ej: 'FC-0001')
+     * @param   {string|null} entity     - Internal ID del proveedor (opcional)
+     * @param   {string|null} subsidiary - Internal ID de la subsidiaria (opcional)
+     * @returns {string|null}            Internal ID de la factura, o null si no se encuentra
      */
-    function obtenerIdPorTranId(tranId) {
+    function obtenerIdPorTranId(tranId, entity, subsidiary) {
+        var filters = [
+            ['tranid', search.Operator.IS, tranId],
+            'AND',
+            ['mainline', search.Operator.IS, 'T'],
+        ];
+
+        if (entity) {
+            filters.push('AND');
+            filters.push(['entity', search.Operator.ANYOF, entity]);
+        }
+
+        if (subsidiary) {
+            filters.push('AND');
+            filters.push(['subsidiary', search.Operator.ANYOF, subsidiary]);
+        }
+
         var resultados = search.create({
             type:    C.TIPOS_TRANSACCION.FACTURA_COMPRA,
-            filters: [
-                ['tranid', search.Operator.IS, tranId],
-                'AND',
-                ['mainline', search.Operator.IS, 'T'],
-            ],
+            filters: filters,
             columns: [search.createColumn({ name: 'internalid' })],
         }).run().getRange({ start: 0, end: 1 });
 
