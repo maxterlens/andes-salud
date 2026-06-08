@@ -1,0 +1,43 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>AS_NSP_002_ActualizacionNivelAprobacion</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="false">SUITESIGNON</feature>
+      <feature required="false">MULTILANGUAGE</feature>
+      <feature required="false">EXPREPORTS</feature>
+      <feature required="false">ADVRECEIVING</feature>
+      <feature required="false">MULTILOCINVT</feature>
+      <feature required="false">INVENTORY</feature>
+      <feature required="false">CUSTOMTRANSACTIONS</feature>
+      <feature required="false">EXTREMELIST</feature>
+      <feature required="false">RECEIVABLES</feature>
+      <feature required="false">MAILMERGE</feature>
+      <feature required="true">CUSTOMRECORDS</feature>
+      <feature required="false">PAYABLES</feature>
+      <feature required="false">PERIODENDJOURNALENTRIES</feature>
+      <feature required="false">WEBSITE</feature>
+      <feature required="false">OPPORTUNITIES</feature>
+      <feature required="false">JOBS</feature>
+      <feature required="false">CUSTOMSEGMENTS</feature>
+      <feature required="false">ADVANCEDJOBS</feature>
+      <feature required="false">ACCOUNTING</feature>
+      <feature required="false">VENDORPREPAYMENTS</feature>
+      <feature required="true">WORKFLOW</feature>
+      <feature required="true">PURCHASEORDERS</feature>
+      <feature required="true">CRM</feature>
+    </features>
+    <objects>
+      <object>customrole1697</object>
+      <object>customrecord_as_niveles_aprobacion.val_15770511_7115118_sb2_946</object>
+      <object>customlist_2w_grupo_aprobacion</object>
+      <object>customrecord_as_niveles_aprobacion.val_15770513_7115118_sb2_768</object>
+      <object>customrecord_as_niveles_aprobacion.val_15770510_7115118_sb2_618</object>
+      <object>custemailtmpl_3_7115118_sb2_533</object>
+      <object>customrole1723</object>
+      <object>customrole1726</object>
+      <object>customrecord_as_niveles_aprobacion.val_15770509_7115118_sb2_447</object>
+      <object>custform_233_7115118_sb2_196</object>
+    </objects>
+  </dependencies>
+</manifest>
