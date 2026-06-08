@@ -1317,8 +1317,24 @@
           <eventtypes></eventtypes>
           <isinactive>F</isinactive>
           <initcondition>
-            <formula></formula>
+            <formula><![CDATA["User" NOT IN ("Employee1","Employee2")]]></formula>
             <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>User</name>
+                <value>STDUSERUSER</value>
+              </parameter>
+              <parameter>
+                <name>Employee1</name>
+                <selectrecordtype>-4</selectrecordtype>
+                <value>405483</value>
+              </parameter>
+              <parameter>
+                <name>Employee2</name>
+                <selectrecordtype>-4</selectrecordtype>
+                <value>406170</value>
+              </parameter>
+            </parameters>
           </initcondition>
         </lockrecordaction>
       </workflowactions>
