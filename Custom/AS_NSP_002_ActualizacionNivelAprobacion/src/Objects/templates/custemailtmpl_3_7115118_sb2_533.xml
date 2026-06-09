@@ -7,6 +7,6 @@
   <mediaitem></mediaitem>
   <name>Correo Notificación Orden de Compra</name>
   <recordtype>TRANSACTION</recordtype>
-  <subject>Aprobación de OCT</subject>
+  <subject>Aprobación de OC</subject>
   <usesmedia>F</usesmedia>
 </emailtemplate>

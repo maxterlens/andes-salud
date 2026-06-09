@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "NetSuite - Andes Salud",
+  "version": "1.2",
+  "description": "Agrega el botón Actualizar Precios en la página de solicitud de órdenes estándar de NetSuite.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["ns-update-prices.js"],
+      "matches": ["https://*.app.netsuite.com/*"]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.app.netsuite.com/app/accounting/transactions/orderpurchreqs.nl*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
