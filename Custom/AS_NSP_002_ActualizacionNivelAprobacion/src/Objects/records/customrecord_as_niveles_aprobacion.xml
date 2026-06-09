@@ -127,21 +127,36 @@
       <subtab></subtab>
     </customrecordcustomfield>
   </customrecordcustomfields>
-  <permissions>
-    <permission>
-      <permittedlevel>VIEW</permittedlevel>
-      <permittedrole>[scriptid=customrole1723]</permittedrole>
-      <restriction></restriction>
-    </permission>
-    <permission>
-      <permittedlevel>VIEW</permittedlevel>
-      <permittedrole>[scriptid=customrole1697]</permittedrole>
-      <restriction></restriction>
-    </permission>
-    <permission>
-      <permittedlevel>VIEW</permittedlevel>
-      <permittedrole>[scriptid=customrole1726]</permittedrole>
-      <restriction></restriction>
-    </permission>
-  </permissions>
+  <instances>
+    <instance scriptid="val_15770509_7115118_sb2_447">
+      <custrecord_as_nivel_aprb_aprobadores></custrecord_as_nivel_aprb_aprobadores>
+      <custrecord_as_nivel_aprb_grupo_aprobacio>[scriptid=customlist_2w_grupo_aprobacion.val_9854793_7115118_sb1_427]</custrecord_as_nivel_aprb_grupo_aprobacio>
+      <isinactive>F</isinactive>
+      <name>Grupo 1</name>
+    </instance>
+    <instance scriptid="val_15770510_7115118_sb2_618">
+      <custrecord_as_nivel_aprb_aprobadores></custrecord_as_nivel_aprb_aprobadores>
+      <custrecord_as_nivel_aprb_grupo_aprobacio>[scriptid=customlist_2w_grupo_aprobacion.val_9854794_7115118_sb1_525]</custrecord_as_nivel_aprb_grupo_aprobacio>
+      <isinactive>F</isinactive>
+      <name>Grupo 2</name>
+    </instance>
+    <instance scriptid="val_15770511_7115118_sb2_946">
+      <custrecord_as_nivel_aprb_aprobadores></custrecord_as_nivel_aprb_aprobadores>
+      <custrecord_as_nivel_aprb_grupo_aprobacio>[scriptid=customlist_2w_grupo_aprobacion.val_9854795_7115118_sb1_959]</custrecord_as_nivel_aprb_grupo_aprobacio>
+      <isinactive>F</isinactive>
+      <name>Grupo 3</name>
+    </instance>
+    <instance scriptid="val_15770512_7115118_sb2_377">
+      <custrecord_as_nivel_aprb_aprobadores></custrecord_as_nivel_aprb_aprobadores>
+      <custrecord_as_nivel_aprb_grupo_aprobacio>[scriptid=customlist_2w_grupo_aprobacion.val_9854796_7115118_sb1_742]</custrecord_as_nivel_aprb_grupo_aprobacio>
+      <isinactive>T</isinactive>
+      <name>Grupo 4</name>
+    </instance>
+    <instance scriptid="val_15770513_7115118_sb2_768">
+      <custrecord_as_nivel_aprb_aprobadores></custrecord_as_nivel_aprb_aprobadores>
+      <custrecord_as_nivel_aprb_grupo_aprobacio>[scriptid=customlist_2w_grupo_aprobacion.val_30272313_7115118_818]</custrecord_as_nivel_aprb_grupo_aprobacio>
+      <isinactive>F</isinactive>
+      <name>Jefe de Abastecimiento</name>
+    </instance>
+  </instances>
 </customrecordtype>

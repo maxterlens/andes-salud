@@ -26,18 +26,25 @@
       <feature required="true">WORKFLOW</feature>
       <feature required="true">PURCHASEORDERS</feature>
       <feature required="true">CRM</feature>
+      <feature required="true">SERVERSIDESCRIPTING</feature>
     </features>
     <objects>
-      <object>customrole1697</object>
-      <object>customrecord_as_niveles_aprobacion.val_15770511_7115118_sb2_946</object>
-      <object>customlist_2w_grupo_aprobacion</object>
-      <object>customrecord_as_niveles_aprobacion.val_15770513_7115118_sb2_768</object>
-      <object>customrecord_as_niveles_aprobacion.val_15770510_7115118_sb2_618</object>
-      <object>custemailtmpl_3_7115118_sb2_533</object>
-      <object>customrole1723</object>
-      <object>customrole1726</object>
-      <object>customrecord_as_niveles_aprobacion.val_15770509_7115118_sb2_447</object>
+      <!--<object>customrecord_as_niveles_aprobacion.val_15770513_7115118_sb2_768</object>-->
+      <object>customlist_2w_grupo_aprobacion.val_9854794_7115118_sb1_525</object>
+      <object>customlist_2w_grupo_aprobacion.val_9854795_7115118_sb1_959</object>
+      <!--<object>customrecord_as_niveles_aprobacion.val_15770510_7115118_sb2_618</object>-->
+      <!--<object>customrole1727</object>-->
+      <!--<object>customrole1726</object>-->
+      <!--<object>customrecord_as_niveles_aprobacion.val_15770509_7115118_sb2_447</object>-->
       <object>custform_233_7115118_sb2_196</object>
+      <object>customlist_2w_grupo_aprobacion.val_9854793_7115118_sb1_427</object>
+      <object>customlist_2w_grupo_aprobacion.val_9854796_7115118_sb1_742</object>
+      <object>customrole1697</object>
+      <!--<object>customrecord_as_niveles_aprobacion.val_15770511_7115118_sb2_946</object>-->
+      <object>customlist_2w_grupo_aprobacion</object>
+      <!--<object>custemailtmpl_3_7115118_sb2_533</object>-->
+      <!--<object>customrole1723</object>-->
+      <object>customlist_2w_grupo_aprobacion.val_30272313_7115118_818</object>
     </objects>
   </dependencies>
 </manifest>
