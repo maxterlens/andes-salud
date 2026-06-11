@@ -1,0 +1,17 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>AS_NSP_003_AplicacionJournalFacturaCompra</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="false">PERIODENDJOURNALENTRIES</feature>
+      <feature required="false">EXPREPORTS</feature>
+      <feature required="false">WEBSITE</feature>
+      <feature required="false">ADVRECEIVING</feature>
+      <feature required="false">MULTILOCINVT</feature>
+      <feature required="false">OPPORTUNITIES</feature>
+      <feature required="false">CUSTOMTRANSACTIONS</feature>
+      <feature required="false">ACCOUNTING</feature>
+      <feature required="false">TIMETRACKING</feature>
+    </features>
+  </dependencies>
+</manifest>
