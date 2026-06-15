@@ -1,0 +1,20 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>PaseWorkFlow</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="true">WORKFLOW</feature>
+      <feature required="true">PURCHASEORDERS</feature>
+    </features>
+    <objects>
+      <object>customlist_2w_grupo_aprobacion</object>
+      <object>customlist_2w_grupo_aprobacion.val_9854794_7115118_sb1_525</object>
+      <object>customlist_2w_grupo_aprobacion.val_9854795_7115118_sb1_959</object>
+      <object>custentity_2w_grupo_aprobacion</object>
+      <object>custbody_2w_prox_aprobadores</object>
+      <object>customlist_2w_grupo_aprobacion.val_9854793_7115118_sb1_427</object>
+      <object>customlist_2w_grupo_aprobacion.val_30272313_7115118_818</object>
+      <object>custform_233_7115118_sb2_196</object>
+    </objects>
+  </dependencies>
+</manifest>

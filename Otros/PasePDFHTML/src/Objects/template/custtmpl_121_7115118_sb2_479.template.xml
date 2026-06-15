@@ -1,0 +1,462 @@
+<?xml version="1.0"?>
+<!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<pdf>
+<head>
+	<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+	<#if .locale == "zh_CN">
+		<link name="NotoSansCJKsc" type="font" subtype="opentype" src="${nsfont.NotoSansCJKsc_Regular}" src-bold="${nsfont.NotoSansCJKsc_Bold}" bytes="2" />
+	<#elseif .locale == "zh_TW">
+		<link name="NotoSansCJKtc" type="font" subtype="opentype" src="${nsfont.NotoSansCJKtc_Regular}" src-bold="${nsfont.NotoSansCJKtc_Bold}" bytes="2" />
+	<#elseif .locale == "ja_JP">
+		<link name="NotoSansCJKjp" type="font" subtype="opentype" src="${nsfont.NotoSansCJKjp_Regular}" src-bold="${nsfont.NotoSansCJKjp_Bold}" bytes="2" />
+	<#elseif .locale == "ko_KR">
+		<link name="NotoSansCJKkr" type="font" subtype="opentype" src="${nsfont.NotoSansCJKkr_Regular}" src-bold="${nsfont.NotoSansCJKkr_Bold}" bytes="2" />
+	<#elseif .locale == "th_TH">
+		<link name="NotoSansThai" type="font" subtype="opentype" src="${nsfont.NotoSansThai_Regular}" src-bold="${nsfont.NotoSansThai_Bold}" bytes="2" />
+	</#if>
+    <macrolist>
+        <macro id="nlheader">
+            
+<table class="header-table"><tr>
+<td class="logo-cell" align="left"><#if companyInformation.logoUrl?length != 0> <@filecabinet nstype="image" style="width: 72px; height: auto;" src="${companyInformation.logoUrl}" /> </#if></td>
+<td class="title-cell" align="center">
+<div class="doc-title"><span style="font-size: 14pt;">ORDEN DE COMPRA </span> <span style="font-size: 14pt;">${record.tranid}</span></div>
+</td>
+<td class="right-cell">&nbsp;</td>
+</tr></table>
+
+        </macro>
+        <macro id="nlfooter">
+            &nbsp;
+        </macro>
+    </macrolist>
+    <style>
+        * {
+        <#if .locale == "zh_CN">
+            font-family: NotoSans, NotoSansCJKsc, sans-serif;
+        <#elseif .locale == "zh_TW">
+            font-family: NotoSans, NotoSansCJKtc, sans-serif;
+        <#elseif .locale == "ja_JP">
+            font-family: NotoSans, NotoSansCJKjp, sans-serif;
+        <#elseif .locale == "ko_KR">
+            font-family: NotoSans, NotoSansCJKkr, sans-serif;
+        <#elseif .locale == "th_TH">
+            font-family: NotoSans, NotoSansThai, sans-serif;
+        <#else>
+            font-family: NotoSans, sans-serif;
+        </#if>
+        }
+
+        body {
+            color: #2f3e4e;
+            font-size: 9pt;
+        }
+
+        table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        td {
+            vertical-align: top;
+            padding: 4px 6px;
+            word-wrap: break-word;
+        }
+
+        th {
+            font-size: 8pt;
+            font-weight: bold;
+            color: #2f3e4e;
+            background-color: #efefef;
+            border-bottom: 1px solid #cfd5db;
+            padding: 8px 6px;
+            text-align: left;
+        }
+
+        /* Header */
+        .header-table {
+            width: 100%;
+            margin-bottom: 6px;
+        }
+
+        .header-table td {
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        .logo-cell {
+            width: 16%;
+        }
+
+        .title-cell {
+            width: 68%;
+            text-align: center;
+        }
+
+        .right-cell {
+            width: 16%;
+        }
+
+        .doc-title {
+            font-size: 15pt;
+            font-weight: 700;
+            color: #2f3e4e;
+            text-align: center;
+            letter-spacing: 0.4px;
+        }
+
+        .doc-number {
+            font-size: 19pt;
+            font-weight: 700;
+            color: #1f2f40;
+            text-align: center;
+            margin-top: 1px;
+        }
+
+        .doc-date {
+            font-size: 9pt;
+            color: #3d4c5b;
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        /* Blocks */
+        .block {
+            border: 1px solid #97a3af;
+            margin-top: 10px;
+        }
+
+        .block-title {
+            background-color: #edf0f2;
+            color: #2e4a62;
+            font-size: 10.5pt;
+            font-weight: bold;
+            padding: 6px 10px;
+            border-bottom: 1px solid #d5dce2;
+        }
+
+        .label {
+            width: 34%;
+            font-weight: bold;
+            color: #415364;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+
+        .value {
+            width: 66%;
+            color: #1f2f40;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+
+        /* Layout */
+        .main-top {
+            margin-top: 10px;
+        }
+
+        .bottom-layout td {
+            vertical-align: bottom;
+        }
+
+        .left-pane {
+            width: 73%;
+            padding: 0;
+        }
+
+        .mid-gap {
+            width: 2%;
+            padding: 0;
+        }
+
+        .right-pane {
+            width: 25%;
+            padding: 0;
+        }
+
+        /* Summary */
+        .summary-box {
+            border: 1px solid #97a3af;
+        }
+
+        .summary-title {
+            background-color: #edf0f2;
+            color: #2e4a62;
+            font-size: 10pt;
+            font-weight: bold;
+            padding: 6px 8px;
+            border-bottom: 1px solid #d5dce2;
+        }
+
+        .summary-label {
+            font-weight: bold;
+            color: #415364;
+            padding: 8px;
+            border-bottom: 1px solid #dde2e7;
+        }
+
+        .summary-value {
+            text-align: right;
+            color: #1f2f40;
+            padding: 8px;
+            border-bottom: 1px solid #dde2e7;
+        }
+
+        .summary-total-row td {
+            background-color: #edf0f2;
+        }
+
+        .summary-total-label {
+            font-weight: bold;
+            font-size: 11pt;
+            color: #1f2f40;
+            padding: 8px;
+        }
+
+        .summary-total-value {
+            font-weight: bold;
+            font-size: 11pt;
+            color: #1f2f40;
+            text-align: right;
+            padding: 8px;
+        }
+
+        /* Items / Expenses */
+        .itemtable {
+            margin-top: 12px;
+            border: 1px solid #97a3af;
+        }
+
+        .itemtable thead th {
+            white-space: nowrap;
+            word-wrap: normal;
+            overflow: hidden;
+            font-size: 8pt;
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+
+        .itemtable td {
+            border-bottom: 1px solid #e3e7ea;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            vertical-align: top;
+        }
+
+        .itemname {
+            font-weight: bold;
+            color: #1f2f40;
+            line-height: 140%;
+        }
+
+        .itemdesc {
+            color: #5b6978;
+            font-size: 8pt;
+            line-height: 135%;
+        }
+
+        .itemmeta {
+            color: #5b6978;
+            font-size: 8pt;
+            line-height: 135%;
+        }
+
+        .itemlocation {
+            display: block;
+            color: #1f2f40;
+            font-size: 8pt;
+            line-height: 120%;
+            text-align: left;
+            margin: 0;
+            padding: 0;
+        }
+
+        .location-cell {
+            text-align: left;
+            vertical-align: top;
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        /* Compliance */
+        .compliance-page {
+            page-break-before: always;
+            margin-top: 12px;
+        }
+
+        .compliance-box {
+            width: 100%;
+            border: 1px solid #97a3af;
+        }
+
+        .compliance-inner {
+            padding: 14px 16px;
+        }
+
+        .compliance-title {
+            text-align: center;
+            font-size: 10pt;
+            font-weight: bold;
+            color: #2e4a62;
+            margin: 0 0 10px 0;
+        }
+
+        .compliance-text {
+            text-align: justify;
+            font-size: 8pt;
+            line-height: 13pt;
+            color: #1f2f40;
+            margin: 0;
+        }
+
+        .approval-status {
+            text-align: center;
+            font-size: 9pt;
+            font-weight: bold;
+            color: #1f2f40;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body header="nlheader" header-height="11%" footer="nlfooter" footer-height="20pt" padding="0.45in 0.45in 0.45in 0.45in" size="Letter">
+    <#assign vendorEmail = (record.entity.email!'')> <#assign vendorRut = (record.entity.custentity_2wrut!'')> <#assign subsidiaryRut = (subsidiary.federalidnumber!'')> <#if !(subsidiaryRut?has_content)> <#assign subsidiaryRut = (subsidiary.taxidnum!'')> </#if> <!-- DATOS DEL PROVEEDOR -->
+<table class="main-top"><tr>
+<td style="padding: 0;">
+<table class="block"><tr>
+<td class="block-title" colspan="2">Datos del proveedor&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <strong>Fecha de emisión:</strong> ${record.trandate}</td>
+</tr>
+<tr>
+<td class="label">Número de orden de compra</td>
+<td class="value">${record.tranid}</td>
+</tr>
+<tr>
+<td class="label">Razón social</td>
+<td class="value">${record.entity}</td>
+</tr>
+<tr>
+<td class="label">RUT proveedor</td>
+<td class="value"><#if vendorRut?has_content> ${vendorRut} <#else> No informado </#if></td>
+</tr>
+<tr>
+<td class="label">Dirección comercial</td>
+<td class="value">${record.billingaddress.addrtext!''}</td>
+</tr>
+<tr>
+<td class="label">Teléfono de contacto</td>
+<td class="value">${record.billingaddress.addrphone!''}</td>
+</tr>
+<tr>
+<td class="label">Correo electrónico</td>
+<td class="value"><#if vendorEmail?has_content> ${vendorEmail} <#else> No informado </#if></td>
+</tr></table>
+</td>
+</tr></table>
+<!-- DATOS DE COMPRA + RESUMEN -->
+<table class="bottom-layout" style="margin-top: 10px; width: 100.001%;"><tr>
+<td class="left-pane" style="width: 66.2654%;">
+<table class="block"><tr>
+<td class="block-title" colspan="2">Datos de compra y entrega</td>
+</tr>
+<tr>
+<td class="label">Empresa solicitante</td>
+<td class="value">${record.subsidiary!''}</td>
+</tr>
+<tr>
+<td class="label">RUT subsidiaria</td>
+<td class="value"><#if subsidiaryRut?has_content> ${subsidiaryRut} <#else> No informado </#if></td>
+</tr>
+<tr>
+<td class="label">Dirección de entrega</td>
+<td class="value">${subsidiary.mainaddress_text!''}</td>
+</tr>
+<tr>
+<td class="label">Condiciones de pago</td>
+<td class="value">${record.terms!''}</td>
+</tr>
+<tr>
+<td class="label">Observaciones</td>
+<td class="value"><#if record.memo?has_content> ${record.memo} <#else> Sin observaciones. </#if></td>
+</tr></table>
+</td>
+<td class="mid-gap" style="width: 1.22937%;">&nbsp;</td>
+<td class="right-pane" style="width: 32.5202%;" valign="bottom">
+<table class="summary-box"><tr>
+<td class="summary-title" colspan="2">Resumen de la orden</td>
+</tr>
+<tr>
+<td class="summary-label">Subtotal</td>
+<td class="summary-value"><span style="font-size: 10pt;">${record.subtotal}</span></td>
+</tr>
+<tr>
+<td class="summary-label">IVA</td>
+<td class="summary-value"><span style="font-size: 10pt;">${record.taxtotal}</span></td>
+</tr>
+<tr class="summary-total-row">
+<td class="summary-total-label"><span style="font-size: 8pt;">Total</span></td>
+<td class="summary-total-value"><span style="font-size: 10pt;">${record.total}</span></td>
+</tr></table>
+</td>
+</tr></table>
+<!-- DETALLE ITEMS --> <#if record.item?has_content>
+<table class="itemtable">
+<thead>
+<tr>
+<th class="text-center" colspan="3">Cantidad</th>
+<th colspan="10">Artículo / Detalle</th>
+<th colspan="4">Ubicación</th>
+<th class="text-right" colspan="4">Valor unitario</th>
+<th class="text-right" colspan="3">Importe</th>
+</tr>
+</thead>
+<#list record.item as item><tr>
+<td class="text-center" colspan="3"><span style="font-size: 8pt;">${item.quantity}</span></td>
+<td colspan="10"><span class="itemname" style="font-size: 8pt;">${item.item}</span> <#if item.description?has_content> <br /><span class="itemdesc">${item.description}</span> </#if> <#if (item.options!'')?has_content> <br /><span class="itemmeta"><strong><span style="font-size: 8pt;">Detalle</span>:</strong> ${item.options}</span> </#if></td>
+<td class="location-cell" colspan="4"><#if (item.location!'')?has_content> <span class="itemlocation">${item.location}</span> <#elseif (record.location!'')?has_content> <span class="itemlocation">${record.location}</span> <#else> <span class="itemlocation">No informado</span> </#if></td>
+<td class="text-right" colspan="4"><span style="font-size: 8pt;">${item.rate}</span></td>
+<td class="text-right" colspan="3"><span style="font-size: 8pt;">${item.amount}</span></td>
+</tr>
+</#list></table>
+</#if> <!-- GASTOS --> <#if record.expense?has_content>
+<table class="itemtable" style="margin-top: 10px;">
+<thead>
+<tr>
+<th colspan="10">Categoría</th>
+<th colspan="10">Cuenta</th>
+<th class="text-right" colspan="4">Importe</th>
+</tr>
+</thead>
+<#list record.expense as expense><tr>
+<td colspan="10"><span style="font-size: 8pt;">${expense.category}</span></td>
+<td colspan="10"><span class="itemname" style="font-size: 8pt;">${expense.account}</span> <#if expense.memo?has_content> <br /><span class="itemdesc">${expense.memo}</span> </#if></td>
+<td class="text-right" colspan="4"><span style="font-size: 8pt;">${expense.amount}</span></td>
+</tr>
+</#list></table>
+</#if> <!-- CUMPLIMIENTO -->
+<table class="compliance-page"><tr>
+<td align="center">
+<table class="compliance-box"><tr>
+<td class="compliance-inner">
+<p class="compliance-title">&nbsp;</p>
+<p class="compliance-title">Declaración de Cumplimiento Normativo (Ley N° 20.393)</p>
+<p class="compliance-title">&nbsp;</p>
+<p class="compliance-text">Durante la vigencia del contrato y/o de la relación comercial que mantenga con Andes Salud, el proveedor deberá dar cumplimiento al Modelo de Prevención de Delitos implementado por la institución, orientado a prevenir los ilícitos contemplados en la Ley N° 20.393 sobre Responsabilidad Penal de las Personas Jurídicas. En este contexto, el proveedor se compromete a actuar con apego a la normativa vigente, bajo principios de ética, transparencia e integridad. Asimismo, deberá abstenerse de participar, en calidad de autor, cómplice o encubridor, en cualquiera de los delitos contemplados en la referida ley, adoptando además las medidas necesarias para prevenir cualquier hecho que pueda revestir dicho carácter. Del mismo modo, se obliga a informar, a través del Canal de Denuncias de Andes Salud, cualquier antecedente del que tome conocimiento respecto de conductas que pudiesen ser constitutivas de alguno de dichos delitos por parte de trabajadores de cualquiera de las partes. El incumplimiento de estas obligaciones facultará a Andes Salud para poner término inmediato al contrato y/o a la relación comercial, sin derecho del proveedor a exigir pago, compensación o indemnización alguna con motivo de dicho término.</p>
+<p class="approval-status">Estado de aprobación: ${record.approvalstatus}</p>
+<#if preferences.print_barcodes?? && preferences.print_barcodes>
+<table style="width: 100%; margin-top: 8px;"><tr>
+<td style="padding: 0;" align="center"><barcode codetype="code128" showtext="true" height="40" value="${record.tranid?xml}" /></td>
+</tr></table>
+</#if></td>
+</tr></table>
+</td>
+</tr></table>
+</body>
+</pdf>

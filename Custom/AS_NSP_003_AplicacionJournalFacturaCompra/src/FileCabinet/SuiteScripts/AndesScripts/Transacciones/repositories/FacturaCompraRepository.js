@@ -2,52 +2,34 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(['N/record', 'N/search', 'N/log'], (record, search, log) => {
+define(['N/record', 'N/search', 'N/query', 'N/log'], (record, search, query, log) => {
 
     const SUBLIST_APPLY             = 'apply';
     const TOLERANCE                 = 0.001;
     const APPROVED_APPROVAL_STATUS  = '2';
-    const DEFAULT_ACCOUNT_ID        = 853;
 
     // ─── Acceso a datos ───────────────────────────────────────────────────────
 
     /**
-     * Devuelve el tipo de record de una transacción (e.g. 'vendorbill', 'salesorder').
+     * Busca la primera cuenta bancaria activa, no resumen, de la subsidiaria y moneda indicadas.
+     * Devuelve el internal ID de la cuenta o null si no encuentra ninguna.
      */
-    const obtenerTipoTransaccion = (transaccionId) => {
-        const fields = search.lookupFields({
-            type: search.Type.TRANSACTION,
-            id: transaccionId,
-            columns: ['recordtype']
-        });
-        return fields.recordtype;
-    };
-
-    /**
-     * Devuelve el tipo contable de una cuenta (e.g. 'AcctPay', 'AcctRec', 'Bank').
-     */
-    const obtenerTipoCuenta = (accountId) => {
-        const fields = search.lookupFields({
-            type: search.Type.ACCOUNT,
-            id: accountId,
-            columns: ['type']
-        });
-        return fields.type;
-    };
-
-    /**
-     * Devuelve la entidad (proveedor) y la cuenta por pagar de una factura de compra.
-     */
-    const obtenerDatosFactura = (facturaId) => {
-        const fields = search.lookupFields({
-            type: record.Type.VENDOR_BILL,
-            id: facturaId,
-            columns: ['entity', 'account']
-        });
-        return {
-            entity: fields.entity && fields.entity.length > 0 ? String(fields.entity[0].value) : null,
-            account: fields.account && fields.account.length > 0 ? String(fields.account[0].value) : null
-        };
+    const obtenerCuentaBancoPorSubsidiaria = (subsidiaryId, currencyId) => {
+        const sql = `
+            SELECT 
+                a.id
+            FROM 
+                account a
+            WHERE 
+                NVL(a.isinactive, 'F') = 'F'
+                AND a.accttype IN ('Bank')
+                AND NVL(a.issummary, 'F') = 'F'
+                AND BUILTIN.MNFILTER(a.subsidiary, 'MN_INCLUDE', '', 'TRUE', '${subsidiaryId}') = 'T'
+                AND a.currency IN ('${currencyId}')`;
+        const results = query.runSuiteQL({
+            query: sql,
+        }).asMappedResults();
+        return results.length > 0 ? String(results[0].id) : null;
     };
 
     /**
@@ -134,7 +116,19 @@ define(['N/record', 'N/search', 'N/log'], (record, search, log) => {
 
         const account = vendorPayment.getValue({ fieldId: 'account' });
         if (!account) {
-            vendorPayment.setValue({ fieldId: 'account', value: DEFAULT_ACCOUNT_ID });
+            const subsidiaryId   = vendorPayment.getValue({ fieldId: 'subsidiary' });
+            const currencyId     = vendorPayment.getValue({ fieldId: 'currency' });
+            const cuentaBancoId  = obtenerCuentaBancoPorSubsidiaria(subsidiaryId, currencyId);
+
+            if (!cuentaBancoId) {
+                log.error({
+                    title:   'FacturaCompraRepository',
+                    details: `No se encontró cuenta bancaria activa para la subsidiaria ${subsidiaryId}. Se omite la aplicación del journal ${journalId} a la factura ${facturaId}.`
+                });
+                return;
+            }
+
+            vendorPayment.setValue({ fieldId: 'account', value: cuentaBancoId });
         }
 
         const lineCount = vendorPayment.getLineCount({ sublistId: SUBLIST_APPLY });
@@ -192,9 +186,6 @@ define(['N/record', 'N/search', 'N/log'], (record, search, log) => {
     };
 
     return {
-        obtenerTipoTransaccion,
-        obtenerTipoCuenta,
-        obtenerDatosFactura,
         obtenerDatosTransaccionesEnLote,
         obtenerTiposCuentaEnLote,
         aplicarJournalAFactura
