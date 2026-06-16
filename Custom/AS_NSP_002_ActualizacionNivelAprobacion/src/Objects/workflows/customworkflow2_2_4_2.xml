@@ -200,12 +200,37 @@
             <type>VISUAL_BUILDER</type>
           </initcondition>
         </setfieldvalueaction>
-        <setfieldvalueaction scriptid="workflowaction13989">
+        <setfieldvalueaction scriptid="workflowaction14003">
           <clienttriggerfields></clienttriggerfields>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
           <field>[scriptid=custbody_as_aprobador_n4]</field>
+          <isinactive>F</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield></valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>STATIC</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+        <setfieldvalueaction scriptid="workflowaction13989">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=custbody_as_ultimo_aprobador]</field>
           <isinactive>F</isinactive>
           <scheduledelay></scheduledelay>
           <schedulemode>DELAY</schedulemode>
@@ -300,12 +325,37 @@
             <type>VISUAL_BUILDER</type>
           </initcondition>
         </setfieldvalueaction>
-        <setfieldvalueaction scriptid="workflowaction13993">
+        <setfieldvalueaction scriptid="workflowaction14004">
           <clienttriggerfields></clienttriggerfields>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
           <field>[scriptid=custbody_as_fecha_aprobador_n4]</field>
+          <isinactive>F</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield></valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>STATIC</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+        <setfieldvalueaction scriptid="workflowaction13993">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=custbody_as_ultimo_fecha_aprobador]</field>
           <isinactive>F</isinactive>
           <scheduledelay></scheduledelay>
           <schedulemode>DELAY</schedulemode>
@@ -525,7 +575,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>3973</recipient>
+          <recipient>407482</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -685,19 +735,19 @@
             </parameters>
           </initcondition>
         </workflowtransition>
-        <workflowtransition scriptid="workflowtransition303">
+        <workflowtransition scriptid="workflowtransition390">
           <buttonaction>[scriptid=customworkflow2_2_4_2.workflowstate15.workflowaction56]</buttonaction>
           <conditionsavedsearch></conditionsavedsearch>
-          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
           <scheduledelay></scheduledelay>
           <scheduletimeunit></scheduletimeunit>
-          <tostate>[scriptid=customworkflow2_2_4_2.workflowstate435]</tostate>
+          <tostate>[scriptid=customworkflow2_2_4_2.workflowstate13800]</tostate>
           <triggertype></triggertype>
           <waitforworkflow></waitforworkflow>
           <waitforworkflowstate></waitforworkflowstate>
           <initcondition>
-            <formula><![CDATA["Total" > 1.23E8]]></formula>
+            <formula><![CDATA["Total" > 123000000.00]]></formula>
             <type>VISUAL_BUILDER</type>
             <parameters>
               <parameter>
@@ -902,7 +952,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>2315</recipient>
+          <recipient>405823</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -938,7 +988,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>3973</recipient>
+          <recipient>407482</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -1252,7 +1302,7 @@
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
-          <field>[scriptid=custbody_as_aprobador_n4]</field>
+          <field>[scriptid=custbody_as_ultimo_aprobador]</field>
           <isinactive>F</isinactive>
           <scheduledelay></scheduledelay>
           <schedulemode>DELAY</schedulemode>
@@ -1268,12 +1318,12 @@
           <valuetext></valuetext>
           <valuetype>FIELD</valuetype>
           <initcondition>
-            <formula><![CDATA[isEmpty("AS Aprobador N°4") = 'T']]></formula>
+            <formula><![CDATA[isEmpty("AS Ultimo Aprobador") = 'T']]></formula>
             <type>VISUAL_BUILDER</type>
             <parameters>
               <parameter>
-                <name>AS Aprobador N°4</name>
-                <value>[scriptid=custbody_as_aprobador_n4]</value>
+                <name>AS Ultimo Aprobador</name>
+                <value>[scriptid=custbody_as_ultimo_aprobador]</value>
               </parameter>
             </parameters>
           </initcondition>
@@ -1283,7 +1333,7 @@
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
-          <field>[scriptid=custbody_as_fecha_aprobador_n4]</field>
+          <field>[scriptid=custbody_as_ultimo_fecha_aprobador]</field>
           <isinactive>F</isinactive>
           <scheduledelay></scheduledelay>
           <schedulemode>DELAY</schedulemode>
@@ -1299,12 +1349,12 @@
           <valuetext></valuetext>
           <valuetype>DATE</valuetype>
           <initcondition>
-            <formula><![CDATA[isEmpty("AS Fecha Aprobación N°4") = 'T']]></formula>
+            <formula><![CDATA[isEmpty("AS Ultimo Fecha Aprobación") = 'T']]></formula>
             <type>VISUAL_BUILDER</type>
             <parameters>
               <parameter>
-                <name>AS Fecha Aprobación N°4</name>
-                <value>[scriptid=custbody_as_fecha_aprobador_n4]</value>
+                <name>AS Ultimo Fecha Aprobación</name>
+                <value>[scriptid=custbody_as_ultimo_fecha_aprobador]</value>
               </parameter>
             </parameters>
           </initcondition>
@@ -1327,12 +1377,12 @@
               <parameter>
                 <name>Employee1</name>
                 <selectrecordtype>-4</selectrecordtype>
-                <value>1975</value>
+                <value>405483</value>
               </parameter>
               <parameter>
                 <name>Employee2</name>
                 <selectrecordtype>-4</selectrecordtype>
-                <value>2662</value>
+                <value>406170</value>
               </parameter>
             </parameters>
           </initcondition>
@@ -1409,7 +1459,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>2983</recipient>
+          <recipient>406491</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -1445,7 +1495,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>2315</recipient>
+          <recipient>405823</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -1741,7 +1791,7 @@
     <workflowstate scriptid="workflowstate435">
       <description></description>
       <donotexitworkflow>F</donotexitworkflow>
-      <name>123000000+ AP 2 G2</name>
+      <name>123000000+ AP 2.1 G2</name>
       <positionx>403</positionx>
       <positiony>553</positiony>
       <workflowactions triggertype="ONENTRY">
@@ -1808,7 +1858,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>3797</recipient>
+          <recipient>407305</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -1844,7 +1894,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>3884</recipient>
+          <recipient>407393</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -1872,7 +1922,7 @@
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
-          <field>[scriptid=custbody_as_aprobador_n1]</field>
+          <field>[scriptid=custbody_as_aprobador_n2]</field>
           <isinactive>F</isinactive>
           <scheduledelay></scheduledelay>
           <schedulemode>DELAY</schedulemode>
@@ -1888,12 +1938,12 @@
           <valuetext></valuetext>
           <valuetype>FIELD</valuetype>
           <initcondition>
-            <formula><![CDATA[isEmpty("AS Aprobador N°1") = 'T']]></formula>
+            <formula><![CDATA[isEmpty("AS Aprobador N°2") = 'T']]></formula>
             <type>VISUAL_BUILDER</type>
             <parameters>
               <parameter>
-                <name>AS Aprobador N°1</name>
-                <value>[scriptid=custbody_as_aprobador_n1]</value>
+                <name>AS Aprobador N°2</name>
+                <value>[scriptid=custbody_as_aprobador_n2]</value>
               </parameter>
             </parameters>
           </initcondition>
@@ -1903,7 +1953,7 @@
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
-          <field>[scriptid=custbody_as_fecha_aprobador_n1]</field>
+          <field>[scriptid=custbody_as_fecha_aprobador_n2]</field>
           <isinactive>F</isinactive>
           <scheduledelay></scheduledelay>
           <schedulemode>DELAY</schedulemode>
@@ -1919,12 +1969,12 @@
           <valuetext></valuetext>
           <valuetype>DATE</valuetype>
           <initcondition>
-            <formula><![CDATA[isEmpty("AS Fecha Aprobación N°1") = 'T']]></formula>
+            <formula><![CDATA[isEmpty("AS Fecha Aprobación N°2") = 'T']]></formula>
             <type>VISUAL_BUILDER</type>
             <parameters>
               <parameter>
-                <name>AS Fecha Aprobación N°1</name>
-                <value>[scriptid=custbody_as_fecha_aprobador_n1]</value>
+                <name>AS Fecha Aprobación N°2</name>
+                <value>[scriptid=custbody_as_fecha_aprobador_n2]</value>
               </parameter>
             </parameters>
           </initcondition>
@@ -2141,7 +2191,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>2315</recipient>
+          <recipient>405823</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -2177,7 +2227,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>2983</recipient>
+          <recipient>406491</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -2468,7 +2518,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>3797</recipient>
+          <recipient>407305</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -2504,7 +2554,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>3884</recipient>
+          <recipient>407393</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -2795,7 +2845,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>3797</recipient>
+          <recipient>407305</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -2831,7 +2881,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>3884</recipient>
+          <recipient>407393</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -3122,7 +3172,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>3797</recipient>
+          <recipient>407305</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -3158,7 +3208,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>3884</recipient>
+          <recipient>407393</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -3382,7 +3432,7 @@
     <workflowstate scriptid="workflowstate441">
       <description></description>
       <donotexitworkflow>F</donotexitworkflow>
-      <name>123000000+ AP 2.3 G3</name>
+      <name>123000000+ AP 2.1.1 G2</name>
       <positionx>683</positionx>
       <positiony>553</positiony>
       <workflowactions triggertype="ONENTRY">
@@ -3428,7 +3478,7 @@
           <valuefield></valuefield>
           <valueformula></valueformula>
           <valuejoinfield></valuejoinfield>
-          <valueselect>[scriptid=customrecord_as_niveles_aprobacion.val_15770511_7115118_sb2_946]</valueselect>
+          <valueselect>[scriptid=customrecord_as_niveles_aprobacion.val_15770510_7115118_sb2_618]</valueselect>
           <valuetext></valuetext>
           <valuetype>STATIC</valuetype>
           <initcondition>
@@ -3449,7 +3499,43 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>2898</recipient>
+          <recipient>407305</recipient>
+          <recipientbccemail></recipientbccemail>
+          <recipientccemail></recipientccemail>
+          <recipientemail></recipientemail>
+          <recipientfield></recipientfield>
+          <recipientjoinfield></recipientjoinfield>
+          <recipienttype>SPECIFIC</recipienttype>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <senderfield>STDUSERUSER</senderfield>
+          <senderjoinfield></senderjoinfield>
+          <sendertype>FIELD</sendertype>
+          <subject></subject>
+          <template>[scriptid=custemailtmpl_3_7115118_sb2_533]</template>
+          <usetemplate>T</usetemplate>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </sendemailaction>
+        <sendemailaction scriptid="workflowaction14002">
+          <attachmentfield></attachmentfield>
+          <attachmentfile></attachmentfile>
+          <attachmentjoinfield></attachmentjoinfield>
+          <attachmenttype>SPECIFIC</attachmenttype>
+          <body></body>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <includeformat></includeformat>
+          <includerecordlink>F</includerecordlink>
+          <includetransaction>F</includetransaction>
+          <isinactive>F</isinactive>
+          <recipient>407393</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -3477,7 +3563,7 @@
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
-          <field>[scriptid=custbody_as_aprobador_n2]</field>
+          <field>[scriptid=custbody_as_aprobador_n3]</field>
           <isinactive>F</isinactive>
           <scheduledelay></scheduledelay>
           <schedulemode>DELAY</schedulemode>
@@ -3493,12 +3579,12 @@
           <valuetext></valuetext>
           <valuetype>FIELD</valuetype>
           <initcondition>
-            <formula><![CDATA[isEmpty("AS Aprobador N°2") = 'T']]></formula>
+            <formula><![CDATA[isEmpty("AS Aprobador N°3") = 'T']]></formula>
             <type>VISUAL_BUILDER</type>
             <parameters>
               <parameter>
-                <name>AS Aprobador N°2</name>
-                <value>[scriptid=custbody_as_aprobador_n2]</value>
+                <name>AS Aprobador N°3</name>
+                <value>[scriptid=custbody_as_aprobador_n3]</value>
               </parameter>
             </parameters>
           </initcondition>
@@ -3508,7 +3594,7 @@
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
-          <field>[scriptid=custbody_as_fecha_aprobador_n2]</field>
+          <field>[scriptid=custbody_as_fecha_aprobador_n3]</field>
           <isinactive>F</isinactive>
           <scheduledelay></scheduledelay>
           <schedulemode>DELAY</schedulemode>
@@ -3524,12 +3610,12 @@
           <valuetext></valuetext>
           <valuetype>DATE</valuetype>
           <initcondition>
-            <formula><![CDATA[isEmpty("AS Fecha Aprobación N°2") = 'T']]></formula>
+            <formula><![CDATA[isEmpty("AS Fecha Aprobación N°3") = 'T']]></formula>
             <type>VISUAL_BUILDER</type>
             <parameters>
               <parameter>
-                <name>AS Fecha Aprobación N°2</name>
-                <value>[scriptid=custbody_as_fecha_aprobador_n2]</value>
+                <name>AS Fecha Aprobación N°3</name>
+                <value>[scriptid=custbody_as_fecha_aprobador_n3]</value>
               </parameter>
             </parameters>
           </initcondition>
@@ -3559,7 +3645,7 @@
               <parameter>
                 <name>AS Niveles de Aprobación OC1</name>
                 <selectrecordtype>[scriptid=customrecord_as_niveles_aprobacion]</selectrecordtype>
-                <value>[scriptid=customrecord_as_niveles_aprobacion.val_15770511_7115118_sb2_946]</value>
+                <value>[scriptid=customrecord_as_niveles_aprobacion.val_15770510_7115118_sb2_618]</value>
               </parameter>
               <parameter>
                 <name>User</name>
@@ -3595,7 +3681,7 @@
               <parameter>
                 <name>AS Niveles de Aprobación OC1</name>
                 <selectrecordtype>[scriptid=customrecord_as_niveles_aprobacion]</selectrecordtype>
-                <value>[scriptid=customrecord_as_niveles_aprobacion.val_15770511_7115118_sb2_946]</value>
+                <value>[scriptid=customrecord_as_niveles_aprobacion.val_15770510_7115118_sb2_618]</value>
               </parameter>
               <parameter>
                 <name>User</name>
@@ -3740,7 +3826,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>2898</recipient>
+          <recipient>406406</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -3964,7 +4050,7 @@
     <workflowstate scriptid="workflowstate443">
       <description></description>
       <donotexitworkflow>F</donotexitworkflow>
-      <name>AP 2.3.1 G3</name>
+      <name>AP 2.1.1 G3</name>
       <positionx>903</positionx>
       <positiony>553</positiony>
       <workflowactions triggertype="ONENTRY">
@@ -4031,7 +4117,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>2898</recipient>
+          <recipient>406406</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -4059,7 +4145,7 @@
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
-          <field>[scriptid=custbody_as_aprobador_n3]</field>
+          <field>[scriptid=custbody_as_aprobador_n4]</field>
           <isinactive>F</isinactive>
           <scheduledelay></scheduledelay>
           <schedulemode>DELAY</schedulemode>
@@ -4075,12 +4161,12 @@
           <valuetext></valuetext>
           <valuetype>FIELD</valuetype>
           <initcondition>
-            <formula><![CDATA[isEmpty("AS Aprobador N°3") = 'T']]></formula>
+            <formula><![CDATA[isEmpty("AS Aprobador N°4") = 'T']]></formula>
             <type>VISUAL_BUILDER</type>
             <parameters>
               <parameter>
-                <name>AS Aprobador N°3</name>
-                <value>[scriptid=custbody_as_aprobador_n3]</value>
+                <name>AS Aprobador N°4</name>
+                <value>[scriptid=custbody_as_aprobador_n4]</value>
               </parameter>
             </parameters>
           </initcondition>
@@ -4090,7 +4176,7 @@
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
-          <field>[scriptid=custbody_as_fecha_aprobador_n3]</field>
+          <field>[scriptid=custbody_as_fecha_aprobador_n4]</field>
           <isinactive>F</isinactive>
           <scheduledelay></scheduledelay>
           <schedulemode>DELAY</schedulemode>
@@ -4106,12 +4192,12 @@
           <valuetext></valuetext>
           <valuetype>DATE</valuetype>
           <initcondition>
-            <formula><![CDATA[isEmpty("AS Fecha Aprobación N°3") = 'T']]></formula>
+            <formula><![CDATA[isEmpty("AS Fecha Aprobación N°4") = 'T']]></formula>
             <type>VISUAL_BUILDER</type>
             <parameters>
               <parameter>
-                <name>AS Fecha Aprobación N°3</name>
-                <value>[scriptid=custbody_as_fecha_aprobador_n3]</value>
+                <name>AS Fecha Aprobación N°4</name>
+                <value>[scriptid=custbody_as_fecha_aprobador_n4]</value>
               </parameter>
             </parameters>
           </initcondition>
@@ -4322,7 +4408,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>3797</recipient>
+          <recipient>407305</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -4358,7 +4444,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>3884</recipient>
+          <recipient>407393</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -4661,12 +4747,37 @@
             <type>VISUAL_BUILDER</type>
           </initcondition>
         </setfieldvalueaction>
-        <setfieldvalueaction scriptid="workflowaction13981">
+        <setfieldvalueaction scriptid="workflowaction14005">
           <clienttriggerfields></clienttriggerfields>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
           <field>[scriptid=custbody_as_aprobador_n4]</field>
+          <isinactive>F</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield></valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>STATIC</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+        <setfieldvalueaction scriptid="workflowaction13981">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=custbody_as_ultimo_aprobador]</field>
           <isinactive>F</isinactive>
           <scheduledelay></scheduledelay>
           <schedulemode>DELAY</schedulemode>
@@ -4761,12 +4872,37 @@
             <type>VISUAL_BUILDER</type>
           </initcondition>
         </setfieldvalueaction>
-        <setfieldvalueaction scriptid="workflowaction13985">
+        <setfieldvalueaction scriptid="workflowaction14006">
           <clienttriggerfields></clienttriggerfields>
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
           <field>[scriptid=custbody_as_fecha_aprobador_n4]</field>
+          <isinactive>F</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield></valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>STATIC</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+        <setfieldvalueaction scriptid="workflowaction13985">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=custbody_as_ultimo_fecha_aprobador]</field>
           <isinactive>F</isinactive>
           <scheduledelay></scheduledelay>
           <schedulemode>DELAY</schedulemode>
@@ -4796,6 +4932,281 @@
           <scheduledelay></scheduledelay>
           <scheduletimeunit></scheduletimeunit>
           <tostate>[scriptid=customworkflow2_2_4_2.workflowstate15]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </workflowtransition>
+      </workflowtransitions>
+    </workflowstate>
+    <workflowstate scriptid="workflowstate13800">
+      <description></description>
+      <donotexitworkflow>F</donotexitworkflow>
+      <name>123000000+ AP 2 G1</name>
+      <positionx>163</positionx>
+      <positiony>553</positiony>
+      <workflowactions triggertype="ONENTRY">
+        <setfieldvalueaction scriptid="workflowaction13994">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow2_2_4_2.custworkflow2_2_4_2]</field>
+          <isinactive>F</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDUSERUSER</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+        <setfieldvalueaction scriptid="workflowaction13995">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=custbody_as_siguiente_nivel_aprobacion]</field>
+          <isinactive>F</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield></valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect>[scriptid=customrecord_as_niveles_aprobacion.val_15770509_7115118_sb2_447]</valueselect>
+          <valuetext></valuetext>
+          <valuetype>STATIC</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+        <sendemailaction scriptid="workflowaction13996">
+          <attachmentfield></attachmentfield>
+          <attachmentfile></attachmentfile>
+          <attachmentjoinfield></attachmentjoinfield>
+          <attachmenttype>SPECIFIC</attachmenttype>
+          <body></body>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <includeformat></includeformat>
+          <includerecordlink>F</includerecordlink>
+          <includetransaction>F</includetransaction>
+          <isinactive>F</isinactive>
+          <recipient>406491</recipient>
+          <recipientbccemail></recipientbccemail>
+          <recipientccemail></recipientccemail>
+          <recipientemail></recipientemail>
+          <recipientfield></recipientfield>
+          <recipientjoinfield></recipientjoinfield>
+          <recipienttype>SPECIFIC</recipienttype>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <senderfield>STDUSERUSER</senderfield>
+          <senderjoinfield></senderjoinfield>
+          <sendertype>FIELD</sendertype>
+          <subject></subject>
+          <template>[scriptid=custemailtmpl_3_7115118_sb2_533]</template>
+          <usetemplate>T</usetemplate>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </sendemailaction>
+        <sendemailaction scriptid="workflowaction13997">
+          <attachmentfield></attachmentfield>
+          <attachmentfile></attachmentfile>
+          <attachmentjoinfield></attachmentjoinfield>
+          <attachmenttype>SPECIFIC</attachmenttype>
+          <body></body>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <includeformat></includeformat>
+          <includerecordlink>F</includerecordlink>
+          <includetransaction>F</includetransaction>
+          <isinactive>F</isinactive>
+          <recipient>405823</recipient>
+          <recipientbccemail></recipientbccemail>
+          <recipientccemail></recipientccemail>
+          <recipientemail></recipientemail>
+          <recipientfield></recipientfield>
+          <recipientjoinfield></recipientjoinfield>
+          <recipienttype>SPECIFIC</recipienttype>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <senderfield>STDUSERUSER</senderfield>
+          <senderjoinfield></senderjoinfield>
+          <sendertype>FIELD</sendertype>
+          <subject></subject>
+          <template>[scriptid=custemailtmpl_3_7115118_sb2_533]</template>
+          <usetemplate>T</usetemplate>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </sendemailaction>
+        <setfieldvalueaction scriptid="workflowaction13998">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=custbody_as_aprobador_n1]</field>
+          <isinactive>F</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDUSERUSER</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+        <setfieldvalueaction scriptid="workflowaction13999">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=custbody_as_fecha_aprobador_n1]</field>
+          <isinactive>F</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate>TODAY</valuedate>
+          <valuefield></valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>DATE</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
+      <workflowactions triggertype="BEFORELOAD">
+        <addbuttonaction scriptid="workflowaction14000">
+          <checkconditionbeforeexecution>T</checkconditionbeforeexecution>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <isinactive>F</isinactive>
+          <label>Aceptar</label>
+          <saverecordfirst>F</saverecordfirst>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </addbuttonaction>
+        <addbuttonaction scriptid="workflowaction14001">
+          <checkconditionbeforeexecution>T</checkconditionbeforeexecution>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <isinactive>F</isinactive>
+          <label>Rechazar</label>
+          <saverecordfirst>F</saverecordfirst>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </addbuttonaction>
+      </workflowactions>
+      <workflowtransitions>
+        <workflowtransition scriptid="workflowtransition391">
+          <buttonaction>[scriptid=customworkflow2_2_4_2.workflowstate13800.workflowaction14000]</buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4_2.workflowstate435]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula><![CDATA["Total" > 123000000.00]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+            </parameters>
+          </initcondition>
+        </workflowtransition>
+        <workflowtransition scriptid="workflowtransition392">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4_2.workflowstate13799]</tostate>
+          <triggertype>AFTERSUBMIT</triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula><![CDATA["Total" != "AS Importe Total"]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Total</name>
+                <value>STDBODYTOTAL</value>
+              </parameter>
+              <parameter>
+                <name>AS Importe Total</name>
+                <value>[scriptid=custbody_as_importe_total]</value>
+              </parameter>
+            </parameters>
+          </initcondition>
+        </workflowtransition>
+        <workflowtransition scriptid="workflowtransition393">
+          <buttonaction>[scriptid=customworkflow2_2_4_2.workflowstate13800.workflowaction14001]</buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow2_2_4_2.workflowstate17]</tostate>
           <triggertype></triggertype>
           <waitforworkflow></waitforworkflow>
           <waitforworkflowstate></waitforworkflowstate>
