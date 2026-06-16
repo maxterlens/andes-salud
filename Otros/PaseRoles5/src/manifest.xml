@@ -1,0 +1,64 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>PaseRoles5</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="false">SUBSIDIARIES</feature>
+      <feature required="false">WEBSERVICES</feature>
+      <feature required="true">MULTIBOOK</feature>
+    </features>
+    <objects>
+      <object>customrecord_ncfar_asset</object>
+      <object>customrecord_4601_witaxconfiguration</object>
+      <object>customrecord_2w_dte_folios</object>
+      <object>customtransaction_fam_disp_jrn</object>
+      <object>customrecord_ncfar_transferaccounts</object>
+      <object>customtransaction_fam_revaluation_jrn</object>
+      <!--<object>customtransaction_2w_fondo_fijo_empleado</object>-->
+      <object>customrecord_ph4014_wtax_jrnl_type</object>
+      <object>customrecord_4601_groupedwitaxcode</object>
+      <object>customtransaction_fam_depr_jrn</object>
+      <object>customrecord_4601_witaxsetup</object>
+      <object>customtransaction_fam_specialdepr_jrn</object>
+      <object>customrecord_ecsl_audit_trail_dtl</object>
+      <object>customrecord_ncfar_altmethods</object>
+      <object>customrecord_scm_ecn_eco_type</object>
+      <object>customrecord_2663_entity_bank_details</object>
+      <object>customrecord_scm_ecn_engr_change_order</object>
+      <object>customrecord_online_filing</object>
+      <object>customrecord_ncfar_deprhistory</object>
+      <object>customrecord_bg_queueinstance</object>
+      <object>customrecord_scm_ecn_implement_eco_log</object>
+      <object>customrecord_filing_config</object>
+      <object>customrecord_ncfar_deprmethod</object>
+      <object>customrecord_ph4014_wtax_type_d</object>
+      <object>customrecord_4601_witaxcode</object>
+      <object>customrecord_bg_procinstance</object>
+      <object>customrecord_filing_authorization</object>
+      <object>customrecord_ecsl_audit_trail_hdr</object>
+      <object>customrecord_2w_as_prefactura_detalles</object>
+      <object>customrecord_repairmaintcategory</object>
+      <object>customrecord_ncfar_altdepr_proposal</object>
+      <object>customrecord_tax_return_setup_item</object>
+      <object>customrecord_ncfar_altdepreciation</object>
+      <object>customrecord_ph4014_wtax_type_kind</object>
+      <object>customrecord_2w_as_prefactura</object>
+      <object>customrecord_ncfar_assetproposal</object>
+      <object>customrecord_fam_tpaf_mapping</object>
+      <object>customrecord_vatonline_submittedperiod</object>
+      <object>customrecord_ncfar_altdeprdef</object>
+      <object>customrecord2w_registro_inversiones</object>
+      <object>customtransaction_fam_transfer_jrn</object>
+      <object>customrecord_bg_proclog</object>
+      <object>customrecord_filing_template</object>
+      <object>customrecord_4601_witaxtype</object>
+    </objects>
+    <!--<applications>
+      <application id="com.netsuite.smartcount">
+        <objects>
+          <object>customrecord_sc_item_count_details</object>
+        </objects>
+      </application>
+    </applications>-->
+  </dependencies>
+</manifest>

@@ -1,0 +1,43 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>PaseWorkFlow2</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="false">PERIODENDJOURNALENTRIES</feature>
+      <feature required="false">EXPREPORTS</feature>
+      <feature required="false">ADVRECEIVING</feature>
+      <feature required="false">MULTILOCINVT</feature>
+      <feature required="true">WORKFLOW</feature>
+      <feature required="false">INVENTORY</feature>
+      <feature required="false">OPPORTUNITIES</feature>
+      <feature required="false">CUSTOMTRANSACTIONS</feature>
+      <feature required="false">RECEIVABLES</feature>
+      <feature required="false">ACCOUNTING</feature>
+      <feature required="false">PAYABLES</feature>
+      <feature required="true">PURCHASEORDERS</feature>
+    </features>
+    <objects>
+      <object>custemailtmpl_3_7115118_sb2_533</object>
+      <object>custentity_as_nivel_aprobacion</object>
+      <object>custbody_as_siguiente_nivel_aprobacion</object>
+      <object>customrecord_as_niveles_aprobacion.val_15770513_7115118_sb2_768</object>
+      <object>customrecord_as_niveles_aprobacion.val_15770510_7115118_sb2_618</object>
+      <object>customrecord_as_niveles_aprobacion.val_15770509_7115118_sb2_447</object>
+      <object>customrecord_as_niveles_aprobacion</object>
+      <object>custbody_as_fecha_aprobador_n1</object>
+      <object>custbody_as_fecha_aprobador_n2</object>
+      <object>custbody_as_fecha_aprobador_n3</object>
+      <object>custbody_as_fecha_aprobador_n4</object>
+      <object>custbody_as_ultimo_fecha_aprobador</object>
+      <object>custbody_as_aprobador_n1</object>
+      <object>custbody_as_aprobador_n2</object>
+      <object>custbody_as_aprobador_n3</object>
+      <object>custbody_as_aprobador_n4</object>
+      <object>custbody_as_ultimo_aprobador</object>                  
+      <object>customrecord_as_niveles_aprobacion.val_15770511_7115118_sb2_946</object>
+      <object>custbody_as_ultimo_aprobador</object>
+      <object>custbody_as_importe_total</object>
+      <object>custform_233_7115118_sb2_196</object>
+    </objects>
+  </dependencies>
+</manifest>

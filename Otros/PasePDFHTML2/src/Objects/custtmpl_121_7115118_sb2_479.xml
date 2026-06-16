@@ -1,0 +1,9 @@
+<advancedpdftemplate scriptid="custtmpl_121_7115118_sb2_479" standard="STDTMPLEMPTY">
+  <description></description>
+  <displaysourcecode>T</displaysourcecode>
+  <isinactive>F</isinactive>
+  <preferred>F</preferred>
+  <printtype>TRANSACTION</printtype>
+  <title>Standard Purchase PDF/HTML Template 2</title>
+  <trantype>PURCHORD</trantype>
+</advancedpdftemplate>
