@@ -1,6 +1,5 @@
 <customrecordtype scriptid="customrecord_as_niveles_aprobacion">
   <accesstype>NONENEEDED</accesstype>
-  <aidescription></aidescription>
   <allowattachments>T</allowattachments>
   <allowinlinedeleting>F</allowinlinedeleting>
   <allowinlinedetaching>T</allowinlinedetaching>
@@ -19,7 +18,6 @@
   <enablenumbering>F</enablenumbering>
   <enableoptimisticlocking>T</enableoptimisticlocking>
   <enablesystemnotes>T</enablesystemnotes>
-  <externalrolepermissionlevel>NONE</externalrolepermissionlevel>
   <hierarchical>F</hierarchical>
   <icon></icon>
   <iconbuiltin>T</iconbuiltin>
@@ -32,7 +30,6 @@
   <numberingmindigits></numberingmindigits>
   <numberingprefix></numberingprefix>
   <numberingsuffix></numberingsuffix>
-  <publicpermissionlevel>NONE</publicpermissionlevel>
   <recordname>AS Niveles de Aprobación OC</recordname>
   <showcreationdate>F</showcreationdate>
   <showcreationdateonlist>F</showcreationdateonlist>
@@ -46,7 +43,6 @@
   <customrecordcustomfields>
     <customrecordcustomfield scriptid="custrecord_as_nivel_aprb_grupo_aprobacio">
       <accesslevel>2</accesslevel>
-      <aidescription></aidescription>
       <allowquickadd>F</allowquickadd>
       <applyformatting>F</applyformatting>
       <checkspelling>F</checkspelling>
@@ -58,7 +54,6 @@
       <displaytype>NORMAL</displaytype>
       <displaywidth></displaywidth>
       <dynamicdefault></dynamicdefault>
-      <enabletextenhance>F</enabletextenhance>
       <encryptatrest>F</encryptatrest>
       <fieldtype>SELECT</fieldtype>
       <globalsearch>F</globalsearch>
@@ -87,7 +82,6 @@
     </customrecordcustomfield>
     <customrecordcustomfield scriptid="custrecord_as_nivel_aprb_aprobadores">
       <accesslevel>2</accesslevel>
-      <aidescription></aidescription>
       <allowquickadd>F</allowquickadd>
       <applyformatting>F</applyformatting>
       <checkspelling>F</checkspelling>
@@ -99,7 +93,6 @@
       <displaytype>NORMAL</displaytype>
       <displaywidth></displaywidth>
       <dynamicdefault></dynamicdefault>
-      <enabletextenhance>F</enabletextenhance>
       <encryptatrest>F</encryptatrest>
       <fieldtype>MULTISELECT</fieldtype>
       <globalsearch>F</globalsearch>

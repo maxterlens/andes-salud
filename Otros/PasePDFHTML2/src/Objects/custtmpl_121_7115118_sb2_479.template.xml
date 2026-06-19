@@ -422,18 +422,20 @@
 <table class="itemtable">
 <thead>
 <tr>
-<th class="text-center" colspan="3">Cantidad</th>
-<th colspan="10">Artículo / Detalle</th>
-<th colspan="4">Ubicación</th>
-<th class="text-right" colspan="4">Valor unitario</th>
+<th class="text-center" colspan="2">Cantidad</th>
+<th colspan="9">Artículo / Detalle</th>
+<th colspan="4">Cód. UPC</th>
+<th colspan="3">Ubicación</th>
+<th class="text-right" colspan="3">Valor unitario</th>
 <th class="text-right" colspan="3">Importe</th>
 </tr>
 </thead>
 <#list record.item as item><tr>
-<td class="text-center" colspan="3"><span style="font-size: 8pt;">${item.quantity}</span></td>
-<td colspan="10"><span class="itemname" style="font-size: 8pt;">${item.item}</span> <#if item.description?has_content> <br /><span class="itemdesc">${item.description}</span> </#if> <#if (item.options!'')?has_content> <br /><span class="itemmeta"><strong><span style="font-size: 8pt;">Detalle</span>:</strong> ${item.options}</span> </#if></td>
-<td class="location-cell" colspan="4"><#if (item.location!'')?has_content> <span class="itemlocation">${item.location}</span> <#elseif (record.location!'')?has_content> <span class="itemlocation">${record.location}</span> <#else> <span class="itemlocation">No informado</span> </#if></td>
-<td class="text-right" colspan="4"><span style="font-size: 8pt;">${item.rate}</span></td>
+<td class="text-center" colspan="2"><span style="font-size: 8pt;">${item.quantity}</span></td>
+<td colspan="9"><p style="text-align:left;"><span class="itemname" style="font-size: 8pt;">${item.item}</span> <#if item.description?has_content> <br /><span class="itemdesc">${item.description}</span> </#if> <#if (item.options!'')?has_content> <br /><span class="itemmeta"><strong><span style="font-size: 8pt;">Detalle</span>:</strong> ${item.options}</span> </#if></p></td>
+<td colspan="4"><#if item.item.custitem_as_codigo_upc?has_content><span style="font-size: 8pt;">${item.custcol_as_codigo_upc_linea}</span><#else><span class="itemdesc">—</span></#if></td>
+<td class="location-cell" colspan="3"><p style="text-align:left;"><#if (item.location!'')?has_content> <span class="itemlocation">${item.location}</span> <#elseif (record.location!'')?has_content> <span class="itemlocation">${record.location}</span> <#else> <span class="itemlocation">No informado</span> </#if></p></td>
+<td class="text-right" colspan="3"><span style="font-size: 8pt;">${item.rate}</span></td>
 <td class="text-right" colspan="3"><span style="font-size: 8pt;">${item.amount}</span></td>
 </tr>
 </#list></table>

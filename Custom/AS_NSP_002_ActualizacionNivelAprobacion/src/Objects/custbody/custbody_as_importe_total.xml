@@ -1,6 +1,5 @@
 <transactionbodycustomfield scriptid="custbody_as_importe_total">
   <accesslevel>2</accesslevel>
-  <aidescription></aidescription>
   <applyformatting>T</applyformatting>
   <bodycustomerpayment>F</bodycustomerpayment>
   <bodycustomtransactions></bodycustomtransactions>
@@ -24,7 +23,6 @@
   <bodysale>F</bodysale>
   <bodytransferorder>F</bodytransferorder>
   <bodyvendorpayment>F</bodyvendorpayment>
-  <bodyvendorprepayment>F</bodyvendorprepayment>
   <checkspelling>F</checkspelling>
   <defaultchecked>F</defaultchecked>
   <defaultselection></defaultselection>
@@ -34,7 +32,6 @@
   <displaytype>NORMAL</displaytype>
   <displaywidth></displaywidth>
   <dynamicdefault></dynamicdefault>
-  <enabletextenhance>F</enabletextenhance>
   <encryptatrest>F</encryptatrest>
   <fieldtype>CURRENCY</fieldtype>
   <fldsizelabel></fldsizelabel>

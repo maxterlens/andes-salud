@@ -1,7 +1,8 @@
 /**
  * @NApiVersion 2.1
  * @module ASMotorTransformacionService
- * @description Motor de transformación de recepciones a facturas de compra.
+ * @description Motor de transformación a facturas de compra.
+ *              Soporta dos flujos: desde recepción (itemreceipt) y desde OC directa (purchaseorder).
  *
  *              Flujo de transformación:
  *              1. Obtiene la Orden de Compra asociada a la recepción (createdfrom)
@@ -223,7 +224,53 @@ define([
         return nuevaFacturaId;
     }
 
+    /**
+     * Genera una factura de compra directamente desde la OC, sin recepción asociada.
+     * Incluye todas las líneas item y expense que NetSuite permite facturar en ese momento.
+     * El estado de aprobación se fija en Pendiente de Aprobación (1).
+     *
+     * @param   {string|number} ocId                 - Internal ID de la Orden de Compra
+     * @param   {string|number} facturaOrigenId      - Internal ID de la factura del CSV (vendorbill)
+     * @param   {string}        facturaOrigenTranId  - TranId de la factura del CSV
+     * @returns {string}                              Internal ID de la nueva factura guardada
+     * @throws  {Error}  Si el transform falla o el guardado falla
+     */
+    function transformarOcAFactura(ocId, facturaOrigenId, facturaOrigenTranId) {
+        // 1. Transform OC → vendorbill (todas las líneas que NetSuite permita facturar)
+        var nuevaFactura = record.transform({
+            fromType:  C.TIPOS_TRANSACCION.ORDEN_COMPRA,
+            fromId:    ocId,
+            toType:    C.TIPOS_TRANSACCION.FACTURA_COMPRA,
+            isDynamic: true,
+        });
+
+        // 2. Copiar campos de cabecera desde la factura del CSV
+        var camposCabecera = FacturaCompraRepo.obtenerCamposCabecera(facturaOrigenId);
+        _copiarCamposCabecera(nuevaFactura, camposCabecera);
+
+        // 3. Forma de pago: aplicar valor por defecto si vino vacío del CSV
+        var formaPago = nuevaFactura.getValue({ fieldId: 'custbody_2w_forma_pago' });
+        if (!formaPago) {
+            nuevaFactura.setValue({ fieldId: 'custbody_2w_forma_pago', value: C.DEFAULTS_FACTURA_NUEVA.FORMA_PAGO });
+        }
+
+        // 4. Marcar como Pendiente de Aprobación
+        nuevaFactura.setValue({ fieldId: 'approvalstatus', value: C.DEFAULTS_FACTURA_NUEVA.APPROVAL_STATUS_PENDIENTE });
+
+        // 5. Guardar la nueva factura
+        var nuevaFacturaId = String(nuevaFactura.save({
+            enableSourcing:        false,
+            ignoreMandatoryFields: false,
+        }));
+
+        // 6. Actualizar el tranid con el de la factura del CSV
+        FacturaCompraRepo.actualizarTranId(nuevaFacturaId, facturaOrigenTranId);
+
+        return nuevaFacturaId;
+    }
+
     return {
         transformarRecepcionAFactura,
+        transformarOcAFactura,
     };
 });

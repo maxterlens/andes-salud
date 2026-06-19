@@ -1,4 +1,9 @@
 <manifest projecttype="ACCOUNTCUSTOMIZATION">
   <projectname>PasePDFHTML2</projectname>
   <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="true">ADVANCEDPRINTING</feature>
+    </features>
+  </dependencies>
 </manifest>

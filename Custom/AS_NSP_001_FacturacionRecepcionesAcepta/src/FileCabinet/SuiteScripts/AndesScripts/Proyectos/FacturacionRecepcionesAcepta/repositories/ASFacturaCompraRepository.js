@@ -145,7 +145,6 @@ define([
             values: { tranid: facturaOrigenTranId },
             options: {
                 enableSourcing:        false,
-                disableTriggers:       true,
                 ignoreMandatoryFields: true,
             },
         });

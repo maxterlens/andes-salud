@@ -4,7 +4,6 @@
   <description></description>
   <isinactive>F</isinactive>
   <isprivate>F</isprivate>
-  <mediaitem></mediaitem>
   <name>Correo Notificación Orden de Compra</name>
   <recordtype>TRANSACTION</recordtype>
   <subject>Aprobación de OC</subject>

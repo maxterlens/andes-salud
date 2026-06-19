@@ -52,7 +52,7 @@ define(['N/record', 'N/search', 'N/query', 'N/log'], (record, search, query, log
                 search.createColumn({ name: 'recordtype' }),
                 search.createColumn({ name: 'entity' }),
                 search.createColumn({ name: 'account' }),
-                search.createColumn({ name: 'status' })
+                search.createColumn({ name: 'statusref' })
             ]
         });
 
@@ -61,7 +61,7 @@ define(['N/record', 'N/search', 'N/query', 'N/log'], (record, search, query, log
                 recordtype: result.getValue({ name: 'recordtype' }),
                 entity: result.getValue({ name: 'entity' }) || '',
                 account: result.getValue({ name: 'account' }) || '',
-                status: result.getValue({ name: 'status' }) || ''
+                status: result.getValue({ name: 'statusref' }) || ''
             };
             return true;
         });

@@ -1,6 +1,5 @@
 <entitycustomfield scriptid="custentity_as_nivel_aprobacion">
   <accesslevel>2</accesslevel>
-  <aidescription></aidescription>
   <appliestocontact>F</appliestocontact>
   <appliestocustomer>F</appliestocustomer>
   <appliestoemployee>T</appliestoemployee>
@@ -26,7 +25,6 @@
   <displaytype>NORMAL</displaytype>
   <displaywidth></displaywidth>
   <dynamicdefault></dynamicdefault>
-  <enabletextenhance>F</enabletextenhance>
   <encryptatrest>F</encryptatrest>
   <fieldtype>SELECT</fieldtype>
   <globalsearch>F</globalsearch>

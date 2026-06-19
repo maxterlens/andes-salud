@@ -34,6 +34,7 @@ define([], function () {
     var FIELDS_DETALLE = {
         CABECERA:              'custrecord_as_det_ctrl_carga_cabecera',
         RECEPCION:             'custrecord_as_det_ctrl_carga_recepcion',
+        ORDEN_COMPRA:          'custrecord_as_det_ctrl_carga_orden_com',
         FACTURA_ACEPTA_ORIGEN: 'custrecord_as_det_ctrl_carga_fact_ac_ori',
         FACTURA_NUEVA:         'custrecord_as_det_ctrl_carga_fact_nueva',
         ESTADO:                'custrecord_as_det_ctrl_carga_estado',
@@ -91,12 +92,23 @@ define([], function () {
      */
     var CAMPO_IMPORTE_LINEA = 'rate';
 
+    /**
+     * Tipos de proceso soportados por el Map/Reduce.
+     * Determinan el formato del CSV y el flujo de transformación a ejecutar.
+     */
+    var TIPOS_PROCESO = {
+        RECEPCION:  'RECEPCION',
+        OC_DIRECTA: 'OC_DIRECTA',
+    };
+
     /** Valores por defecto aplicados a la nueva factura generada desde la recepción */
     var DEFAULTS_FACTURA_NUEVA = {
         /** Forma de pago aplicada cuando el campo viene vacío desde la factura del CSV (2 = Crédito) */
         FORMA_PAGO: '2',
-        /** Estado de aprobación de la nueva factura (2 = Aprobada) */
+        /** Estado de aprobación para facturas generadas desde recepción (2 = Aprobada) */
         APPROVAL_STATUS: '2',
+        /** Estado de aprobación para facturas generadas directamente desde OC (1 = Pendiente de aprobación) */
+        APPROVAL_STATUS_PENDIENTE: '1',
     };
 
     return {
@@ -105,6 +117,7 @@ define([], function () {
         FIELDS_DETALLE:           FIELDS_DETALLE,
         ESTADOS:                  ESTADOS,
         TIPOS_TRANSACCION:        TIPOS_TRANSACCION,
+        TIPOS_PROCESO:            TIPOS_PROCESO,
         CAMPOS_CABECERA_A_COPIAR: CAMPOS_CABECERA_A_COPIAR,
         CAMPO_IMPORTE_LINEA:      CAMPO_IMPORTE_LINEA,
         DEFAULTS_FACTURA_NUEVA:   DEFAULTS_FACTURA_NUEVA,
