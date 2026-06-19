@@ -82,14 +82,10 @@ define([
         form.clientScriptModulePath = '../clients/AS_ActionButtons_CLNT_2.1.js'
     }
 
-    const agregarColumnaStockDisponible = (context) => {
-        
-    }
 
     // ─── Triggers (índice público) ───────────────────────────────────────────
 
     return { 
-        agregarBotonAsignacionLote,
-        agregarColumnaStockDisponible
+        agregarBotonAsignacionLote
     };
 });
