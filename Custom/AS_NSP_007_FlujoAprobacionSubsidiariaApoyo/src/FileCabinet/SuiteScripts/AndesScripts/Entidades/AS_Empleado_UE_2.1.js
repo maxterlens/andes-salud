@@ -4,30 +4,39 @@
  * @NModuleScope SameAccount
  *
  * User Event Script — Empleado
- * Detecta cambios en custentity_as_nivel_aprobacion y actualiza el record
- * customrecord_as_niveles_aprobacion correspondiente.
+ * Gestiona la sublista de niveles de aprobación OC por subsidiaria y
+ * sincroniza el campo custentity_as_nivel_aprobacion con los registros
+ * customrecord_as_niveles_aprobacion correspondientes.
  *
- * Triggers: beforeSubmit / afterSubmit (CREATE / EDIT)
+ * Triggers: beforeLoad / beforeSubmit / afterSubmit (CREATE / EDIT / VIEW)
  */
 define([
     './handlers/EmpleadoHandler'
 ], (EmpleadoHandler) => {
 
+    const beforeLoad = (context) => {
+        try {
+            EmpleadoHandler.renderizarSublistaDeNivelesAprobacion(context);
+        } catch (e) {
+            log.error('An error occurred in [beforeLoad]', e);
+        }
+    };
+
     const beforeSubmit = (context) => {
         try {
-            EmpleadoHandler.limpiarNivelAprobacionAlInactivar(context);
+            EmpleadoHandler.procesarNivelesAprobacionAntesDeGuardar(context);
         } catch (e) {
-            log.error('An error was ocurred in [beforeSubmit]', e);
+            log.error('An error occurred in [beforeSubmit]', e);
         }
-    }
+    };
 
-    const afterSubmit  = (context) => {
+    const afterSubmit = (context) => {
         try {
-            EmpleadoHandler.sincronizarNivelAprobacionAlCambiar(context);
+            EmpleadoHandler.sincronizarAprobadoresEnNivelesAprobacion(context);
         } catch (e) {
-            log.error('An error was ocurred in [afterSubmit]', e);
+            log.error('An error occurred in [afterSubmit]', e);
         }
-    }
+    };
 
-    return { beforeSubmit, afterSubmit };
+    return { beforeLoad, beforeSubmit, afterSubmit };
 });

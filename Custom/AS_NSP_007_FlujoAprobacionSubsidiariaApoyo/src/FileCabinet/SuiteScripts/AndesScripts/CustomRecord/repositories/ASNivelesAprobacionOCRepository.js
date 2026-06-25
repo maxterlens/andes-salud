@@ -5,10 +5,12 @@
  * Repositorio para customrecord_as_niveles_aprobacion.
  * Gestiona el campo MULTISELECT custrecord_as_nivel_aprb_aprobadores.
  */
-define(['N/record', 'N/log'], (record, log) => {
+define(['N/record', 'N/search', 'N/log'], (record, search, log) => {
 
-    const RECORD_TYPE = 'customrecord_as_niveles_aprobacion';
+    const RECORD_TYPE       = 'customrecord_as_niveles_aprobacion';
     const FIELD_APROBADORES = 'custrecord_as_nivel_aprb_aprobadores';
+    const FIELD_SUBSIDIARIA = 'custrecord_as_nivel_aprb_subsidiaria';
+    const FIELD_GRUPO       = 'custrecord_as_nivel_aprb_grupo_aprobacio';
 
     /**
      * Agrega un empleado al campo aprobadores de un nivel de aprobación.
@@ -68,5 +70,35 @@ define(['N/record', 'N/log'], (record, log) => {
         });
     };
 
-    return { addAprobador, removeAprobador };
+    /**
+     * Devuelve todos los registros activos de niveles de aprobación con
+     * sus campos de subsidiaria y grupo de aprobación.
+     *
+     * @returns {Array<{ id: string, subsidiariaId: string, subsidiariaNombre: string, grupoId: string, grupoNombre: string }>}
+     */
+    const obtenerTodosActivos = () => {
+        const resultados = [];
+
+        search.create({
+            type: RECORD_TYPE,
+            filters: [['isinactive', 'is', false]],
+            columns: [
+                search.createColumn({ name: FIELD_SUBSIDIARIA }),
+                search.createColumn({ name: FIELD_GRUPO })
+            ]
+        }).run().each((result) => {
+            resultados.push({
+                id:                result.id,
+                subsidiariaId:     result.getValue({ name: FIELD_SUBSIDIARIA }),
+                subsidiariaNombre: result.getText({ name: FIELD_SUBSIDIARIA }),
+                grupoId:           result.getValue({ name: FIELD_GRUPO }),
+                grupoNombre:       result.getText({ name: FIELD_GRUPO })
+            });
+            return true;
+        });
+
+        return resultados;
+    };
+
+    return { addAprobador, removeAprobador, obtenerTodosActivos };
 });
