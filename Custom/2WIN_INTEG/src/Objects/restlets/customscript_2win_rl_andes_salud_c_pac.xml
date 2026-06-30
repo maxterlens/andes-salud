@@ -1,0 +1,22 @@
+<restlet scriptid="customscript_2win_rl_andes_salud_c_pac">
+  <description>RESTlet para carga masiva de pacientes desde Andes Salud</description>
+  <isinactive>F</isinactive>
+  <name>2Win RL AS Carga Masiva Pacientes</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/2win_andes_salud_interfases/interfaces/2win_rl_andes_salud_carga_masiva_pacientes.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_rl_andes_salud_c_pac">
+      <allemployees>T</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
+      <isdeployed>T</isdeployed>
+      <loglevel>ERROR</loglevel>
+      <status>RELEASED</status>
+      <title>2Win RL AS Carga Masiva Pacientes</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</restlet>

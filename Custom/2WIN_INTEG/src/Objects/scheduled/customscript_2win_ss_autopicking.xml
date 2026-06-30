@@ -1,0 +1,24 @@
+<scheduledscript scriptid="customscript_2win_ss_autopicking">
+  <description>Script programado para procesar la cola de autopicking de órdenes de venta de forma asíncrona. Se ejecuta bajo demanda mediante task.create().</description>
+  <isinactive>F</isinactive>
+  <name>2Win SS Autopicking</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/2win_andes_salud_interfases/scheduled/2win_ss_autopicking_processor.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_ss_autopicking">
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <status>NOTSCHEDULED</status>
+      <title>2Win SS Autopicking</title>
+      <recurrence>
+        <single>
+          <repeat></repeat>
+          <startdate>2026-03-10</startdate>
+          <starttime>21:00:00Z</starttime>
+        </single>
+      </recurrence>
+    </scriptdeployment>
+  </scriptdeployments>
+</scheduledscript>

@@ -1,0 +1,24 @@
+<scheduledscript scriptid="customscript3157">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>Autopicking One</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/2win_andes_salud_interfases/scheduled/2win_ss_autopicking_one.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy1">
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <status>NOTSCHEDULED</status>
+      <title>Autopicking One</title>
+      <recurrence>
+        <single>
+          <repeat></repeat>
+          <startdate>2026-06-23</startdate>
+          <starttime>22:00:00Z</starttime>
+        </single>
+      </recurrence>
+    </scriptdeployment>
+  </scriptdeployments>
+</scheduledscript>

@@ -1,0 +1,25 @@
+<scheduledscript scriptid="customscript_2win_ss_precarga_pos">
+  <description>Script programado para pre-cargar listas tales como subsidiarias, ubicaciones, entre otros, para optimizar los procesos de pos farmacia.</description>
+  <isinactive>F</isinactive>
+  <name>2Win SS Precarga Por Farmacia</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/2win_andes_salud_interfases/scheduled/2win_ss_precarga_pos_farmacia.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_ss_precarga_pos">
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <status>SCHEDULED</status>
+      <title>2Win SS Precarga Por Farmacia</title>
+      <recurrence>
+        <daily>
+          <everyxdays>1</everyxdays>
+          <repeat>PT15M</repeat>
+          <startdate>2026-04-15</startdate>
+          <starttime>04:00:00Z</starttime>
+        </daily>
+      </recurrence>
+    </scriptdeployment>
+  </scriptdeployments>
+</scheduledscript>

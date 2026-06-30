@@ -1,0 +1,22 @@
+<restlet scriptid="customscript_2win_rl_andes_salud_edit_pf">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>2Win RL Andes Salud Editar Prefactura</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/2win_andes_salud_interfases/interfaces/2win_rl_andes_salud_editar_prefactura.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_rl_andes_salud_edit_pf">
+      <allemployees>F</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>F</allroles>
+      <audslctrole></audslctrole>
+      <isdeployed>T</isdeployed>
+      <loglevel>ERROR</loglevel>
+      <status>RELEASED</status>
+      <title>2Win RL Andes Salud Editar Prefactura</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</restlet>

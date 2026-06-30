@@ -1,0 +1,22 @@
+<restlet scriptid="customscript_2win_rl_andessalud_devoluci">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>2Win Andes Salud Devolucion</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/2win_andes_salud_interfases/interfaces/2win_rl_andes_salud_devolucion_farmacia.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_rl_andessalud_devoluci">
+      <allemployees>T</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <status>RELEASED</status>
+      <title>2Win Andes Salud Devolucion</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</restlet>

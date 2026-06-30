@@ -1,0 +1,24 @@
+<scheduledscript scriptid="customscript_2win_ss_andessalud_peticion">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>2win_ss_andessalud_peticion</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/2win_andes_salud_interfases/scheduled/2win_ss_andes_salud_interfaces_peticion.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_ss_andessalud_peticion">
+      <isdeployed>T</isdeployed>
+      <loglevel>ERROR</loglevel>
+      <status>NOTSCHEDULED</status>
+      <title>2win_ss_andessalud_peticion</title>
+      <recurrence>
+        <single>
+          <repeat></repeat>
+          <startdate>2025-07-18</startdate>
+          <starttime>22:00:00Z</starttime>
+        </single>
+      </recurrence>
+    </scriptdeployment>
+  </scriptdeployments>
+</scheduledscript>

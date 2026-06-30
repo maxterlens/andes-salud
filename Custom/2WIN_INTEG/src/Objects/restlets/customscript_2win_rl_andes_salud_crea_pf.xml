@@ -1,0 +1,22 @@
+<restlet scriptid="customscript_2win_rl_andes_salud_crea_pf">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>2Win RL Andes Salud Crear Prefactura</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/2win_andes_salud_interfases/interfaces/2win_rl_andes_salud_crear_prefactura.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_rl_andes_salud_crea_pf">
+      <allemployees>F</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
+      <isdeployed>T</isdeployed>
+      <loglevel>ERROR</loglevel>
+      <status>RELEASED</status>
+      <title>2Win RL Andes Salud Crear Prefactura</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</restlet>

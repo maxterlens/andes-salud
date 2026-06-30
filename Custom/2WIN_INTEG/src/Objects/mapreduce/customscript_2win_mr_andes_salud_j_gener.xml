@@ -1,0 +1,48 @@
+<mapreducescript scriptid="customscript_2win_mr_andes_salud_j_gener">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>2Win Generador de Asientos Contables</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/2win_andes_salud_interfases/map_reduce/2win_mr_andes_salud_generacion_asientos.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_mr_andes_salud_j_gener">
+      <buffersize>16</buffersize>
+      <concurrencylimit>4</concurrencylimit>
+      <isdeployed>T</isdeployed>
+      <loglevel>ERROR</loglevel>
+      <queueallstagesatonce>T</queueallstagesatonce>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>SCHEDULED</status>
+      <title>2Win MR Generador de Asientos Contables</title>
+      <yieldaftermins>60</yieldaftermins>
+      <recurrence>
+        <daily>
+          <everyxdays>1</everyxdays>
+          <repeat></repeat>
+          <startdate>2026-04-06</startdate>
+          <starttime>03:00:00Z</starttime>
+        </daily>
+      </recurrence>
+    </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_2win_mr_andes_salud_asiento">
+      <buffersize>4</buffersize>
+      <concurrencylimit>4</concurrencylimit>
+      <isdeployed>F</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <queueallstagesatonce>T</queueallstagesatonce>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>NOTSCHEDULED</status>
+      <title>2Win Generador de Asientos Contables</title>
+      <yieldaftermins>60</yieldaftermins>
+      <recurrence>
+        <single>
+          <repeat></repeat>
+          <startdate>2026-03-29</startdate>
+          <starttime>21:00:00Z</starttime>
+        </single>
+      </recurrence>
+    </scriptdeployment>
+  </scriptdeployments>
+</mapreducescript>

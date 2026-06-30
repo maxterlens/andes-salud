@@ -1,0 +1,60 @@
+<mapreducescript scriptid="customscript_2win_mr_andessalud_ov_ag_li">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>2win_mr_andessalud_ov_agregar_lineas</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/2win_andes_salud_interfases/map_reduce/2win_mr_andes_salud_ov_agregar_lineas.js]</scriptfile>
+  <scriptcustomfields>
+    <scriptcustomfield scriptid="custscript_mr_as_agregar_datos_entrada">
+      <accesslevel>2</accesslevel>
+      <aidescription></aidescription>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Datos de archivo en el gabinete que almacena Batch de cargos ambulatorios</description>
+      <displayheight></displayheight>
+      <displaytype>NORMAL</displaytype>
+      <displaywidth>40</displaywidth>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>TEXT</fieldtype>
+      <help>Datos de archivo en el gabinete que almacena Batch de cargos ambulatorios</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>datos_entrada_agregar</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+  </scriptcustomfields>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_mr_andessalud_ov_ag_li">
+      <buffersize>16</buffersize>
+      <concurrencylimit>4</concurrencylimit>
+      <custscript_mr_as_agregar_datos_entrada></custscript_mr_as_agregar_datos_entrada>
+      <isdeployed>T</isdeployed>
+      <loglevel>ERROR</loglevel>
+      <queueallstagesatonce>T</queueallstagesatonce>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>NOTSCHEDULED</status>
+      <title>2win_mr_andessalud_ov_agregar_lineas</title>
+      <yieldaftermins>60</yieldaftermins>
+      <recurrence>
+        <single>
+          <repeat></repeat>
+          <startdate>2025-08-18</startdate>
+          <starttime>22:00:00Z</starttime>
+        </single>
+      </recurrence>
+    </scriptdeployment>
+  </scriptdeployments>
+</mapreducescript>
