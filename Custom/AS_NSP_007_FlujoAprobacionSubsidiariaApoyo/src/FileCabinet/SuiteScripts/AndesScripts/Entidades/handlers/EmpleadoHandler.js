@@ -107,8 +107,12 @@ define([
                 if (entrada) subsidiariaAGrupoSeleccionado[entrada.subsidiariaId] = entrada.grupoId;
             }
 
-            // ── 5. Poblar filas (una por subsidiaria activa) ─────────────────
-            estructura.subsidiarias.forEach((sub, i) => {
+            // ── 5. Poblar filas (una por subsidiaria activa, ordenadas por nombre) ─
+            const subsidiariasOrdenadas = estructura.subsidiarias
+                .slice()
+                .sort((a, b) => a.text.localeCompare(b.text, undefined, { sensitivity: 'base' }));
+
+            subsidiariasOrdenadas.forEach((sub, i) => {
                 sublist.setSublistValue({ id: COL_SUBSIDIARIA,    line: i, value: sub.text });
                 sublist.setSublistValue({ id: COL_SUBSIDIARIA_ID, line: i, value: String(sub.id) });
                 if (subsidiariaAGrupoSeleccionado[sub.id]) {
