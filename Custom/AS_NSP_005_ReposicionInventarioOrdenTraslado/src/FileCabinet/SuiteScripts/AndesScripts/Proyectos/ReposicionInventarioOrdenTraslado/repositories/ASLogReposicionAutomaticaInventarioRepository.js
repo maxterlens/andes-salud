@@ -57,7 +57,7 @@ define(['N/record', 'N/log'], (record, log) => {
         }
 
         logRec.save();
-        log.debug('LogReposicionRepository.save', `Log guardado: ${name}`);
+        log.error('LogReposicionRepository.save', `Log guardado: ${name}`);
     };
 
     return { save };

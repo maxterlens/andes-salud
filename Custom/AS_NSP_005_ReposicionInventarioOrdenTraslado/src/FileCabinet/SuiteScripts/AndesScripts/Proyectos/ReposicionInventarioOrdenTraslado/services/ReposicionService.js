@@ -44,7 +44,7 @@ define(['../repositories/InventarioRepository', 'N/log'],
         const itemConfigs = InventarioRepository.getItemLocationConfig(locationTo);
 
         if (!itemConfigs.length) {
-            log.debug('ReposicionService.getItemsToReplenish',
+            log.error('ReposicionService.getItemsToReplenish',
                 `locationTo ${locationTo}: sin artículos con punto de reorden configurado.`
             );
             return [];
@@ -68,7 +68,7 @@ define(['../repositories/InventarioRepository', 'N/log'],
                 acc.push({
                     itemInternalId  : ic.item_internal_id,
                     itemCode        : ic.item_code,
-                    itemDisplayName : ic.item_display_name,
+                    itemDisplayName : ic.item_display_name || '',
                     qtyToOrder      : Math.ceil(preferredLevel - effectiveQty),
                     reorderPoint,
                     preferredLevel,

@@ -61,12 +61,12 @@ define([
             const items = ReposicionService.getItemsToReplenish(locationTo);
 
             if (!items.length) {
-                log.debug('map', `[${key}] Sin artículos a reponer. Se omite.`);
+                log.error('map', `[${key}] Sin artículos a reponer. Se omite.`);
                 return;
             }
 
             items.forEach(item => context.write({ key, value: JSON.stringify(item) }));
-            log.debug('map', `[${key}] Artículos emitidos: ${items.length}`);
+            log.error('map', `[${key}] Artículos emitidos: ${items.length}`);
 
         } catch (e) {
             log.error('map', `[${key}] ${e.name}: ${e.message}`);

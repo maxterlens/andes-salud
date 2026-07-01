@@ -45,7 +45,7 @@ define(['N/search', 'N/log'], (search, log) => {
             return true;
         });
 
-        log.debug('ConfigReposicionRepository.getActiveConfigs',
+        log.error('ConfigReposicionRepository.getActiveConfigs',
             `Configuraciones activas encontradas: ${configs.length}`
         );
         return configs;

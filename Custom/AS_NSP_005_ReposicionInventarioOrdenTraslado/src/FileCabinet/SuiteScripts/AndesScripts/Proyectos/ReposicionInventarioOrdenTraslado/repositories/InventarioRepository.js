@@ -7,7 +7,7 @@
  *              Responsabilidad exclusiva: consultas SuiteQL sobre
  *              itemlocationconfiguration, inventorybalance y transfer orders pendientes.
  */
-define(['N/query', 'N/log'], (query, log) => {
+define(['N/query', 'N/search'], (query, search) => {
 
     /**
      * Obtiene la configuración de ubicación de artículo para una ubicación destino.
@@ -88,31 +88,39 @@ define(['N/query', 'N/log'], (query, log) => {
      */
     const getPendingInTransitQty = (locationTo, itemIds) => {
         const inTransitMap = {};
+        log.error('getPendingInTransitQty', { locationTo, itemIds });
+        if (!itemIds.length) return inTransitMap;
         try {
-            query.runSuiteQL({
-                query: `
-                    SELECT
-                        tl.item,
-                        SUM(tl.quantity - COALESCE(tl.quantityreceived, 0)) AS qty_pending
-                    FROM transaction     t
-                    JOIN transactionline tl ON tl.transaction = t.id
-                    WHERE t.type             = 'TrnsfOrd'
-                      AND t.status           IN (
-                              'pendingFulfillment',
-                              'partiallyFulfilled',
-                              'pendingReceival',
-                              'partiallyReceived'
-                          )
-                      AND t.transferlocation = ${locationTo}
-                      AND tl.mainline        = 'F'
-                      AND tl.isclosed        = 'F'
-                      AND tl.item            IN (${itemIds})
-                    GROUP BY tl.item
-                `
-            }).asMappedResults().forEach(r => {
-                inTransitMap[r.item] = parseFloat(r.qty_pending) || 0;
+            const newSearch = search.create({
+                type: "transferorder",
+                settings:[{"name":"consolidationtype","value":"NONE"},{"name":"includeperiodendtransactions","value":"F"}],
+                filters:[
+                    ["type","anyof","TrnfrOrd"], 
+                    "AND", 
+                    ["item","anyof", itemIds.split(',')], 
+                    "AND", 
+                    ["location","anyof", locationTo],
+                    "AND",      
+                    ["closed","is","F"]
+                ],
+                columns:[
+                    search.createColumn({ name: "item", summary: "GROUP"}),
+                    search.createColumn({ name: "formulanumeric", summary: "SUM", formula: "NVL({quantity},0) - NVL({quantityshiprecv},0)" })
+                ]
             });
+            let pageData = newSearch.runPaged({ pageSize: 1000 });
+            pageData.pageRanges.forEach(function (pageRange) {
+                let page = pageData.fetch({ index: pageRange.index });
+                let results = page.data;
+                    for (let i = 0; i < results.length; i++) {
+                        let columns = results[i].columns;
+                        let item = (results[i].getValue(columns[0]));
+                        let qty_pending = Number(results[i].getValue(columns[1]));
+                        inTransitMap[item] = qty_pending;
+                    }
+                });
         } catch (e) {
+            log.error('error', e);
             log.error('InventarioRepository.getPendingInTransitQty',
                 `locationTo ${locationTo}: ${e.message}. Se asume 0 en tránsito.`
             );
