@@ -12,8 +12,9 @@ define([
     const beforeLoad = (context) => {
         try {
             OrdenTrasladoHandler.agregarBotonAsignacionLote(context);
+            OrdenTrasladoHandler.poblarStockDisponible(context);
         } catch (e) {
-            log.error({ title: 'UE afterSubmit - AS_AsientoDiario', details: e.message });
+            log.error({ title: 'UE beforeLoad - AS_OrdenTraslado', details: e.message });
             throw e;
         }
     };

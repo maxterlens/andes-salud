@@ -10,8 +10,9 @@
 define([
     'N/record',
     'N/search',
-    'N/format'
-], (record, search, format) => {
+    'N/format',
+    'N/query'
+], (record, search, format, query) => {
 
     // ─── IDs de campos y sublists ─────────────────────────────────────────────
     const TIPO_OT            = 'transferorder';
@@ -154,6 +155,55 @@ define([
     };
 
     // ─────────────────────────────────────────────────────────────────────────
+    // STOCK DISPONIBLE
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Retorna el stock disponible de múltiples ítems en una ubicación via SuiteQL.
+     * Una sola query con GROUP BY — nunca llamar dentro de un bucle.
+     *
+     * @param {Array<string|number>} itemIds
+     * @param {string|number}        locationId
+     * @returns {Object} Mapa { [itemId]: stockDisponible }. Ítems sin stock retornan 0.
+     */
+    const obtenerStockDisponibleEnLote = (itemIds, locationId) => {
+        const stockMap = {};
+        if (!itemIds || itemIds.length === 0) return stockMap;
+
+        // Inicializar todos en 0 para garantizar entrada por cada itemId
+        itemIds.forEach(id => { stockMap[String(id)] = 0; });
+
+        const placeholders = itemIds.map(() => '?').join(', ');
+        const params = [
+            ...itemIds.map(id => Number(id)),
+            Number(locationId)
+        ];
+
+        const resultSet = query.runSuiteQL({
+            query : `
+                SELECT
+                    ib.item,
+                    SUM(inl.quantityavailable) AS stockdisponible
+                FROM
+                    inventoryBalance ib
+                    JOIN inventoryNumber invn ON ib.inventorynumber = invn.id
+                    JOIN InventoryNumberLocation inl ON invn.id = inl.inventorynumber AND inl.location = ib.location
+                WHERE
+                    ib.item IN (${placeholders})
+                    AND ib.location = ?
+                    AND inl.quantityavailable > 0
+                GROUP BY ib.item`,
+            params
+        });
+
+        resultSet.asMappedResults().forEach(row => {
+            stockMap[String(row.item)] = Number(row.stockdisponible) || 0;
+        });
+
+        return stockMap;
+    };
+
+    // ─────────────────────────────────────────────────────────────────────────
     // APLICACIÓN DEL PLAN
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -235,6 +285,7 @@ define([
         leerLineasOrdenTraslado,
         obtenerLotesDisponiblesEnLote,
         verificarItemsConLoteEnLote,
-        aplicarPlanAsignacion
+        aplicarPlanAsignacion,
+        obtenerStockDisponibleEnLote
     };
 });

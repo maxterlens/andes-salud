@@ -3,9 +3,9 @@
  * @NModuleScope SameAccount
  */
 define([
-    'N/ui/serverWidget',
     'N/runtime',
-], (serverWidget, runtime) => {
+    '../services/OrdenTrasladoService'
+], (runtime, OrdenTrasladoService) => {
 
     const ESTADOS_PERMITIDOS = ['pendingFulfillment', 'partiallyFulfilled'];
 
@@ -83,9 +83,69 @@ define([
     }
 
 
+    // ─── Funcionalidades beforeLoad ─────────────────────────────────────────
+
+    /**
+     * Puebla custcol_as_stock_disponible en cada línea de ítem con el stock actual
+     * del artículo en la ubicación de la OT.
+     * Se ejecuta en los modos view, edit y copy.
+     * Usa una sola consulta batch — nunca un request por línea.
+     *
+     * @param {Object} context - Contexto del User Event Script
+     */
+    const poblarStockDisponible = (context) => {
+        const { newRecord, type } = context;
+        const { executionContext, ContextType} = runtime
+
+        // Solo en los modos donde tiene sentido mostrar el stock actual
+        const MODOS_PERMITIDOS = ['view', 'edit', 'copy'];
+        if (!MODOS_PERMITIDOS.includes(type)) return;
+
+        // Guard: solo en contexto de UI del usuario (no en Suitelet, web services, etc.)
+        if (executionContext != ContextType.USER_INTERFACE) return;
+
+        const locationId = newRecord.getValue({ fieldId: 'location' });
+        if (!locationId) return;
+
+        const lineCount = newRecord.getLineCount({ sublistId: 'item' });
+        if (!lineCount || lineCount === 0) return;
+
+        // ── Recolectar itemIds únicos y sus índices de línea ─────────────────
+        const linesByItemId = {};
+        for (let i = 0; i < lineCount; i++) {
+            const itemId = String(
+                newRecord.getSublistValue({ sublistId: 'item', fieldId: 'item', line: i }) || ''
+            );
+            if (!itemId) continue;
+            if (!linesByItemId[itemId]) linesByItemId[itemId] = [];
+            linesByItemId[itemId].push(i);
+        }
+
+        const itemIds = Object.keys(linesByItemId);
+        if (itemIds.length === 0) return;
+
+        // ── Una sola consulta batch al service ───────────────────────────────
+        const { ok, stockMap } = OrdenTrasladoService.obtenerStockDisponibleEnLote({ itemIds, locationId });
+        if (!ok || !stockMap) return;
+
+        // ── Setear el campo en cada línea (modo no-dinámico en UE) ───────────
+        itemIds.forEach(itemId => {
+            const stock = stockMap[itemId] ?? 0;
+            linesByItemId[itemId].forEach(lineIndex => {
+                newRecord.setSublistValue({
+                    sublistId: 'item',
+                    fieldId  : 'custcol_as_stock_disponible',
+                    line     : lineIndex,
+                    value    : stock
+                });
+            });
+        });
+    };
+
     // ─── Triggers (índice público) ───────────────────────────────────────────
 
-    return { 
-        agregarBotonAsignacionLote
+    return {
+        agregarBotonAsignacionLote,
+        poblarStockDisponible
     };
 });

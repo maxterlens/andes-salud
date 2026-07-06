@@ -17,6 +17,33 @@ define([
     // ==========================================
 
     /**
+     * Retorna el stock disponible de uno o varios ítems en una ubicación.
+     * Método HTTP esperado: GET
+     * Query params esperados: itemIds (CSV, ej: "1,2,3"), locationId
+     */
+    const _obtenerStockDisponible = (scriptContext) => {
+        const { itemIds, locationId } = scriptContext.request.parameters;
+
+        if (!itemIds || !locationId) {
+            throw error.create({
+                name   : 'MISSING_PARAMETER',
+                message: 'Se requieren los query parameters itemIds (CSV) y locationId.'
+            });
+        }
+
+        const itemIdsArray = itemIds.split(',').map(id => id.trim()).filter(Boolean);
+
+        if (itemIdsArray.length === 0) {
+            throw error.create({
+                name   : 'MISSING_PARAMETER',
+                message: 'El parámetro itemIds no contiene valores válidos.'
+            });
+        }
+
+        return OrdenTrasladoService.obtenerStockDisponibleEnLote({ itemIds: itemIdsArray, locationId });
+    };
+
+    /**
      * Asigna el detalle de inventario (lotes FEFO) a las líneas de la OT.
      * Método HTTP esperado: POST
      * Body esperado: { ordenTrasladoId: string|number }
@@ -60,6 +87,10 @@ define([
         'asign-inventory-detail': {
             method: 'POST',
             action: _asignarDetalleInventario
+        },
+        'get-available-stock': {
+            method: 'GET',
+            action: _obtenerStockDisponible
         }
     };
 

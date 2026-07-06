@@ -1,0 +1,11 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>PaseRoles6</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="false">SUBSIDIARIES</feature>
+      <feature required="false">WEBSERVICES</feature>
+      <feature required="true">MULTIBOOK</feature>
+    </features>
+  </dependencies>
+</manifest>
