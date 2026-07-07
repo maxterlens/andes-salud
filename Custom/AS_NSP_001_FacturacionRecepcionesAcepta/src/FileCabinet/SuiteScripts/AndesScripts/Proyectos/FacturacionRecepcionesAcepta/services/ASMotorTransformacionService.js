@@ -213,8 +213,8 @@ define([
 
         // 9. Guardar la nueva factura
         var nuevaFacturaId = String(nuevaFactura.save({
-            enableSourcing:        false,
-            ignoreMandatoryFields: false,
+            enableSourcing:        true,
+            ignoreMandatoryFields: true,
         }));
 
         // 10. Actualizar el tranid con el de la factura del CSV

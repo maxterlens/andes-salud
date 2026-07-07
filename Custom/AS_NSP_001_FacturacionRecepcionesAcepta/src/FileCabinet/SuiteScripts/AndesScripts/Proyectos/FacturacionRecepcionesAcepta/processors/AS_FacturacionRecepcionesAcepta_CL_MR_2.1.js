@@ -46,7 +46,7 @@ define([
     '../repositories/ASControlCargaRepository',
     '../repositories/ASRecepcionRepository',
     '../repositories/ASFacturaCompraRepository',
-    '../repositories/ASOcRepository',
+    '../repositories/ASOrdenCompraRepository',
     '../services/ASMotorTransformacionService',
 ], function (record, file, search, log, runtime, C, ControlCargaRepo, RecepcionRepo, FacturaCompraRepo, OcRepo, MotorTransformacion) {
 

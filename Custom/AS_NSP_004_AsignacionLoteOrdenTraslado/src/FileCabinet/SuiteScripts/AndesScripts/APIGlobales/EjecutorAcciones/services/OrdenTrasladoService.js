@@ -152,11 +152,11 @@ define([
             return { estadoLinea: ESTADO_COMPLETE, asignaciones: [], qtyAsignada: 0 };
         }
 
-        // Ítem sin control de lote → solo cantidad
+        // Ítem sin control de lote → no requiere inventorydetail; la cantidad ya está en la línea
         if (!mapaEsLoteItem[itemId]) {
             return {
                 estadoLinea : ESTADO_NO_LOT,
-                asignaciones: [{ lotId: null, qty: qtyNecesaria, lineExistente: false, lineExistenteIndex: -1 }],
+                asignaciones: [],
                 qtyAsignada : qtyNecesaria
             };
         }

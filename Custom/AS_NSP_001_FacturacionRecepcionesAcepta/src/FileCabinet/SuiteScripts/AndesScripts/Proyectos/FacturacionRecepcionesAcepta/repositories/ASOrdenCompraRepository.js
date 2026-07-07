@@ -1,5 +1,5 @@
 /**
- * @module ASOcRepository
+ * @module ASOrdenCompraRepository
  * @description Acceso a datos de Órdenes de Compra (Purchase Order) en NetSuite.
  *              Provee búsqueda por tranId y validación de estado de facturación.
  */

@@ -53,7 +53,16 @@ define([
 
         for (let i = 0; i < lineCount; i++) {
             trasnferOrderRecord.selectLine({ sublistId: SUBLIST_ITEM, line: i });
-            const invDetail              = trasnferOrderRecord.getCurrentSublistSubrecord({ sublistId: SUBLIST_ITEM, fieldId: FIELD_INV_DETAIL});
+
+            // Para artículos no lotizados/serializados, NetSuite lanza una excepción
+            // al intentar acceder al subrecord inventorydetail. Se captura y trata como null.
+            let invDetail = null;
+            try {
+                invDetail = trasnferOrderRecord.getCurrentSublistSubrecord({ sublistId: SUBLIST_ITEM, fieldId: FIELD_INV_DETAIL });
+            } catch (e) {
+                // Artículo sin control de lote/serie → sin detalle de inventario
+            }
+
             const asignacionesExistentes = invDetail ? _leerAsignacionesInventario(invDetail) : [];
             const qtyPrev                = asignacionesExistentes.reduce((s, a) => s + a.qty, 0);
 

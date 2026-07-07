@@ -144,7 +144,8 @@ define([
             id:     nuevaFacturaId,
             values: { tranid: facturaOrigenTranId },
             options: {
-                enableSourcing:        false,
+                disbaleTriggers: true,
+                enableSourcing: true,
                 ignoreMandatoryFields: true,
             },
         });
