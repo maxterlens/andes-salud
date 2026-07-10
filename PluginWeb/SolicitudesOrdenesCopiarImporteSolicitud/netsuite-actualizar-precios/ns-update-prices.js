@@ -51,9 +51,9 @@ const UpdatePricesService = {
 
     for (let i = 0; i < lines; i++) {
       currentRecord.selectLine({ sublistId: NS_CONFIG.sublist.items, line: i });
-      let isDisabled = currentRecord.getSublistField({ sublistId: NS_CONFIG.sublist.items, fieldId: NS_CONFIG.field.orderrate, line: 0});
-      if (isDisabled) continue;
-      let estimatedRate = currentRecord.getSublistField({ sublistId: NS_CONFIG.sublist.items, fieldId: NS_CONFIG.field.estimatedrate, line});
+      let orderRateField = currentRecord.getSublistField({ sublistId: NS_CONFIG.sublist.items, fieldId: NS_CONFIG.field.orderrate, line: i});
+      if (orderRateField.isDisabled) continue;
+      let estimatedRate = currentRecord.getCurrentSublistValue({ sublistId: NS_CONFIG.sublist.items, fieldId: NS_CONFIG.field.estimatedrate });
       currentRecord.selectLine({ sublistId: NS_CONFIG.sublist.items, line: i });
       currentRecord.setCurrentSublistValue({
         sublistId: NS_CONFIG.sublist.items,
