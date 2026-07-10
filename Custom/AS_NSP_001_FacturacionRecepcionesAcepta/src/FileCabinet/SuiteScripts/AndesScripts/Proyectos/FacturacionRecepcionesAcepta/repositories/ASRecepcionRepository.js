@@ -54,15 +54,15 @@ define([
     }
 
     /**
-     * Carga la recepción y retorna un mapa de los ítems recibidos con su cantidad total.
-     * Si un mismo ítem aparece en varias líneas (distintos lotes), las cantidades se suman,
-     * de modo que el vendorbill resultante refleje la cantidad total recibida por ítem.
+     * Carga la recepción y retorna un mapa de los ítems recibidos con su cantidad total
+     * y los lotes/series efectivamente recibidos (inventoryAssignments).
      *
-     * SUPUESTO: los lotes identifican unidades recibidas, pero el vendorbill solo requiere
-     *           la cantidad total por ítem (no tiene detalle de lote).
+     * Si un mismo ítem aparece en varias líneas (distintos lotes), las cantidades se suman
+     * y los inventory assignments se acumulan en el arreglo del ítem.
      *
      * @param   {string|number} recepcionId - Internal ID de la recepción
-     * @returns {Object}  Mapa itemId → { quantity: number }
+     * @returns {Object}  Mapa itemId → { quantity: number, inventoryAssignments: Array }
+     *                    inventoryAssignments: [{ receiptinventorynumber, quantity, expirationdate }]
      */
     function obtenerLineasPorItem(recepcionId) {
         var recepcion   = record.load({
@@ -84,11 +84,46 @@ define([
                 line:      i,
             })) || 0;
 
+            // Leer los lotes/series del inventorydetail de esta línea
+            var assignments = [];
+            try {
+                var invDetail = recepcion.getSublistSubrecord({
+                    sublistId: 'item',
+                    fieldId:   'inventorydetail',
+                    line:      i,
+                });
+                if (invDetail) {
+                    var totalAssignments = invDetail.getLineCount({ sublistId: 'inventoryassignment' });
+                    for (var k = 0; k < totalAssignments; k++) {
+                        assignments.push({
+                            receiptinventorynumber: invDetail.getSublistValue({
+                                sublistId: 'inventoryassignment',
+                                fieldId:   'receiptinventorynumber',
+                                line:      k,
+                            }),
+                            quantity: parseFloat(invDetail.getSublistValue({
+                                sublistId: 'inventoryassignment',
+                                fieldId:   'quantity',
+                                line:      k,
+                            })) || 0,
+                            expirationdate: invDetail.getSublistValue({
+                                sublistId: 'inventoryassignment',
+                                fieldId:   'expirationdate',
+                                line:      k,
+                            }),
+                        });
+                    }
+                }
+            } catch (e) {
+                // Ítem sin detalle de inventario; assignments queda vacío.
+            }
+
             if (lineas[itemId]) {
-                // Mismo ítem en distintos lotes → sumar cantidades
+                // Mismo ítem en distintos lotes → sumar cantidad y acumular assignments
                 lineas[itemId].quantity += cantidad;
+                lineas[itemId].inventoryAssignments = lineas[itemId].inventoryAssignments.concat(assignments);
             } else {
-                lineas[itemId] = { quantity: cantidad };
+                lineas[itemId] = { quantity: cantidad, inventoryAssignments: assignments };
             }
         }
 

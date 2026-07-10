@@ -62,14 +62,21 @@ define([
 
     /**
      * Parsea el contenido CSV del archivo.
-     * Detecta el tipo de proceso según el encabezado de la primera columna:
-     *   - 'recepcion'   → TIPOS_PROCESO.RECEPCION
-     *   - 'ordencompra' → TIPOS_PROCESO.OC_DIRECTA
+     * Detecta el tipo de proceso según el encabezado de la primera fila:
      *
-     * Retorna cada fila con { tipo, tranidDocumento, tranidFactura }.
+     *   - Primera columna 'recepcion' + 13 columnas → TIPOS_PROCESO.OC_CON_RECEPCION
+     *     Formato: Recepcion,Orden de compra,Folio,Tipo DTE SII Acepta,Fecha Emisión,
+     *              Periodo,FORMA DE PAGO,URL,Estado de aprobación,Estado del Documento
+     *              en Compras,Monto Neto,Monto IVA,Monto Total
+     *
+     *   - Primera columna 'ordencompra'              → TIPOS_PROCESO.OC_DIRECTA
+     *     Formato: OrdenCompra;Factura
+     *
+     *   - Primera columna 'recepcion' + 2 columnas   → TIPOS_PROCESO.RECEPCION
+     *     Formato: Recepcion;Factura
      *
      * @param   {string} contenido - Texto completo del CSV
-     * @returns {Array<{ tipo: string, tranidDocumento: string, tranidFactura: string }>}
+     * @returns {Array}
      */
     function _parsearCsv(contenido) {
         try {
@@ -94,18 +101,44 @@ define([
                 log.error('primerValor', primerValor);
 
                 // Detectar fila de cabecera y determinar el tipo de proceso
-                if (index === 0 && (primerValor === 'recepcion' || primerValor === 'factura' || primerValor === 'ordencompra')) {
-                    tipo = (primerValor === 'ordencompra')
-                        ? C.TIPOS_PROCESO.OC_DIRECTA
-                        : C.TIPOS_PROCESO.RECEPCION;
+                if (index === 0) {
+                    if (primerValor === 'ordencompra') {
+                        tipo = C.TIPOS_PROCESO.OC_DIRECTA;
+                    } else if (primerValor === 'recepcion' && columnas.length >= 12) {
+                        tipo = C.TIPOS_PROCESO.OC_CON_RECEPCION;
+                    } else {
+                        tipo = C.TIPOS_PROCESO.RECEPCION; // 'recepcion' o 'factura' con 2 col
+                    }
                     return;
                 }
 
-                resultado.push({
-                    tipo: tipo,
-                    tranidDocumento: columnas[0],
-                    tranidFactura: columnas[1],
-                });
+                if (tipo === C.TIPOS_PROCESO.OC_CON_RECEPCION) {
+                    // Formato de 13 columnas: cada fila lleva todos los datos del CSV
+                    resultado.push({
+                        tipo:            tipo,
+                        tranidDocumento: columnas[0],  // Recepcion
+                        tranidOC:        columnas[1],  // Orden de compra
+                        datosCsv: {
+                            folio:            columnas[2],
+                            tipoDteSii:       columnas[3],
+                            fechaEmision:     columnas[4],
+                            fechaVencimiento: columnas[5],
+                            periodo:          columnas[6],
+                            url:              columnas[7],
+                            estadoCompras:    columnas[8],
+                            montoNeto:        columnas[9],
+                            montoIva:         columnas[10],
+                            montoTotal:       columnas[11],
+                        },
+                    });
+                } else {
+                    // Formatos originales de 2 columnas
+                    resultado.push({
+                        tipo:            tipo,
+                        tranidDocumento: columnas[0],
+                        tranidFactura:   columnas[1],
+                    });
+                }
             });
 
             log.error('resultado', resultado);
@@ -122,10 +155,11 @@ define([
      * @param {Object}      datos
      * @param {string}      datos.controlCargaId   - ID del registro de cabecera
      * @param {string}      datos.tipo             - C.TIPOS_PROCESO.*
-     * @param {string|null} datos.recepcionId      - ID de la recepción (solo RECEPCION)
-     * @param {string|null} datos.ocId             - ID de la OC (solo OC_DIRECTA)
-     * @param {string|null} datos.facturaOrigenId  - ID de la factura del CSV
+     * @param {string|null} datos.recepcionId      - ID de la recepción (RECEPCION / OC_CON_RECEPCION)
+     * @param {string|null} datos.ocId             - ID de la OC (OC_DIRECTA / OC_CON_RECEPCION)
+     * @param {string|null} datos.facturaOrigenId  - ID de la factura del CSV (RECEPCION / OC_DIRECTA)
      * @param {string|null} datos.facturaNewId     - ID de la nueva factura generada
+     * @param {Object|null} datos.datosCsv         - Valores del CSV (OC_CON_RECEPCION)
      * @param {string}      datos.estado           - Texto del estado (C.ESTADOS.*)
      * @param {string}      datos.detalle          - Mensaje descriptivo o de error
      */
@@ -134,10 +168,10 @@ define([
 
         det.setValue({ fieldId: C.FIELDS_DETALLE.CABECERA, value: datos.controlCargaId });
 
-        if (datos.tipo === C.TIPOS_PROCESO.RECEPCION && datos.recepcionId) {
+        if ((datos.tipo === C.TIPOS_PROCESO.RECEPCION || datos.tipo === C.TIPOS_PROCESO.OC_CON_RECEPCION) && datos.recepcionId) {
             det.setValue({ fieldId: C.FIELDS_DETALLE.RECEPCION, value: datos.recepcionId });
         }
-        if (datos.tipo === C.TIPOS_PROCESO.OC_DIRECTA && datos.ocId) {
+        if ((datos.tipo === C.TIPOS_PROCESO.OC_DIRECTA || datos.tipo === C.TIPOS_PROCESO.OC_CON_RECEPCION) && datos.ocId) {
             det.setValue({ fieldId: C.FIELDS_DETALLE.ORDEN_COMPRA, value: datos.ocId });
         }
         if (datos.facturaOrigenId) {
@@ -145,6 +179,23 @@ define([
         }
         if (datos.facturaNewId) {
             det.setValue({ fieldId: C.FIELDS_DETALLE.FACTURA_NUEVA, value: datos.facturaNewId });
+        }
+        if (datos.tipo === C.TIPOS_PROCESO.OC_CON_RECEPCION && datos.datosCsv) {
+            // Almacenar los valores del CSV que se usaron para setear la factura
+            var jsonDatos = {
+                tranid:                       datos.datosCsv.folio,
+                custbody_2wintipodtesii:      datos.datosCsv.tipoDteSii,
+                custbody_2win_fecha_emision:  datos.datosCsv.fechaEmision,
+                duedate:                      datos.datosCsv.fechaVencimiento,
+                trandate:                     datos.datosCsv.fechaEmision,
+                postingperiod:                datos.datosCsv.periodo,
+                custbody_2win_url:            datos.datosCsv.url,
+                custbody_2win_estado_compras: datos.datosCsv.estadoCompras,
+                custbody_2win_monto_neto:     datos.datosCsv.montoNeto,
+                custbody_2win_monto_iva:      datos.datosCsv.montoIva,
+                custbody_2win_monto_total:    datos.datosCsv.montoTotal,
+            };
+            det.setValue({ fieldId: C.FIELDS_DETALLE.DATOS, value: JSON.stringify(jsonDatos) });
         }
 
         det.setText({ fieldId: C.FIELDS_DETALLE.ESTADO, text: datos.estado });
@@ -194,12 +245,7 @@ define([
 
             // Adjuntar el ID de cabecera a cada fila para disponibilizarlo en reduce
             return filas.map(function (fila) {
-                return {
-                    controlCargaId: cabecera.id,
-                    tipo: fila.tipo,
-                    tranidDocumento: fila.tranidDocumento,
-                    tranidFactura: fila.tranidFactura,
-                };
+                return Object.assign({ controlCargaId: cabecera.id }, fila);
             });
 
         } catch (e) {
@@ -226,7 +272,22 @@ define([
 
             var datosEmitidos;
 
-            if (fila.tipo === C.TIPOS_PROCESO.OC_DIRECTA) {
+            if (fila.tipo === C.TIPOS_PROCESO.OC_CON_RECEPCION) {
+                // ── Flujo OC con recepción (nuevo formato de 13 col) ─────────
+                var recepcionIdNuevo = RecepcionRepo.obtenerIdPorTranId(fila.tranidDocumento);
+                var ocIdNuevo        = OcRepo.obtenerIdPorTranId(fila.tranidOC);
+
+                datosEmitidos = {
+                    controlCargaId:  fila.controlCargaId,
+                    tipo:            fila.tipo,
+                    tranidDocumento: fila.tranidDocumento,
+                    tranidOC:        fila.tranidOC,
+                    recepcionId:     recepcionIdNuevo,
+                    ocId:            ocIdNuevo,
+                    datosCsv:        fila.datosCsv,
+                };
+
+            } else if (fila.tipo === C.TIPOS_PROCESO.OC_DIRECTA) {
                 // ── Flujo OC directa ──────────────────────────────────────────
                 var ocId = OcRepo.obtenerIdPorTranId(fila.tranidDocumento);
                 var estaFacturada = ocId ? OcRepo.estaFacturadaTotalmente(ocId) : false;
@@ -283,7 +344,78 @@ define([
 
         log.error({ title: 'reduce', details: 'Procesando [' + datos.tipo + ']: ' + datos.tranidDocumento });
 
-        if (datos.tipo === C.TIPOS_PROCESO.OC_DIRECTA) {
+        if (datos.tipo === C.TIPOS_PROCESO.OC_CON_RECEPCION) {
+            // ── Flujo OC con recepción (nuevo formato de 13 col) ─────────────
+
+            if (!datos.recepcionId) {
+                var msgRecepNuevo = 'No se encontró la recepción con tranId: ' + datos.tranidDocumento;
+                log.error({ title: 'reduce', details: msgRecepNuevo });
+                _crearDetalle({
+                    controlCargaId: datos.controlCargaId,
+                    tipo:           datos.tipo,
+                    recepcionId:    null,
+                    ocId:           datos.ocId,
+                    datosCsv:       datos.datosCsv,
+                    facturaNewId:   null,
+                    estado:         C.ESTADOS.ERROR,
+                    detalle:        msgRecepNuevo,
+                });
+                return;
+            }
+
+            if (!datos.ocId) {
+                var msgOcNuevo = 'No se encontró la Orden de Compra con tranId: ' + datos.tranidOC;
+                log.error({ title: 'reduce', details: msgOcNuevo });
+                _crearDetalle({
+                    controlCargaId: datos.controlCargaId,
+                    tipo:           datos.tipo,
+                    recepcionId:    datos.recepcionId,
+                    ocId:           null,
+                    datosCsv:       datos.datosCsv,
+                    facturaNewId:   null,
+                    estado:         C.ESTADOS.ERROR,
+                    detalle:        msgOcNuevo,
+                });
+                return;
+            }
+
+            try {
+                var nuevaFacturaIdNuevo = MotorTransformacion.transformarOcConRecepcionAFactura(
+                    datos.ocId,
+                    datos.recepcionId,
+                    datos.datosCsv
+                );
+
+                log.error({ title: 'reduce', details: 'Factura generada ID: ' + nuevaFacturaIdNuevo + ' | OC: ' + datos.tranidOC + ' | Recepción: ' + datos.tranidDocumento });
+
+                _crearDetalle({
+                    controlCargaId: datos.controlCargaId,
+                    tipo:           datos.tipo,
+                    recepcionId:    datos.recepcionId,
+                    ocId:           datos.ocId,
+                    datosCsv:       datos.datosCsv,
+                    facturaNewId:   nuevaFacturaIdNuevo,
+                    estado:         C.ESTADOS.COMPLETADO,
+                    detalle:        'Factura generada desde OC ' + datos.tranidOC + ' con recepción ' + datos.tranidDocumento,
+                });
+
+            } catch (e) {
+                var msgErrorNuevo = 'Error al transformar OC ' + datos.tranidOC + ' (recepción ' + datos.tranidDocumento + '): ' + e.message;
+                log.error({ title: 'reduce', details: msgErrorNuevo });
+                log.error('An error was ocurred in function [reduce] OC_CON_RECEPCION', e);
+                _crearDetalle({
+                    controlCargaId: datos.controlCargaId,
+                    tipo:           datos.tipo,
+                    recepcionId:    datos.recepcionId,
+                    ocId:           datos.ocId,
+                    datosCsv:       datos.datosCsv,
+                    facturaNewId:   null,
+                    estado:         C.ESTADOS.ERROR,
+                    detalle:        msgErrorNuevo,
+                });
+            }
+
+        } else if (datos.tipo === C.TIPOS_PROCESO.OC_DIRECTA) {
             // ── Flujo OC directa ──────────────────────────────────────────────
 
             if (!datos.ocId) {
@@ -366,7 +498,7 @@ define([
             }
 
         } else {
-            // ── Flujo recepción (original) ────────────────────────────────────
+            // ── Flujo recepción original (2 col) ─────────────────────────────
 
             if (!datos.recepcionId) {
                 var msgRecepcion = 'No se encontró la recepción con tranId: ' + datos.tranidDocumento;

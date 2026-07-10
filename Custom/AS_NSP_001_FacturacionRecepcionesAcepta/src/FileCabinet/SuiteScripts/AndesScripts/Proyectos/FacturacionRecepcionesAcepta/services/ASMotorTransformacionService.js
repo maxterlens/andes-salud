@@ -76,6 +76,92 @@ define([
                     fieldId:   'quantity',
                     value:     lineasRecepcion[itemId].quantity,
                 });
+                
+                // Si el ítem tiene detalle de inventario (lotes/series), sincronizar
+                // su cantidad total con la cantidad recibida. De lo contrario, al
+                // guardar NetSuite lanzará: "La cantidad total del detalle de
+                // inventario debe ser <cantidad_recibida>".
+                try {
+                    var inventoryDetail = nuevaFactura.getCurrentSublistSubrecord({
+                        sublistId: 'item',
+                        fieldId:   'inventorydetail',
+                    });
+                    if (inventoryDetail) {
+                        var detailCount = inventoryDetail.getLineCount({ sublistId: 'inventoryassignment' });
+
+                        // 1. Almacenar las líneas existentes antes de eliminarlas
+                        var assignmentLines = [];
+                        for (var d = 0; d < detailCount; d++) {
+                            assignmentLines.push({
+                                receiptinventorynumber: inventoryDetail.getSublistValue({
+                                    sublistId: 'inventoryassignment',
+                                    fieldId:   'receiptinventorynumber',
+                                    line:      d,
+                                }),
+                                quantity: parseFloat(inventoryDetail.getSublistValue({
+                                    sublistId: 'inventoryassignment',
+                                    fieldId:   'quantity',
+                                    line:      d,
+                                })) || 0,
+                                expirationdate: inventoryDetail.getSublistValue({
+                                    sublistId: 'inventoryassignment',
+                                    fieldId:   'expirationdate',
+                                    line:      d,
+                                }),
+                            });
+                        }
+
+                        // 2. Eliminar todas las líneas existentes
+                        for (var d = detailCount - 1; d >= 0; d--) {
+                            inventoryDetail.removeLine({ sublistId: 'inventoryassignment', line: d });
+                        }
+
+                        // 3. Re-agregar líneas respetando la cantidad recibida.
+                        //    Fuente primaria: lotes del inventorydetail de la recepción.
+                        //    Fallback: assignmentLines heredado del transform OC → vendorbill,
+                        //    usado solo cuando la recepción no tiene assignments propios.
+                        var lotesParaAgregar = (
+                            lineasRecepcion[itemId].inventoryAssignments &&
+                            lineasRecepcion[itemId].inventoryAssignments.length > 0
+                        )
+                            ? lineasRecepcion[itemId].inventoryAssignments
+                            : assignmentLines;
+
+                        var cantidadRestante = lineasRecepcion[itemId].quantity;
+                        for (var a = 0; a < lotesParaAgregar.length && cantidadRestante > 0; a++) {
+                            var lineaOrigen = lotesParaAgregar[a];
+                            var cantidadLinea = Math.min(lineaOrigen.quantity, cantidadRestante);
+
+                            inventoryDetail.selectNewLine({ sublistId: 'inventoryassignment' });
+
+                            if (lineaOrigen.receiptinventorynumber) {
+                                inventoryDetail.setCurrentSublistValue({
+                                    sublistId: 'inventoryassignment',
+                                    fieldId:   'receiptinventorynumber',
+                                    value:     lineaOrigen.receiptinventorynumber,
+                                });
+                            }
+                            if (lineaOrigen.expirationdate) {
+                                inventoryDetail.setCurrentSublistValue({
+                                    sublistId: 'inventoryassignment',
+                                    fieldId:   'expirationdate',
+                                    value:     lineaOrigen.expirationdate,
+                                });
+                            }
+                            inventoryDetail.setCurrentSublistValue({
+                                sublistId: 'inventoryassignment',
+                                fieldId:   'quantity',
+                                value:     cantidadLinea,
+                            });
+                            inventoryDetail.commitLine({ sublistId: 'inventoryassignment' });
+
+                            cantidadRestante -= cantidadLinea;
+                        }
+                    }
+                } catch (invErr) {
+                    // El ítem no usa detalle de inventario; no hay nada que ajustar.
+                }
+
                 nuevaFactura.commitLine({ sublistId: 'item' });
             }
         }
@@ -269,8 +355,90 @@ define([
         return nuevaFacturaId;
     }
 
+    /**
+     * Genera una factura de compra desde la OC, filtrando ítems según la recepción indicada
+     * y seteando los campos de cabecera directamente desde los valores del CSV (sin factura origen).
+     * El approvalstatus queda en Aprobada (2) y custbody_2w_forma_pago usa el valor por defecto.
+     * Tras guardar, actualiza el tranid con el Folio del CSV.
+     *
+     * @param   {string|number} ocId        - Internal ID de la Orden de Compra
+     * @param   {string|number} recepcionId - Internal ID de la recepción (itemreceipt)
+     * @param   {Object}        datosCsv    - Valores extraídos del CSV:
+     *   @param {string} datosCsv.folio            - Folio → tranid
+     *   @param {string} datosCsv.tipoDteSii        - ID interno → custbody_2wintipodtesii
+     *   @param {string} datosCsv.fechaEmision       - Fecha → custbody_2win_fecha_emision + trandate
+     *   @param {string} datosCsv.periodo            - ID interno → postingperiod
+     *   @param {string} datosCsv.url                - → custbody_2win_url
+     *   @param {string} datosCsv.estadoCompras      - ID interno → custbody_2win_estado_compras
+     *   @param {string} datosCsv.montoNeto          - → custbody_2win_monto_neto
+     *   @param {string} datosCsv.montoIva           - → custbody_2win_monto_iva
+     *   @param {string} datosCsv.montoTotal         - → custbody_2win_monto_total
+     * @returns {string} Internal ID de la nueva factura guardada
+     * @throws  {Error}  Si el transform o el guardado fallan
+     */
+    function transformarOcConRecepcionAFactura(ocId, recepcionId, datosCsv) {
+        // 1. Leer los ítems, cantidades y lotes de la recepción
+        var lineasRecepcion = RecepcionRepo.obtenerLineasPorItem(recepcionId);
+
+        // 2. Transform OC → vendorbill
+        var nuevaFactura = record.transform({
+            fromType:  C.TIPOS_TRANSACCION.ORDEN_COMPRA,
+            fromId:    ocId,
+            toType:    C.TIPOS_TRANSACCION.FACTURA_COMPRA,
+            isDynamic: true,
+        });
+
+        // 3. Filtrar sublist item: solo ítems presentes en la recepción con su cantidad recibida
+        _filtrarYAjustarLineasItem(nuevaFactura, lineasRecepcion);
+
+        // 4. Setear campos de cabecera desde el CSV
+        if (datosCsv.tipoDteSii) {
+            nuevaFactura.setValue({ fieldId: 'custbody_2wintipodtesii', value: datosCsv.tipoDteSii });
+        }
+        if (datosCsv.fechaEmision) {
+            nuevaFactura.setText({ fieldId: 'custbody_2win_fecha_emision', text: datosCsv.fechaEmision });
+            nuevaFactura.setText({ fieldId: 'trandate',                    text: datosCsv.fechaEmision });
+        }
+        if (datosCsv.periodo) {
+            nuevaFactura.setValue({ fieldId: 'postingperiod', value: datosCsv.periodo });
+        }
+        if (datosCsv.url) {
+            nuevaFactura.setValue({ fieldId: 'custbody_2win_url', value: datosCsv.url });
+        }
+        if (datosCsv.estadoCompras) {
+            nuevaFactura.setValue({ fieldId: 'custbody_2win_estado_compras', value: datosCsv.estadoCompras });
+        }
+        if (datosCsv.montoNeto) {
+            nuevaFactura.setValue({ fieldId: 'custbody_2win_monto_neto', value: parseFloat(datosCsv.montoNeto) });
+        }
+        if (datosCsv.montoIva) {
+            nuevaFactura.setValue({ fieldId: 'custbody_2win_monto_iva', value: parseFloat(datosCsv.montoIva) });
+        }
+        if (datosCsv.montoTotal) {
+            nuevaFactura.setValue({ fieldId: 'custbody_2win_monto_total', value: parseFloat(datosCsv.montoTotal) });
+        }
+
+        // 5. Forma de pago: valor por defecto
+        nuevaFactura.setValue({ fieldId: 'custbody_2w_forma_pago', value: C.DEFAULTS_FACTURA_NUEVA.FORMA_PAGO });
+
+        // 6. Marcar como Aprobada
+        nuevaFactura.setValue({ fieldId: 'approvalstatus', value: C.DEFAULTS_FACTURA_NUEVA.APPROVAL_STATUS });
+
+        // 7. Guardar
+        var nuevaFacturaId = String(nuevaFactura.save({
+            enableSourcing:        true,
+            ignoreMandatoryFields: true,
+        }));
+
+        // 8. Actualizar tranid con el Folio del CSV
+        FacturaCompraRepo.actualizarTranId(nuevaFacturaId, datosCsv.folio);
+
+        return nuevaFacturaId;
+    }
+
     return {
         transformarRecepcionAFactura,
         transformarOcAFactura,
+        transformarOcConRecepcionAFactura,
     };
 });

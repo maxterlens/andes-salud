@@ -39,6 +39,8 @@ define([], function () {
         FACTURA_NUEVA:         'custrecord_as_det_ctrl_carga_fact_nueva',
         ESTADO:                'custrecord_as_det_ctrl_carga_estado',
         DETALLE:               'custrecord_as_det_ctrl_carga_detalle',
+        /** JSON con los valores del CSV usados para setear la factura (formato OC_CON_RECEPCION) */
+        DATOS:                 'custrecord_as_det_ctrl_carga_datos',
     };
 
     /**
@@ -95,10 +97,15 @@ define([], function () {
     /**
      * Tipos de proceso soportados por el Map/Reduce.
      * Determinan el formato del CSV y el flujo de transformación a ejecutar.
+     *
+     * RECEPCION:        CSV de 2 col (Recepcion;Factura). Transforma OC→factura filtrada por recepción.
+     * OC_DIRECTA:       CSV de 2 col (OrdenCompra;Factura). Transforma OC→factura sin filtro de recepción.
+     * OC_CON_RECEPCION: CSV de 13 col. Transforma OC→factura filtrada por recepción, con campos del CSV.
      */
     var TIPOS_PROCESO = {
-        RECEPCION:  'RECEPCION',
-        OC_DIRECTA: 'OC_DIRECTA',
+        RECEPCION:        'RECEPCION',
+        OC_DIRECTA:       'OC_DIRECTA',
+        OC_CON_RECEPCION: 'OC_CON_RECEPCION',
     };
 
     /** Valores por defecto aplicados a la nueva factura generada desde la recepción */

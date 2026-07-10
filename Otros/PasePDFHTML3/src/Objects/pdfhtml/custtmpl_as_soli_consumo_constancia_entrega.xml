@@ -1,0 +1,10 @@
+<advancedpdftemplate scriptid="custtmpl_as_soli_consumo_constancia_entrega" standard="STDTMPLCR_2WIN_SOLICITUD_CONSUMO">
+  <description></description>
+  <displaysourcecode>T</displaysourcecode>
+  <isinactive>F</isinactive>
+  <preferred>T</preferred>
+  <printtype>CUSTOMRECORD</printtype>
+  <recordtype>[scriptid=customrecord_2win_solicitud_consumo]</recordtype>
+  <title>AS Solicitud Consumo - Constancia de Entrega</title>
+  <trantype>CUSTOM</trantype>
+</advancedpdftemplate>

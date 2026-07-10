@@ -1,0 +1,26 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>PasePDFHTML3</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="true">UNITSOFMEASURE</feature>
+      <feature required="true">CLASSES</feature>
+      <feature required="false">MULTILANGUAGE</feature>
+      <feature required="true">LOCATIONS</feature>
+      <feature required="true">ADVANCEDPRINTING</feature>
+      <feature required="true">DEPARTMENTS</feature>
+      <feature required="true">ACCOUNTING</feature>
+      <feature required="false">CUSTOMSEGMENTS</feature>
+      <feature required="false">EXTREMELIST</feature>
+      <feature required="false">MAILMERGE</feature>
+      <feature required="true">CUSTOMRECORDS</feature>
+      <feature required="true">SUBSIDIARIES</feature>
+    </features>
+    <objects>
+      <object>customlist_estado_solicitud.val_enviopendiente</object>
+      <object>customlist_estado_solicitud</object>
+      <object>custrecord_2win_responsable_ubicacion</object>
+      <object>customrecord_2win_solicitud_consumo</object>
+    </objects>
+  </dependencies>
+</manifest>

@@ -1,0 +1,233 @@
+<?xml version="1.0"?>
+<!DOCTYPE pdf PUBLIC "-//big.faceless.org//report" "report-1.1.dtd">
+<pdf>
+<head>
+	<link name="NotoSans" type="font" subtype="truetype" src="${nsfont.NotoSans_Regular}" src-bold="${nsfont.NotoSans_Bold}" src-italic="${nsfont.NotoSans_Italic}" src-bolditalic="${nsfont.NotoSans_BoldItalic}" bytes="2" />
+	<#if .locale == "zh_CN">
+		<link name="NotoSansCJKsc" type="font" subtype="opentype" src="${nsfont.NotoSansCJKsc_Regular}" src-bold="${nsfont.NotoSansCJKsc_Bold}" bytes="2" />
+	<#elseif .locale == "zh_TW">
+		<link name="NotoSansCJKtc" type="font" subtype="opentype" src="${nsfont.NotoSansCJKtc_Regular}" src-bold="${nsfont.NotoSansCJKtc_Bold}" bytes="2" />
+	<#elseif .locale == "ja_JP">
+		<link name="NotoSansCJKjp" type="font" subtype="opentype" src="${nsfont.NotoSansCJKjp_Regular}" src-bold="${nsfont.NotoSansCJKjp_Bold}" bytes="2" />
+	<#elseif .locale == "ko_KR">
+		<link name="NotoSansCJKkr" type="font" subtype="opentype" src="${nsfont.NotoSansCJKkr_Regular}" src-bold="${nsfont.NotoSansCJKkr_Bold}" bytes="2" />
+	<#elseif .locale == "th_TH">
+		<link name="NotoSansThai" type="font" subtype="opentype" src="${nsfont.NotoSansThai_Regular}" src-bold="${nsfont.NotoSansThai_Bold}" bytes="2" />
+	</#if>
+    <macrolist>
+        <macro id="nlheader">
+
+<table class="header-table"><tr>
+<td class="logo-cell" align="left"><#if companyInformation.logoUrl?length != 0> <@filecabinet nstype="image" style="width: 72px; height: auto;" src="${companyInformation.logoUrl}" /> </#if></td>
+<td class="title-cell" align="center">
+<div class="doc-title"><span style="font-size: 14pt;">SOLICITUD DE CONSUMO </span> <span style="font-size: 14pt;">${record.name}</span></div>
+</td>
+<td class="right-cell">&nbsp;</td>
+</tr></table>
+
+        </macro>
+        <macro id="nlfooter">
+            &nbsp;
+        </macro>
+    </macrolist>
+    <style>
+        * {
+        <#if .locale == "zh_CN">
+            font-family: NotoSans, NotoSansCJKsc, sans-serif;
+        <#elseif .locale == "zh_TW">
+            font-family: NotoSans, NotoSansCJKtc, sans-serif;
+        <#elseif .locale == "ja_JP">
+            font-family: NotoSans, NotoSansCJKjp, sans-serif;
+        <#elseif .locale == "ko_KR">
+            font-family: NotoSans, NotoSansCJKkr, sans-serif;
+        <#elseif .locale == "th_TH">
+            font-family: NotoSans, NotoSansThai, sans-serif;
+        <#else>
+            font-family: NotoSans, sans-serif;
+        </#if>
+        }
+
+        body {
+            color: #2f3e4e;
+            font-size: 9pt;
+        }
+
+        table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+
+        td {
+            vertical-align: top;
+            padding: 4px 6px;
+            word-wrap: break-word;
+        }
+
+        th {
+            font-size: 8pt;
+            font-weight: bold;
+            color: #2f3e4e;
+            background-color: #efefef;
+            border-bottom: 1px solid #cfd5db;
+            padding: 8px 6px;
+            text-align: left;
+        }
+
+        /* Header */
+        .header-table {
+            width: 100%;
+            margin-bottom: 6px;
+        }
+
+        .header-table td {
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        .logo-cell {
+            width: 16%;
+        }
+
+        .title-cell {
+            width: 68%;
+            text-align: center;
+        }
+
+        .right-cell {
+            width: 16%;
+        }
+
+        .doc-title {
+            font-size: 15pt;
+            font-weight: 700;
+            color: #2f3e4e;
+            text-align: center;
+            letter-spacing: 0.4px;
+        }
+
+        /* Blocks */
+        .block {
+            border: 1px solid #97a3af;
+            margin-top: 10px;
+        }
+
+        .block-title {
+            background-color: #edf0f2;
+            color: #2e4a62;
+            font-size: 10.5pt;
+            font-weight: bold;
+            padding: 6px 10px;
+            border-bottom: 1px solid #d5dce2;
+        }
+
+        .label {
+            width: 34%;
+            font-weight: bold;
+            color: #415364;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+
+        .value {
+            width: 66%;
+            color: #1f2f40;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+
+        /* Layout */
+        .main-top {
+            margin-top: 10px;
+        }
+
+        /* Items table */
+        .itemtable {
+            margin-top: 12px;
+            border: 1px solid #97a3af;
+        }
+
+        .itemtable thead th {
+            white-space: nowrap;
+            word-wrap: normal;
+            overflow: hidden;
+            font-size: 8pt;
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+
+        .itemtable td {
+            border-bottom: 1px solid #e3e7ea;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            vertical-align: top;
+        }
+
+        .itemname {
+            font-weight: bold;
+            color: #1f2f40;
+            line-height: 140%;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+    </style>
+</head>
+<body header="nlheader" header-height="11%" footer="nlfooter" footer-height="20pt" padding="0.45in 0.45in 0.45in 0.45in" size="Letter">
+
+<!-- DATOS DEL SOLICITANTE -->
+<table class="main-top"><tr>
+<td style="padding: 0;">
+<table class="block"><tr>
+<td class="block-title" colspan="2">Datos del solicitante&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <strong>Fecha de emisión:</strong> ${record.custrecord_2win_consumo_fecha}</td>
+</tr>
+<tr>
+<td class="label">Número de solicitud</td>
+<td class="value">${record.name}</td>
+</tr>
+<tr>
+<td class="label">Nombre del solicitante</td>
+<td class="value">${record.custrecord_2win_consumo_solicitante}</td>
+</tr>
+<tr>
+<td class="label"><u>Ubicación</u></td>
+<td class="value">${record.custrecord_2win_consumo_ubicacion!''}</td>
+</tr>
+<tr>
+<td class="label">Departamento solicitante</td>
+<td class="value">${record.custrecord_2win_consumo_departamento!''}</td>
+</tr>
+<tr>
+<td class="label">Nota:</td>
+<td class="value"><#if record.custrecord_2win_consumo_nota?has_content>${record.custrecord_2win_consumo_nota}<#else>&nbsp;</#if></td>
+</tr></table>
+</td>
+</tr></table>
+
+<!-- DETALLE DE ARTÍCULOS -->
+<table class="itemtable">
+<thead>
+<tr>
+<th colspan="6">Artículo</th>
+<th class="text-center" colspan="4">Unidad de Medida</th>
+<th class="text-center" colspan="4">Cantidad solicitada</th>
+<th class="text-center" colspan="4">Cantidad despachada</th>
+<th colspan="6">Centro de Costo</th>
+</tr>
+</thead>
+<#list record.recmachcustrecord_2win_consumo_det_ref as line><tr>
+<td colspan="6"><span class="itemname" style="font-size: 8pt;">${line.custrecord_2win_consumo_det_articulo}</span></td>
+<td class="text-center" colspan="4"><span style="font-size: 8pt;">${line.custrecord_2win_consumo_det_unidad!''}</span></td>
+<td class="text-center" colspan="4"><span style="font-size: 8pt;">${line.custrecord_2win_consumo_det_cantidad}</span></td>
+<td class="text-center" colspan="4"><span style="font-size: 8pt;">&nbsp;</span></td>
+<td colspan="6"><span style="font-size: 8pt;">${line.custrecord_2win_consumo_det_departamento!''}</span></td>
+</tr>
+</#list></table>
+
+</body>
+</pdf>
