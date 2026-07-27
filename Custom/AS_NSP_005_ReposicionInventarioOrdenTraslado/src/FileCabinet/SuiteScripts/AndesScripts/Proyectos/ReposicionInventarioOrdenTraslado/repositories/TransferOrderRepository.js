@@ -47,7 +47,7 @@ define(['N/record', 'N/log'], (record, log) => {
         });
 
         const toId = toRec.save({ enableSourcing: true, ignoreMandatoryFields: false });
-        log.audit('TransferOrderRepository.create',
+        log.error('TransferOrderRepository.create',
             `Orden de Traslado creada: ID ${toId} | Líneas: ${items.length}`
         );
         return toId;

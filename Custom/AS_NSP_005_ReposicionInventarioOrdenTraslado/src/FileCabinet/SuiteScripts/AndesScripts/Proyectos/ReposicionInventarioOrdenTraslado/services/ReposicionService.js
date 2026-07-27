@@ -18,7 +18,7 @@ define(['../repositories/InventarioRepository', 'N/log'],
      *   stock_efectivo = stock_disponible_en_destino + cantidad_en_tránsito_hacia_destino
      *
      *   Condición de reposición:
-     *     stock_efectivo <= reorderpoint  AND  preferredstocklevel > stock_efectivo
+     *     stock_efectivo <= safetystocklevel  AND  preferredstocklevel > stock_efectivo
      *
      *   Cantidad a pedir:
      *     ceil(preferredstocklevel - stock_efectivo)
@@ -32,7 +32,7 @@ define(['../repositories/InventarioRepository', 'N/log'],
      *   itemCode: string,
      *   itemDisplayName: string,
      *   qtyToOrder: number,
-     *   reorderPoint: number,
+     *   safetyStockLevel: number,
      *   preferredLevel: number,
      *   safetyStock: number,
      *   currentQty: number,
@@ -41,7 +41,15 @@ define(['../repositories/InventarioRepository', 'N/log'],
      * }>}
      */
     const getItemsToReplenish = (locationTo) => {
+        log.error('ReposicionService.getItemsToReplenish - INICIO',
+            `Evaluando artículos para locationTo: ${locationTo}`
+        );
+
         const itemConfigs = InventarioRepository.getItemLocationConfig(locationTo);
+
+        log.error('ReposicionService.getItemsToReplenish - itemConfigs',
+            `locationTo ${locationTo}: ${itemConfigs.length} artículo(s) con reorderpoint > 0 encontrados.`
+        );
 
         if (!itemConfigs.length) {
             log.error('ReposicionService.getItemsToReplenish',
@@ -55,22 +63,39 @@ define(['../repositories/InventarioRepository', 'N/log'],
         const stockMap     = InventarioRepository.getAvailableStock(locationTo, itemIds);
         const inTransitMap = InventarioRepository.getPendingInTransitQty(locationTo, itemIds);
 
-        return itemConfigs.reduce((acc, ic) => {
+        log.error('ReposicionService.getItemsToReplenish - stockMap',    JSON.stringify(stockMap));
+        log.error('ReposicionService.getItemsToReplenish - inTransitMap', JSON.stringify(inTransitMap));
+
+        const result = itemConfigs.reduce((acc, ic) => {
             const currentQty    = stockMap[ic.item_internal_id]     || 0;
             const inTransitQty  = inTransitMap[ic.item_internal_id] || 0;
             const effectiveQty  = currentQty + inTransitQty;
 
-            const reorderPoint   = parseFloat(ic.reorderpoint)        || 0;
-            const preferredLevel = parseFloat(ic.preferredstocklevel) || 0;
-            const safetyStock    = parseFloat(ic.safetystocklevel)    || 0;
+            const safetyStockLevel = Number(ic.safetystocklevel)   || 0;
+            const preferredLevel   = Number(ic.preferredstocklevel) || 0;
+            const safetyStock      = Number(ic.safetystocklevel)    || 0;
 
-            if (effectiveQty <= reorderPoint && preferredLevel > effectiveQty) {
+            const needsReplenishment = effectiveQty < safetyStockLevel/* && preferredLevel > effectiveQty*/;
+
+            log.error('ReposicionService.getItemsToReplenish - evaluación artículo', JSON.stringify({
+                itemInternalId : ic.item_internal_id,
+                itemCode       : ic.item_code,
+                currentQty,
+                inTransitQty,
+                effectiveQty,
+                safetyStockLevel,
+                preferredLevel,
+                needsReplenishment,
+                qtyToOrder     : needsReplenishment ? safetyStockLevel - effectiveQty : 0
+            }));
+
+            if (needsReplenishment) {
                 acc.push({
                     itemInternalId  : ic.item_internal_id,
                     itemCode        : ic.item_code,
                     itemDisplayName : ic.item_display_name || '',
-                    qtyToOrder      : Math.ceil(preferredLevel - effectiveQty),
-                    reorderPoint,
+                    qtyToOrder      : safetyStockLevel - effectiveQty,
+                    safetyStockLevel,
                     preferredLevel,
                     safetyStock,
                     currentQty,
@@ -81,6 +106,12 @@ define(['../repositories/InventarioRepository', 'N/log'],
 
             return acc;
         }, []);
+
+        log.error('ReposicionService.getItemsToReplenish - RESULTADO',
+            `locationTo ${locationTo}: ${result.length} artículo(s) requieren reposición de un total de ${itemConfigs.length} evaluados.`
+        );
+
+        return result;
     };
 
     return { getItemsToReplenish };

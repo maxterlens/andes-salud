@@ -16,11 +16,6 @@ define(["N/currentRecord", "N/url"], (currentRecord, url) => {
     const STLT_SCRIPT_ID = "customscript_as_action_execut_hdlr_stlt";
     const STLT_DEPLOY_ID = "customdeploy_as_action_execut_hdlr_stlt";
 
-    const SUBLIST_ITEM = "item";
-    const FIELD_ITEM = "item";
-    const FIELD_LOCATION = "location";
-    const FIELD_STOCK_DISPONIBLE = "custcol_as_stock_disponible";
-
     currentRecord = currentRecord.get();
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -47,15 +42,15 @@ define(["N/currentRecord", "N/url"], (currentRecord, url) => {
         const { sublistId, fieldId, line } = context;
 
         // Caso 1: cambió el ítem en la sublista
-        if (sublistId === SUBLIST_ITEM && fieldId === FIELD_ITEM) {
+        if (sublistId === 'item' && fieldId === 'item') {
             _recalcularStockLinea(line);
             return;
         }
 
         // Caso 2: cambió la ubicación en el header
         // (los campos de cabecera llegan con sublistId vacío o nulo)
-        if (!sublistId && fieldId === FIELD_LOCATION) {
-            const locationId = currentRecord.getValue({ fieldId: FIELD_LOCATION });
+        if (!sublistId && fieldId === 'location') {
+            const locationId = currentRecord.getValue({ fieldId: 'location' });
             if (!locationId) {
                 // Limpiar todas las líneas si se borró la ubicación
                 _limpiarStockTodasLasLineas();
@@ -74,13 +69,13 @@ define(["N/currentRecord", "N/url"], (currentRecord, url) => {
      * @param {number} lineIndex - Índice base 0 de la línea en la sublista item
      */
     const _recalcularStockLinea = (lineIndex) => {
-        const itemId = currentRecord.getCurrentSublistValue({ sublistId: SUBLIST_ITEM, fieldId: FIELD_ITEM });
-        const locationId = currentRecord.getValue({ fieldId: FIELD_LOCATION });
+        const itemId = currentRecord.getCurrentSublistValue({ sublistId: 'item', fieldId: 'item' });
+        const locationId = currentRecord.getValue({ fieldId: 'location' });
 
         // Limpiar inmediatamente
         currentRecord.setCurrentSublistValue({
-            sublistId: SUBLIST_ITEM,
-            fieldId: FIELD_STOCK_DISPONIBLE,
+            sublistId: 'item',
+            fieldId: 'custcol_as_stock_disponible',
             value: "",
         });
 
@@ -89,10 +84,10 @@ define(["N/currentRecord", "N/url"], (currentRecord, url) => {
         _obtenerStockMap([String(itemId)], locationId)
             .then((stockMap) => {
                 if (!stockMap) return;
-                currentRecord.selectLine({ sublistId: SUBLIST_ITEM, line: lineIndex });
+                currentRecord.selectLine({ sublistId: 'item', line: lineIndex });
                 currentRecord.setCurrentSublistValue({
-                    sublistId: SUBLIST_ITEM,
-                    fieldId: FIELD_STOCK_DISPONIBLE,
+                    sublistId: 'item',
+                    fieldId: 'custcol_as_stock_disponible',
                     value: stockMap[String(itemId)] ?? 0,
                 });
             })
@@ -107,7 +102,7 @@ define(["N/currentRecord", "N/url"], (currentRecord, url) => {
      * @param {string|number} locationId
      */
     const _recalcularStockTodasLasLineas = (locationId) => {
-        const lineCount = currentRecord.getLineCount({ sublistId: SUBLIST_ITEM });
+        const lineCount = currentRecord.getLineCount({ sublistId: 'item' });
         if (!lineCount) return;
 
         // Mapear itemId → [lineIndexes]
@@ -115,8 +110,8 @@ define(["N/currentRecord", "N/url"], (currentRecord, url) => {
         for (let i = 0; i < lineCount; i++) {
             const itemId = String(
                 currentRecord.getSublistValue({
-                    sublistId: SUBLIST_ITEM,
-                    fieldId: FIELD_ITEM,
+                    sublistId: 'item',
+                    fieldId: 'item',
                     line: i,
                 }) || "",
             );
@@ -134,17 +129,17 @@ define(["N/currentRecord", "N/url"], (currentRecord, url) => {
                 itemIds.forEach((itemId) => {
                     const stock = stockMap[itemId] ?? 0;
                     linesByItemId[itemId].forEach((lineIndex) => {
-                        currentRecord.selectLine({ sublistId: SUBLIST_ITEM,  line: lineIndex });
+                        currentRecord.selectLine({ sublistId: 'item',  line: lineIndex });
                         currentRecord.setCurrentSublistValue({
-                            sublistId: SUBLIST_ITEM,
-                            fieldId: FIELD_STOCK_DISPONIBLE,
+                            sublistId: 'item',
+                            fieldId: 'custcol_as_stock_disponible',
                             value: stock,
                             ignoreFieldChange: true,
                             forceSyncSourcing: true
                         });
                     });
                     if (linesByItemId[itemId].length) {
-                        currentRecord.commitLine({ sublistId: SUBLIST_ITEM });
+                        currentRecord.commitLine({ sublistId: 'item' });
                     }
                 });
             })
@@ -159,13 +154,13 @@ define(["N/currentRecord", "N/url"], (currentRecord, url) => {
      */
     const _limpiarStockTodasLasLineas = () => {
         const lineCount = currentRecord.getLineCount({
-            sublistId: SUBLIST_ITEM,
+            sublistId: 'item',
         });
         for (let i = 0; i < lineCount; i++) {
-            currentRecord.selectLine({ sublistId: SUBLIST_ITEM, line: i });
+            currentRecord.selectLine({ sublistId: 'item', line: i });
             currentRecord.setCurrentSublistValue({
-                sublistId: SUBLIST_ITEM,
-                fieldId: FIELD_STOCK_DISPONIBLE,
+                sublistId: 'item',
+                fieldId: 'custcol_as_stock_disponible',
                 value: "",
                 ignoreFieldChange: true,
                 forceSyncSourcing: true

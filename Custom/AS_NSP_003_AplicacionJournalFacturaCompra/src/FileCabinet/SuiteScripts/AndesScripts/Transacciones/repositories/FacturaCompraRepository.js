@@ -162,7 +162,7 @@ define(['N/record', 'N/search', 'N/query', 'N/log'], (record, search, query, log
 
                 vendorPayment.selectLine({ sublistId: SUBLIST_APPLY, line: i });
                 vendorPayment.setCurrentSublistValue({ sublistId: SUBLIST_APPLY, fieldId: 'apply', value: true });
-                vendorPayment.setCurrentSublistValue({ sublistId: SUBLIST_APPLY, fieldId: 'amount', value: importeDisponible });
+                vendorPayment.setCurrentSublistValue({ sublistId: SUBLIST_APPLY, fieldId: 'amount', value: importe });
                 vendorPayment.commitLine({ sublistId: SUBLIST_APPLY });
                 journalAplicado = true;
             }

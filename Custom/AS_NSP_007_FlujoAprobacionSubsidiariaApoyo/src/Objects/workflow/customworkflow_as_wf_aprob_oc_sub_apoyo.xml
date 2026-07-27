@@ -34,17 +34,17 @@
       <parameter>
         <name>{#Subsidiary#}1</name>
         <selectrecordtype>-117</selectrecordtype>
-        <value>1</value>
+        <value>[ACCOUNT_SPECIFIC_VALUE]</value>
       </parameter>
       <parameter>
         <name>{#Subsidiary#}2</name>
         <selectrecordtype>-117</selectrecordtype>
-        <value>4</value>
+        <value>[ACCOUNT_SPECIFIC_VALUE]</value>
       </parameter>
       <parameter>
         <name>{#Subsidiary#}3</name>
         <selectrecordtype>-117</selectrecordtype>
-        <value>7</value>
+        <value>[ACCOUNT_SPECIFIC_VALUE]</value>
       </parameter>
     </parameters>
   </initcondition>
@@ -513,7 +513,7 @@
           <waitforworkflow></waitforworkflow>
           <waitforworkflowstate></waitforworkflowstate>
           <initcondition>
-            <formula><![CDATA["Total" <= 1230000.00]]></formula>
+            <formula><![CDATA["Total" <= 1230000.0]]></formula>
             <type>VISUAL_BUILDER</type>
             <parameters>
               <parameter>
@@ -535,7 +535,7 @@
           <waitforworkflow></waitforworkflow>
           <waitforworkflowstate></waitforworkflowstate>
           <initcondition>
-            <formula><![CDATA["Total" > 1230000.00 AND "Total" <= 123000000.00]]></formula>
+            <formula><![CDATA["Total" > 1230000.0 AND "Total" <= 1.23E8]]></formula>
             <type>VISUAL_BUILDER</type>
             <parameters>
               <parameter>
@@ -557,7 +557,7 @@
           <waitforworkflow></waitforworkflow>
           <waitforworkflowstate></waitforworkflowstate>
           <initcondition>
-            <formula><![CDATA["Total" > 123000000.00]]></formula>
+            <formula><![CDATA["Total" > 1.23E8]]></formula>
             <type>VISUAL_BUILDER</type>
             <parameters>
               <parameter>
@@ -571,7 +571,7 @@
     </workflowstate>
     <workflowstate scriptid="workflowstate17">
       <description></description>
-      <donotexitworkflow>F</donotexitworkflow>
+      <donotexitworkflow>T</donotexitworkflow>
       <name>Rejected</name>
       <positionx>423</positionx>
       <positiony>3</positiony>
@@ -644,7 +644,7 @@
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
           <isinactive>F</isinactive>
-          <label>Resubmit for Approval</label>
+          <label>Reenviar para aprobación</label>
           <saverecordfirst>T</saverecordfirst>
           <initcondition>
             <formula><![CDATA["Workflow:Created By" IN ("User") OR "User Role" IN ("Role1")]]></formula>
@@ -674,7 +674,7 @@
           <conditionsavedsearch></conditionsavedsearch>
           <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
           <eventtypes></eventtypes>
-          <isinactive>F</isinactive>
+          <isinactive>T</isinactive>
           <initcondition>
             <formula><![CDATA["Workflow:Created By" NOT IN ("User")]]></formula>
             <type>VISUAL_BUILDER</type>
@@ -741,7 +741,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>406943</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -777,7 +777,7 @@
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>478981</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -1104,7 +1104,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>406943</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -1140,7 +1140,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>478981</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -1399,7 +1399,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>407305</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -1435,7 +1435,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>406060</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -1690,7 +1690,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>406943</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -1726,7 +1726,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>478981</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -1975,7 +1975,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>407305</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -2011,7 +2011,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>406060</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -2260,7 +2260,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>407305</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -2296,7 +2296,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>406060</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -2545,7 +2545,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>407305</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -2581,7 +2581,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>406060</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -2830,7 +2830,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>407305</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -2866,7 +2866,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>406060</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -3115,7 +3115,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>406406</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -3364,7 +3364,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>406406</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -3613,7 +3613,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>407305</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -3649,7 +3649,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>406060</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -4150,7 +4150,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>406943</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>
@@ -4186,7 +4186,7 @@ INSTR(',' || {user.custentity_as_nivel_aprobacion.id} || ',', ','||{custbody_as_
           <includerecordlink>F</includerecordlink>
           <includetransaction>F</includetransaction>
           <isinactive>F</isinactive>
-          <recipient>478981</recipient>
+          <recipient>[ACCOUNT_SPECIFIC_VALUE]</recipient>
           <recipientbccemail></recipientbccemail>
           <recipientccemail></recipientccemail>
           <recipientemail></recipientemail>

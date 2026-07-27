@@ -19,7 +19,7 @@ define(['N/query', 'N/search'], (query, search) => {
      *   item_code: string,
      *   item_display_name: string,
      *   preferredstocklevel: string,
-     *   reorderpoint: string,
+     *   safetystocklevel: string,
      *   safetystocklevel: string
      * }>}
      */
@@ -31,12 +31,12 @@ define(['N/query', 'N/search'], (query, search) => {
                     i.itemid              AS item_code,
                     i.displayname         AS item_display_name,
                     ilc.preferredstocklevel,
-                    ilc.reorderpoint,
+                    ilc.safetystocklevel,
                     ilc.safetystocklevel
                 FROM itemlocationconfiguration ilc
                 INNER JOIN item i ON i.id = ilc.item
                 WHERE ilc.location     = ${locationTo}
-                  AND ilc.reorderpoint > 0
+                  AND ilc.safetystocklevel > 0
                   AND i.isinactive     = 'F'
                   AND i.isserialitem   = 'F'
             `
@@ -58,10 +58,11 @@ define(['N/query', 'N/search'], (query, search) => {
                 query: `
                     SELECT
                         item,
-                        COALESCE(quantityavailable, 0) AS qty_available
+                        SUM(COALESCE(quantityavailable, 0)) AS qty_available
                     FROM inventorybalance
                     WHERE location = ${locationTo}
                       AND item     IN (${itemIds})
+                    GROUP BY item
                 `
             }).asMappedResults().forEach(r => {
                 stockMap[r.item] = parseFloat(r.qty_available) || 0;
@@ -96,18 +97,29 @@ define(['N/query', 'N/search'], (query, search) => {
                 settings:[{"name":"consolidationtype","value":"NONE"},{"name":"includeperiodendtransactions","value":"F"}],
                 filters:[
                     ["type","anyof","TrnfrOrd"], 
+                    "AND",
+                    ["mainline","is","F"],
+                    "AND",
+                    ["voided","is","F"],
                     "AND", 
                     ["item","anyof", itemIds.split(',')], 
                     "AND", 
                     ["location","anyof", locationTo],
                     "AND",      
-                    ["closed","is","F"]
+                    ["closed","is","F"],
+                    "AND",
+                    ["transactionlinetype","anyof","RECEIVING"],
+                    "AND",
+                    ["formulanumeric: NVL({quantity},0) - NVL({quantityshiprecv},0)","greaterthan","0"]
                 ],
                 columns:[
                     search.createColumn({ name: "item", summary: "GROUP"}),
                     search.createColumn({ name: "formulanumeric", summary: "SUM", formula: "NVL({quantity},0) - NVL({quantityshiprecv},0)" })
                 ]
             });
+            newSearch.title = 'search testsss';
+            let id = newSearch.save();
+            log.error('id', id);
             let pageData = newSearch.runPaged({ pageSize: 1000 });
             pageData.pageRanges.forEach(function (pageRange) {
                 let page = pageData.fetch({ index: pageRange.index });

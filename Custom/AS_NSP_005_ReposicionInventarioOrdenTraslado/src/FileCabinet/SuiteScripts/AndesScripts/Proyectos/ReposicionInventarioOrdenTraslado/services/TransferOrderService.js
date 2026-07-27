@@ -38,7 +38,7 @@ define([
             linesDetail = buildLinesDetail(items);
             message     = `Orden de Traslado ID ${toId} creada con ${items.length} línea(s).`;
 
-            log.audit('TransferOrderService.processReplenishment',
+            log.error('TransferOrderService.processReplenishment',
                 `[${subsidiaryId}:${locationFrom}→${locationTo}] ${message}`
             );
         } catch (e) {
@@ -86,7 +86,7 @@ define([
             ` | Stock actual: ${item.currentQty}` +
             ` | En tránsito: ${item.inTransitQty}` +
             ` | Nivel preferido: ${item.preferredLevel}` +
-            ` | Punto reorden: ${item.reorderPoint}`
+            ` | Punto reorden: ${item.safetyStockLevel}`
         ).join('\n');
 
     return { processReplenishment };

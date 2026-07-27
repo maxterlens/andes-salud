@@ -41,7 +41,7 @@ define([
      */
     const getInputData = (context) => {
         const configs = ConfigRepository.getActiveConfigs();
-        log.audit('getInputData', `Configuraciones activas: ${configs.length}`);
+        log.error('getInputData', `Configuraciones activas: ${configs.length}`);
         return configs;
     };
 
@@ -119,7 +119,7 @@ define([
             return true;
         });
 
-        log.audit('summarize',
+        log.error('summarize',
             `Ejecución completada | Errores map: ${mapErrors} | Errores reduce: ${reduceErrors}`
         );
     };
