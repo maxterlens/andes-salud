@@ -1,0 +1,16 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>ActualizacionRoleQAProd1</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="false">WEBSERVICES</feature>
+      <feature required="false">SUBSIDIARIES</feature>
+    </features>
+    <objects>
+      <object>customrecord_2win_balance_8_col_v2</object>
+      <object>customrecord_2win_auditoria</object>
+      <object>customrecord_4601_witaxsetup</object>
+      <object>customrecord_2win_solicitud_consumo</object>
+    </objects>
+  </dependencies>
+</manifest>
