@@ -1,0 +1,38 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>PaseFlujoTalcaProdQA</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="true">WORKFLOW</feature>
+      <feature required="true">ACCOUNTING</feature>
+      <feature required="true">SUBSIDIARIES</feature>
+      <feature required="true">PURCHASEORDERS</feature>
+    </features>
+    <objects>
+      <object>custbody_as_aprobador_n3</object>
+      <object>custbody_as_aprobador_n2</object>
+      <object>custbody_as_aprobador_n1</object>
+      <object>customlist_2w_grupo_aprobacion.val_9854794_7115118_sb1_525</object>
+      <object>customlist_2w_grupo_aprobacion.val_9854795_7115118_sb1_959</object>
+      <object>custbody_as_siguiente_nivel_aprobacion</object>
+      <object>customscript_as_asig_prox_gr_apr_wf</object>
+      <object>custbody_as_aprobador_n4</object>
+      <object>customlist_2w_grupo_aprobacion.val_9854793_7115118_sb1_427</object>
+      <object>customscript_as_enviar_corr_aprob_oc_wf.custscript_as_env_corr_apr_plantilla_c</object>
+      <object>custbody_as_fecha_aprobador_n2</object>
+      <object>customscript_as_enviar_corr_aprob_oc_wf</object>
+      <object>custbody_as_fecha_aprobador_n3</object>
+      <object>custbody_as_fecha_aprobador_n4</object>
+      <object>custbody_as_fecha_aprobador_n1</object>
+      <object>customscript_as_asig_prox_gr_apr_wf.custscript_as_asig_prox_gr_apr_wf_grupap</object>
+      <object>custtmpl_121_7115118_sb2_479</object>
+      <object>customscript_as_enviar_corr_aprob_oc_wf.custscript_as_env_corr_apr_plantilla_pdf</object>
+      <object>custbody_as_ultimo_fecha_aprobador</object>
+      <object>custbody_as_ultimo_aprobador</object>
+      <object>customlist_2w_grupo_aprobacion.val_30272313_7115118_818</object>
+      <object>custbody_as_importe_total</object>
+      <object>custemailtmpl_3_7115118_sb2_533</object>
+      <object>custform_233_7115118_sb2_196</object>
+    </objects>
+  </dependencies>
+</manifest>

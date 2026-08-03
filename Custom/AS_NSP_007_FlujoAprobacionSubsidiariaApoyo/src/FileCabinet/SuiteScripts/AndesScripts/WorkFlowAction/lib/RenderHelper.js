@@ -46,16 +46,22 @@ define(['N/render', 'N/record'], (render, record) => {
      * Advanced PDF/HTML de NetSuite (record type -387).
      *
      * @param   {Object}            params
-     * @param   {number|string}     params.templateId - Internal ID de la plantilla PDF/HTML avanzada
-     * @param   {N/record.Record}   params.rec        - Objeto record cargado de la transacción
+     * @param   {number|string}     params.templateId          - Internal ID de la plantilla PDF/HTML avanzada
+     * @param   {N/record.Record}   params.rec                 - Objeto record cargado de la transacción
+     * @param   {string}            [params.subsidiary] - JSON serializado con datos de la subsidiaria
+     *                                                             ({ mainaddress_text, taxidnum })
      * @returns {N/file.File}       Archivo PDF renderizado en memoria
      */
-    const renderTransactionPdf = ({ templateId, rec }) => {
+    const renderTransactionPdf = ({ templateId, rec, subsidiary }) => {
 
         const renderer = render.create();
         renderer.setTemplateById({ id: templateId });
         renderer.addRecord({ templateName: 'record', record: rec });
-
+        renderer.addCustomDataSource({
+            format: render.DataSource.OBJECT,
+            alias:  'subsidiary',
+            data:   subsidiary
+        });
         return renderer.renderAsPdf();
     };
 

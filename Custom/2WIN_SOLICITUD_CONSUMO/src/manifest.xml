@@ -1,0 +1,9 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>2WIN_SOLICITUD_CONSUMO</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="false">SUBSCRIPTIONBILLING</feature>
+    </features>
+  </dependencies>
+</manifest>

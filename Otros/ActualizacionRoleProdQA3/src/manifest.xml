@@ -1,0 +1,45 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>ActualizacionRoleProdQA3</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="false">WEBSERVICES</feature>
+      <feature required="false">SUBSIDIARIES</feature>
+    </features>
+    <objects>
+      <object>customrecord_scm_dps_userdisplay</object>
+      <object>customrecord_4601_witaxconfiguration</object>
+      <object>customrecord_scm_lc_profile_detail</object>
+      <object>customrecord_scm_printreportlog</object>
+      <object>customrecord_2win_auditoria</object>
+      <object>customrecord_ph4014_wtax_jrnl_type</object>
+      <object>customrecord_4601_groupedwitaxcode</object>
+      <object>customrecord_4601_witaxsetup</object>
+      <object>customrecord_2win_solicitud_consumo</object>
+      <object>customrecord_ecsl_audit_trail_dtl</object>
+      <object>customrecord_scm_ecn_eco_type</object>
+      <object>customrecord_scm_item_substitute</object>
+      <object>customrecord_scm_ecn_engr_change_order</object>
+      <object>customrecord_online_filing</object>
+      <object>customrecord_2win_balance_8_col_v2</object>
+      <object>customrecord_scm_ecn_implement_eco_log</object>
+      <object>customrecord_filing_config</object>
+      <object>customrecord_scm_dps_taskview</object>
+      <object>customrecord_ph4014_wtax_type_d</object>
+      <object>customrecord_4601_witaxcode</object>
+      <object>customrecord_filing_authorization</object>
+      <object>customrecord_ecsl_audit_trail_hdr</object>
+      <object>customrecord2w_registro_inversiones</object>
+      <object>customrecord_tax_return_setup_item</object>
+      <object>customrecord_2win_vendor_quotes</object>
+      <object>customrecord_scm_lc_profile</object>
+      <object>customrecord_scm_customerpartnumber</object>
+      <object>customrecord_scm_lc_mapping</object>
+      <object>customrecord_ph4014_wtax_type_kind</object>
+      <object>customrecord_vatonline_submittedperiod</object>
+      <object>customrecord_filing_template</object>
+      <object>customrecord_4601_witaxtype</object>
+      <object>customrecord_scm_preferences</object>
+    </objects>
+  </dependencies>
+</manifest>

@@ -1,0 +1,13 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>AS_NSP_008_ImpresionSolicitudConsumo</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="true">SERVERSIDESCRIPTING</feature>
+      <feature required="false">CRM</feature>
+    </features>
+    <objects>
+      <object>customrecord_2win_solicitud_consumo</object>
+    </objects>
+  </dependencies>
+</manifest>

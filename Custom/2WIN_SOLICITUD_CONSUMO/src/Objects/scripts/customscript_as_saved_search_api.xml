@@ -1,0 +1,25 @@
+<suitelet scriptid="customscript_as_saved_search_api">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>AS API Busqueda Guardada</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/AndesScripts/APIGlobales/BusquedaGuardadaAPI/AS_BusquedaGuardadaAPI_STLT_2.1.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_saved_search_api">
+      <allemployees>F</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <audslctrole>EMPLOYEE_CENTER</audslctrole>
+      <eventtype></eventtype>
+      <isdeployed>T</isdeployed>
+      <isonline>F</isonline>
+      <loglevel>ERROR</loglevel>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>RELEASED</status>
+      <title>AS API Busqueda Guardada</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>

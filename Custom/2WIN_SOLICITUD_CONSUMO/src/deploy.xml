@@ -1,0 +1,14 @@
+<deploy>
+    <configuration>
+        <path>~/AccountConfiguration/*</path>
+    </configuration>
+    <files>
+        <path>~/FileCabinet/SuiteScripts/AndesScripts/*</path>
+    </files>
+    <objects>
+        <path>~/Objects/test/*</path>
+    </objects>
+    <translationimports>
+        <path>~/Translations/*</path>
+    </translationimports>
+</deploy>

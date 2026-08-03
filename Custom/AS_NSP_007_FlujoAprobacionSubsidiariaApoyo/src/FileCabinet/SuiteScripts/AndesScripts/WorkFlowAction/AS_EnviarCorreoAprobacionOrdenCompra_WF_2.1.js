@@ -89,6 +89,19 @@ define(['N/runtime', 'N/record', 'N/email', 'N/search', './lib/RenderHelper'],
                     id:   recordId
                 });
 
+                // ── 3.5. Obtener datos de la subsidiaria ──────────────────────────
+                const subsidiaryId     = poRecord.getValue({ fieldId: 'subsidiary' });
+                const subsidiaryLookup = search.lookupFields({
+                    type:    'subsidiary',
+                    id:      subsidiaryId,
+                    columns: ['address.address', 'taxidnum']
+                });
+
+                const jsonSubsidiary = {
+                    mainaddress_text: subsidiaryLookup['address.address'].replace(/\r\n|\r|\n/g, '<br/>'),
+                    taxidnum:         subsidiaryLookup['taxidnum']
+                };
+
                 // ── 4. Renderizar cuerpo del correo ───────────────────────────────
                 const { subject, body } = RenderHelper.renderEmailTemplate({
                     templateId:    emailTemplateId,
@@ -98,8 +111,9 @@ define(['N/runtime', 'N/record', 'N/email', 'N/search', './lib/RenderHelper'],
                 
                 // ── 5. Renderizar PDF de la OC ────────────────────────────────────
                 const pdfFile = RenderHelper.renderTransactionPdf({
-                    templateId: pdfTemplateId,
-                    rec:        poRecord
+                    templateId:        pdfTemplateId,
+                    rec:               poRecord,
+                    subsidiary:        jsonSubsidiary
                 });
 
                 const tranid  = poRecord.getValue({ fieldId: 'tranid' });
