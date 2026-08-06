@@ -609,40 +609,52 @@ define([
 
             const Farmacia = new daoFarmacia(ordenVentaId);
 
+            // ── Pre-validación (sin tocar la OV) y construcción del lote ──
             const lineasConError = [];
-            const lineasExitosas = [];
+            const devolucionesValidas = [];
 
             devolucionMedicamentos.forEach((devolucionMedicamento) => {
                 try {
                     let { codigoProducto, cantidadDevuelta, IdentificadorUnicoFila } = devolucionMedicamento;
                     cantidadDevuelta = Number(cantidadDevuelta);
-                    if (!IdentificadorUnicoFila && !identificadorUnicoPaciente) throw new Error("Identificador único de fila no definido");
+                    if(!codigoProducto) throw new Error("Código de producto no definido");
+                    if (!IdentificadorUnicoFila) throw new Error("Identificador único de fila no definido");
                     if (!cantidadDevuelta) throw new Error("Cantidad devuelta no definida");
                     if (cantidadDevuelta <= 0) throw new Error("Cantidad devuelta debe ser mayor a cero");
 
-                    const identificadorFinal = IdentificadorUnicoFila || identificadorUnicoPaciente;
-                    Farmacia.devolver(identificadorFinal, cantidadDevuelta);
-
-                    lineasExitosas.push({
-                        identificadorUnicoFila: identificadorFinal,
-                        codigoProducto: codigoProducto || "NO_DEFINIDO",
-                        cantidadDevuelta: cantidadDevuelta,
-                        numeroFicha: numeroFicha,
-                        numeroIngreso: numeroIngreso
+                    devolucionesValidas.push({
+                        identificador: IdentificadorUnicoFila,
+                        cantidadDevolucion: cantidadDevuelta,
+                        codigoProducto: codigoProducto
                     });
                 } catch (error) {
                     nLog.error("devolverConsumo - Error en línea", {
-                        identificadorUnicoFila: devolucionMedicamento.IdentificadorUnicoFila || devolucionMedicamento.identificadorUnicoPaciente,
+                        identificadorUnicoFila: devolucionMedicamento.IdentificadorUnicoFila,
                         error: error.message
                     });
-
                     lineasConError.push({
-                        identificadorUnicoFila: devolucionMedicamento.IdentificadorUnicoFila || devolucionMedicamento.identificadorUnicoPaciente || "NO_DEFINIDO",
-                        codigoProducto: devolucionMedicamento.codigoProducto || "NO_DEFINIDO",
+                        identificadorUnicoFila: devolucionMedicamento.IdentificadorUnicoFila,
+                        codigoProducto: devolucionMedicamento.codigoProducto,
                         error: error.message
                     });
                 }
             });
+
+            // ── Procesamiento por lote (1 sola pasada sobre la OV) ──
+            const resultadoLote = Farmacia.devolverLote(devolucionesValidas);
+
+            // Mapear resultado del lote a las estructuras esperadas por el payload
+            const lineasExitosas = resultadoLote.exitosas.map((r) => ({
+                identificadorUnicoFila: r.identificador,
+                numeroFicha: numeroFicha,
+                numeroIngreso: numeroIngreso
+            }));
+            lineasConError.push(
+                ...resultadoLote.conError.map((e) => ({
+                    identificadorUnicoFila: e.identificador || "NO_DEFINIDO",
+                    error: e.error
+                }))
+            );
 
             if (lineasExitosas.length === 0) {
                 throw new Error(`Todas las líneas de devolución fallaron. Errores: ${lineasConError.map((err) => `[${err.identificadorUnicoFila}] ${err.error}`).join("; ")}`);

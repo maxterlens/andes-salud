@@ -82,7 +82,7 @@ define(["../domain/2win_dom_autopicking", "N/record", "N/log", "N/query"], funct
             }
         });
 
-        // uncommitAndClearInventoryDetail(salesOrderId);
+        uncommitAndClearInventoryDetail(salesOrderId);
 
         try {
             const salesOrderRecord = record.load({
@@ -275,7 +275,7 @@ define(["../domain/2win_dom_autopicking", "N/record", "N/log", "N/query"], funct
             }
 
             const recordId = soRecord.save({
-                enableSourcing: false,
+                //enableSourcing: false,
                 ignoreMandatoryFields: true
             });
 

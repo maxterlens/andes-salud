@@ -181,7 +181,9 @@ define(["../dao/2win_dao_itemfullfilment", "N/log", "N/query", "N/search"], func
             const lineasConInfoLocacion = saleOrderLines.map((linea) => {
                 const locationInfo = linea.inventorylocation ? locationDetails[linea.inventorylocation] : null;
                 const relatedFulfillments = itemFulfillmentLines.filter((fulfillment) => Number(fulfillment.item) === Number(linea.item) && Number(fulfillment.line) === Number(linea.line));
-                return { ...linea, locationInfo, fulfillments: relatedFulfillments };
+                const isNew = relatedFulfillments.length === 0;
+                const filteredFulfillments = relatedFulfillments.filter((fulfillment) => Number(fulfillment.quantity) !== Number(linea.quantity));
+                return { ...linea, locationInfo, isNew, fulfillments: filteredFulfillments };
             });
 
             // Agrupar por Ubicación y Tipo de Picking (Auto/Manual)
@@ -203,7 +205,7 @@ define(["../dao/2win_dao_itemfullfilment", "N/log", "N/query", "N/search"], func
 
             // Identificar Fulfillments Existentes por la misma clave
             const existingFulfillmentsMap = itemFulfillmentLines.reduce((acc, line) => {
-                const matchingOrderLine = lineasConInfoLocacion.find((l) => Number(l.item) === Number(line.item) && Number(l.line) === Number(line.line));
+                const matchingOrderLine = lineasConInfoLocacion.find((l) => Number(l.item) === Number(line.item) && Number(l.line) === Number(line.line) && l.fulfillments.some((f) => f.id === line.id));
                 if (matchingOrderLine) {
                     const isAuto = matchingOrderLine.locationInfo && matchingOrderLine.locationInfo.isAutopicking ? "auto" : "manual";
                     const loc = matchingOrderLine.inventorylocation;
@@ -221,7 +223,8 @@ define(["../dao/2win_dao_itemfullfilment", "N/log", "N/query", "N/search"], func
             // (creados y actualizados) para evitar sobreconsumo del mismo lote.
             const ctxItemIds = [...new Set(lineasConInfoLocacion.map((l) => Number(l.item)))];
             const ctxLocationIds = [...new Set(lineasConInfoLocacion.map((l) => Number(l.inventorylocation)).filter(Boolean))];
-            const ctxAsignacion = this.itemFulfillmentDao.prepararContextoAsignacion(ctxItemIds, ctxLocationIds);
+            const fechaReferencia = newRecord.getValue({ fieldId: "trandate" }) || null;
+            const ctxAsignacion = this.itemFulfillmentDao.prepararContextoAsignacion(ctxItemIds, ctxLocationIds, fechaReferencia);
 
             const resultado = {
                 grupos: [],
@@ -236,7 +239,7 @@ define(["../dao/2win_dao_itemfullfilment", "N/log", "N/query", "N/search"], func
                 const existingFulfillmentIds = existingFulfillmentsMap[key];
 
                 // Evaluamos si el grupo específico contiene líneas que nunca han sido despachadas
-                const tieneLineasNuevasElGrupo = group.lines.some((l) => l.fulfillments.length === 0);
+                const tieneLineasNuevasElGrupo = group.lines.some((l) => l.isNew);
 
                 const detalleGrupo = { grupo: key, tipo: group.isAutoPicking ? "auto" : "manual", lineas: group.lines.length, accion: null, detalle: null };
 
@@ -248,7 +251,7 @@ define(["../dao/2win_dao_itemfullfilment", "N/log", "N/query", "N/search"], func
                     // que ya no aplican y eliminara el IF solo si quedan 0 líneas válidas.
                     for (const ifId of idArray) {
                         try {
-                            const res = this.itemFulfillmentDao.updateLines(ifId, group.lines, newRecord.id, group.isAutoPicking, forceStatusDowngrade, ctxAsignacion);
+                            const res = this.itemFulfillmentDao.updateLines(ifId, group.lines, newRecord.id, group.isAutoPicking, forceStatusDowngrade, ctxAsignacion, fechaReferencia);
                             if (res && res.updated) {
                                 resultado.ifsActualizados.push(res.updated);
                             } else {
@@ -263,10 +266,10 @@ define(["../dao/2win_dao_itemfullfilment", "N/log", "N/query", "N/search"], func
 
                     // Si el grupo además contiene líneas nuevas que no estaban en el IF original, las forzamos en un flujo parcial
                     if (tieneLineasNuevasElGrupo) {
-                        const lineasNuevasDeEsteGrupo = group.lines.filter((l) => l.fulfillments.length === 0);
+                        const lineasNuevasDeEsteGrupo = group.lines.filter((l) => l.isNew);
                         nLog.debug("Sincronización", `Detectadas líneas nuevas en grupo existente. Creando parcial para: ${JSON.stringify(lineasNuevasDeEsteGrupo)}`);
                         try {
-                            const creados = this.itemFulfillmentDao.createPartialFulfillment(newRecord.id, lineasNuevasDeEsteGrupo, group.isAutoPicking, ctxAsignacion);
+                            const creados = this.itemFulfillmentDao.createPartialFulfillment(newRecord.id, lineasNuevasDeEsteGrupo, group.isAutoPicking, ctxAsignacion, fechaReferencia);
                             if (creados && creados.length > 0) {
                                 resultado.ifsCreados.push(...creados);
                             }
@@ -274,11 +277,11 @@ define(["../dao/2win_dao_itemfullfilment", "N/log", "N/query", "N/search"], func
                             nLog.error("Sincronización", `Error creando parcial en grupo ${key}: ${e.message}`);
                         }
                     }
-                } else {
+                } else if (tieneLineasNuevasElGrupo) {
                     nLog.debug("Sincronización", `Creando nuevo IF para el grupo: ${key}`);
                     detalleGrupo.accion = "creado";
                     try {
-                        const creados = this.itemFulfillmentDao.createPartialFulfillment(newRecord.id, group.lines, group.isAutoPicking, ctxAsignacion);
+                        const creados = this.itemFulfillmentDao.createPartialFulfillment(newRecord.id, group.lines, group.isAutoPicking, ctxAsignacion, fechaReferencia);
                         if (creados && creados.length > 0) {
                             resultado.ifsCreados.push(...creados);
                         }
@@ -324,7 +327,6 @@ define(["../dao/2win_dao_itemfullfilment", "N/log", "N/query", "N/search"], func
 
         deleteLineOnFulfillments(orderId, orderLine) {
             const fulfillmentLines = this.#getItemFulfillmentLines(orderId);
-            nLog.debug("fulfillmentLines", fulfillmentLines);
             let idFulfillment = null;
             fulfillmentLines.forEach((fulfillmentLines) => {
                 if (Number(fulfillmentLines.line) === Number(orderLine)) {

@@ -31,7 +31,7 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
          * @param {number} locationId    - locación a validar
          * @throws {Error} si hay lotes con stock insuficiente
          */
-        _validarStockLotesEnBloque(linesToProcess, locationId) {
+        _validarStockLotesEnBloque(linesToProcess, locationId, fechaReferencia = null) {
             const idsLotes = new Set();
             const idsItems = new Set();
             const lotesRequeridos = [];
@@ -57,6 +57,8 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
             }
             if (idsLotes.size === 0) return true;
 
+            const fechaFiltro = fechaReferencia ? (fechaReferencia instanceof Date ? format.format({ value: fechaReferencia, type: format.Type.DATE }) : fechaReferencia) : "CURRENT_DATE";
+
             const suiteQL = `
                     SELECT
                         invNum.id AS inventorynumber,
@@ -76,7 +78,7 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
                         AND item.id IN (${[...idsItems].join(",")})
                         AND invNumLoc.quantityavailable > 0
                         AND (
-                            CURRENT_DATE < invNum.expirationdate
+                            ${fechaFiltro === "CURRENT_DATE" ? "CURRENT_DATE" : `'${fechaFiltro}'`} < invNum.expirationdate
                             OR invNum.expirationdate IS NULL
                         )
             `;
@@ -158,6 +160,66 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
                 fulfillmentRecord.removeCurrentSublistSubrecord({ sublistId: SUBLIST_ITEM, fieldId: FIELD_INV_DETAIL });
             }
         }
+
+        // ══════════════════════════════════════════════════════════════════════
+        // ERROR PARSING — Detección y extracción de lotes desde errores de inventario
+        // ══════════════════════════════════════════════════════════════════════
+
+        /**
+         * Determina si un error capturado en save() corresponde a una validación
+         * de inventario insuficiente. Verifica múltiples fuentes del objeto Error
+         * porque SuiteScript 2.x puede envolver/truncar el mensaje o entregar solo
+         * el código en `error.name` / `error.cause.code`.
+         *
+         * @param {Error} error
+         * @returns {boolean}
+         */
+        _esErrorDeInventario(error) {
+            const ERROR_CODES_INVENTARIO = ["INVENTORY_BALANCE_AVAILABLE_QUANTITY_VALIDATION", "INSUFFICIENT_INVENTORY", "INVENTORY_NUMBERS_REQUIRED"];
+            const ERROR_MESSAGES_INVENTARIO = ["Inventario números", "Inventory numbers", "On Hand", "suficiente inventario disponible", "Not enough inventory available"];
+
+            // 1. Verificar error.name (código del error SuiteScript)
+            if (error.name && ERROR_CODES_INVENTARIO.some((code) => error.name.includes(code))) return true;
+
+            // 2. Verificar error.message (compatibilidad retroactiva)
+            if (error.message && ERROR_MESSAGES_INVENTARIO.some((msg) => error.message.includes(msg))) return true;
+
+            // 3. Verificar error.cause.code y error.cause.details (estructura anidada)
+            const cause = error.cause;
+            if (cause) {
+                if (cause.code && ERROR_CODES_INVENTARIO.some((code) => cause.code.includes(code))) return true;
+                if (cause.details && ERROR_MESSAGES_INVENTARIO.some((msg) => cause.details.includes(msg))) return true;
+            }
+
+            return false;
+        }
+
+        /**
+         * Extrae los números de lote mencionados en un error de inventario.
+         * Busca en `error.message` y `error.cause.details` usando el patrón
+         * "Número de inventario:" / "Number:".
+         *
+         * @param {Error} error
+         * @returns {Set<string>} Conjunto de lotes a excluir
+         */
+        _extraerLotesDeError(error) {
+            const lotes = new Set();
+            const regex = /(?:Number:|Número de inventario:)\s*([^,\]\[\n\r\-]+)/g;
+
+            const textos = [error.message];
+            if (error.cause && error.cause.details) {
+                textos.push(error.cause.details);
+            }
+
+            for (const texto of textos) {
+                if (!texto) continue;
+                const matches = [...texto.matchAll(regex)];
+                matches.forEach((m) => lotes.add(m[1].trim()));
+            }
+
+            return lotes;
+        }
+
         // ══════════════════════════════════════════════════════════════════════
         // ASIGNACIÓN — Snapshot (preferida) → Auto-Picking (fallback)
         // ══════════════════════════════════════════════════════════════════════
@@ -211,11 +273,14 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
          *
          * @param {Array<number>} itemIds
          * @param {Array<number>} locationIds
+         * @param {Date|string|null} fechaReferencia - Fecha para validar vencimiento (default: CURRENT_DATE)
          * @returns {Map<string, Array>} Mapa clave "item|location" → lotes disponibles
          */
-        _cargarStockDisponibleEnBloque(itemIds, locationIds) {
+        _cargarStockDisponibleEnBloque(itemIds, locationIds, fechaReferencia = null) {
             const stockMap = new Map();
             if (!itemIds.length || !locationIds.length) return stockMap;
+
+            const fechaFiltro = fechaReferencia ? (fechaReferencia instanceof Date ? format.format({ value: fechaReferencia, type: format.Type.DATE }) : fechaReferencia) : "CURRENT_DATE";
 
             const sql = `
                     SELECT
@@ -239,7 +304,7 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
                         AND loc.id IN (${locationIds.join(",")})
                         AND invNumLoc.quantityavailable > 0
                         AND (
-                            CURRENT_DATE < invNum.expirationdate
+                            ${fechaFiltro === "CURRENT_DATE" ? "CURRENT_DATE" : `'${fechaFiltro}'`} < invNum.expirationdate
                             OR invNum.expirationdate IS NULL
                         )
                     ORDER BY
@@ -361,11 +426,12 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
          *
          * @param {Array<number>} itemIds
          * @param {Array<number>} locationIds
+         * @param {Date|string|null} fechaReferencia - Fecha para validar vencimiento (default: CURRENT_DATE)
          * @returns {{ stockMap: Map, consumoTracker: Map }}
          */
-        prepararContextoAsignacion(itemIds, locationIds) {
+        prepararContextoAsignacion(itemIds, locationIds, fechaReferencia = null) {
             return {
-                stockMap: this._cargarStockDisponibleEnBloque(itemIds, locationIds),
+                stockMap: this._cargarStockDisponibleEnBloque(itemIds, locationIds, fechaReferencia),
                 consumoTracker: new Map()
             };
         }
@@ -437,15 +503,16 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
          * @param {boolean} isAutoPicking
          * @param {object} ctx           - { stockMap, consumoTracker }
          * @param {Date|string|null} fechaGrupo - fecha de creación de las líneas del grupo
+         * @param {Date|string|null} fechaReferencia - Fecha para validar vencimiento (default: CURRENT_DATE)
          * @returns {number|null} ID del IF creado, o null si no se asignó nada
          */
-        _crearIFParaGrupoFecha(salesOrderId, grupoLineas, isAutoPicking, ctx, fechaGrupo) {
+        _crearIFParaGrupoFecha(salesOrderId, grupoLineas, isAutoPicking, ctx, fechaGrupo, fechaReferencia = null) {
             const defaultInventoryLocation = grupoLineas.find((l) => l.locationInfo?.id)?.locationInfo?.id;
 
             // LBYL: Validar stock físico antes de transformar
             if (!isAutoPicking && defaultInventoryLocation) {
                 try {
-                    this._validarStockLotesEnBloque(grupoLineas, defaultInventoryLocation);
+                    this._validarStockLotesEnBloque(grupoLineas, defaultInventoryLocation, fechaReferencia);
                 } catch (validationError) {
                     nLog.error(`Fulfillment abortado en OV ${salesOrderId} por LBYL (fecha ${fechaGrupo})`, validationError.message);
                     return null;
@@ -461,7 +528,7 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
                 let ctxActual = ctx;
                 if (intento > 1) {
                     ctxActual = {
-                        stockMap: this._cargarStockDisponibleEnBloque(itemIds, locIds),
+                        stockMap: this._cargarStockDisponibleEnBloque(itemIds, locIds, fechaReferencia),
                         consumoTracker: new Map()
                     };
                 }
@@ -537,19 +604,15 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
                 try {
                     return fulfillmentRecord.save({ enableSourcing: true, ignoreMandatoryFields: true });
                 } catch (saveError) {
-                    const isInventoryError =
-                        saveError.name === "USER_ERROR" &&
-                        (saveError.message.includes("Inventario números") || saveError.message.includes("Inventory numbers") || saveError.message.includes("On Hand") || saveError.message.includes("suficiente inventario disponible") || saveError.message.includes("Not enough inventory available"));
+                    if (!this._esErrorDeInventario(saveError)) throw saveError;
 
-                    if (!isInventoryError) throw saveError;
-
-                    const matches = [...saveError.message.matchAll(/(?:Number:|Número de inventario:)\s*([^,\]\[\n\r\-]+)/g)];
-                    if (matches.length === 0) {
-                        nLog.audit(`Error de inventario sin lotes parseables en OV ${salesOrderId} (fecha ${fechaGrupo})`, saveError.message);
+                    const lotesDelError = this._extraerLotesDeError(saveError);
+                    if (lotesDelError.size === 0) {
+                        nLog.audit(`Error de inventario sin lotes parseables en OV ${salesOrderId} (fecha ${fechaGrupo})`, `name: ${saveError.name} | message: ${saveError.message}`);
                         return null;
                     }
 
-                    matches.forEach((m) => lotesExcluidos.add(m[1].trim()));
+                    lotesDelError.forEach((l) => lotesExcluidos.add(l));
                     nLog.audit(`Intento ${intento}/${MAX_INTENTOS} fallido en OV ${salesOrderId} (fecha ${fechaGrupo})`, `Lotes excluidos: ${[...lotesExcluidos].join(", ")}`);
                 }
             }
@@ -571,7 +634,7 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
          *
          * @returns {Array<number>|null} Array de IDs de IFs creados, o null si no se creó ninguno
          */
-        createPartialFulfillment(salesOrderId, linesToFulfill, isAutoPicking = false, ctxAsignacion = null) {
+        createPartialFulfillment(salesOrderId, linesToFulfill, isAutoPicking = false, ctxAsignacion = null, fechaReferencia = null) {
             try {
                 // ── Contexto de asignación: cache de stock + tracker de consumo ───────
                 // Si el caller (AutoPickingManager) pasa ctxAsignacion, se comparte a
@@ -580,7 +643,7 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
                 const allLocIdsRaw = linesToFulfill.map((l) => l.locationInfo?.id || l.inventorylocation).filter(Boolean);
                 const allLocationIds = [...new Set(allLocIdsRaw.map(Number))];
                 const ctx = ctxAsignacion ?? {
-                    stockMap: this._cargarStockDisponibleEnBloque(allItemIds, allLocationIds),
+                    stockMap: this._cargarStockDisponibleEnBloque(allItemIds, allLocationIds, fechaReferencia),
                     consumoTracker: new Map()
                 };
 
@@ -609,7 +672,7 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
                     }
                     for (const [fId, lines] of fulfillmentUpdateMap) {
                         try {
-                            this.updateLines(fId, lines, salesOrderId, isAutoPicking, false, ctx);
+                            this.updateLines(fId, lines, salesOrderId, isAutoPicking, false, ctx, fechaReferencia);
                         } catch (e) {
                             nLog.error(`createPartialFulfillment — error actualizando IF existente ${fId} en OV ${salesOrderId}`, e.message);
                         }
@@ -635,7 +698,7 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
                 for (const [fechaKey, grupoLineas] of gruposPorFecha) {
                     const fechaGrupo = fechaKey === "SIN_FECHA" ? null : fechaKey;
                     try {
-                        const ifId = this._crearIFParaGrupoFecha(salesOrderId, grupoLineas, isAutoPicking, ctx, fechaGrupo);
+                        const ifId = this._crearIFParaGrupoFecha(salesOrderId, grupoLineas, isAutoPicking, ctx, fechaGrupo, fechaReferencia);
                         if (ifId) idsCreados.push(ifId);
                     } catch (e) {
                         nLog.error(`createPartialFulfillment — error creando IF para fecha ${fechaKey} en OV ${salesOrderId}`, e.message);
@@ -658,7 +721,7 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
          * Ya NO se genera un IF adicional para el excedente cuando la línea ya tiene
          * fulfillment asociado — ese caso se resuelve aquí mismo.
          */
-        updateLines(fulfillmentId, linesToFulfill, salesOrderId = null, isAutoPicking = false, forceStatusDowngrade = false, ctxAsignacion = null) {
+        updateLines(fulfillmentId, linesToFulfill, salesOrderId = null, isAutoPicking = false, forceStatusDowngrade = false, ctxAsignacion = null, fechaReferencia = null) {
             try {
                 const itemIds = [...new Set(linesToFulfill.map((l) => Number(l.item)))];
                 const locIdsRaw = linesToFulfill.map((l) => l.locationInfo?.id || l.inventorylocation).filter(Boolean);
@@ -666,12 +729,12 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
                 const MAX_INTENTOS = 3;
 
                 for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
-                    let stockMapActual = ctxAsignacion?.stockMap ?? this._cargarStockDisponibleEnBloque(itemIds, locIdsRaw.length > 0 ? [...new Set(locIdsRaw.map(Number))] : []);
+                    let stockMapActual = ctxAsignacion?.stockMap ?? this._cargarStockDisponibleEnBloque(itemIds, locIdsRaw.length > 0 ? [...new Set(locIdsRaw.map(Number))] : [], fechaReferencia);
                     let consumoTrackerActual = ctxAsignacion?.consumoTracker ?? new Map();
 
                     if (intento > 1) {
                         const locIds = locIdsRaw.length > 0 ? [...new Set(locIdsRaw.map(Number))] : [];
-                        stockMapActual = this._cargarStockDisponibleEnBloque(itemIds, locIds);
+                        stockMapActual = this._cargarStockDisponibleEnBloque(itemIds, locIds, fechaReferencia);
                         consumoTrackerActual = new Map();
                     }
 
@@ -699,7 +762,7 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
                     const linesWithSnapshot = linesToFulfill.filter((l) => l.inventoryDetail);
                     if (linesWithSnapshot.length > 0 && defaultInventoryLocation) {
                         try {
-                            this._validarStockLotesEnBloque(linesWithSnapshot, defaultInventoryLocation);
+                            this._validarStockLotesEnBloque(linesWithSnapshot, defaultInventoryLocation, fechaReferencia);
                         } catch (validationError) {
                             nLog.audit(`LBYL Snapshot en IF ${fulfillmentId} (intento ${intento})`, validationError.message);
                         }
@@ -771,19 +834,15 @@ define(["N/record", "N/search", "N/log", "N/query", "N/format"], (record, search
                         fulfillmentRecord.save({ enableSourcing: true, ignoreMandatoryFields: true });
                         return { updated: fulfillmentId, created: null };
                     } catch (saveError) {
-                        const isInventoryError =
-                            saveError.name === "USER_ERROR" &&
-                            (saveError.message.includes("Inventario números") || saveError.message.includes("Inventory numbers") || saveError.message.includes("On Hand") || saveError.message.includes("suficiente inventario disponible") || saveError.message.includes("Not enough inventory available"));
+                        if (!this._esErrorDeInventario(saveError)) throw saveError;
 
-                        if (!isInventoryError) throw saveError;
-
-                        const matches = [...saveError.message.matchAll(/(?:Number:|Número de inventario:)\s*([^,\]\[\n\r\-]+)/g)];
-                        if (matches.length === 0) {
-                            nLog.audit(`Error de inventario sin lotes parseables en IF ${fulfillmentId}`, saveError.message);
+                        const lotesDelError = this._extraerLotesDeError(saveError);
+                        if (lotesDelError.size === 0) {
+                            nLog.audit(`Error de inventario sin lotes parseables en IF ${fulfillmentId}`, `name: ${saveError.name} | message: ${saveError.message}`);
                             return { updated: null, created: null };
                         }
 
-                        matches.forEach((m) => lotesExcluidos.add(m[1].trim()));
+                        lotesDelError.forEach((l) => lotesExcluidos.add(l));
                         nLog.audit(`Intento ${intento}/${MAX_INTENTOS} fallido en IF ${fulfillmentId}`, `Lotes excluidos: ${[...lotesExcluidos].join(", ")}`);
                     }
                 }

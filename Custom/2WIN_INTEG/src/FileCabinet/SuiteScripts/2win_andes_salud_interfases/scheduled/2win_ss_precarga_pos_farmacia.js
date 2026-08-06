@@ -57,7 +57,7 @@ define(['N/log', 'N/cache', '../domain/2win_dom_precargas'], function(log, cache
             cacheObj.put({
                 key: 'ALL_SUBSIDIARIAS',
                 value: JSON.stringify(subsidiarias.result),
-                ttl: 1200 //15 Min. //86400 // 24 horas
+                ttl: 900 //15 Min. //86400 // 24 horas
             });
 
             log.audit('CACHE_WARMUP', 'Subsidiarias pre-cargadas: ' + subsidiarias.result.length);
@@ -79,7 +79,7 @@ define(['N/log', 'N/cache', '../domain/2win_dom_precargas'], function(log, cache
             cacheObj.put({
                 key: 'ALL_UBICACIONES',
                 value: JSON.stringify(ubicaciones.result),
-                ttl: 1200 //15 Min. //86400 // 24 horas
+                ttl: 900 //15 Min. //86400 // 24 horas
             });
 
             log.audit('CACHE_WARMUP', 'Ubicaciones pre-cargadas: ' + ubicaciones.result.length);
@@ -101,7 +101,7 @@ define(['N/log', 'N/cache', '../domain/2win_dom_precargas'], function(log, cache
             cacheObj.put({
                 key: 'ALL_TIPOS_DTE',
                 value: JSON.stringify(tiposDTE.result),
-                ttl: 1200 //15 Min. //86400 // 24 horas
+                ttl: 900 //15 Min. //86400 // 24 horas
             });
 
             log.audit('CACHE_WARMUP', 'Tipos DTE pre-cargados: ' + tiposDTE.result.length);
@@ -123,7 +123,7 @@ define(['N/log', 'N/cache', '../domain/2win_dom_precargas'], function(log, cache
             cacheObj.put({
                 key: 'ALL_PARAMETROS',
                 value: JSON.stringify(parametros.result),
-                ttl: 1200 //15 Min. //86400 // 24 horas
+                ttl: 900 //15 Min. //86400 // 24 horas
             });
 
             log.audit('CACHE_WARMUP', 'Parámetros pre-cargados: ' + parametros.result.length);
@@ -145,7 +145,7 @@ define(['N/log', 'N/cache', '../domain/2win_dom_precargas'], function(log, cache
             cacheObj.put({
                 key: 'ALL_CENTROS_COSTO',
                 value: JSON.stringify(centrosCosto.result),
-                ttl: 1200 //15 Min. //86400 // 24 horas
+                ttl: 900 //15 Min. //86400 // 24 horas
             });
 
             log.audit('CACHE_WARMUP', 'Centros de costo pre-cargados: ' + centrosCosto.result.length);
@@ -167,7 +167,7 @@ define(['N/log', 'N/cache', '../domain/2win_dom_precargas'], function(log, cache
             cacheObj.put({
                 key: 'ALL_CUENTAS_FORMA_PAGO',
                 value: JSON.stringify(cuentas.result),
-                ttl: 1200 //15 Min. //86400 // 24 horas
+                ttl: 900 //15 Min. //86400 // 24 horas
             });
 
             log.audit('CACHE_WARMUP', 'Cuentas por forma de pago pre-cargadas: ' + cuentas.result.length);
@@ -189,7 +189,7 @@ define(['N/log', 'N/cache', '../domain/2win_dom_precargas'], function(log, cache
             cacheObj.put({
                 key: 'ALL_TAX_CODES',
                 value: JSON.stringify(taxCodes.result),
-                ttl: 1200 //15 Min. //86400 // 24 horas
+                ttl: 900 //15 Min. //86400 // 24 horas
             });
 
             log.audit('CACHE_WARMUP', 'Tax codes pre-cargados: ' + taxCodes.result.length);
@@ -211,7 +211,7 @@ define(['N/log', 'N/cache', '../domain/2win_dom_precargas'], function(log, cache
             cacheObj.put({
                 key: 'ALL_DISCOUNTS',
                 value: JSON.stringify(discounts.result),
-                ttl: 1200 //15 Min. //86400 // 24 horas
+                ttl: 900 //15 Min. //86400 // 24 horas
             });
 
             log.audit('CACHE_WARMUP', 'Descuentos pre-cargados: ' + discounts.result.length);

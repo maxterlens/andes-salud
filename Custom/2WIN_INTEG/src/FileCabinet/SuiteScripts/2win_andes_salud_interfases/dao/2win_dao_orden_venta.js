@@ -539,6 +539,7 @@ define([
                 FROM location
                 WHERE 
                 location.id = ?
+                AND location.isinactive = 'F'
                 `,
                     params: [locationId]
                 })
@@ -835,8 +836,6 @@ define([
      */
     function formatearRut(parametro) {
         try {
-            
-
             // Normalizar a string, eliminar espacios y caracteres no alfanuméricos
             const normalizado = String(parametro).trim();
             const alfaNumerico = normalizado.replace(/[^0-9A-Za-z]/g, "");

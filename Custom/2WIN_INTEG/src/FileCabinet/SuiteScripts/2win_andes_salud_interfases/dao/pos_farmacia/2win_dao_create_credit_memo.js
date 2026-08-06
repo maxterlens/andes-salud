@@ -103,7 +103,13 @@ define([
                 creditMemo.setValue({ fieldId: 'customform', value: 163 });
                 creditMemo.setValue({ fieldId: 'custbody_2w_docreferenciado', value: tipoDocumento.result });
                 creditMemo.setValue({ fieldId: 'custbody_2winfoliodocref', value: folioFacturaOriginal });
-                creditMemo.setValue({ fieldId: 'custbody_2winfolioacepta', value: folioNC });
+                // Si el folio es alfanumérico, usar campo Transbank; si es numérico, usar campo acepta
+                var folioNCEsAlfanumerico = folioNC && !/^[0-9]+$/.test(String(folioNC));
+                if (folioNCEsAlfanumerico) {
+                    creditMemo.setValue({ fieldId: 'custbody_2winfolio_transbank', value: folioNC });
+                } else {
+                    creditMemo.setValue({ fieldId: 'custbody_2winfolioacepta', value: folioNC });
+                }
                 creditMemo.setValue({ fieldId: 'approvalstatus', value: '2' });
 
                 // var numApply = creditMemo.getLineCount({ sublistId: 'apply' });

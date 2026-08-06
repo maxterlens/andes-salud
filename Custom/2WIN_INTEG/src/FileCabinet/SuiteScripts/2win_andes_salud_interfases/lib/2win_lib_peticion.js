@@ -13,7 +13,7 @@ define(["N/https", "N/log", "N/encode"], function (https, nLog, encode) {
      */
     function ejecutarPeticion(tipo, url, token, body) {
         try {
-            nLog.audit("ejecutarPeticion - parametros", {
+            nLog.error("ejecutarPeticion - parametros", {
                 tipo: tipo,
                 url: url,
                 token: token,
@@ -61,7 +61,7 @@ define(["N/https", "N/log", "N/encode"], function (https, nLog, encode) {
                 });
             }
 
-            nLog.audit("ejecutarPeticion - respuesta", respuesta);
+            nLog.error("ejecutarPeticion - respuesta", respuesta);
 
             // // Evaluar codigo de respuesta
             // if (respuesta.code !== 400) {

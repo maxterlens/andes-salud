@@ -27,18 +27,32 @@ define(["../domain/2win_dom_producto", "../lib/2win_lib_auditoria", "N/runtime",
             const filters = [...FILTROS_ITEM];
             // if (fechaDesde) {
             //filters.push("AND", ["created", "onorafter", "14/04/2026"]);
-          filters.push("AND", ["internalid", "anyof", [12855,
-                                                      12856,
-                                                      12857,
-                                                      12858,
-                                                      12859,
-                                                      12860,
-                                                      12861,
-                                                      12862,
-                                                      12863,
-                                                      12872,
-                                                      12873,
-                                                      15081]]);
+          filters.push("AND", ["internalid", "anyof", [15641,
+15635,
+15634,
+15633,
+15632,
+15631,
+15617,
+15600,
+15592,
+15589,
+15588,
+15587,
+15586,
+15536,
+15535,
+15534,
+15533,
+15532,
+15531,
+15527,
+15526,
+15525,
+15524,
+15491,
+15490
+]]);
             // }
 
             const itemSearch = search.create({

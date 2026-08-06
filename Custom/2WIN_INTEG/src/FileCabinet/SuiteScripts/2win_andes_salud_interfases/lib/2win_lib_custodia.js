@@ -83,7 +83,7 @@ define(["N/record", "N/log", "N/crypto/random", "N/search"], function (record, n
     function busquedaRegistroPorExternalid(parametro) {
         try {
             nLog.debug("busquedaRegistroPorExternalid - parametro", parametro);
-            if(!parametro)throw Error("No esta definido el externalid")
+
             let objSearch = {
                 type: "customrecord_2win_andessalud_custodia",
                 filters: [

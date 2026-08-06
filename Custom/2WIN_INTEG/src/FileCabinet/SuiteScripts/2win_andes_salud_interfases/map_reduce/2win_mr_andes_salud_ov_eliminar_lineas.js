@@ -349,6 +349,9 @@ define([
                 throw new Error(contenido.datos.Pacientes[0].error || "Error al procesar registros");
             } else {
                 // Enviar reporte a servicio externo
+                nLog.error("cuerpoPeticion-enviarRegistro", {
+                    cuerpoPeticion: cuerpoPeticion
+                });
                 let respuesta = daoOrdenVenta.enviarRegistro(`${valoresParametrosOperacion[1].text}/process-batch`, cuerpoPeticion);
                 peticionEnviada = true;
                 
@@ -589,6 +592,9 @@ define([
                 custodia.datosEntrada = archivoCreado;
 
                 // Enviar reporte a servicio externo
+                nLog.error("cuerpoPeticion-enviarRegistro", {
+                    cuerpoPeticion: cuerpoPeticion
+                });
                 let respuesta = daoOrdenVenta.enviarRegistro(`${valoresParametrosOperacion[1].text}/process-batch`, cuerpoPeticion);
 
                 // Validar codigo de respuesta

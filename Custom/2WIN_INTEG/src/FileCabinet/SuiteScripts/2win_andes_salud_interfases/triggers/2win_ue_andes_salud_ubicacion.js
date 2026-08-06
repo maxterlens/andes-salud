@@ -79,7 +79,7 @@ define(["../domain/2win_dom_ubicacion", "N/log", "N/search", "N/ui/message", "N/
             .create({
                 type: "customrecord_2win_andessalud_custodia",
                 filters: [["custrecord_2win_as_id_registro", "is", locationId], "AND", ["custrecord_2win_as_codigo_respuesta", "is", "001"]],
-                columns: ["custrecord_2win_as_respuesta", "custrecord_2win_as_interface", "internalid"]
+                columns: ["custrecord_2win_as_respuesta", "custrecord_2win_as_interface", search.createColumn({ name: 'internalid', sort: search.Sort.DESC})]
             })
             .run()
             .getRange({ start: 0, end: 1 });
@@ -204,8 +204,8 @@ define(["../domain/2win_dom_ubicacion", "N/log", "N/search", "N/ui/message", "N/
             // Consultar si existe otro registro con el mismo código (excluyendo el registro actual en edición)
             const queryStr =
                 context.type === context.UserEventType.CREATE
-                    ? `SELECT COUNT(*) as count FROM location WHERE custrecord_2w_codigo_ubicacion = ?`
-                    : `SELECT COUNT(*) as count FROM location WHERE custrecord_2w_codigo_ubicacion = ? AND id != ?`;
+                    ? `SELECT COUNT(*) as count FROM location WHERE custrecord_2w_codigo_ubicacion = ? '`
+                    : `SELECT COUNT(*) as count FROM location WHERE custrecord_2w_codigo_ubicacion = ? AND id != ? `;
 
             const params = context.type === context.UserEventType.CREATE ? [codigoUbicacion] : [codigoUbicacion, newRecord.id];
 

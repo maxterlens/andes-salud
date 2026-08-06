@@ -108,6 +108,7 @@ define(["N/record", "N/log", "N/search"], function (record, nLog, search) {
             // Setear campos de header
             je.setValue({ fieldId: "subsidiary", value: Number(data.subsidiaria) });
             je.setValue({ fieldId: "trandate", value: new Date() });
+            je.setValue({ fieldId: "approvalstatus", value: 2 }); // Aprobado: necesario para que aparezca en la sublista apply del pago
             je.setValue({ fieldId: "memo", value: "Ajuste por redondeo POS Farmacia - " + (data.tipoTransaccion === "invoice" ? "Venta" : "Devolución") });
 
             if (data.departamento) {
