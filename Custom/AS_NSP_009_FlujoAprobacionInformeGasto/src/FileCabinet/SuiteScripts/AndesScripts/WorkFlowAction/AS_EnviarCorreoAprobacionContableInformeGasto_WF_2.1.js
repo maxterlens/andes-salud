@@ -52,7 +52,7 @@ define([
             // ── 1. Leer parámetros del script ─────────────────────────────────
             const script = runtime.getCurrentScript();
             const user = runtime.getCurrentUser();
-            const emailTemplateId = script.getParameter({ name: "custscript_as_env_corr_apr_cont_ig_tmpl" });
+            const emailTemplateId = script.getParameter({ name: "custscript_as_wf_env_coraprob_plantilla" });
 
             if (!emailTemplateId) {
                 log.error({
@@ -105,11 +105,15 @@ define([
                 filters: [
                     ["role", "anyof", roles],
                     "AND",
-                    ["role.subsidiaries", "anyof", subsidiaria],
+                    ["role.subsidiaries", "anyof", subsidiaria],/*
                     "AND",
-                    ["custentity_as_aprobador_cont_wf_inf_gast", "is", "T"],
+                    ["custentity_as_aprobador_cont_wf_inf_gast", "is", "T"],*/
                     "AND",
                     ["isinactive", "is", "F"],
+                    "AND",
+                    ["access","is","T"],
+                    "AND",
+                    ["email","contains","@andessalud.cl"]
                 ],
                 columns: [search.createColumn({ name: "internalid" })],
             });

@@ -1,0 +1,12 @@
+<emailtemplate scriptid="custemailtmpl_as_email_expense_report_notification">
+  <addcompanyaddress>T</addcompanyaddress>
+  <addunsubscribelink>T</addunsubscribelink>
+  <description></description>
+  <isinactive>F</isinactive>
+  <isprivate>F</isprivate>
+  <mediaitem></mediaitem>
+  <name>Correo Notificación Informe de Gasto</name>
+  <recordtype>TRANSACTION</recordtype>
+  <subject>Aprobación de Supervisor de Informe de Gasto</subject>
+  <usesmedia>F</usesmedia>
+</emailtemplate>

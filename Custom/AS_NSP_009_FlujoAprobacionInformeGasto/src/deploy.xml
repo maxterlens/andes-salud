@@ -3,10 +3,10 @@
         <path>~/AccountConfiguration/*</path>
     </configuration>
     <files>
-        <path>~/FileCabinet/SuiteScripts/*</path>
+        <path>~/FileCabinet/SuiteScripts/AndesScripts/APIGlobales/*</path>
     </files>
     <objects>
-        <path>~/Objects/*</path>
+        <path>~/Objects/test/*</path>
     </objects>
     <translationimports>
         <path>~/Translations/*</path>

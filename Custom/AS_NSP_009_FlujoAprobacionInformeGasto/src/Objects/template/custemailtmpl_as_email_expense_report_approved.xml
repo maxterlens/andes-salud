@@ -1,0 +1,12 @@
+<emailtemplate scriptid="custemailtmpl_as_email_expense_report_approved">
+  <addcompanyaddress>T</addcompanyaddress>
+  <addunsubscribelink>T</addunsubscribelink>
+  <description>Notificación enviada al solicitante cuando su Informe de Gasto ha sido aprobada por todos los niveles requeridos.</description>
+  <isinactive>F</isinactive>
+  <isprivate>F</isprivate>
+  <mediaitem></mediaitem>
+  <name>Correo Informe de Gasto Aprobado</name>
+  <recordtype>TRANSACTION</recordtype>
+  <subject>✅ Informe de Gasto ${transaction.tranid} — Aprobada</subject>
+  <usesmedia>F</usesmedia>
+</emailtemplate>

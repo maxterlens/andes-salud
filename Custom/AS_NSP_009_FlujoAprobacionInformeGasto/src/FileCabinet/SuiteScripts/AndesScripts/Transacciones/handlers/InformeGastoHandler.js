@@ -27,7 +27,24 @@ define([
 
     function rejectTransactionPopup() {
 
-        require(['N/record', 'N/currentRecord', 'N/search', 'N/record'], function (record, currentRecord, search, record) {
+        require(['N/currentRecord', 'N/search', 'N/url', 'N/https'], function (currentRecord, search, url, https) {
+
+            // ── Configuración del Suitelet ────────────────────────────────────────
+            var STLT_SCRIPT_ID = 'customscript_as_action_execut_hdlr_stlt';
+            var STLT_DEPLOY_ID = 'customdeploy_as_action_execut_hdlr_stlt';
+
+            var _resolverUrlSuitelet = function () {
+                try {
+                    return url.resolveScript({
+                        scriptId        : STLT_SCRIPT_ID,
+                        deploymentId    : STLT_DEPLOY_ID,
+                        returnExternalUrl: false
+                    });
+                } catch (e) {
+                    console.error('[AS] No se pudo resolver la URL del Suitelet:', e);
+                    return null;
+                }
+            };
 
             var rec       = currentRecord.get();
             var recordId  = rec.id;
@@ -187,10 +204,10 @@ define([
                 var error      = overlay.querySelector('#as_reject_error');
                 var confirmBtn = overlay.querySelector('#as_reject_confirm');
 
-                motivo.value            = '';
-                error.style.display     = 'none';
-                confirmBtn.disabled     = false;
-                confirmBtn.textContent  = 'Rechazar';
+                motivo.value             = '';
+                error.style.display      = 'none';
+                confirmBtn.disabled      = false;
+                confirmBtn.value         = 'Rechazar';
                 confirmBtn.style.opacity = '1';
 
                 document.body.appendChild(overlay);
@@ -217,31 +234,57 @@ define([
 
                 // Deshabilitar botón para evitar doble envío
                 confirmBtn.disabled      = true;
-                confirmBtn.textContent   = 'Procesando...';
+                confirmBtn.value         = 'Procesando...';
                 confirmBtn.style.opacity = '0.7';
+                debugger;
+                // ── 4. Guardar motivo via Suitelet (compatible con Employee Center) ──
+                var suiteletUrl = _resolverUrlSuitelet();
 
-                // ── 4. Guardar motivo via submitFields ────────────────────────────
-                record.submitFields.promise({
-                    type:    record.Type.EXPENSE_REPORT,
-                    id:      recordId,
-                    values:  { custbody_as_motivo_rechazo: motivo },
-                    options: { enableSourcing: false, ignoreMandatoryFields: true }
-                }).then(function () {
-
-                    closePopup();
-
-                    // ── 5. Disparar el botón Rechazar original del workflow ────────
-                    rejectBtn.setAttribute('onclick', originalOnClick);
-                    rejectBtn.click();
-
-                }).catch(function (e) {
-                    console.error('[AS] Error al guardar motivo de rechazo:', e);
-                    errorEl.textContent    = 'Error al guardar el motivo. Intente nuevamente.';
-                    errorEl.style.display  = 'block';
-                    confirmBtn.disabled    = false;
-                    confirmBtn.textContent = 'Rechazar';
+                if (!suiteletUrl) {
+                    errorEl.textContent      = 'Error de configuración. Contacte al administrador.';
+                    errorEl.style.display    = 'block';
+                    confirmBtn.disabled      = false;
+                    confirmBtn.value         = 'Rechazar';
                     confirmBtn.style.opacity = '1';
-                });
+                    return;
+                }
+
+                try {
+                    var response = https.post({
+                        url    : suiteletUrl,
+                        headers: {
+                            'Content-Type' : 'application/json',
+                            'X-Record-Type': 'expensereport',
+                            'X-Operation'  : 'update-rejection-reason'
+                        },
+                        body: JSON.stringify({ recordId: recordId, motivoRechazo: motivo })
+                    });
+
+                    var result = JSON.parse(response.body);
+                    console.log('[AS] Suitelet response:', result);
+
+                    if (result.ok) {
+                        closePopup();
+
+                        // ── 5. Disparar el botón Rechazar original del workflow ──
+                        rejectBtn.setAttribute('onclick', originalOnClick);
+                        rejectBtn.click();
+                    } else {
+                        console.error('[AS] Suitelet respondió con error:', result.error);
+                        errorEl.textContent      = 'Error al guardar el motivo. Intente nuevamente.';
+                        errorEl.style.display    = 'block';
+                        confirmBtn.disabled      = false;
+                        confirmBtn.value         = 'Rechazar';
+                        confirmBtn.style.opacity = '1';
+                    }
+                } catch (err) {
+                    console.error('[AS] Error al llamar Suitelet:', err);
+                    errorEl.textContent      = 'Error de comunicación. Intente nuevamente.';
+                    errorEl.style.display    = 'block';
+                    confirmBtn.disabled      = false;
+                    confirmBtn.value         = 'Rechazar';
+                    confirmBtn.style.opacity = '1';
+                }
             });
 
             // ── 6. Reemplazar onclick del botón con apertura del popup ────────────

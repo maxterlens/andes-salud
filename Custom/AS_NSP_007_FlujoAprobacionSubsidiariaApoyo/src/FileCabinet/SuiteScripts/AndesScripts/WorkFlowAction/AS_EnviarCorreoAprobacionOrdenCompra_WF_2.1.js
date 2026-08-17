@@ -43,6 +43,7 @@ define(['N/runtime', 'N/record', 'N/email', 'N/search', './lib/RenderHelper'],
                 const user            = runtime.getCurrentUser();
                 const emailTemplateId = script.getParameter({ name: 'custscript_as_env_corr_apr_plantilla_c' });
                 const pdfTemplateId   = script.getParameter({ name: 'custscript_as_env_corr_apr_plantilla_pdf' });
+                const aditionalEmails = (script.getParameter({ name: 'custscript_as_env_corr_apr_correo_adi' }) || '').split(',');
 
                 if (!emailTemplateId) {
                     log.error({
@@ -121,9 +122,10 @@ define(['N/runtime', 'N/record', 'N/email', 'N/search', './lib/RenderHelper'],
                 pdfFile.name  = `${tranid}.pdf`;
 
                 // ── 6. Enviar correo al creador de la OC ──────────────────────────
+                let recipients = [createdBy, ... aditionalEmails]
                 email.send({
                     author:     user.id,
-                    recipients: createdBy,
+                    recipients: recipients,
                     subject,
                     body,
                     attachments: [pdfFile],
