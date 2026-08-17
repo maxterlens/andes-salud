@@ -19,19 +19,10 @@ define(['N/search', 'N/ui/dialog'], (search, dialog) => {
             value: customForm === 117,
             ignoreFieldChange: true
         });
-
-        console.log(
-            'PAGE INIT HONORARIO | form:',
-            customForm,
-            '| valor:',
-            customForm === 117
-        );
     };
         
 
     const saveRecord = (context) => {
-            console.log('>>> ENTRO AS DUPLICIDAD <<<');
-
         const currentRecord = context.currentRecord;
 
         const idInterno = currentRecord.id || '0';
@@ -46,7 +37,7 @@ define(['N/search', 'N/ui/dialog'], (search, dialog) => {
                 title: 'Campo requerido',
                 message: 'Debe seleccionar un proveedor.'
             });
-            return false;dake
+            return false;
         }
 
         if (!subsidiaria) {
@@ -61,6 +52,14 @@ define(['N/search', 'N/ui/dialog'], (search, dialog) => {
             dialog.alert({
                 title: 'Campo requerido',
                 message: 'Debe ingresar el folio.'
+            });
+            return false;
+        }
+
+        if (!esHonorario && !tipoDteSii) {
+            dialog.alert({
+                title: 'Campo requerido',
+                message: 'Debe seleccionar el Tipo DTE SII.'
             });
             return false;
         }
