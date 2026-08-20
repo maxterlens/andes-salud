@@ -1,118 +1,111 @@
 /**
  * @NApiVersion 2.1
+ *
  */
-define(['N/search', 'N/ui/dialog'], (search, dialog) => {
+define(['N/search'], (search) => {
 
-    const validarDuplicidad = (currentRecord) => {
+    const FIELD = {
+        CLIENTE: 'entity',
+        SUBSIDIARIA: 'subsidiary',
+        FOLIO: 'custbody_2winfolioacepta',
+        TIPO_DTE_SII: 'custbody_2wintipodtesii',
+        CUSTOM_FORM: 'customform',
+        TAX_TOTAL: 'taxtotal'
+    };
 
-        const idInterno = currentRecord.id || '0';
-        const cliente = currentRecord.getValue({fieldId: 'entity'});
-        const subsidiaria = currentRecord.getValue({fieldId: 'subsidiary'});
-        const folio = currentRecord.getValue({fieldId: 'custbody_2winfolioacepta'});
-        const tipoDteSii = currentRecord.getValue({fieldId: 'custbody_2wintipodtesii'});
+    const TIPO_DTE_SII = {
+        FACTURA_AFECTA_ELECTRONICA: 1,
+        FACTURA_EXENTA_ELECTRONICA: 2
+    };
 
+    const FORMULARIOS_AUTOCOMPLETADOS_POR_WORKFLOW = [
+        151, // QA
+        132  // PROD
+    ];
 
-        if (!cliente) {
-            dialog.alert({
-                title: 'Campo requerido',
-                message: 'Debe seleccionar un cliente.'
-            });
-            return false;
+    const formularioLoAutocompletaElWorkflow = (record) => {
+        const customForm = Number(record.getValue({ fieldId: FIELD.CUSTOM_FORM }));
+        return FORMULARIOS_AUTOCOMPLETADOS_POR_WORKFLOW.indexOf(customForm) !== -1;
+    };
+
+    const calcularTipoDteSiiEsperado = (record) => {
+        const taxTotal = Number(record.getValue({ fieldId: FIELD.TAX_TOTAL })) || 0;
+        return taxTotal > 0
+            ? TIPO_DTE_SII.FACTURA_AFECTA_ELECTRONICA
+            : TIPO_DTE_SII.FACTURA_EXENTA_ELECTRONICA;
+    };
+
+    const obtenerTipoDteSii = (record) => {
+        return formularioLoAutocompletaElWorkflow(record)
+            ? calcularTipoDteSiiEsperado(record)
+            : record.getValue({ fieldId: FIELD.TIPO_DTE_SII });
+    };
+
+    const validarCamposBasicos = (record) => {
+        const camposSiempreRequeridos = [
+            { fieldId: FIELD.CLIENTE, mensaje: 'Debe seleccionar un cliente.' },
+            { fieldId: FIELD.SUBSIDIARIA, mensaje: 'Debe seleccionar una subsidiaria.' },
+            { fieldId: FIELD.FOLIO, mensaje: 'Debe ingresar el Folio Acepta.' }
+        ];
+
+        for (const campo of camposSiempreRequeridos) {
+            if (!record.getValue({ fieldId: campo.fieldId })) {
+                return { ok: false, message: campo.mensaje };
+            }
         }
 
-
-        if (!subsidiaria) {
-            dialog.alert({
-                title: 'Campo requerido',
-                message: 'Debe seleccionar una subsidiaria.'
-            });
-            return false;
+        const tipoDteEsExigibleAqui = !formularioLoAutocompletaElWorkflow(record);
+        if (tipoDteEsExigibleAqui && !record.getValue({ fieldId: FIELD.TIPO_DTE_SII })) {
+            return { ok: false, message: 'Debe seleccionar el Tipo DTE SII Acepta.' };
         }
 
+        return { ok: true };
+    };
 
-        if (!folio) {
-            dialog.alert({
-                title: 'Campo requerido',
-                message: 'Debe ingresar el Folio Acepta.'
-            });
-            return false;
+    const buscarFacturaDuplicada = (record) => {
+        const idInterno = record.id || '0';
+        const cliente = record.getValue({ fieldId: FIELD.CLIENTE });
+        const subsidiaria = record.getValue({ fieldId: FIELD.SUBSIDIARIA });
+        const folio = record.getValue({ fieldId: FIELD.FOLIO });
+        const tipoDteSii = obtenerTipoDteSii(record);
+
+        const faltaAlgunDatoParaComparar = !cliente || !subsidiaria || !folio || !tipoDteSii;
+        if (faltaAlgunDatoParaComparar) {
+            return null;
         }
-
-        if (!tipoDteSii) {
-            dialog.alert({
-                title: 'Campo requerido',
-                message: 'Debe seleccionar el Tipo DTE SII Acepta.'
-            });
-            return false;
-        }
-
 
         const filtros = [
             ['type', 'anyof', 'CustInvc'],
-            'AND',
-            ['entity', 'anyof', cliente],
-            'AND',
-            ['subsidiary', 'anyof', subsidiaria],
-            'AND',
-            ['custbody_2winfolioacepta', 'equalto', folio],
-            'AND',
-            ['custbody_2wintipodtesii', 'anyof', tipoDteSii],
-            'AND',
-            ['mainline', 'is', 'T']
+            'AND', ['entity', 'anyof', cliente],
+            'AND', ['subsidiary', 'anyof', subsidiaria],
+            'AND', [FIELD.FOLIO, 'equalto', folio],
+            'AND', [FIELD.TIPO_DTE_SII, 'anyof', tipoDteSii],
+            'AND', ['mainline', 'is', 'T']
         ];
 
-
         if (idInterno !== '0') {
-            filtros.push(
-                'AND',
-                ['internalidnumber', 'notequalto', idInterno]
-            );
+            filtros.push('AND', ['internalidnumber', 'notequalto', idInterno]);
         }
 
-
-        const resultado = search.create({
+        const [primerResultado] = search.create({
             type: search.Type.INVOICE,
             filters: filtros,
-            columns: [
-                'internalid',
-                'tranid'
-            ]
-        }).run().getRange({
-            start: 0,
-            end: 1
-        });
+            columns: ['internalid', 'tranid']
+        }).run().getRange({ start: 0, end: 1 });
 
-
-        if (resultado && resultado.length > 0) {
-
-            const invoiceDuplicadaId = resultado[0].getValue({
-                name: 'internalid'
-            });
-
-            const documentNumber = resultado[0].getValue({
-                name: 'tranid'
-            });
-
-
-            dialog.alert({
-                title: 'Documento duplicado',
-                message:
-                    'Ya existe una factura de venta con el Folio Acepta ' + folio +
-                    ' para el mismo cliente, subsidiaria y Tipo DTE SII.' +
-                    '<br><br>Transacción: ' + documentNumber +
-                    '<br>ID interno: ' + invoiceDuplicadaId
-            });
-
-            return false;
+        if (!primerResultado) {
+            return null;
         }
 
-
-        return true;
+        return {
+            internalId: primerResultado.getValue({ name: 'internalid' }),
+            documentNumber: primerResultado.getValue({ name: 'tranid' })
+        };
     };
 
-
     return {
-        validarDuplicidad
+        validarCamposBasicos,
+        buscarFacturaDuplicada
     };
 
 });

@@ -1,5 +1,5 @@
 <manifest projecttype="ACCOUNTCUSTOMIZATION">
-  <projectname>AS_NSP_012_ValDuplicidadFacturadeVentas</projectname>
+  <projectname>AS_NSP_013_ValidaDuplicidadAsientosConta</projectname>
   <frameworkversion>1.0</frameworkversion>
   <dependencies>
     <features>
