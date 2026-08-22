@@ -82,8 +82,8 @@ define(['N/search'], function (search) {
         filters.push('AND',    ['subsidiary', 'anyof',      subsidiaria]);
         filters.push('AND',    ['trandate',   'onorbefore', fechaCorte]);
         if (cuentaContable) filters.push('AND', ['account',    'anyof',      cuentaContable]);
-        if (tipoRegistro) filters.push('AND',   ['recordtype', 'anyof',      tipoRegistro]);
-        if (true) filters.push('AND', ['internalid', 'anyof',      1013804]);
+        if (tipoRegistro) filters.push('AND',   ['recordtype', 'is',      tipoRegistro]);
+        if (true) filters.push('AND', ['trandate', 'onorafter',    '20/08/2026'  ]);
 
         /* ── Búsqueda ────────────────────────────────────────────────── */
         return search.create({
@@ -94,14 +94,13 @@ define(['N/search'], function (search) {
             ],
             filters : filters,
             columns : [
-                search.createColumn({ name: 'internalid',                        label: 'Id Transaccion'     }),
-                search.createColumn({ name: 'internalid', join: 'account',       label: 'Id Cuenta Contable' }),
+                search.createColumn({ name: 'internalid',                        label: 'Id Transaccion'   , sort: 'DESC'  }),
                 search.createColumn({ name: 'subsidiarynohierarchy',             label: 'Subsidiaria'        }),
                 search.createColumn({ name: 'type',                              label: 'Tipo'               }),
                 search.createColumn({ name: 'recordtype',                        label: 'Tipo Registro'      }),
                 search.createColumn({ name: 'entity',                            label: 'Nombre'             }),
                 search.createColumn({ name: 'postingperiod',                     label: 'Periodo'            }),
-                search.createColumn({ name: 'trandate',                          label: 'Fecha'              }),
+                search.createColumn({ name: 'trandate',                          label: 'Fecha'           , sort: 'DESC'   }),
                 search.createColumn({ name: 'tranid',                            label: 'Num Documento'      }),
                 search.createColumn({ name: 'custbody_2winfolioacepta',          label: 'Folio Acepta'       }),
                 search.createColumn({ name: 'custcol_2w_folio',                  label: 'Folio JE'           }),

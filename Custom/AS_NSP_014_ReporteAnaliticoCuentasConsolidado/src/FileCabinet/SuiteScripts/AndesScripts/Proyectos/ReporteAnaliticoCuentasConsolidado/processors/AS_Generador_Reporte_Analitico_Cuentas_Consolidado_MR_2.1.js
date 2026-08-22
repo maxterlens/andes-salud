@@ -1,14 +1,16 @@
 /**
  * AS_NSP_014 — Reporte Analítico de Cuentas Consolidado
  * @description Map Reduce que orquesta la generación del reporte analítico de cuentas.
- *              V1: vuelca todos los resultados de la búsqueda unificada en un archivo CSV.
+ *              Genera un archivo XLS y un archivo CSV con los resultados de la búsqueda.
  *
  *  Responsabilidades por fase:
  *    getInputData → TransaccionReporteAnaliticoCuentasRepository.buildSearch()
- *    map          → ReporteAnaliticoCuentasCsvService.buildCsvRow()
+ *    map          → ReporteAnaliticoCuentasCsvService.buildRow()  (emite array crudo en JSON)
  *    reduce       → pass-through (una fila por result.id)
- *    summarize    → ReporteAnaliticoCuentasCsvService.crearArchivoCsv()
- *                   LogReporteAnaliticoCuentasRepository.marcarCompletado() / marcarError()
+ *    summarize    → 1. ReporteAnaliticoCuentasCsvService.crearArchivoXls()
+ *                      LogReporteAnaliticoCuentasRepository.marcarXlsGenerado()
+ *                   2. ReporteAnaliticoCuentasCsvService.crearArchivoCsv()
+ *                      LogReporteAnaliticoCuentasRepository.marcarCompletado() / marcarError()
  *
  *  Parámetros del script:
  *    custscript_as_mr_param_subsidiar  — Internal ID de subsidiaria (opcional)
@@ -22,10 +24,11 @@
  */
 define([
     'N/runtime',
+    'N/file',
     '../repositories/TransaccionReporteAnaliticoCuentasRepository',
     '../repositories/LogReporteAnaliticoCuentasRepository',
     '../services/ReporteAnaliticoCuentasCsvService',
-], function (runtime, transaccionRepo, logRepo, csvService) {
+], function (runtime, file, transaccionRepo, logRepo, csvService) {
 
     /* ─── IDs de parámetros del script ──────────────────────────────── */
     const PARAM = {
@@ -62,14 +65,16 @@ define([
 
     /* ═══════════════════════════════════════════════════════════════════
      *  MAP
-     *  Convierte cada resultado de búsqueda en una fila CSV y la emite.
+     *  Convierte cada resultado de búsqueda en un array crudo de valores
+     *  y lo emite como JSON. El formato final (CSV / XLS) se aplica en
+     *  summarize, donde ya se conoce el tipo de archivo destino.
      *  La clave es result.id (internal ID de la transacción) para
      *  garantizar unicidad en la fase reduce.
      * ═══════════════════════════════════════════════════════════════════ */
     function map(context) {
         const result = JSON.parse(context.value);
-        const row    = csvService.buildCsvRow(result);
-        context.write({ key: result.id, value: row });
+        const row    = csvService.buildRow(result);
+        context.write({ key: result.id, value: JSON.stringify(row) });
     }
 
     /* ═══════════════════════════════════════════════════════════════════
@@ -86,9 +91,9 @@ define([
     /* ═══════════════════════════════════════════════════════════════════
      *  SUMMARIZE
      *  1. Registra errores de fases previas.
-     *  2. Recolecta todas las filas emitidas por reduce.
-     *  3. Crea el archivo CSV en el File Cabinet.
-     *  4. Actualiza el registro de log con el resultado.
+     *  2. Recolecta todos los arrays de datos emitidos por reduce.
+     *  3. Genera el archivo XLS y actualiza el log (estado: "Generando CSV").
+     *  4. Genera el archivo CSV y actualiza el log (estado: "Completado").
      * ═══════════════════════════════════════════════════════════════════ */
     function summarize(summary) {
 
@@ -110,37 +115,51 @@ define([
         const fechaCorte    = script.getParameter({ name: PARAM.FECHA_CORTE });
         const subsidiariaId = script.getParameter({ name: PARAM.SUBSIDIARIA });
 
-        /* ── 2. Recolectar filas ───────────────────────────────────── */
-        const lines = [];
+        /* ── 2. Recolectar arrays de datos ────────────────────────── */
+        const rows = [];
         summary.output.iterator().each(function (key, value) {
-            lines.push(value);
+            rows.push(JSON.parse(value));
             return true;
         });
 
         log.error({
             title  : 'summarize — Total filas recolectadas',
-            details: lines.length,
+            details: rows.length,
         });
 
-        /* ── 3. Crear archivo CSV ──────────────────────────────────── */
         try {
-            const nombre = csvService.generarNombreArchivo(subsidiariaId, fechaCorte);
-            log.error('nombre', nombre);
-            const fileId = csvService.crearArchivoCsv({ lines: lines, nombre: nombre, folderId: folderId });
-            const archivo = file.load({ id: fileId });
-            const fileUrl = archivo.url;
+            /* ── 3. Generar archivo XLS ────────────────────────────── */
+            const nombreXls = csvService.generarNombreArchivo(subsidiariaId, fechaCorte, 'xls');
+            log.error('summarize — Generando XLS', nombreXls);
+
+            const xlsId    = csvService.crearArchivoXls({ rows: rows, nombre: nombreXls, folderId: folderId });
+            const archivoXls = file.load({ id: xlsId });
             log.error({
-                title  : 'summarize — Archivo guardado',
-                details: 'ID: ' + fileId + ' | Nombre: ' + nombre,
+                title  : 'summarize — XLS guardado',
+                details: 'ID: ' + xlsId + ' | Nombre: ' + nombreXls,
             });
 
-            /* ── 4. Actualizar log: éxito ────────────────────────── */
-            logRepo.marcarCompletado(logId, { nombreArchivo: nombre, fileId: fileId, fileUrl: fileUrl });
+            /* Actualizar log con XLS — estado pasa a "Generando CSV" */
+            logRepo.marcarXlsGenerado(logId, { nombreArchivo: nombreXls, fileId: xlsId, fileUrl: archivoXls.url });
+
+            /* ── 4. Generar archivo CSV ────────────────────────────── */
+            const nombreCsv = csvService.generarNombreArchivo(subsidiariaId, fechaCorte, 'csv');
+            log.error('summarize — Generando CSV', nombreCsv);
+
+            const csvId    = csvService.crearArchivoCsv({ rows: rows, nombre: nombreCsv, folderId: folderId });
+            const archivoCsv = file.load({ id: csvId });
+            log.error({
+                title  : 'summarize — CSV guardado',
+                details: 'ID: ' + csvId + ' | Nombre: ' + nombreCsv,
+            });
+
+            /* Actualizar log con CSV — estado pasa a "Completado" */
+            logRepo.marcarCompletado(logId, { nombreArchivo: nombreCsv, fileId: csvId, fileUrl: archivoCsv.url });
 
         } catch (e) {
-            log.error({ title: 'summarize — Error generando CSV', details: e.message || String(e) });
+            log.error({ title: 'summarize — Error generando archivos', details: e.message || String(e) });
 
-            /* ── 4. Actualizar log: error ────────────────────────── */
+            /* Actualizar log: error */
             logRepo.marcarError(logId, e.message || String(e));
         }
     }

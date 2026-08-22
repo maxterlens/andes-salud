@@ -1,10 +1,11 @@
 /**
  * AS_NSP_014 — Reporte Analítico de Cuentas Consolidado
- * @description Servicio de construcción y persistencia del CSV del reporte.
+ * @description Servicio de construcción y persistencia del CSV y XLS del reporte.
  *              Encapsula:
- *                - Mapeo de resultado de búsqueda → fila CSV (lógica de folio y saldo)
+ *                - Mapeo de resultado de búsqueda → array de valores crudos (buildRow)
  *                - Cálculo de Saldo Debe / Saldo Haber por tipo de registro
- *                - Creación y guardado del archivo CSV en el File Cabinet
+ *                - Creación del archivo CSV con appendLine (crearArchivoCsv)
+ *                - Creación del archivo XLS (XML Spreadsheet 2003) con appendLine (crearArchivoXls)
  *
  *  Lógica de Folio:
  *    vendorbill   → tranid
@@ -26,7 +27,7 @@ define(['N/file'], function (file) {
     const RT_PAGO    = ['customerdeposit', 'vendorprepayment', 'customerpayment', 'vendorpayment'];
     const RT_ASIENTO = 'journalentry';
 
-    /* ─── Cabecera del CSV ────────────────────────────────────────────── */
+    /* ─── Cabecera del reporte ───────────────────────────────────────── */
     const CSV_HEADERS = [
         'Id Transaccion',
         'Id Cuenta Contable',
@@ -47,13 +48,14 @@ define(['N/file'], function (file) {
 
     /* ──────────────────────────────────────────────────────────────────── */
     /**
-     * Mapea un resultado de búsqueda al string de una línea CSV.
-     * Recibe el objeto result ya parseado (JSON.parse(context.value) del map).
+     * Mapea un resultado de búsqueda a un array de valores crudos (sin escapar).
+     * El array resultante es consumido por crearArchivoCsv y crearArchivoXls,
+     * que aplican el formato correspondiente (CSV escape / XML escape).
      *
-     * @param   {Object} result - Resultado de búsqueda parseado
-     * @returns {string}  Línea CSV con los 15 campos esperados
+     * @param   {Object} result - Resultado de búsqueda parseado (JSON.parse(context.value))
+     * @returns {Array}  Array con los 15 valores del reporte
      */
-    function buildCsvRow(result) {
+    function buildRow(result) {
         log.error('result', result);
         const vals       = result.values;
         const recordtype = _val(vals.recordtype);
@@ -79,7 +81,7 @@ define(['N/file'], function (file) {
 
         return [
             result.id,
-            _val(vals['account.internalid']),
+            _val(vals.account),
             _txt(vals.subsidiarynohierarchy),
             _txt(vals.type),
             _txt(vals.entity),
@@ -93,34 +95,114 @@ define(['N/file'], function (file) {
             haber,
             saldo.saldoDebe,
             saldo.saldoHaber,
-        ].map(_escapeCsv).join(',');
+        ];
     }
 
     /* ──────────────────────────────────────────────────────────────────── */
     /**
      * Crea el archivo CSV en el File Cabinet y devuelve su internal ID.
-     * La cabecera (CSV_HEADERS) se agrega automáticamente como primera línea.
+     * La cabecera se escribe como contenido inicial; cada fila de datos
+     * se agrega con appendLine para evitar construir un string gigante en memoria.
      *
      * @param   {Object}         opts
-     * @param   {string[]}       opts.lines      Filas de datos (sin cabecera)
-     * @param   {string}         opts.nombre     Nombre del archivo destino (con .csv)
-     * @param   {string|number}  opts.folderId   ID de la carpeta en File Cabinet
+     * @param   {Array[]}        opts.rows      Arrays de valores crudos (de buildRow)
+     * @param   {string}         opts.nombre    Nombre del archivo (con extensión .csv)
+     * @param   {string|number}  opts.folderId  ID de la carpeta en File Cabinet
      * @returns {number}  Internal ID del archivo creado
      */
     function crearArchivoCsv(opts) {
-        const lines    = opts.lines    || [];
+        const rows     = opts.rows     || [];
         const nombre   = opts.nombre   || 'reporte.csv';
-        const folderId = opts.folderId || -15;   // -15 = raíz SuiteScripts como fallback
+        const folderId = opts.folderId || -15;
 
         const csvFile = file.create({
             name    : nombre,
             fileType: file.Type.CSV,
-            contents: [CSV_HEADERS.join(',')].concat(lines).join('\n'),
+            contents: CSV_HEADERS.join(','),
             folder  : folderId,
             encoding: file.Encoding.UTF_8,
         });
 
+        for (const row of rows) {
+            const line = row.map(_escapeCsv).join(',');
+            if (line === '') continue;
+            csvFile.appendLine({ value: line });
+        }
+
         return csvFile.save();
+    }
+
+    /* ──────────────────────────────────────────────────────────────────── */
+    /**
+     * Crea el archivo XLS (formato XML Spreadsheet 2003) en el File Cabinet
+     * y devuelve su internal ID. Compatible con Excel sin librerías externas.
+     * La cabecera se escribe en el contenido inicial; cada fila de datos
+     * se agrega con appendLine.
+     *
+     * @param   {Object}         opts
+     * @param   {Array[]}        opts.rows      Arrays de valores crudos (de buildRow)
+     * @param   {string}         opts.nombre    Nombre del archivo (con extensión .xls)
+     * @param   {string|number}  opts.folderId  ID de la carpeta en File Cabinet
+     * @returns {number}  Internal ID del archivo creado
+     */
+    function crearArchivoXls(opts) {
+        const rows     = opts.rows     || [];
+        const nombre   = opts.nombre   || 'reporte.xls';
+        const folderId = opts.folderId || -15;
+
+        /* Encabezado XML + definición de estilos + primera fila de headers en negrita */
+        const xmlInicio =
+            '<?xml version="1.0" encoding="UTF-8"?>\n' +
+            '<?mso-application progid="Excel.Sheet"?>\n' +
+            '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\n' +
+            ' xmlns:o="urn:schemas-microsoft-com:office:office"\n' +
+            ' xmlns:x="urn:schemas-microsoft-com:office:excel"\n' +
+            ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"\n' +
+            ' xmlns:html="http://www.w3.org/TR/REC-html40">\n' +
+            '<Styles>\n' +
+            ' <Style ss:ID="Default" ss:Name="Normal">\n' +
+            '  <Font ss:FontName="Arial" ss:Size="8"/>\n' +
+            ' </Style>\n' +
+            ' <Style ss:ID="sHeader">\n' +
+            '  <Font ss:FontName="Arial" x:Family="Swiss" ss:Size="8" ss:Bold="1"/>\n' +
+            '  <Interior ss:Color="#DBDBDB" ss:Pattern="Solid"/>\n' +
+            ' </Style>\n' +
+            '</Styles>\n' +
+            '<Worksheet ss:Name="Reporte">\n' +
+            '<Table>\n' +
+            _buildXlsRow(CSV_HEADERS, true, 'sHeader');
+
+        const xlsFile = file.create({
+            name    : nombre,
+            fileType: file.Type.PLAINTEXT,
+            contents: xmlInicio,
+            folder  : folderId,
+            encoding: file.Encoding.UTF_8,
+        });
+
+        /* Filas de datos */
+        for (const row of rows) {
+            xlsFile.appendLine({ value: _buildXlsRow(row, false) });
+        }
+
+        /* Cierre del XML + WorksheetOptions para congelar la primera fila */
+        xlsFile.appendLine({ value:
+            '</Table>\n' +
+            '<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">\n' +
+            ' <FreezePanes/>\n' +
+            ' <FrozenNoSplit/>\n' +
+            ' <SplitHorizontal>1</SplitHorizontal>\n' +
+            ' <TopRowBottomPane>1</TopRowBottomPane>\n' +
+            ' <ActivePane>2</ActivePane>\n' +
+            ' <Panes>\n' +
+            '  <Pane><Number>3</Number></Pane>\n' +
+            '  <Pane><Number>2</Number><ActiveRow>0</ActiveRow></Pane>\n' +
+            ' </Panes>\n' +
+            '</WorksheetOptions>\n' +
+            '</Worksheet>\n</Workbook>'
+        });
+
+        return xlsFile.save();
     }
 
     /* ──────────────────────────────────────────────────────────────────── */
@@ -129,31 +211,30 @@ define(['N/file'], function (file) {
      *
      * @param   {string|null} subsidiariaId  Internal ID de la subsidiaria (o null para ALL)
      * @param   {string|null} fechaCorte     Fecha en formato NS (MM/DD/YYYY), o null
+     * @param   {string}      [extension]    Extensión del archivo: 'csv' (default) | 'xls'
      * @returns {string}  Ej: "ReporteAnaliticoCuentas_3_01-31-2025.csv"
      */
-    function generarNombreArchivo(subsidiariaId, fechaCorte) {
+    function generarNombreArchivo(subsidiariaId, fechaCorte, extension) {
+        const ext = extension || 'csv';
         const tag = fechaCorte ? fechaCorte.replace(/\//g, '-') : 'SFECHA';
-        return 'ReporteAnaliticoCuentas_' + (subsidiariaId || 'ALL') + '_' + tag + '.csv';
+        return 'ReporteAnaliticoCuentas_' + (subsidiariaId || 'ALL') + '_' + tag + '.' + ext;
     }
 
     /* ═══ Lógica de Saldo Debe / Saldo Haber ═══════════════════════════ */
 
     /**
      * @param {string}  recordtype
-     * @param {boolean} isMainline  true cuando la línea es cabecera (*) de la transacción
-     * @param {number}  debe        debitamount de la línea
-     * @param {number}  haber       creditamount de la línea
-     * @param {number}  amtRem      amountremaining (facturas / NC)
-     * @param {number}  amtPaid     amountpaid (pagos / asientos)
+     * @param {boolean} isMainline
+     * @param {number}  debe
+     * @param {number}  haber
+     * @param {number}  amtRem
+     * @param {number}  amtPaid
      * @returns {{ saldoDebe: number, saldoHaber: number }}
      */
     function _calcSaldo(recordtype, isMainline, debe, haber, amtRem, amtPaid) {
         var saldoDebe = 0, saldoHaber = 0;
 
         if (RT_FACTURA.indexOf(recordtype) !== -1) {
-            /* Facturas y notas de crédito
-             *   Línea mainline → saldo total = amountremaining
-             *   Líneas de detalle → se expone el importe directo de la línea */
             if (isMainline) {
                 if (debe > 0)  saldoDebe  = amtRem;
                 else           saldoHaber = amtRem;
@@ -161,16 +242,47 @@ define(['N/file'], function (file) {
                 saldoDebe  = debe;
                 saldoHaber = haber;
             }
-
         } else if (RT_PAGO.indexOf(recordtype) !== -1 || recordtype === RT_ASIENTO) {
-            /* Pagos, anticipos y asientos contables
-             *   Saldo = |Debe - Haber| − amountpaid */
             var saldo = Math.abs(debe - haber) - amtPaid;
             if (debe > 0)  saldoDebe  = saldo;
             else           saldoHaber = saldo;
         }
 
         return { saldoDebe: saldoDebe, saldoHaber: saldoHaber };
+    }
+
+    /* ═══ Helpers XLS ═══════════════════════════════════════════════════ */
+
+    /**
+     * Construye el string XML de una fila para el XLS.
+     * Los encabezados siempre son String; los valores numéricos se tipan como Number.
+     * @param {Array}   cells     Valores de la fila
+     * @param {boolean} isHeader  true → fuerza tipo String en todas las celdas
+     * @param {string}  [styleId] ss:StyleID a aplicar en cada celda (ej: 'sHeader' para negrita)
+     */
+    function _buildXlsRow(cells, isHeader, styleId) {
+        var styleAttr = styleId ? ' ss:StyleID="' + styleId + '"' : '';
+        var cellsXml = '';
+        for (var i = 0; i < cells.length; i++) {
+            var val  = (cells[i] === null || cells[i] === undefined) ? '' : String(cells[i]);
+            var type = (isHeader || !_isNumeric(val)) ? 'String' : 'Number';
+            cellsXml += '<Cell' + styleAttr + '><Data ss:Type="' + type + '">' + _escapeXml(val) + '</Data></Cell>';
+        }
+        return '<Row>' + cellsXml + '</Row>';
+    }
+
+    /** Retorna true si el valor puede representarse como número en Excel */
+    function _isNumeric(val) {
+        return val !== '' && !isNaN(Number(val));
+    }
+
+    /** Escapa caracteres especiales para XML */
+    function _escapeXml(val) {
+        return String(val)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
     }
 
     /* ═══ Helpers de acceso a valores de columna ════════════════════════ */
@@ -211,8 +323,9 @@ define(['N/file'], function (file) {
 
     return {
         CSV_HEADERS         : CSV_HEADERS,
-        buildCsvRow         : buildCsvRow,
+        buildRow            : buildRow,
         crearArchivoCsv     : crearArchivoCsv,
+        crearArchivoXls     : crearArchivoXls,
         generarNombreArchivo: generarNombreArchivo,
     };
 });

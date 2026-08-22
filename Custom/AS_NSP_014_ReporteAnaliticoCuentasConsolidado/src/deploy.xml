@@ -6,7 +6,7 @@
         <path>~/FileCabinet/*</path>
     </files>
     <objects>
-        <path>~/Objects/*</path>
+        <path>~/Objects/tests/*</path>
     </objects>
     <translationimports>
         <path>~/Translations/*</path>

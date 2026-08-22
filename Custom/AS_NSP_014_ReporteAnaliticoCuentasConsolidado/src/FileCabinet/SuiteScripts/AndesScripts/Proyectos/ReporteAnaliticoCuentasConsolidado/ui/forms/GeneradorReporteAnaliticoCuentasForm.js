@@ -86,14 +86,6 @@ define(['N/ui/serverWidget'], function (serverWidget) {
             value    : filtros.subsidiaria,
         }).isMandatory = true;
         _addField(form, {
-            id       : FILTROS.CUENTA_CONTABLE,
-            type     : serverWidget.FieldType.SELECT,
-            label    : 'Cuenta Contable',
-            source   : 'account',
-            container: 'custpage_grp_filtros',
-            value    : filtros.cuentaContable,
-        })
-        _addField(form, {
             id       : FILTROS.FECHA,
             type     : serverWidget.FieldType.DATE,
             label    : 'Fecha de Corte',
@@ -104,6 +96,14 @@ define(['N/ui/serverWidget'], function (serverWidget) {
             width : 25
         }).isMandatory = true;
         _addField(form, {
+            id       : FILTROS.CUENTA_CONTABLE,
+            type     : serverWidget.FieldType.SELECT,
+            label    : 'Cuenta Contable',
+            source   : 'account',
+            container: 'custpage_grp_filtros',
+            value    : filtros.cuentaContable,
+        })
+        /*_addField(form, {
             id       : FILTROS.CLIENTE,
             type     : serverWidget.FieldType.SELECT,
             label    : 'Cliente',
@@ -128,7 +128,7 @@ define(['N/ui/serverWidget'], function (serverWidget) {
         }).updateDisplaySize({
             height : 60,
             width : 20
-        });
+        });*/
 
         /* ── Botón submit ──────────────────────────────────────────── */
         form.addSubmitButton({ label: 'Generar Reporte' });

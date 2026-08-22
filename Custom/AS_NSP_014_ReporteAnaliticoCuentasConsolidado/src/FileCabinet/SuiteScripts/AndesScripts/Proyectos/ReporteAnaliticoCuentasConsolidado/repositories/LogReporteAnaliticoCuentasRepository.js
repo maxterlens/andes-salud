@@ -53,7 +53,7 @@ define(['N/search', 'N/record'], function (search, record) {
             subsidiariId : r.getValue({ name: FIELDS.SUBSIDIARIA })       || '',
             fechaCorte   : r.getValue({ name: FIELDS.FECHA_CORTE })       || '',
             estado       : r.getValue({ name: FIELDS.ESTADO })            || '',
-            idXls    : r.getValue({ name: FIELDS.ID_XLS })       || '',
+            idXls        : r.getValue({ name: FIELDS.ID_XLS })       || '',
             nombreXls    : r.getValue({ name: FIELDS.NOMBRE_XLS })        || '',
             urlXls       : r.getValue({ name: FIELDS.URL_XLS })        || '',
             idCsv        : r.getValue({ name: FIELDS.ID_CSV })       || '',
@@ -124,6 +124,32 @@ define(['N/search', 'N/record'], function (search, record) {
 
     /* ─────────────────────────────────────────────────────────────── */
     /**
+     * Actualiza el registro de log con la información del archivo XLS generado
+     * y cambia el estado a "Generando CSV".
+     * Llamado desde summarize() del Map Reduce después de crear el Excel.
+     *
+     * @param {string|number} logId
+     * @param {Object}        datos
+     * @param {string}        datos.nombreArchivo  Nombre del archivo XLS generado
+     * @param {string|number} datos.fileId         Internal ID del archivo en File Cabinet
+     * @param {string}        datos.fileUrl        URL del archivo en File Cabinet
+     */
+    function marcarXlsGenerado(logId, datos) {
+        if (!logId) return;
+        var values = {};
+        values[FIELDS.ID_XLS]     = datos.fileId        || '';
+        values[FIELDS.NOMBRE_XLS] = datos.nombreArchivo || '';
+        values[FIELDS.URL_XLS]    = datos.fileUrl       || '';
+        values[FIELDS.ESTADO]     = 'Generando CSV';
+        record.submitFields({
+            type  : RECORD_TYPE,
+            id    : logId,
+            values: values,
+        });
+    }
+
+    /* ─────────────────────────────────────────────────────────────── */
+    /**
      * Marca el registro de log como completado, registrando el nombre
      * y el ID del archivo CSV generado.
      * Llamado desde summarize() del Map Reduce al finalizar con éxito.
@@ -132,14 +158,15 @@ define(['N/search', 'N/record'], function (search, record) {
      * @param {Object}        datos
      * @param {string}        datos.nombreArchivo  Nombre del archivo CSV generado
      * @param {string|number} datos.fileId         Internal ID del archivo en File Cabinet
+     * @param {string}        datos.fileUrl        URL del archivo en File Cabinet
      */
     function marcarCompletado(logId, datos) {
         if (!logId) return;
         var values = {};
-        values[FIELDS.NOMBRE_XLS] = datos.nombreArchivo || '';
-        values[FIELDS.ID_XLS] = datos.fileId       || '';
-        values[FIELDS.URL_XLS] = datos.fileUrl          || '';
-        values[FIELDS.ESTADO]      = 'Completado';
+        values[FIELDS.ID_CSV]     = datos.fileId        || '';
+        values[FIELDS.NOMBRE_CSV] = datos.nombreArchivo || '';
+        values[FIELDS.URL_CSV]    = datos.fileUrl       || '';
+        values[FIELDS.ESTADO]     = 'Completado';
         record.submitFields({
             type  : RECORD_TYPE,
             id    : logId,
@@ -188,5 +215,5 @@ define(['N/search', 'N/record'], function (search, record) {
         return rec.save();
     }
 
-    return { FIELDS, RECORD_TYPE, getAll, getByArchivoDataId, marcarCompletado, marcarError, crear };
+    return { FIELDS, RECORD_TYPE, getAll, getByArchivoDataId, marcarXlsGenerado, marcarCompletado, marcarError, crear };
 });
