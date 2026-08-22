@@ -17,6 +17,11 @@
  *    Facturas y NC (detalle)  : Saldo = importe de la línea (debe / haber)
  *    Pagos, anticipos, AJ     : Saldo = |Debe - Haber| − amountpaid
  *
+ *  Lógica de Agrupación (XLS solamente):
+ *    Se agrupan filas por (Id Cuenta Contable, Id Subsidiaria, Id Entidad, Folio).
+ *    Por cada grupo se compensan Saldo Debe y Saldo Haber; solo se conserva la fila
+ *    representativa (primera del grupo) con el saldo neto dominante.
+ *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -27,8 +32,8 @@ define(['N/file'], function (file) {
     const RT_PAGO    = ['customerdeposit', 'vendorprepayment', 'customerpayment', 'vendorpayment'];
     const RT_ASIENTO = 'journalentry';
 
-    /* ─── Cabecera del reporte ───────────────────────────────────────── */
-    const CSV_HEADERS = [
+    /* ─── Cabecera del XLS (15 columnas) ────────────────────────────── */
+    const XLS_HEADERS = [
         'Id Transaccion',
         'Id Cuenta Contable',
         'Subsidiaria',
@@ -46,17 +51,36 @@ define(['N/file'], function (file) {
         'Saldo Haber',
     ];
 
+    /* ─── Cabecera del CSV (17 columnas: XLS + IDs de agrupación) ───── */
+    const CSV_HEADERS = XLS_HEADERS.concat(['Id Subsidiaria', 'Id Entidad']);
+
     /* ──────────────────────────────────────────────────────────────────── */
     /**
-     * Mapea un resultado de búsqueda a un array de valores crudos (sin escapar).
-     * El array resultante es consumido por crearArchivoCsv y crearArchivoXls,
-     * que aplican el formato correspondiente (CSV escape / XML escape).
+     * Mapea un resultado de búsqueda a un array de 17 valores crudos (sin escapar).
+     *
+     * Índices:
+     *   [0]  Id Transaccion
+     *   [1]  Id Cuenta Contable
+     *   [2]  Subsidiaria (texto display)
+     *   [3]  Tipo de Transaccion
+     *   [4]  Nombre (entidad, texto display)
+     *   [5]  Folio
+     *   [6]  Numero Documento
+     *   [7]  Glosa
+     *   [8]  Fecha
+     *   [9]  Periodo Contable
+     *   [10] Cuenta Contable
+     *   [11] Debe
+     *   [12] Haber
+     *   [13] Saldo Debe
+     *   [14] Saldo Haber
+     *   [15] Id Subsidiaria  (valor interno — para CSV y clave de agrupación XLS)
+     *   [16] Id Entidad      (valor interno — para CSV y clave de agrupación XLS)
      *
      * @param   {Object} result - Resultado de búsqueda parseado (JSON.parse(context.value))
-     * @returns {Array}  Array con los 15 valores del reporte
+     * @returns {Array}  Array con los 17 valores del reporte
      */
     function buildRow(result) {
-        log.error('result', result);
         const vals       = result.values;
         const recordtype = _val(vals.recordtype);
         const isMainline = _val(vals.mainline) === '*';
@@ -80,32 +104,33 @@ define(['N/file'], function (file) {
         const saldo = _calcSaldo(recordtype, isMainline, debe, haber, amtRem, amtPaid);
 
         return [
-            result.id,
-            _val(vals.account),
-            _txt(vals.subsidiarynohierarchy),
-            _txt(vals.type),
-            _txt(vals.entity),
-            folio,
-            _val(vals.tranid),
-            _val(vals.memo),
-            _val(vals.trandate),
-            _txt(vals.postingperiod),
-            _txt(vals.account),
-            debe,
-            haber,
-            saldo.saldoDebe,
-            saldo.saldoHaber,
+            result.id,                              // [0]  Id Transaccion
+            _val(vals.account),                      // [1]  Id Cuenta Contable
+            _txt(vals.subsidiarynohierarchy),        // [2]  Subsidiaria (texto)
+            _txt(vals.type),                        // [3]  Tipo de Transaccion
+            _txt(vals.entity),                      // [4]  Nombre (entidad texto)
+            folio,                                  // [5]  Folio
+            _val(vals.tranid),                      // [6]  Numero Documento
+            _val(vals.memo),                        // [7]  Glosa
+            _val(vals.trandate),                    // [8]  Fecha
+            _txt(vals.postingperiod),               // [9]  Periodo Contable
+            _txt(vals.account),                     // [10] Cuenta Contable
+            debe,                                   // [11] Debe
+            haber,                                  // [12] Haber
+            saldo.saldoDebe,                        // [13] Saldo Debe
+            saldo.saldoHaber,                       // [14] Saldo Haber
+            _val(vals.subsidiarynohierarchy),        // [15] Id Subsidiaria (valor interno)
+            _val(vals.entity),                      // [16] Id Entidad (valor interno)
         ];
     }
 
     /* ──────────────────────────────────────────────────────────────────── */
     /**
      * Crea el archivo CSV en el File Cabinet y devuelve su internal ID.
-     * La cabecera se escribe como contenido inicial; cada fila de datos
-     * se agrega con appendLine para evitar construir un string gigante en memoria.
+     * Escribe las 17 columnas (15 del reporte + Id Subsidiaria + Id Entidad).
      *
      * @param   {Object}         opts
-     * @param   {Array[]}        opts.rows      Arrays de valores crudos (de buildRow)
+     * @param   {Array[]}        opts.rows      Arrays de 17 valores crudos (de buildRow)
      * @param   {string}         opts.nombre    Nombre del archivo (con extensión .csv)
      * @param   {string|number}  opts.folderId  ID de la carpeta en File Cabinet
      * @returns {number}  Internal ID del archivo creado
@@ -136,11 +161,12 @@ define(['N/file'], function (file) {
     /**
      * Crea el archivo XLS (formato XML Spreadsheet 2003) en el File Cabinet
      * y devuelve su internal ID. Compatible con Excel sin librerías externas.
-     * La cabecera se escribe en el contenido inicial; cada fila de datos
-     * se agrega con appendLine.
+     *
+     * Aplica agrupación/compensación (_compensarFilas) antes de escribir.
+     * Solo escribe las 15 primeras columnas por fila (sin IDs de agrupación).
      *
      * @param   {Object}         opts
-     * @param   {Array[]}        opts.rows      Arrays de valores crudos (de buildRow)
+     * @param   {Array[]}        opts.rows      Arrays de 17 valores crudos (de buildRow)
      * @param   {string}         opts.nombre    Nombre del archivo (con extensión .xls)
      * @param   {string|number}  opts.folderId  ID de la carpeta en File Cabinet
      * @returns {number}  Internal ID del archivo creado
@@ -149,6 +175,9 @@ define(['N/file'], function (file) {
         const rows     = opts.rows     || [];
         const nombre   = opts.nombre   || 'reporte.xls';
         const folderId = opts.folderId || -15;
+
+        /* ── Agrupar y compensar filas antes de escribir ─────────────── */
+        const rowsXls = _compensarFilas(rows);
 
         /* Encabezado XML + definición de estilos + primera fila de headers en negrita */
         const xmlInicio =
@@ -170,7 +199,7 @@ define(['N/file'], function (file) {
             '</Styles>\n' +
             '<Worksheet ss:Name="Reporte">\n' +
             '<Table>\n' +
-            _buildXlsRow(CSV_HEADERS, true, 'sHeader');
+            _buildXlsRow(XLS_HEADERS, true, 'sHeader');
 
         const xlsFile = file.create({
             name    : nombre,
@@ -180,9 +209,9 @@ define(['N/file'], function (file) {
             encoding: file.Encoding.UTF_8,
         });
 
-        /* Filas de datos */
-        for (const row of rows) {
-            xlsFile.appendLine({ value: _buildXlsRow(row, false) });
+        /* Filas de datos — solo las 15 primeras columnas */
+        for (const row of rowsXls) {
+            xlsFile.appendLine({ value: _buildXlsRow(row.slice(0, 15), false) });
         }
 
         /* Cierre del XML + WorksheetOptions para congelar la primera fila */
@@ -218,6 +247,81 @@ define(['N/file'], function (file) {
         const ext = extension || 'csv';
         const tag = fechaCorte ? fechaCorte.replace(/\//g, '-') : 'SFECHA';
         return 'ReporteAnaliticoCuentas_' + (subsidiariaId || 'ALL') + '_' + tag + '.' + ext;
+    }
+
+    /* ═══ Lógica de Agrupación y Compensación (XLS) ════════════════════ */
+
+    /**
+     * Agrupa las filas por (Id Cuenta Contable, Id Subsidiaria, Id Entidad, Folio)
+     * y aplica compensación de Saldo Debe vs Saldo Haber por grupo.
+     *
+     * Reglas:
+     *   - Las filas SIN folio (row[5] = '') se excluyen de la agrupación y se
+     *     escriben en el XLS tal cual, cada una como fila independiente.
+     *   - Por cada grupo CON folio:
+     *       · Se suman todos los Saldo Debe (row[13]) y Saldo Haber (row[14]).
+     *       · neto = sumDebe − sumHaber.
+     *       · Si neto ≥ 0 → saldoDebe = neto, saldoHaber = 0.
+     *       · Si neto < 0 → saldoDebe = 0, saldoHaber = |neto|.
+     *       · Solo se conserva la primera fila del grupo (representativa); las
+     *         demás se descartan.
+     *   - El orden de aparición original se preserva.
+     *
+     * Clave de grupo:  row[1] | row[15] | row[16] | row[5]
+     *   row[1]  = Id Cuenta Contable
+     *   row[15] = Id Subsidiaria (valor interno)
+     *   row[16] = Id Entidad (valor interno)
+     *   row[5]  = Folio
+     *
+     * @param   {Array[]} rows  Arrays de 17 valores (salida de buildRow)
+     * @returns {Array[]}       Filas consolidadas (una por grupo), en orden de aparición
+     */
+    function _compensarFilas(rows) {
+        /* ── Pasada 1: acumular saldos por grupo (solo filas CON folio) ── */
+        var grupos = {};
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            if (!row[5]) continue; // sin folio → se excluye de la agrupación
+
+            var key = row[1] + '|' + row[15] + '|' + row[16] + '|' + row[5];
+            if (!grupos[key]) {
+                grupos[key] = {
+                    rep     : row.slice(), // primera fila del grupo (representativa)
+                    sumDebe : 0,
+                    sumHaber: 0,
+                };
+            }
+            grupos[key].sumDebe  += Number(row[13]) || 0;
+            grupos[key].sumHaber += Number(row[14]) || 0;
+        }
+
+        /* Calcular saldo neto para cada grupo */
+        for (var gkey in grupos) {
+            var g    = grupos[gkey];
+            var neto = g.sumDebe - g.sumHaber;
+            if (neto >= 0) { g.rep[13] = neto;  g.rep[14] = 0;     }
+            else           { g.rep[13] = 0;      g.rep[14] = -neto; }
+        }
+
+        /* ── Pasada 2: emitir en orden de aparición original ─────────── */
+        var resultado = [];
+        var emitidos  = {};
+        for (var j = 0; j < rows.length; j++) {
+            var r = rows[j];
+            if (!r[5]) {
+                /* Sin folio: pasa sin agrupar (cada fila es independiente) */
+                resultado.push(r.slice());
+                continue;
+            }
+            var k = r[1] + '|' + r[15] + '|' + r[16] + '|' + r[5];
+            if (!emitidos[k]) {
+                resultado.push(grupos[k].rep); // representativa con saldo neto
+                emitidos[k] = true;
+                /* Las filas siguientes del mismo grupo se descartan (ya acumuladas) */
+            }
+        }
+
+        return resultado;
     }
 
     /* ═══ Lógica de Saldo Debe / Saldo Haber ═══════════════════════════ */
@@ -258,11 +362,11 @@ define(['N/file'], function (file) {
      * Los encabezados siempre son String; los valores numéricos se tipan como Number.
      * @param {Array}   cells     Valores de la fila
      * @param {boolean} isHeader  true → fuerza tipo String en todas las celdas
-     * @param {string}  [styleId] ss:StyleID a aplicar en cada celda (ej: 'sHeader' para negrita)
+     * @param {string}  [styleId] ss:StyleID a aplicar en cada celda
      */
     function _buildXlsRow(cells, isHeader, styleId) {
         var styleAttr = styleId ? ' ss:StyleID="' + styleId + '"' : '';
-        var cellsXml = '';
+        var cellsXml  = '';
         for (var i = 0; i < cells.length; i++) {
             var val  = (cells[i] === null || cells[i] === undefined) ? '' : String(cells[i]);
             var type = (isHeader || !_isNumeric(val)) ? 'String' : 'Number';
@@ -323,6 +427,7 @@ define(['N/file'], function (file) {
 
     return {
         CSV_HEADERS         : CSV_HEADERS,
+        XLS_HEADERS         : XLS_HEADERS,
         buildRow            : buildRow,
         crearArchivoCsv     : crearArchivoCsv,
         crearArchivoXls     : crearArchivoXls,

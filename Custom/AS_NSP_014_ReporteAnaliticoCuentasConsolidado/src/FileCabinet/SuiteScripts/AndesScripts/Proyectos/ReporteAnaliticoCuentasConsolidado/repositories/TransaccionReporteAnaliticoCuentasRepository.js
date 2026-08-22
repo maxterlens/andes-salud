@@ -39,7 +39,7 @@ define(['N/search'], function (search) {
      * @param   {string}  [params.fechaCorte]   Fecha en formato NS (MM/DD/YYYY); aplica onorbefore
      * @returns {search.Search}
      */
-    function buildSearch(params) {
+    function buildSearch_1(params) {
         params = params || {};
         const subsidiaria = params.subsidiaria;
         const fechaCorte  = params.fechaCorte;
@@ -83,7 +83,6 @@ define(['N/search'], function (search) {
         filters.push('AND',    ['trandate',   'onorbefore', fechaCorte]);
         if (cuentaContable) filters.push('AND', ['account',    'anyof',      cuentaContable]);
         if (tipoRegistro) filters.push('AND',   ['recordtype', 'is',      tipoRegistro]);
-        if (true) filters.push('AND', ['trandate', 'onorafter',    '20/08/2026'  ]);
 
         /* ── Búsqueda ────────────────────────────────────────────────── */
         return search.create({
@@ -114,6 +113,51 @@ define(['N/search'], function (search) {
                 search.createColumn({ name: 'amountpaid',                        label: 'Importe Pagado'     }),
             ],
         });
+    }
+
+    /* ─────────────────────────────────────────────────────────────────── */
+    /**
+     * Construye y devuelve la búsqueda unificada de transacciones.
+     * Diseñada para ser entregada directamente por getInputData() del Map Reduce;
+     * el motor MR se encarga de la paginación automática.
+     *
+     * @param   {Object}  [params={}]
+     * @param   {string}  [params.subsidiaria]  Internal ID de subsidiaria (filtra si se proporciona)
+     * @param   {string}  [params.fechaCorte]   Fecha en formato NS (MM/DD/YYYY); aplica onorbefore
+     * @returns {search.Search}
+     */
+    function buildSearch(params) {
+        params = params || {};
+        const subsidiaria = params.subsidiaria;
+        const fechaCorte  = params.fechaCorte;
+        const cuentaContable = params.cuentaContable;
+        const tipoRegistro = params.tipoRegistro;
+
+        let savedSearch = search.load({ id: 'customsearch13086' });
+
+        if (savedSearch.filters.length > 5) {
+            do {
+                savedSearch.filters.pop();            
+            }
+            while (savedSearch.filters.length > 5)
+
+            savedSearch.filters.push(
+                search.createFilter({ type: 'subsidiary', operator: 'anyof', values: [subsidiaria] })
+            )
+            savedSearch.filters.push(
+                search.createFilter({ type: 'trandate', operator: 'onorbefore', values: [fechaCorte] })
+            )
+            if (cuentaContable) {
+                search.createFilter({ type: 'account', operator: 'anyof', values: [cuentaContable] })
+            }
+            if (tipoRegistro) {
+                search.createFilter({ type: 'recordtype', operator: 'is', values: [tipoRegistro] })
+            }
+            let id = savedSearch.save();
+            log.error('id saved', id);
+        }
+
+        return savedSearch;
     }
 
     return { buildSearch };

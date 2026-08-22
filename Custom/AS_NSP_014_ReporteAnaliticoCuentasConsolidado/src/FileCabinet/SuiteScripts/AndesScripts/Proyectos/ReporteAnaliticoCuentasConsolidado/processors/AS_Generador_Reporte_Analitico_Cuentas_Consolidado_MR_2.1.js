@@ -164,5 +164,5 @@ define([
         }
     }
 
-    return { getInputData, map, reduce, summarize };
+    return { getInputData, map, /*reduce,*/ summarize };
 });
