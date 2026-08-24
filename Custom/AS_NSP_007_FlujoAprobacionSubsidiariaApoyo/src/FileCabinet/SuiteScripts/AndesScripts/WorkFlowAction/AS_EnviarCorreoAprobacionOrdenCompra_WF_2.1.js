@@ -1,3 +1,4 @@
+
 /**
  * @NApiVersion 2.1
  * @NScriptType WorkflowActionScript
@@ -26,12 +27,37 @@
 define(['N/runtime', 'N/record', 'N/email', 'N/search', './lib/RenderHelper'],
     (runtime, record, email, search, RenderHelper) => {
 
-        /**
-         * @param {Object}              scriptContext
-         * @param {N/record.Record}     scriptContext.newRecord - Registro actual de la transacción
-         * @param {N/record.Record}     scriptContext.oldRecord - Registro anterior
-         * @param {Object}              scriptContext.workflow  - Contexto del workflow
-         */
+        const obtenerCorreosNotificacion = ({ agrupar, subsidiaryId, vendorId, correoIndividual }) => {
+
+            const individual = correoIndividual ? [correoIndividual] : [];
+            if (!agrupar) return individual;
+            const correos = [];
+
+            search.create({
+                type:    'customrecord_as_correo_notif_oc_subs',
+                filters: [
+                    ['custrecord_as_cn_subsidiaria', 'anyof',      subsidiaryId], 'AND',
+                    ['custrecord_as_cn_vendedor',    'anyof',      vendorId],     'AND',
+                    ['custrecord_as_cn_correo',      'isnotempty', ''],           'AND',
+                    ['isinactive',                   'is',         'F']
+                ],
+                columns: ['custrecord_as_cn_correo']
+            }).run().each((result) => {
+                correos.push(result.getValue({ name: 'custrecord_as_cn_correo' }));
+                return true;
+            });
+
+            if (!correos.length) {
+                log.error({
+                    title:   'obtenerCorreosNotificacion - Sin contactos configurados',
+                    details: `No hay contactos para Subsidiaria ${subsidiaryId} / Proveedor ${vendorId}. Se usa el contacto individual de la OC.`
+                });
+                return individual;
+            }
+
+            return correos;
+        };
+
         const onAction = (scriptContext) => {
 
             const { newRecord } = scriptContext;
@@ -43,7 +69,6 @@ define(['N/runtime', 'N/record', 'N/email', 'N/search', './lib/RenderHelper'],
                 const user            = runtime.getCurrentUser();
                 const emailTemplateId = script.getParameter({ name: 'custscript_as_env_corr_apr_plantilla_c' });
                 const pdfTemplateId   = script.getParameter({ name: 'custscript_as_env_corr_apr_plantilla_pdf' });
-                const aditionalEmails = (script.getParameter({ name: 'custscript_as_env_corr_apr_correo_adi' }) || '').split(',');
 
                 if (!emailTemplateId) {
                     log.error({
@@ -103,6 +128,21 @@ define(['N/runtime', 'N/record', 'N/email', 'N/search', './lib/RenderHelper'],
                     taxidnum:         subsidiaryLookup['taxidnum']
                 };
 
+                const correoContactoNotificacion = poRecord.getValue({ fieldId: 'custbody_as_correo_notif_email' });
+                const agruparContactos           = poRecord.getValue({ fieldId: 'custbody_as_agrupar_contacto_prov' });
+
+                const correosAdicionales = obtenerCorreosNotificacion({
+                    agrupar:          agruparContactos,
+                    subsidiaryId:     subsidiaryId,
+                    vendorId:         poRecord.getValue({ fieldId: 'entity' }),
+                    correoIndividual: correoContactoNotificacion
+                });
+
+                log.debug({
+                    title:   'Correos notificación',
+                    details: `Modo: ${agruparContactos ? 'agrupado por proveedor' : 'contacto individual'} | Destinatarios: ${correosAdicionales.join(', ') || '(ninguno)'}`
+                });
+
                 // ── 4. Renderizar cuerpo del correo ───────────────────────────────
                 const { subject, body } = RenderHelper.renderEmailTemplate({
                     templateId:    emailTemplateId,
@@ -121,8 +161,9 @@ define(['N/runtime', 'N/record', 'N/email', 'N/search', './lib/RenderHelper'],
                 //const vendor  = poRecord.getText({ fieldId: 'entity' });
                 pdfFile.name  = `${tranid}.pdf`;
 
-                // ── 6. Enviar correo al creador de la OC ──────────────────────────
-                let recipients = [createdBy, ... aditionalEmails]
+                // N/email.send admite 10 destinatarios como máximo (recipients + cc + bcc).
+                const recipients = [createdBy, ...correosAdicionales].slice(0, 10);
+
                 email.send({
                     author:     user.id,
                     recipients: recipients,
@@ -134,9 +175,17 @@ define(['N/runtime', 'N/record', 'N/email', 'N/search', './lib/RenderHelper'],
                     }
                 });
 
+                const recortado = recipients.length < correosAdicionales.length + 1;
+
                 log.audit({
                     title:   'onAction - Correo enviado',
-                    details: `Correo enviado exitosamente al creador (ID: ${createdBy}) de la OC ${recordId}.`
+                    details: [
+                        `OC:            ${recordId}`,
+                        `Creador:       ${createdBy}`,
+                        `Encontrados:   ${correosAdicionales.length}`,
+                        `Enviados:      ${recipients.length}${recortado ? ' (tope de 10)' : ''}`,
+                        `Destinatarios: ${recipients.join(', ')}`
+                    ].join('\n')
                 });
 
             } catch (e) {

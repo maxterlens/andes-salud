@@ -3,10 +3,12 @@
         <path>~/AccountConfiguration/*</path>
     </configuration>
     <files>
-        <path>~/FileCabinet/SuiteScripts/AndesScripts/WorkFlowAction/*</path>
+        <path>~/FileCabinet/SuiteScripts/AndesScripts/Transacciones/*</path>
     </files>
     <objects>
-        <path>~/Objects/email/*</path>
+        <path>~/Objects/Records/*</path>
+        <path>~/Objects/Body/*</path>
+        <path>~/Objects/scripts/*</path>
     </objects>
     <translationimports>
         <path>~/Translations/*</path>

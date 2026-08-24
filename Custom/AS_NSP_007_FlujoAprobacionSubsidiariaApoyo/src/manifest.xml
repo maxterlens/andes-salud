@@ -1,5 +1,5 @@
 <manifest projecttype="ACCOUNTCUSTOMIZATION">
-  <projectname>AS_NSP_007_FlujoAprobacionSubsidiariaApoyo</projectname>
+  <projectname>AS_NSP_007_FlujoAprobacionSubApoyo</projectname>
   <frameworkversion>1.0</frameworkversion>
   <dependencies>
     <features>
@@ -8,6 +8,21 @@
       <feature required="true">SUBSIDIARIES</feature>
       <feature required="true">PURCHASEORDERS</feature>
       <feature required="true">CRM</feature>
+      <feature required="false">MULTILANGUAGE</feature>
+      <feature required="false">EXPREPORTS</feature>
+      <feature required="false">ADVRECEIVING</feature>
+      <feature required="false">MULTILOCINVT</feature>
+      <feature required="true">ACCOUNTING</feature>
+      <feature required="false">INVENTORY</feature>
+      <feature required="false">CUSTOMTRANSACTIONS</feature>
+      <feature required="false">EXTREMELIST</feature>
+      <feature required="false">RECEIVABLES</feature>
+      <feature required="false">MAILMERGE</feature>
+      <feature required="true">CUSTOMRECORDS</feature>
+      <feature required="false">PAYABLES</feature>
+      <feature required="false">PERIODENDJOURNALENTRIES</feature>
+      <feature required="false">OPPORTUNITIES</feature>
+      <feature required="false">CUSTOMSEGMENTS</feature>
     </features>
     <objects>
       <object>custbody_as_aprobador_n3</object>
