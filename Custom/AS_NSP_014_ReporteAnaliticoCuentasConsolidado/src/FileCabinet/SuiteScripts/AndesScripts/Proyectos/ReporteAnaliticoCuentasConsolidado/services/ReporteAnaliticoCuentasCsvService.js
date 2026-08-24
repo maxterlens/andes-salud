@@ -126,6 +126,80 @@ define(['N/file'], function (file) {
 
     /* ──────────────────────────────────────────────────────────────────── */
     /**
+     * Mapea los 21 campos de una línea CSV (exportada por SearchTask) a un array
+     * de 17 valores crudos con la misma estructura que buildRow().
+     *
+     * Índices de entrada (cols[], 0-based):
+     *   0  internalid            → Id Transaccion
+     *   1  formulanumeric {subsidiary.internalid} → Id Subsidiaria
+     *   2  subsidiarynohierarchy → Subsidiaria (texto)
+     *   3  type (display)        → Tipo de Transaccion
+     *   4  recordtype            → Tipo Registro (vendorbill, journalentry, …)
+     *   5  formulanumeric {name.id} → Id Entidad
+     *   6  entity (texto)        → Nombre
+     *   7  postingperiod         → Periodo Contable
+     *   8  trandate              → Fecha
+     *   9  tranid                → Numero Documento / Folio vendorbill
+     *   10 custbody_2winfolioacepta → Folio otros
+     *   11 custcol_2w_folio      → Folio journalentry
+     *   12 memo                  → Glosa
+     *   13 account.internalid    → Id Cuenta Contable
+     *   14 account (texto)       → Cuenta Contable
+     *   15 accounttype           → (no se usa en el reporte)
+     *   16 mainline              → Main Line ("Yes"/"No")
+     *   17 debitamount           → Debe
+     *   18 creditamount          → Haber
+     *   19 amountremaining       → Importe Restante
+     *   20 amountpaid            → Importe Pagado
+     *
+     * @param   {string[]} cols  21 campos del CSV ya parseados (sin comillas)
+     * @returns {Array}          Array con los 17 valores del reporte
+     */
+    function buildRowFromCsv(cols) {
+        var recordtype = _strCsv(cols[4]);
+        var isMainline = _isMainlineCsv(cols[16]);
+
+        var debe    = _numCsv(cols[17]);
+        var haber   = _numCsv(cols[18]);
+        var amtRem  = _numCsv(cols[19]);
+        var amtPaid = _numCsv(cols[20]);
+
+        /* ── Folio según tipo de registro ────────────────────────────── */
+        var folio = '';
+        if (recordtype === 'vendorbill') {
+            folio = _strCsv(cols[9]);   // tranid
+        } else if (recordtype === 'journalentry') {
+            folio = _strCsv(cols[11]);  // custcol_2w_folio
+        } else {
+            folio = _strCsv(cols[10]);  // custbody_2winfolioacepta
+        }
+
+        /* ── Saldo Debe / Saldo Haber ────────────────────────────────── */
+        var saldo = _calcSaldo(recordtype, isMainline, debe, haber, amtRem, amtPaid);
+
+        return [
+            _strCsv(cols[0]),           // [0]  Id Transaccion
+            _strCsv(cols[13]),          // [1]  Id Cuenta Contable
+            _strCsv(cols[2]),           // [2]  Subsidiaria (texto)
+            _strCsv(cols[3]),           // [3]  Tipo de Transaccion
+            _strCsv(cols[6]),           // [4]  Nombre (entidad)
+            folio,                      // [5]  Folio
+            _strCsv(cols[9]),           // [6]  Numero Documento (tranid)
+            _strCsv(cols[12]),          // [7]  Glosa
+            _strCsv(cols[8]),           // [8]  Fecha
+            _strCsv(cols[7]),           // [9]  Periodo Contable
+            _strCsv(cols[14]),          // [10] Cuenta Contable (texto)
+            debe,                       // [11] Debe
+            haber,                      // [12] Haber
+            saldo.saldoDebe,            // [13] Saldo Debe
+            saldo.saldoHaber,           // [14] Saldo Haber
+            _strCsv(cols[1]),           // [15] Id Subsidiaria
+            _strCsv(cols[5]),           // [16] Id Entidad
+        ];
+    }
+
+    /* ──────────────────────────────────────────────────────────────────── */
+    /**
      * Crea el archivo CSV en el File Cabinet y devuelve su internal ID.
      * Escribe las 17 columnas (15 del reporte + Id Subsidiaria + Id Entidad).
      *
@@ -417,6 +491,34 @@ define(['N/file'], function (file) {
         return isNaN(n) ? 0 : n;
     }
 
+    /* ═══ Helpers CSV (para buildRowFromCsv) ═══════════════════════════ */
+
+    /** Limpia y retorna el campo CSV como string; '' si nulo/undefined */
+    function _strCsv(str) {
+        return (str === null || str === undefined) ? '' : String(str).trim();
+    }
+
+    /**
+     * Convierte un campo numérico del CSV a número.
+     * Elimina separadores de miles (comas) antes de parsear.
+     * Devuelve 0 si no es parseable.
+     */
+    function _numCsv(str) {
+        var s = (str === null || str === undefined) ? '' : String(str).replace(/,/g, '').trim();
+        var n = parseFloat(s);
+        return isNaN(n) ? 0 : n;
+    }
+
+    /**
+     * Interpreta el campo mainline del CSV como booleano.
+     * Acepta: "Yes", "*", "T", "1", "true", "sí", "si" (case-insensitive).
+     */
+    function _isMainlineCsv(val) {
+        if (val === null || val === undefined) return false;
+        var s = String(val).trim().toLowerCase();
+        return s === 'yes' || s === '*' || s === 't' || s === '1' || s === 'true' || s === 'sí' || s === 'si';
+    }
+
     /** Escapa un valor para CSV: encierra en comillas si tiene coma, comilla o salto de línea */
     function _escapeCsv(val) {
         var str = (val === null || val === undefined) ? '' : String(val);
@@ -429,6 +531,7 @@ define(['N/file'], function (file) {
         CSV_HEADERS         : CSV_HEADERS,
         XLS_HEADERS         : XLS_HEADERS,
         buildRow            : buildRow,
+        buildRowFromCsv     : buildRowFromCsv,
         crearArchivoCsv     : crearArchivoCsv,
         crearArchivoXls     : crearArchivoXls,
         generarNombreArchivo: generarNombreArchivo,
