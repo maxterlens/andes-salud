@@ -3,9 +3,7 @@
  * @NScriptType UserEventScript
  * @file AS_AsientoContable_UE_2.1.js
  * @description User Event del Asiento Diario (journalentry).
- *              - beforeSubmit: bloquea el guardado si el Handler detecta
- *                duplicidad. Corre siempre — UI, CSV import, API, scripts —
- *                a diferencia del Client Script, que solo cubre la UI.
+
  */
 define(['./handlers/AS_AsientoContableHandler', 'N/error', 'N/log'], (AsientoContableHandler, error, log) => {
 

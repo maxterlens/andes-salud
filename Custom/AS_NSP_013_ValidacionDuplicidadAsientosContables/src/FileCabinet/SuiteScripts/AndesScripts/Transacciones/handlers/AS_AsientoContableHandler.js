@@ -4,7 +4,7 @@
  * @file AS_AsientoContableHandler.js
  * @description Validación de duplicidad del Asiento Diario.
  */
-define(['N/search'], (search) => {
+define(['N/search', 'N/log'], (search, log) => {
 
     const validar = (journal) => {
         const lineas = obtenerLineasControl(journal);
@@ -82,6 +82,14 @@ define(['N/search'], (search) => {
                 `Línea ${linea.numero}: ${descripcionLinea(linea)} ya está registrado `
                 + `en el asiento ${asiento.numero || asiento.id}.`
             );
+
+            try {
+                log.error({
+                    title: 'DUPLICIDAD_ASIENTO_CONTABLE - ID interno',
+                    details: `Línea ${linea.numero}: asiento ${asiento.numero || asiento.id}, ID interno ${asiento.id}`
+                });
+            } catch (e) {
+            }
         });
 
         return mensajes;
