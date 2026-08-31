@@ -12,7 +12,7 @@ Importante: esto **no valida saldos**. No revisa si un asiento sobreaplica un pa
 
 **`AS_AsientoContable_UE_2.1.js`** (User Event, `beforeSubmit`) es la barrera real. Corre siempre — UI, CSV import, integraciones, API — no importa por dónde entre el guardado. Si el handler devuelve errores, tira `error.create()` y bloquea.
 
-**`AS_AsientoContableVenta_CS_2.1.js`** (Client Script, `saveRecord`) es solo cosmético. Muestra el mismo mensaje pero como un diálogo bonito antes de que el usuario intente guardar, para que no tenga que esperar el viaje al servidor para enterarse. No bloquea nada por sí solo — si no está deployado en algún lado, el UE igual frena el guardado, solo que el usuario ve el error genérico de NetSuite en vez del diálogo prolijo.
+**`AS_AsientoContable_CS_2.1.js`** (Client Script, `saveRecord`) es solo cosmético. Muestra el mismo mensaje pero como un diálogo bonito antes de que el usuario intente guardar, para que no tenga que esperar el viaje al servidor para enterarse. No bloquea nada por sí solo — si no está deployado en algún lado, el UE igual frena el guardado, solo que el usuario ve el error genérico de NetSuite en vez del diálogo prolijo.
 
 ## La llave de duplicidad
 
@@ -35,6 +35,18 @@ En vez de buscar duplicados línea por línea, se junta todo lo necesario (cuent
 Dos detalles de Journal Entry que costó averiguar:
 - No hay filtro de `mainline` — el JE no tiene línea principal, ese campo llega vacío y filtrar por `mainline is F` descartaría todo.
 - Los nombres de columna de búsqueda no son los mismos que los de la sublista: la entidad se busca como `name` (en el record es `entity`), el monto del Debe como `debitamount` (en el record es `debit`).
+
+## La excepcion por cuenta
+
+Hay cuentas donde repetir la llave completa es un movimiento legitimo, no un error: los pagos manuales con tarjeta de credito y debito registran el mismo folio de la misma entidad mas de una vez. Para esos casos existe el checkbox **AS Exenta de control de duplicidad** (`custrecord_as_cuenta_exenta_dup`) sobre el record Account.
+
+Una linea cuya cuenta este marcada **no entra a la lista de control**: queda fuera de los dos controles a la vez, el interno y el externo, porque ni siquiera llega a la lista que los alimenta. El resto de las lineas del mismo asiento se sigue validando normal.
+
+Es un checkbox sobre la cuenta y no un parametro del deployment por una razon concreta: la lista la necesitan el User Event **y** el Client Script. Con un parametro habria que definirlo en los dos scripts y mantener los dos valores iguales a mano; el dia que se desincronicen, uno bloquea y el otro no. El checkbox es una sola fuente que los dos leen, y agregar otra cuenta es marcarla en NetSuite sin desplegar codigo.
+
+Cuando la excepcion se aplica queda rastro: un `log.audit` por asiento con cuantas lineas se exoneraron.
+
+Advertencia al marcar una cuenta: se pierde tambien la deteccion **externa** en ella, que es la que atrapa que una misma carga se suba dos veces. Antes de marcar una cuenta conviene confirmar que los choques que da hoy son legitimos y no una carga repetida.
 
 ## El caso de Advanced Intercompany Journal Entry
 

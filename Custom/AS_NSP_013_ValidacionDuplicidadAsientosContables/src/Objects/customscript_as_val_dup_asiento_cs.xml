@@ -6,7 +6,7 @@
   <notifyemails></notifyemails>
   <notifyowner>T</notifyowner>
   <notifyuser>F</notifyuser>
-  <scriptfile>[/SuiteScripts/AndesScripts/Transacciones/AS_AsientoContableVenta_CS_2.1.js]</scriptfile>
+  <scriptfile>[/SuiteScripts/AndesScripts/Transacciones/AS_AsientoContable_CS_2.1.js]</scriptfile>
   <scriptdeployments>
     <scriptdeployment scriptid="customdeploy_as_val_dup_asiento_cs">
       <allemployees>F</allemployees>

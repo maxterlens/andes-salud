@@ -3,10 +3,6 @@
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  * @file AS_AsientoContable_CS_2.1.js
- * @description Client Script del Asiento Diario (journalentry).
- *              - saveRecord: aviso rápido al usuario si el Handler detecta
- *                duplicidad. No es la barrera real — esa la impone el User
- *                Event en beforeSubmit.
  */
 define(['./handlers/AS_AsientoContableHandler', 'N/ui/dialog', 'N/log'], (AsientoContableHandler, dialog, log) => {
 

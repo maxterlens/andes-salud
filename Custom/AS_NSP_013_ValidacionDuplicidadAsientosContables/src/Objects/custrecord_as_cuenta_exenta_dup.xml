@@ -1,0 +1,37 @@
+<othercustomfield scriptid="custrecord_as_cuenta_exenta_dup">
+  <accesslevel>2</accesslevel>
+  <aidescription></aidescription>
+  <applyformatting>F</applyformatting>
+  <checkspelling>F</checkspelling>
+  <defaultchecked>F</defaultchecked>
+  <defaultselection></defaultselection>
+  <defaultvalue></defaultvalue>
+  <description>Marcar esta opción para excluir la cuenta del control de duplicidad de asientos contables. Las líneas que utilicen esta cuenta no serán consideradas en la validación de duplicados; las demás líneas del asiento se validarán normalmente.</description>
+  <displayheight></displayheight>
+  <displaytype>NORMAL</displaytype>
+  <displaywidth></displaywidth>
+  <dynamicdefault></dynamicdefault>
+  <enabletextenhance>F</enabletextenhance>
+  <encryptatrest>F</encryptatrest>
+  <fieldtype>CHECKBOX</fieldtype>
+  <help>Marcar esta opción para excluir la cuenta del control de duplicidad de asientos contables. Las líneas que utilicen esta cuenta no serán consideradas en la validación de duplicados; las demás líneas del asiento se validarán normalmente.</help>
+  <isformula>F</isformula>
+  <ismandatory>F</ismandatory>
+  <label>AS Exenta de control de duplicidad</label>
+  <linktext></linktext>
+  <maxlength></maxlength>
+  <maxvalue></maxvalue>
+  <minvalue></minvalue>
+  <onparentdelete></onparentdelete>
+  <rectype>-112</rectype>
+  <searchcomparefield></searchcomparefield>
+  <searchdefault></searchdefault>
+  <searchlevel>2</searchlevel>
+  <selectrecordtype></selectrecordtype>
+  <showhierarchy>F</showhierarchy>
+  <showinlist>T</showinlist>
+  <sourcefilterby></sourcefilterby>
+  <sourcefrom></sourcefrom>
+  <sourcelist></sourcelist>
+  <storevalue>T</storevalue>
+</othercustomfield>

@@ -16,10 +16,27 @@ define(['N/search', 'N/log'], (search, log) => {
         ];
     };
 
+    const obtenerCuentasExentas = () => {
+        const exentas = new Set();
+
+        search.create({
+            type: 'account',
+            filters: [['custrecord_as_cuenta_exenta_dup', search.Operator.IS, 'T']],
+            columns: ['internalid']
+        }).run().each((resultado) => {
+            exentas.add(resultado.getValue({ name: 'internalid' }));
+            return true;
+        });
+
+        return exentas;
+    };
+
     const obtenerLineasControl = (journal) => {
         const subsidiariaCabecera = journal.getValue({ fieldId: 'subsidiary' });
         const cantidad = journal.getLineCount({ sublistId: 'line' });
+        const cuentasExentas = obtenerCuentasExentas();
         const lineas = [];
+        let exoneradas = 0;
 
         for (let i = 0; i < cantidad; i++) {
             const cuenta = journal.getSublistValue({ sublistId: 'line', fieldId: 'account', line: i });
@@ -30,6 +47,11 @@ define(['N/search', 'N/log'], (search, log) => {
 
             if (!cuenta || !entidad || !folio) continue;
 
+            if (cuentasExentas.has(String(cuenta))) {
+                exoneradas++;
+                continue;
+            }
+
             lineas.push({
                 numero: i + 1,
                 subsidiaria,
@@ -37,6 +59,13 @@ define(['N/search', 'N/log'], (search, log) => {
                 entidad,
                 folio,
                 movimiento: debe ? 'debit' : 'credit'
+            });
+        }
+
+        if (exoneradas) {
+            log.audit({
+                title: 'Lineas exoneradas del control de duplicidad',
+                details: `${exoneradas} de ${cantidad} lineas, por cuenta marcada como exenta de duplicidad`
             });
         }
 
