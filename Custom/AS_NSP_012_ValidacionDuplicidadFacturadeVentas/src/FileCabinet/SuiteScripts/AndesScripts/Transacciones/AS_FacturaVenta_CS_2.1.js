@@ -9,16 +9,6 @@ define([
 
     const saveRecord = (context) => {
         const currentRecord = context.currentRecord;
-
-        const camposBasicos = FacturaVentaHandler.validarCamposBasicos(currentRecord);
-        if (!camposBasicos.ok) {
-            dialog.alert({
-                title: 'Campo requerido',
-                message: camposBasicos.message
-            });
-            return false;
-        }
-
         const duplicado = FacturaVentaHandler.buscarFacturaDuplicada(currentRecord);
         if (duplicado) {
             dialog.alert({
