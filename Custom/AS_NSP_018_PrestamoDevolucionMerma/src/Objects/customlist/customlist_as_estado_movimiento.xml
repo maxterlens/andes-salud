@@ -1,0 +1,39 @@
+<customlist scriptid="customlist_as_estado_movimiento">
+  <description>Estado del ciclo de vida del movimiento: Pendiente de Devolucion, Devuelto Parcial, Devuelto Total, Procesado</description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>AS Estado de Movimiento</name>
+  <customvalues>
+    <customvalue scriptid="val_pendiente_procesar">
+      <abbreviation>PP</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Pendiente de Procesar</value>
+    </customvalue>
+    <customvalue scriptid="val_pendiente_devolucion">
+      <abbreviation>P</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Pendiente de Devolucion</value>
+    </customvalue>
+    <customvalue scriptid="val_devuelto_parcial">
+      <abbreviation>DP</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Devuelto Parcial</value>
+    </customvalue>
+    <customvalue scriptid="val_devuelto_total">
+      <abbreviation>DT</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Devuelto Total</value>
+    </customvalue>
+    <customvalue scriptid="val_procesado">
+      <abbreviation>PR</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Procesado</value>
+    </customvalue>
+    <customvalue scriptid="val_anulado">
+      <abbreviation>AN</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Anulado</value>
+    </customvalue>
+  </customvalues>
+</customlist>

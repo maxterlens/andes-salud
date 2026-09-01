@@ -1,0 +1,26 @@
+<usereventscript scriptid="customscript_as_ue_movimiento_inv">
+  <description>Arma la vista de la cabecera del movimiento segun el tipo, agrega los botones de proceso y bloquea la edicion de un movimiento ya procesado.</description>
+  <isinactive>F</isinactive>
+  <name>AS Movimiento Inventario UE</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/AS_MovimientoInventario_UE_2.1.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_ue_movimiento_inv">
+      <allemployees>T</allemployees>
+      <alllocalizationcontexts>T</alllocalizationcontexts>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
+      <eventtype></eventtype>
+      <executioncontext>USERINTERFACE</executioncontext>
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <recordtype>[scriptid=customrecord_as_movimiento_inventario]</recordtype>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>RELEASED</status>
+    </scriptdeployment>
+  </scriptdeployments>
+</usereventscript>

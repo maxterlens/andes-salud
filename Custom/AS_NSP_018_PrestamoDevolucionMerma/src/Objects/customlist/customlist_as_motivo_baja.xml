@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_as_motivo_baja">
+  <description>Motivo de la baja cuando el tipo de movimiento es Merma: Vencimiento, Deterioro, Otro</description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>AS Motivo de Baja</name>
+  <customvalues>
+    <customvalue scriptid="val_vencimiento">
+      <abbreviation>V</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Vencimiento</value>
+    </customvalue>
+    <customvalue scriptid="val_deterioro">
+      <abbreviation>D</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Deterioro</value>
+    </customvalue>
+    <customvalue scriptid="val_otro">
+      <abbreviation>O</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Otro</value>
+    </customvalue>
+  </customvalues>
+</customlist>

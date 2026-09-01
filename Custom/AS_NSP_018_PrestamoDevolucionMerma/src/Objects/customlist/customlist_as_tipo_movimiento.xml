@@ -1,0 +1,24 @@
+<customlist scriptid="customlist_as_tipo_movimiento">
+  <description>Tipo de movimiento registrado en Movimiento de Inventario: Prestamo, Devolucion, Merma</description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>AS Tipo de Movimiento</name>
+  <customvalues>
+    <customvalue scriptid="val_prestamo">
+      <abbreviation>P</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Prestamo</value>
+    </customvalue>
+    <customvalue scriptid="val_devolucion">
+      <abbreviation>D</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Devolucion</value>
+    </customvalue>
+    <customvalue scriptid="val_merma">
+      <abbreviation>M</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Merma</value>
+    </customvalue>
+  </customvalues>
+</customlist>

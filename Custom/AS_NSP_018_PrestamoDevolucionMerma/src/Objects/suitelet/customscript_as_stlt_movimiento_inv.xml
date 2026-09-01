@@ -1,0 +1,31 @@
+<suitelet scriptid="customscript_as_stlt_movimiento_inv">
+  <description>Suitelet de registro de movimientos de inventario: prestamos, devoluciones y bajas por merma o vencimiento.</description>
+  <isinactive>F</isinactive>
+  <name>AS Registro Movimiento Inventario STLT</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/AS_MovimientoInventario_STLT_2.1.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_stlt_movimiento_inv">
+      <allemployees>T</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>F</allroles>
+      <audslctrole></audslctrole>
+      <eventtype></eventtype>
+      <isdeployed>T</isdeployed>
+      <isonline>F</isonline>
+      <links>
+        <link>
+          <linkcategory>BASICTRANSACTIONSINVENTORY</linkcategory>
+          <linklabel>Movimiento de Inventario</linklabel>
+        </link>
+      </links>
+      <loglevel>DEBUG</loglevel>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>RELEASED</status>
+      <title>AS Registro Movimiento Inventario STLT</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>

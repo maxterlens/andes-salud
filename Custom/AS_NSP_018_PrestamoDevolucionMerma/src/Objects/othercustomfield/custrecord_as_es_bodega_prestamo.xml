@@ -1,0 +1,37 @@
+<othercustomfield scriptid="custrecord_as_es_bodega_prestamo">
+  <accesslevel>2</accesslevel>
+  <aidescription></aidescription>
+  <applyformatting>F</applyformatting>
+  <checkspelling>F</checkspelling>
+  <defaultchecked>F</defaultchecked>
+  <defaultselection></defaultselection>
+  <defaultvalue></defaultvalue>
+  <description>Marca la ubicacion que hace de bodega de prestamos de su subsidiaria: destino del prestamo y origen de la devolucion. Debe haber una sola marcada por subsidiaria.</description>
+  <displayheight></displayheight>
+  <displaytype>NORMAL</displaytype>
+  <displaywidth></displaywidth>
+  <dynamicdefault></dynamicdefault>
+  <enabletextenhance>F</enabletextenhance>
+  <encryptatrest>F</encryptatrest>
+  <fieldtype>CHECKBOX</fieldtype>
+  <help>Marcar solo en la ubicacion que recibe el stock prestado. Es el destino del traslado del prestamo y el origen del traslado de la devolucion. Una sola ubicacion marcada por subsidiaria.</help>
+  <isformula>F</isformula>
+  <ismandatory>F</ismandatory>
+  <label>AS Bodega de Prestamos y Devoluciones</label>
+  <linktext></linktext>
+  <maxlength></maxlength>
+  <maxvalue></maxvalue>
+  <minvalue></minvalue>
+  <onparentdelete></onparentdelete>
+  <rectype>-103</rectype>
+  <searchcomparefield></searchcomparefield>
+  <searchdefault></searchdefault>
+  <searchlevel>2</searchlevel>
+  <selectrecordtype></selectrecordtype>
+  <showhierarchy>F</showhierarchy>
+  <showinlist>T</showinlist>
+  <sourcefilterby></sourcefilterby>
+  <sourcefrom></sourcefrom>
+  <sourcelist></sourcelist>
+  <storevalue>T</storevalue>
+</othercustomfield>
