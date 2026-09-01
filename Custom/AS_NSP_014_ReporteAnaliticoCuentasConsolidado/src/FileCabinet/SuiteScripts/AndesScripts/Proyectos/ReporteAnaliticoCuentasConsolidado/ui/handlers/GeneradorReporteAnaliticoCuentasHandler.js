@@ -57,6 +57,7 @@ define([
 
         const filtros = {
             subsidiaria   : params[formModule.FILTROS.SUBSIDIARIA]     || '',
+            fechaInicio   : params[formModule.FILTROS.FECHA_INICIO]    || '',
             fecha         : params[formModule.FILTROS.FECHA]           || '',
             cuentaContable: params[formModule.FILTROS.CUENTA_CONTABLE] || '',
             cliente       : params[formModule.FILTROS.CLIENTE]         || '',
@@ -99,21 +100,23 @@ define([
         const params = context.request.parameters;
 
         const subsidiaria    = params[formModule.FILTROS.SUBSIDIARIA]     || '';
+        const fechaInicio    = params[formModule.FILTROS.FECHA_INICIO]    || '';
         const fecha          = params[formModule.FILTROS.FECHA]           || '';
         const cuentaContable = params[formModule.FILTROS.CUENTA_CONTABLE] || '';
+        const omitirNetoCero = params[formModule.FILTROS.OMITIR_NETO_CERO] || 'F';
         const cliente        = params[formModule.FILTROS.CLIENTE]         || '';
         const proveedor      = params[formModule.FILTROS.PROVEEDOR]       || '';
         const folio          = params[formModule.FILTROS.FOLIO]           || '';
 
-        log.audit({
+        /*log.audit({
             title  : 'handlePost — Solicitud de generación de reporte',
-            details: JSON.stringify({ subsidiaria, fecha, cuentaContable, cliente, proveedor, folio }),
-        });
+            details: JSON.stringify({ subsidiaria, fechaInicio, fecha, cuentaContable, cliente, proveedor, folio }),
+        });*/
 
         try {
             /* ── 1. Crear registro de log (estado: "En Proceso") ─────── */
-            const logId = repository.crear({ subsidiaria, fechaCorte: fecha });
-            log.audit({ title: 'handlePost — Registro de log creado', details: { logId } });
+            const logId = repository.crear({ subsidiaria, fechaCorte: fecha, fechaInicio: fechaInicio });
+            //log.audit({ title: 'handlePost — Registro de log creado', details: { logId } });
 
             /* ── 2. Obtener ID de carpeta del parámetro del Suitelet ─── */
             const folderId = runtime.getCurrentScript().getParameter({ name: PARAM_FOLDER_ID });
@@ -150,13 +153,13 @@ define([
 
             const updatedSearchId = savedSearch.save();
 
-            log.audit({
+            /*log.audit({
                 title  : 'handlePost — Búsqueda actualizada',
                 details: 'ID: ' + String(updatedSearchId),
-            });
+            });*/
 
-            /* ── 4. Crear archivo CSV temporal en el File Cabinet ─────── */
-            const nombreTmp = 'tmp_rpt_analitico_log' + logId
+            /* ── 4. Crear archivo CSV en el File Cabinet ─────── */
+            const nombreTmp = 'DataReporteAnalitico' + logId
                             + '_sub' + (subsidiaria || 'ALL') + '.csv';
             const tmpFile   = file.create({
                 name    : nombreTmp,
@@ -166,10 +169,10 @@ define([
             });
             const tmpFileId = tmpFile.save();
 
-            log.audit({
+            /*log.audit({
                 title  : 'handlePost — Archivo temporal creado',
                 details: 'ID: ' + tmpFileId + ' | Nombre: ' + nombreTmp,
-            });
+            });*/
 
             /* ── 5. Configurar SS (MapReduce) como inboundDependency ──────
              *
@@ -177,14 +180,16 @@ define([
              *  El SS_2.1.js está definido como @NScriptType MapReduceScript.
              *  NO llamar a ssTask.submit() aquí — NetSuite lo lanza automáticamente
              *  cuando el SearchTask finaliza.
-             * ─────────────────────────────────────────────────────────── */
+             * ─────────────────────────────────────────────────────────────── */
             const ssTask            = task.create({ taskType: task.TaskType.SCHEDULED_SCRIPT });
             ssTask.scriptId         = SS_SCRIPT_ID;
             ssTask.deploymentId     = SS_DEPLOY_ID;
             ssTask.params           = {
                 custscript_as_rpt_anlt_cta_ss_subsi      : subsidiaria,
+                custscript_as_rpt_anlt_cta_ss_fecha_ini  : fechaInicio || null,
                 custscript_as_rpt_anlt_cta_ss_fecha_cort : fecha,
                 custscript_as_rpt_anlt_cta_ss_cta_cont   : cuentaContable || null,
+                custscript_as_rpt_anlt_cta_ss_omit_n0 : omitirNetoCero,
                 custscript_as_rpt_anlt_cta_ss_log_id     : logId,
                 custscript_as_rpt_anlt_cta_ss_folderid   : folderId,
                 custscript_as_rpt_anlt_cta_ss_archtempid : tmpFileId,
@@ -198,10 +203,10 @@ define([
 
             const taskId = searchTask.submit();
 
-            log.audit({
+            /*log.audit({
                 title  : 'handlePost — SearchTask lanzado',
                 details: JSON.stringify({ taskId: String(taskId), logId, tmpFileId }),
-            });
+            });*/
 
             /* ── 7. Redirect (POST-Redirect-Get) ─────────────────────── */
             redirect.toSuitelet({

@@ -12,11 +12,13 @@ define(['N/ui/serverWidget'], function (serverWidget) {
     /* ─── IDs de campos de filtro ────────────────────────────────── */
     const FILTROS = Object.freeze({
         SUBSIDIARIA      : 'custpage_fil_subsidiaria',
+        FECHA_INICIO     : 'custpage_fil_fecha_inicio',
         FECHA            : 'custpage_fil_fecha',
         CUENTA_CONTABLE  : 'custpage_fil_cuenta_cont',
         CLIENTE          : 'custpage_fil_cliente',
         PROVEEDOR        : 'custpage_fil_proveedor',
         FOLIO            : 'custpage_fil_folio',
+        OMITIR_NETO_CERO : 'custpage_fil_omit_net_cero'
     });
 
     /* ─── IDs de columnas de la sublista de logs ─────────────────── */
@@ -86,6 +88,16 @@ define(['N/ui/serverWidget'], function (serverWidget) {
             value    : filtros.subsidiaria,
         }).isMandatory = true;
         _addField(form, {
+            id       : FILTROS.FECHA_INICIO,
+            type     : serverWidget.FieldType.DATE,
+            label    : 'Fecha de Inicio',
+            container: 'custpage_grp_filtros',
+            value    : filtros.fechaInicio,
+        }).updateDisplaySize({
+            height : 60,
+            width : 25
+        });
+        _addField(form, {
             id       : FILTROS.FECHA,
             type     : serverWidget.FieldType.DATE,
             label    : 'Fecha de Corte',
@@ -103,6 +115,12 @@ define(['N/ui/serverWidget'], function (serverWidget) {
             container: 'custpage_grp_filtros',
             value    : filtros.cuentaContable,
         })
+        _addField(form, {
+            id       : FILTROS.OMITIR_NETO_CERO,
+            type     : serverWidget.FieldType.CHECKBOX,
+            label    : 'Omitir Neto Cero',
+            container: 'custpage_grp_filtros',
+        }).defaultValue = 'T';
         /*_addField(form, {
             id       : FILTROS.CLIENTE,
             type     : serverWidget.FieldType.SELECT,
@@ -143,39 +161,39 @@ define(['N/ui/serverWidget'], function (serverWidget) {
         sl.addField({ id: COLS.FECHA_CREACION, type: serverWidget.FieldType.TEXT,       label: 'Fecha Creación'        });
         sl.addField({ id: COLS.USUARIO,        type: serverWidget.FieldType.TEXT,       label: 'Usuario'               });
         sl.addField({ id: COLS.SUBSIDIARIA,    type: serverWidget.FieldType.TEXT,       label: 'Subsidiaria'           });
-        sl.addField({ id: COLS.FECHA_CORTE,    type: serverWidget.FieldType.TEXT,       label: 'Fecha de Corte'        });
-        sl.addField({ id: COLS.NOMBRE_XLS,     type: serverWidget.FieldType.TEXT,       label: 'Nombre Archivo Excel'  });
-        sl.addField({ id: COLS.LINK_DESCARGA,  type: serverWidget.FieldType.TEXT, label: 'Descargar Excel'       });
+        sl.addField({ id: COLS.FECHA_CORTE,    type: serverWidget.FieldType.TEXT,       label: 'Fecha'        });
+        sl.addField({ id: COLS.NOMBRE_XLS,     type: serverWidget.FieldType.TEXT,       label: 'Nombre Archivo'  });
+        sl.addField({ id: COLS.LINK_DESCARGA,  type: serverWidget.FieldType.TEXT, label: 'Descargar'       });
         //sl.addField({ id: COLS.LINK_DETALLE,   type: serverWidget.FieldType.TEXT, label: 'URL Detalle'           });
 
         /* ── Poblar sublista con los logs del repositorio ─────────── */
-        logs.forEach(function (log, i) {
-            if (log.fechaCreacion) sl.setSublistValue({ id: COLS.FECHA_CREACION, line: i, value: log.fechaCreacion || '' });
-            sl.setSublistValue({ id: COLS.USUARIO,        line: i, value: log.usuario       || '' });
-            sl.setSublistValue({ id: COLS.SUBSIDIARIA,    line: i, value: log.subsidiaria   || '' });
-            if (log.fechaCorte) sl.setSublistValue({ id: COLS.FECHA_CORTE,    line: i, value: log.fechaCorte    || '' });
-            if (log.nombreXls) sl.setSublistValue({ id: COLS.NOMBRE_XLS,     line: i, value: log.nombreXls     || '—' });
+        logs.forEach(function (rlog, i) {
+            if (rlog.fechaCreacion) sl.setSublistValue({ id: COLS.FECHA_CREACION, line: i, value: rlog.fechaCreacion || '' });
+            sl.setSublistValue({ id: COLS.USUARIO,        line: i, value: rlog.usuario       || '' });
+            sl.setSublistValue({ id: COLS.SUBSIDIARIA,    line: i, value: rlog.subsidiaria   || '' });
+            if (rlog.fechaCorte) sl.setSublistValue({ id: COLS.FECHA_CORTE,    line: i, value: `De: ${rlog.fechaInicio || '- -'} A: ${rlog.fechaCorte}`    || '' });
+            if (rlog.nombreXls) sl.setSublistValue({ id: COLS.NOMBRE_XLS,     line: i, value: rlog.nombreXls     || '—' });
 
             // Link de descarga directa del Excel desde el File Cabinet
-            if (log.urlXls)
+            if (rlog.urlXls)
             sl.setSublistValue({
                 id   : COLS.LINK_DESCARGA,
                 line : i,
-                value: `<a href="${log.urlXls}" target="_blank">Descargar</a>`
+                value: `<a href="${rlog.urlXls}" target="_blank">Descargar</a>`
             });
 
             // Columna oculta (display:none) con el link al detalle del histórico.
             // Parámetro fileId = idCsv → el Suitelet carga op=detail con el contenido del archivo.
             // Puede ser consumida por el Client Script para navegar programáticamente.
-            //if (log.idCsv)
+            //if (rlog.idCsv)
             /*sl.setSublistValue({
                 id   : COLS.LINK_DETALLE,
                 line : i,
-                value: log.idCsv
-                    ? `<a href="${suiteletUrl}&op=detail&fileId=${log.idCsv}"
+                value: rlog.idCsv
+                    ? `<a href="${suiteletUrl}&op=detail&fileId=${rlog.idCsv}"
                           class="as-link-detalle"
-                          data-file-id="${log.idCsv}"
-                          style="display:none;">${suiteletUrl}&op=detail&fileId=${log.idCsv}</a>`
+                          data-file-id="${rlog.idCsv}"
+                          style="display:none;">${suiteletUrl}&op=detail&fileId=${rlog.idCsv}</a>`
                     : '',
             });*/
         });

@@ -32,19 +32,21 @@ define(['N/file'], function (file) {
     const RT_PAGO    = ['customerdeposit', 'vendorprepayment', 'customerpayment', 'vendorpayment'];
     const RT_ASIENTO = 'journalentry';
 
-    /* ─── Cabecera del XLS (15 columnas) ────────────────────────────── */
+    /* ─── Cabecera del XLS (17 columnas) ────────────────────────────── */
     const XLS_HEADERS = [
         'Id Transaccion',
         'Id Cuenta Contable',
         'Subsidiaria',
         'Tipo de Transaccion',
+        'RUT',
         'Nombre',
         'Folio',
         'Numero Documento',
         'Glosa',
         'Fecha',
         'Periodo Contable',
-        'Cuenta Contable',
+        'Numero de Cuenta',
+        'Nombre Cuenta',
         'Debe',
         'Haber',
         'Saldo Debe',
@@ -126,8 +128,8 @@ define(['N/file'], function (file) {
 
     /* ──────────────────────────────────────────────────────────────────── */
     /**
-     * Mapea los 21 campos de una línea CSV (exportada por SearchTask) a un array
-     * de 17 valores crudos con la misma estructura que buildRow().
+     * Mapea los 23 campos de una línea CSV (exportada por SearchTask) a un array
+     * de 19 valores crudos con la misma estructura que buildRow() más Nombre Cuenta y la fecha YYYYMMDD.
      *
      * Índices de entrada (cols[], 0-based):
      *   0  internalid            → Id Transaccion
@@ -138,37 +140,39 @@ define(['N/file'], function (file) {
      *   5  formulanumeric {name.id} → Id Entidad
      *   6  entity (texto)        → Nombre
      *   7  postingperiod         → Periodo Contable
-     *   8  trandate              → Fecha
+     *   8  trandate              → Fecha (formato DD/MM/YYYY del entorno)
      *   9  tranid                → Numero Documento / Folio vendorbill
      *   10 custbody_2winfolioacepta → Folio otros
      *   11 custcol_2w_folio      → Folio journalentry
      *   12 memo                  → Glosa
      *   13 account.internalid    → Id Cuenta Contable
-     *   14 account (texto)       → Cuenta Contable
-     *   15 accounttype           → (no se usa en el reporte)
-     *   16 mainline              → Main Line ("Yes"/"No")
-     *   17 debitamount           → Debe
-     *   18 creditamount          → Haber
-     *   19 amountremaining       → Importe Restante
-     *   20 amountpaid            → Importe Pagado
+     *   14 account.number (join)  → Numero de Cuenta
+     *   15 formulatext displayname→ Nombre Cuenta
+     *   16 accounttype           → (no se usa en el reporte)
+     *   17 mainline              → Main Line ("Yes"/"No")
+     *   18 debitamount           → Debe
+     *   19 creditamount          → Haber
+     *   20 amountremaining       → Importe Restante
+     *   21 amountpaid            → Importe Pagado
+     *   22 Fecha YYYYMMDD        → Entero numérico para comparación de fechaInicio
      *
-     * @param   {string[]} cols  21 campos del CSV ya parseados (sin comillas)
-     * @returns {Array}          Array con los 17 valores del reporte
+     * @param   {string[]} cols  23 campos del CSV ya parseados (sin comillas)
+     * @returns {Array}          Array con 19 valores: [0..18]
      */
     function buildRowFromCsv(cols) {
         var recordtype = _strCsv(cols[4]);
-        var isMainline = _isMainlineCsv(cols[16]);
+        var isMainline = _isMainlineCsv(cols[17]);  // era cols[16]; +1 por nueva col Nombre Cuenta
 
-        var debe    = _numCsv(cols[17]);
-        var haber   = _numCsv(cols[18]);
-        var amtRem  = _numCsv(cols[19]);
-        var amtPaid = _numCsv(cols[20]);
+        var debe    = _numCsv(cols[18]);  // era cols[17]
+        var haber   = _numCsv(cols[19]);  // era cols[18]
+        var amtRem  = _numCsv(cols[20]);  // era cols[19]
+        var amtPaid = _numCsv(cols[21]);  // era cols[20]
 
         /* ── Folio según tipo de registro ────────────────────────────── */
         var folio = '';
         if (recordtype === 'vendorbill') {
             folio = _strCsv(cols[9]);   // tranid
-        } else if (recordtype === 'journalentry') {
+        } else if (recordtype === 'journalentry' || recordtype === 'advintercompanyjournalentry' ) {
             folio = _strCsv(cols[11]);  // custcol_2w_folio
         } else {
             folio = _strCsv(cols[10]);  // custbody_2winfolioacepta
@@ -178,23 +182,25 @@ define(['N/file'], function (file) {
         var saldo = _calcSaldo(recordtype, isMainline, debe, haber, amtRem, amtPaid);
 
         return [
-            _strCsv(cols[0]),           // [0]  Id Transaccion
-            _strCsv(cols[13]),          // [1]  Id Cuenta Contable
-            _strCsv(cols[2]),           // [2]  Subsidiaria (texto)
-            _strCsv(cols[3]),           // [3]  Tipo de Transaccion
-            _strCsv(cols[6]),           // [4]  Nombre (entidad)
-            folio,                      // [5]  Folio
-            _strCsv(cols[9]),           // [6]  Numero Documento (tranid)
-            _strCsv(cols[12]),          // [7]  Glosa
-            _strCsv(cols[8]),           // [8]  Fecha
-            _strCsv(cols[7]),           // [9]  Periodo Contable
-            _strCsv(cols[14]),          // [10] Cuenta Contable (texto)
-            debe,                       // [11] Debe
-            haber,                      // [12] Haber
-            saldo.saldoDebe,            // [13] Saldo Debe
-            saldo.saldoHaber,           // [14] Saldo Haber
-            _strCsv(cols[1]),           // [15] Id Subsidiaria
-            _strCsv(cols[5]),           // [16] Id Entidad
+            _strCsv(cols[0]),                          // [0]  Id Transaccion
+            _strCsv(cols[13]),                         // [1]  Id Cuenta Contable
+            _strCsv(cols[2]),                          // [2]  Subsidiaria (texto)
+            _strCsv(cols[3]),                          // [3]  Tipo de Transaccion
+            _strCsv(cols[6]),                          // [4]  Nombre (entidad)
+            folio,                                     // [5]  Folio
+            _strCsv(cols[9]),                          // [6]  Numero Documento (tranid)
+            _strCsv(cols[12]),                         // [7]  Glosa
+            _strCsv(cols[8]),                          // [8]  Fecha (DD/MM/YYYY)
+            _strCsv(cols[7]),                          // [9]  Periodo Contable
+            _strCsv(cols[14]),                         // [10] Numero de Cuenta
+            _strCsv(cols[15]),                         // [11] Nombre Cuenta
+            debe,                                      // [12] Debe
+            haber,                                     // [13] Haber
+            saldo.saldoDebe,                           // [14] Saldo Debe
+            saldo.saldoHaber,                          // [15] Saldo Haber
+            _strCsv(cols[1]),                          // [16] Id Subsidiaria
+            _strCsv(cols[5]),                          // [17] Id Entidad
+            parseInt(_strCsv(cols[22]), 10) || 0,      // [18] Fecha YYYYMMDD (cols[22]) — solo para filtro
         ];
     }
 
@@ -236,22 +242,48 @@ define(['N/file'], function (file) {
      * Crea el archivo XLS (formato XML Spreadsheet 2003) en el File Cabinet
      * y devuelve su internal ID. Compatible con Excel sin librerías externas.
      *
-     * Aplica agrupación/compensación (_compensarFilas) antes de escribir.
+     * Aplica agrupación/compensación (_compensarFilas) antes de escribir y,
+     * opcionalmente, filtra filas cuya fecha sea anterior a fechaInicio.
      * Solo escribe las 15 primeras columnas por fila (sin IDs de agrupación).
      *
      * @param   {Object}         opts
-     * @param   {Array[]}        opts.rows      Arrays de 17 valores crudos (de buildRow)
-     * @param   {string}         opts.nombre    Nombre del archivo (con extensión .xls)
-     * @param   {string|number}  opts.folderId  ID de la carpeta en File Cabinet
+     * @param   {Array[]}        opts.rows              Arrays de 17 valores crudos (de buildRow)
+     * @param   {string}         opts.nombre            Nombre del archivo (con extensión .xls)
+     * @param   {string|number}  opts.folderId          ID de la carpeta en File Cabinet
+     * @param   {string}         [opts.fechaInicio]     Fecha de inicio DD/MM/YYYY (opcional)
+     * @param   {boolean}        [opts.omitirNetoCero]   true → elimina filas agrupadas con neto = 0
+     * @param   {Object}         [opts.rutsPorEntidad]   Mapa { internalId: rut } para columna RUT
      * @returns {number}  Internal ID del archivo creado
      */
     function crearArchivoXls(opts) {
-        const rows     = opts.rows     || [];
-        const nombre   = opts.nombre   || 'reporte.xls';
-        const folderId = opts.folderId || -15;
+        const rows           = opts.rows           || [];
+        const nombre         = opts.nombre         || 'reporte.xls';
+        const folderId       = opts.folderId       || -15;
+        const fechaInicio    = opts.fechaInicio    || null;
+        const omitirNetoCero = opts.omitirNetoCero || false;
+        const rutsPorEntidad = opts.rutsPorEntidad || {};
 
-        /* ── Agrupar y compensar filas antes de escribir ─────────────── */
-        const rowsXls = _compensarFilas(rows);
+        /* ── 1. Agrupar y compensar filas (waterfall) ──────────────────── */
+        var rowsXls = _compensarFilas(rows, omitirNetoCero);
+
+        /* ── 4. Filtrar por fecha de inicio (después de agrupar) ─────── *
+         *  row[17] = Fecha en formato YYYYMMDD (integer) proveniente de cols[21].
+         *  Esto evita parsear el formato DD/MM/YYYY de row[8] que varía por entorno.
+         * ─────────────────────────────────────────────────────────────── */
+        if (fechaInicio) {
+            var fechaInicioNum = _toYYYYMMDD(fechaInicio);
+            if (fechaInicioNum) {
+                var totalAntes = rowsXls.length;
+                rowsXls = rowsXls.filter(function (row) {
+                    return (Number(row[18]) || 0) >= fechaInicioNum;
+                });
+                log.error({
+                    title  : 'crearArchivoXls — Filtro fechaInicio aplicado',
+                    details: 'fechaInicio: ' + fechaInicio + ' (' + fechaInicioNum + ')' +
+                             ' | antes: ' + totalAntes + ' | después: ' + rowsXls.length,
+                });
+            }
+        }
 
         /* Encabezado XML + definición de estilos + primera fila de headers en negrita */
         const xmlInicio =
@@ -283,9 +315,28 @@ define(['N/file'], function (file) {
             encoding: file.Encoding.UTF_8,
         });
 
-        /* Filas de datos — solo las 15 primeras columnas */
+        /* Filas de datos — 17 columnas con RUT y nuevas columnas de cuenta */
         for (const row of rowsXls) {
-            xlsFile.appendLine({ value: _buildXlsRow(row.slice(0, 15), false) });
+            var xlsRow = [
+                row[0],                           // Id Transaccion
+                row[1],                           // Id Cuenta Contable
+                row[2],                           // Subsidiaria
+                row[3],                           // Tipo de Transaccion
+                rutsPorEntidad[row[17]] || '',    // RUT (del mapa por Id Entidad)
+                row[4],                           // Nombre
+                row[5],                           // Folio
+                row[6],                           // Numero Documento
+                row[7],                           // Glosa
+                row[8],                           // Fecha
+                row[9],                           // Periodo Contable
+                row[10],                          // Numero de Cuenta
+                row[11],                          // Nombre Cuenta
+                row[12],                          // Debe
+                row[13],                          // Haber
+                row[14],                          // Saldo Debe
+                row[15],                          // Saldo Haber
+            ];
+            xlsFile.appendLine({ value: _buildXlsRow(xlsRow, false) });
         }
 
         /* Cierre del XML + WorksheetOptions para congelar la primera fila */
@@ -327,78 +378,158 @@ define(['N/file'], function (file) {
 
     /**
      * Agrupa las filas por (Id Cuenta Contable, Id Subsidiaria, Id Entidad, Folio)
-     * y aplica compensación de Saldo Debe vs Saldo Haber por grupo.
+     * y aplica el algoritmo waterfall de absorción secuencial entre el lado Debe
+     * y el lado Haber de cada grupo.
      *
      * Reglas:
-     *   - Las filas SIN folio (row[5] = '') se excluyen de la agrupación y se
-     *     escriben en el XLS tal cual, cada una como fila independiente.
+     *   - Las filas SIN folio (row[5] = '') no se agrupan: se emiten como filas
+     *     independientes en el orden en que aparecen.
      *   - Por cada grupo CON folio:
-     *       · Se suman todos los Saldo Debe (row[13]) y Saldo Haber (row[14]).
-     *       · neto = sumDebe − sumHaber.
-     *       · Si neto ≥ 0 → saldoDebe = neto, saldoHaber = 0.
-     *       · Si neto < 0 → saldoDebe = 0, saldoHaber = |neto|.
-     *       · Solo se conserva la primera fila del grupo (representativa); las
-     *         demás se descartan.
-     *   - El orden de aparición original se preserva.
+     *       · Si solo hay filas en un lado (solo Debe o solo Haber) → sin compensación;
+     *         todas las filas del grupo se emiten sin modificar.
+     *       · Si hay filas en ambos lados → waterfall secuencial:
+     *           1. Puntero i = 0 (lista Debe), j = 0 (lista Haber).
+     *           2. absorb = min(debeSaldo[i], haberSaldo[j]).
+     *           3. Restar absorb de ambos saldos actuales.
+     *           4. Si debeSaldo[i] llega a 0 → fila Debe[i] queda absorbida; i++.
+     *           5. Si haberSaldo[j] llega a 0 → fila Haber[j] queda absorbida; j++.
+     *           6. Repetir hasta agotar un lado.
+     *           7. Las filas restantes del otro lado se emiten con su saldo no absorbido.
+     *   - Filas absorbidas (saldo llega a 0):
+     *       · omitirNetoCero = true  → se descartan del resultado.
+     *       · omitirNetoCero = false → se incluyen con saldoDebe (row[14]) = 0 y
+     *         saldoHaber (row[15]) = 0, conservando los valores crudos Debe (row[12])
+     *         y Haber (row[13]) de la transacción original.
+     *   - Filas parcialmente absorbidas: se emiten con su saldo residual actualizado.
      *
-     * Clave de grupo:  row[1] | row[15] | row[16] | row[5]
+     * Clave de grupo: row[1] | row[16] | row[17] | row[5]
      *   row[1]  = Id Cuenta Contable
-     *   row[15] = Id Subsidiaria (valor interno)
-     *   row[16] = Id Entidad (valor interno)
+     *   row[16] = Id Subsidiaria (valor interno)
+     *   row[17] = Id Entidad     (valor interno)
      *   row[5]  = Folio
      *
-     * @param   {Array[]} rows  Arrays de 17 valores (salida de buildRow)
-     * @returns {Array[]}       Filas consolidadas (una por grupo), en orden de aparición
+     * @param   {Array[]} rows            Arrays de 19 valores (salida de buildRowFromCsv)
+     * @param   {boolean} omitirNetoCero  true → descartar filas absorbidas con saldo 0/0
+     * @returns {Array[]}                 Filas compensadas, en orden de primera aparición del grupo
      */
-    function _compensarFilas(rows) {
-        /* ── Pasada 1: acumular saldos por grupo (solo filas CON folio) ── */
-        var grupos = {};
+    function _compensarFilas(rows, omitirNetoCero) {
+        omitirNetoCero = omitirNetoCero || false;
+
+        /* ── Pasada 1: clasificar filas por grupo y lado ────────────── */
+        var ordenGrupos = [];      /* claves en orden de primera aparición */
+        var grupos      = {};      /* clave → descriptor de grupo          */
+
         for (var i = 0; i < rows.length; i++) {
             var row = rows[i];
-            if (!row[5]) continue; // sin folio → se excluye de la agrupación
 
-            var key = row[1] + '|' + row[15] + '|' + row[16] + '|' + row[5];
-            if (!grupos[key]) {
-                grupos[key] = {
-                    rep     : row.slice(), // primera fila del grupo (representativa)
-                    sumDebe : 0,
-                    sumHaber: 0,
-                };
-            }
-            grupos[key].sumDebe  += Number(row[13]) || 0;
-            grupos[key].sumHaber += Number(row[14]) || 0;
-        }
-
-        /* Calcular saldo neto para cada grupo */
-        for (var gkey in grupos) {
-            var g    = grupos[gkey];
-            var neto = g.sumDebe - g.sumHaber;
-            if (neto >= 0) { g.rep[13] = neto;  g.rep[14] = 0;     }
-            else           { g.rep[13] = 0;      g.rep[14] = -neto; }
-        }
-
-        /* ── Pasada 2: emitir en orden de aparición original ─────────── */
-        var resultado = [];
-        var emitidos  = {};
-        for (var j = 0; j < rows.length; j++) {
-            var r = rows[j];
-            if (!r[5]) {
-                /* Sin folio: pasa sin agrupar (cada fila es independiente) */
-                resultado.push(r.slice());
+            if (!row[5]) {
+                /* Sin folio: fila independiente */
+                var nfKey = '__nf__' + i;
+                ordenGrupos.push(nfKey);
+                grupos[nfKey] = { noFolio: true, fila: row.slice() };
                 continue;
             }
-            var k = r[1] + '|' + r[15] + '|' + r[16] + '|' + r[5];
-            if (!emitidos[k]) {
-                resultado.push(grupos[k].rep); // representativa con saldo neto
-                emitidos[k] = true;
-                /* Las filas siguientes del mismo grupo se descartan (ya acumuladas) */
+
+            var key = row[1] + '|' + row[16] + '|' + row[17] + '|' + row[5];
+            if (!grupos[key]) {
+                grupos[key] = {
+                    noFolio   : false,
+                    debeRows  : [],
+                    haberRows : [],
+                    neutroRows: [],
+                };
+                ordenGrupos.push(key);
             }
+            var g  = grupos[key];
+            var sd = Number(row[14]) || 0;
+            var sh = Number(row[15]) || 0;
+            if      (sd > 0) g.debeRows.push(row.slice());
+            else if (sh > 0) g.haberRows.push(row.slice());
+            else             g.neutroRows.push(row.slice());
+        }
+
+        /* ── Pasada 2: waterfall por grupo y emitir resultado ────────── */
+        var resultado = [];
+
+        for (var gi = 0; gi < ordenGrupos.length; gi++) {
+            var k = ordenGrupos[gi];
+            var g = grupos[k];
+
+            if (g.noFolio) {
+                resultado.push(g.fila);
+                continue;
+            }
+
+            var debeRows   = g.debeRows;
+            var haberRows  = g.haberRows;
+            var neutroRows = g.neutroRows;
+
+            /* ── Solo un lado → sin compensación ──────────────────────── */
+            if (debeRows.length === 0 || haberRows.length === 0) {
+                for (var a = 0; a < debeRows.length;   a++) resultado.push(debeRows[a]);
+                for (var b = 0; b < haberRows.length;  b++) resultado.push(haberRows[b]);
+                for (var c = 0; c < neutroRows.length; c++) resultado.push(neutroRows[c]);
+                continue;
+            }
+
+            /* ── Ambos lados → waterfall de absorción secuencial ─────── */
+            var debeSaldo  = debeRows.map(function (r)  { return Number(r[14])  || 0; });
+            var haberSaldo = haberRows.map(function (r) { return Number(r[15]) || 0; });
+            var debeAbsorb  = new Array(debeRows.length).fill(false);
+            var haberAbsorb = new Array(haberRows.length).fill(false);
+
+            var di = 0, hi = 0;
+            while (di < debeRows.length && hi < haberRows.length) {
+                var absorb = Math.min(debeSaldo[di], haberSaldo[hi]);
+                debeSaldo[di]  = Math.round((debeSaldo[di]  - absorb) * 100) / 100;
+                haberSaldo[hi] = Math.round((haberSaldo[hi] - absorb) * 100) / 100;
+
+                if (debeSaldo[di]  === 0) { debeAbsorb[di]  = true; di++; }
+                if (haberSaldo[hi] === 0) { haberAbsorb[hi] = true; hi++; }
+            }
+
+            /* Emitir filas Debe */
+            for (var d = 0; d < debeRows.length; d++) {
+                var rowD = debeRows[d].slice();
+                if (debeAbsorb[d]) {
+                    /* Absorbida completamente */
+                    if (!omitirNetoCero) {
+                        rowD[14] = 0;   /* Saldo Debe  → 0  (Debe raw row[12] se conserva) */
+                        rowD[15] = 0;   /* Saldo Haber → 0 */
+                        resultado.push(rowD);
+                    }
+                    /* omitirNetoCero = true → se descarta */
+                } else {
+                    rowD[14] = debeSaldo[d]; /* saldo restante (actualizado o intacto) */
+                    resultado.push(rowD);
+                }
+            }
+
+            /* Emitir filas Haber */
+            for (var h = 0; h < haberRows.length; h++) {
+                var rowH = haberRows[h].slice();
+                if (haberAbsorb[h]) {
+                    /* Absorbida completamente */
+                    if (!omitirNetoCero) {
+                        rowH[14] = 0;   /* Saldo Debe  → 0 */
+                        rowH[15] = 0;   /* Saldo Haber → 0 (Haber raw row[13] se conserva) */
+                        resultado.push(rowH);
+                    }
+                    /* omitirNetoCero = true → se descarta */
+                } else {
+                    rowH[15] = haberSaldo[h]; /* saldo restante */
+                    resultado.push(rowH);
+                }
+            }
+
+            /* Neutras: siempre pasan sin modificación */
+            for (var n = 0; n < neutroRows.length; n++) resultado.push(neutroRows[n]);
         }
 
         return resultado;
     }
 
-    /* ═══ Lógica de Saldo Debe / Saldo Haber ═══════════════════════════ */
+        /* ═══ Lógica de Saldo Debe / Saldo Haber ═══════════════════════════ */
 
     /**
      * @param {string}  recordtype
@@ -489,6 +620,24 @@ define(['N/file'], function (file) {
     function _num(fieldVal) {
         var n = parseFloat(_val(fieldVal));
         return isNaN(n) ? 0 : n;
+    }
+
+    /* ═══ Helper de conversión de fecha ════════════════════════════════ */
+
+    /**
+     * Convierte una fecha en formato DD/MM/YYYY (formato NetSuite LATAM) al entero YYYYMMDD
+     * para comparación numérica directa con el valor de cols[21].
+     * Devuelve 0 si la fecha es nula, vacía o tiene formato inválido.
+     * Aplica zero-padding en día y mes (ej. '1/8/2026' → 20260801).
+     */
+    function _toYYYYMMDD(fecha) {
+        if (!fecha) return 0;
+        var parts = String(fecha).split('/');
+        if (parts.length !== 3) return 0;
+        var dd   = parts[0].length === 1 ? '0' + parts[0] : parts[0];
+        var mm   = parts[1].length === 1 ? '0' + parts[1] : parts[1];
+        var yyyy = parts[2];
+        return parseInt(yyyy + mm + dd, 10) || 0;
     }
 
     /* ═══ Helpers CSV (para buildRowFromCsv) ═══════════════════════════ */

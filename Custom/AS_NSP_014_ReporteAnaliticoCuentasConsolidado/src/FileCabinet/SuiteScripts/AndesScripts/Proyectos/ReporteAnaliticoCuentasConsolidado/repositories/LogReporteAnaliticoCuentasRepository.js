@@ -13,7 +13,8 @@ define(['N/search', 'N/record'], function (search, record) {
     const FIELDS = {
         USUARIO      : 'custrecord_as_log_rep_anal_cta_usuario',
         SUBSIDIARIA  : 'custrecord_as_log_rep_anal_cta_subsidiar',
-        FECHA_CORTE  : 'custrecord_as_log_rep_anal_cta_fecha',
+        FECHA_CORTE  : 'custrecord_as_log_rep_anal_cta_fechacort',
+        FECHA_INICIO : 'custrecord_as_log_rep_anal_cta_fechaini',
         ESTADO       : 'custrecord_as_log_rep_anal_cta_estado',
         ID_XLS       : 'custrecord_as_log_rep_anal_cta_id_ar_xls',
         NOMBRE_XLS   : 'custrecord_as_log_rep_anal_cta_arch_xls',
@@ -29,8 +30,9 @@ define(['N/search', 'N/record'], function (search, record) {
         return [
             search.createColumn({ name: 'created',          sort: search.Sort.DESC, label: 'Fecha Creacion' }),
             search.createColumn({ name: FIELDS.USUARIO,     label: 'Usuario'      }),
-            search.createColumn({ name: FIELDS.SUBSIDIARIA, label: 'Subsidiaria'  }),
+            search.createColumn({ join: FIELDS.SUBSIDIARIA, name: 'namenohierarchy', label: 'Nombre'  }),
             search.createColumn({ name: FIELDS.FECHA_CORTE, label: 'Fecha Corte'  }),
+            search.createColumn({ name: FIELDS.FECHA_INICIO, label: 'Fecha Inicio'  }),
             search.createColumn({ name: FIELDS.ESTADO,      label: 'Estado'       }),
             search.createColumn({ name: FIELDS.ID_XLS,      label: 'Id Arch XLS'  }),
             search.createColumn({ name: FIELDS.NOMBRE_XLS,  label: 'Nombre XLS'   }),
@@ -39,6 +41,7 @@ define(['N/search', 'N/record'], function (search, record) {
             search.createColumn({ name: FIELDS.NOMBRE_CSV,  label: 'Nombre CSV' }),
             search.createColumn({ name: FIELDS.URL_CSV,     label: 'Url CSV' }),
             search.createColumn({ name: FIELDS.RESULTADO,   label: 'Resultado' }),
+            search.createColumn({ name: FIELDS.SUBSIDIARIA, label: 'Subsidiaria'  }),
         ];
     }
 
@@ -49,8 +52,9 @@ define(['N/search', 'N/record'], function (search, record) {
             fechaCreacion: r.getValue({ name: 'created' })               || '',
             usuario      : r.getText ({ name: FIELDS.USUARIO })           || '',
             usuarioId    : r.getValue({ name: FIELDS.USUARIO })           || '',
-            subsidiaria  : r.getText ({ name: FIELDS.SUBSIDIARIA })       || '',
+            subsidiaria  : r.getValue ({ join: FIELDS.SUBSIDIARIA, name: 'namenohierarchy' }) || '',
             subsidiariId : r.getValue({ name: FIELDS.SUBSIDIARIA })       || '',
+            fechaInicio  : r.getValue({ name: FIELDS.FECHA_INICIO })      || '',
             fechaCorte   : r.getValue({ name: FIELDS.FECHA_CORTE })       || '',
             estado       : r.getValue({ name: FIELDS.ESTADO })            || '',
             idXls        : r.getValue({ name: FIELDS.ID_XLS })       || '',
@@ -206,11 +210,11 @@ define(['N/search', 'N/record'], function (search, record) {
      * @returns {number} Internal ID del registro creado
      */
     function crear(datos) {
-        log.error('datos', datos);
         datos = datos || {};
         const rec = record.create({ type: RECORD_TYPE });
         rec.setValue({ fieldId: FIELDS.SUBSIDIARIA, value: datos.subsidiaria || '' });
         rec.setText({ fieldId: FIELDS.FECHA_CORTE,  text: datos.fechaCorte  || '' });
+        if (datos.fechaInicio) rec.setText({ fieldId: FIELDS.FECHA_INICIO,  text: datos.fechaInicio  || '' });        
         rec.setValue({ fieldId: FIELDS.ESTADO,      value: datos.estado      || 'En Proceso' });
         return rec.save();
     }
