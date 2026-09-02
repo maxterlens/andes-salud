@@ -1,11 +1,5 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
- * @description Flujo de la devolucion: genera el Inventory Transfer inverso,
- *              desde la bodega de prestamos hacia la ubicacion de origen del
- *              prestamo, descuenta lo devuelto de las lineas del prestamo y lo
- *              deja en Devuelto Parcial o Devuelto Total. Cada devolucion genera
- *              su propio traslado, asi que admite devoluciones por partes.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -16,11 +10,6 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
         const idMovimiento = context.request.parameters.idMovimiento;
 
         const cabecera = movimientoRepository.cargarMovimiento(idMovimiento);
-
-        // El estado es la unica marca de que el traslado ya se genero. Sin este
-        // corte, dos clics en el boton -o un F5 sobre la URL del proceso- creaban
-        // dos Inventory Transfer: el inventario se movia dos veces y el segundo
-        // pisaba el sello de quien proceso y cuando.
         const estado = cabecera.getText({ fieldId: 'custrecord_as_mov_estado' });
 
         if (estado !== CONSTANTES.ESTADOS.PENDIENTE_PROCESAR) {
@@ -34,9 +23,6 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
 
         const idPrestamo = cabecera.getValue({ fieldId: 'custrecord_as_mov_prestamo_ref' });
 
-        // Las dos ubicaciones son las que quedaron guardadas en la devolucion: el
-        // formulario las propone invertidas respecto del prestamo, pero el usuario
-        // las puede cambiar y manda lo que eligio.
         const subsidiaria      = cabecera.getValue({ fieldId: 'custrecord_as_mov_subsidiaria' });
         const ubicacionOrigen  = cabecera.getValue({ fieldId: 'custrecord_as_mov_ubicacion' });
         const nombreOrigen     = cabecera.getText({ fieldId: 'custrecord_as_mov_ubicacion' });
@@ -66,18 +52,11 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
             });
         }
 
-        // El material tiene que volver con el mismo lote que salio: la devolucion
-        // no elige. Se leen los lotes del traslado que genero el prestamo y se
-        // consumen en el mismo orden, salteando lo que ya volvio en devoluciones
-        // anteriores. El prestamo si elige, con su criterio de la bodega.
         const prestamo = movimientoRepository.cargarMovimiento(idPrestamo);
 
         const lotesDelPrestamo = inventoryTransferRepository.buscarLotesDelTraslado(
             prestamo.getValue({ fieldId: 'custrecord_as_mov_transfer' }));
 
-        // Lo ya devuelto se cuenta por articulo y no por linea: los lotes del
-        // prestamo salieron en una sola lista por articulo, asi que si el
-        // prestamo repite un articulo en dos lineas, las dos consumen de ahi.
         const yaDevuelto = {};
 
         lineasPrestamo.forEach((linea) => {
@@ -92,12 +71,6 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
             yaDevuelto[linea.articulo] = (yaDevuelto[linea.articulo] || 0) + linea.cantidad;
         });
 
-        // El stock se valida lote por lote y no por articulo: la bodega guarda a
-        // la vez el material de todos los prestamos abiertos, asi que puede
-        // sobrar del articulo y faltar justo del lote que esta devolucion tiene
-        // que devolver. Se mira lo que hay fisicamente y no lo disponible, porque
-        // la bodega de prestamos no publica disponibilidad: su material esta
-        // fuera de la clinica y no debe contar como stock usable hasta que vuelva.
         const lotesEnLaBodega = {};
 
         lineas.forEach((linea) => {
@@ -113,9 +86,6 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
                 const enLaBodega = lotesEnLaBodega[linea.articulo].filter((fila) => fila.numeroInventario === lote.numeroInventario)[0];
 
                 const hay = enLaBodega ? enLaBodega.enMano : 0;
-
-                // El plan trae el id interno del lote; el nombre sale de la
-                // bodega y es lo que despues se sella en la linea y se muestra.
                 lote.nombre = enLaBodega ? enLaBodega.nombreLote : '';
 
                 if (hay < lote.cantidad) {
@@ -143,12 +113,6 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
             memo            : 'DEVOLUCION ' + cabecera.getValue({ fieldId: 'name' }),
         }, lineas);
 
-        // Cada linea de la devolucion sabe contra que linea del prestamo va, asi
-        // que se descuenta una a una. Cuadrar por articulo descontaba de mas cuando
-        // el prestamo repetia el mismo articulo en dos lineas.
-        // Con que lote volvio cada linea. Se guarda despues de generar el traslado,
-        // que es cuando ya es un hecho. Una linea puede volver partida en dos
-        // lotes si el prestamo la cubrio con dos.
         lineas.forEach((linea) => {
             const nombres = linea.lotes.map((lote) => lote.nombre + ' (' + lote.cantidad + ')');
 
@@ -168,8 +132,6 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
 
         const lineasActualizadas = movimientoRepository.buscarLineasPorMovimiento(idPrestamo);
 
-        // Total solo cuando no queda ninguna linea con pendiente: la suma total
-        // puede dar cero compensando lineas y no significa lo mismo.
         let nombreEstadoPrestamo = CONSTANTES.ESTADOS.DEVUELTO_PARCIAL;
 
         if (lineasActualizadas.every((linea) => linea.pendiente === 0)) {
@@ -179,8 +141,6 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
         const idEstadoProcesado = movimientoRepository.obtenerIdEstadoMovimiento(CONSTANTES.ESTADOS.PROCESADO);
         const idEstadoPrestamo  = movimientoRepository.obtenerIdEstadoMovimiento(nombreEstadoPrestamo);
 
-        // El sello de proceso va en la devolucion, no en el prestamo: el prestamo
-        // conserva el suyo, el del dia que salio el material.
         movimientoRepository.actualizarProcesoMovimiento(idMovimiento, {
             transfer        : transfer.id,
             estado          : idEstadoProcesado,
@@ -206,10 +166,6 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
         });
     }
 
-    // Recorre los lotes que salieron en el prestamo, saltea las unidades que ya
-    // volvieron en devoluciones anteriores y toma las siguientes. Un lote se
-    // puede partir entre dos devoluciones: si salieron 5 del lote A y ya
-    // volvieron 2, esta devolucion arranca en la tercera unidad de A.
     function tomarLotesDelPrestamo(salidos, saltar, cantidad) {
         const tomados = [];
 

@@ -30,7 +30,7 @@
   <numberingmindigits>6</numberingmindigits>
   <numberingprefix>MOV#</numberingprefix>
   <numberingsuffix></numberingsuffix>
-  <recordname>Movimiento de Inventario</recordname>
+  <recordname>AS Movimiento de Inventario</recordname>
   <showcreationdate>F</showcreationdate>
   <showcreationdateonlist>F</showcreationdateonlist>
   <showid>T</showid>
@@ -40,6 +40,13 @@
   <showowner>F</showowner>
   <showownerallowchange>F</showownerallowchange>
   <showowneronlist>F</showowneronlist>
+  <links>
+    <link>
+      <linkcategory>BASICTRANSACTIONSINVENTORY</linkcategory>
+      <linklabel>Movimiento de Inventario</linklabel>
+      <linktasktype>LIST</linktasktype>
+    </link>
+  </links>
   <customrecordcustomfields>
     <customrecordcustomfield scriptid="custrecord_as_mov_tipo">
       <accesslevel>2</accesslevel>
@@ -190,6 +197,45 @@
       <searchdefault></searchdefault>
       <searchlevel>2</searchlevel>
       <selectrecordtype>-102</selectrecordtype>
+      <showinlist>T</showinlist>
+      <sourcefilterby></sourcefilterby>
+      <sourcefrom></sourcefrom>
+      <sourcelist></sourcelist>
+      <storevalue>T</storevalue>
+      <subtab></subtab>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_as_mov_entidad_receptora">
+      <accesslevel>2</accesslevel>
+      <allowquickadd>F</allowquickadd>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Institucion que se lleva el material. Se elige en el Prestamo entre las configuradas para la subsidiaria en AS Entidad Receptora por Subsidiaria; una Devolucion la hereda de su prestamo y una Merma no la usa. No es obligatorio: un prestamo entre servicios internos no tiene institucion externa</description>
+      <displayheight></displayheight>
+      <displaytype>NORMAL</displaytype>
+      <displaywidth></displaywidth>
+      <dynamicdefault></dynamicdefault>
+      <encryptatrest>F</encryptatrest>
+      <fieldtype>SELECT</fieldtype>
+      <globalsearch>F</globalsearch>
+      <help></help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <isparent>F</isparent>
+      <label>Entidad Receptora</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <parentsubtab></parentsubtab>
+      <rolerestrict>F</rolerestrict>
+      <searchcomparefield></searchcomparefield>
+      <searchdefault></searchdefault>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype>-2</selectrecordtype>
       <showinlist>T</showinlist>
       <sourcefilterby></sourcefilterby>
       <sourcefrom></sourcefrom>

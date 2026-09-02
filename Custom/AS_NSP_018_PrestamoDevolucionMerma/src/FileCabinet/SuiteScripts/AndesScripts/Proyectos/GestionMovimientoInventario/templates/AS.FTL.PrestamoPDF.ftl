@@ -136,6 +136,12 @@
 <td class="label">Servicio</td>
 <td class="value">${doc.cabecera.servicio}</td>
 </tr>
+<#if doc.cabecera.entidad?has_content>
+<tr>
+<td class="label">Entidad receptora</td>
+<td class="value">${doc.cabecera.entidad}</td>
+</tr>
+</#if>
 <tr>
 <td class="label">Ubicacion origen</td>
 <td class="value">${doc.cabecera.origen}</td>

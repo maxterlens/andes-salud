@@ -30,8 +30,8 @@
  * @scriptid     customscript_as_stlt_movimiento_inv
  * @deploymentid customdeploy_as_stlt_movimiento_inv
  */
-define(['./lib/MovimientoInventarioConstants', './handlers/MovimientoInventarioHandler', './handlers/PrestamoHandler', './handlers/DevolucionHandler', './handlers/ImpresionHandler'],
-    (CONSTANTES, movimientoHandler, prestamoHandler, devolucionHandler, impresionHandler) => {
+define(['./lib/MovimientoInventarioConstants', './handlers/MovimientoInventarioForm', './handlers/MovimientoInventarioHandler', './handlers/PrestamoHandler', './handlers/DevolucionHandler', './handlers/ImpresionHandler'],
+    (CONSTANTES, formulario, movimientoHandler, prestamoHandler, devolucionHandler, impresionHandler) => {
 
     const OPERACIONES = CONSTANTES.OPERACIONES;
     
@@ -56,7 +56,7 @@ define(['./lib/MovimientoInventarioConstants', './handlers/MovimientoInventarioH
             } else if (parametros.operacion === OPERACIONES.IMPRIMIR) {
                 impresionHandler.imprimirMovimiento(context);
             } else {
-                movimientoHandler.renderizarFormulario(context);
+                formulario.renderizarFormulario(context);
             }
         } catch (fallo) {
             log.error({
@@ -69,7 +69,6 @@ define(['./lib/MovimientoInventarioConstants', './handlers/MovimientoInventarioH
             throw fallo;
         }
     }
-
 
     function obtenerParametros(context) {
         const parametros = context.request.parameters;
@@ -88,7 +87,6 @@ define(['./lib/MovimientoInventarioConstants', './handlers/MovimientoInventarioH
                        || 'nuevo',
         };
     }
-
 
     return { onRequest };
 });

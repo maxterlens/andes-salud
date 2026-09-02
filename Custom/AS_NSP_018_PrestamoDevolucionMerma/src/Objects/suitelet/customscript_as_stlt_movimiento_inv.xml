@@ -16,12 +16,6 @@
       <eventtype></eventtype>
       <isdeployed>T</isdeployed>
       <isonline>F</isonline>
-      <links>
-        <link>
-          <linkcategory>BASICTRANSACTIONSINVENTORY</linkcategory>
-          <linklabel>Movimiento de Inventario</linklabel>
-        </link>
-      </links>
       <loglevel>DEBUG</loglevel>
       <runasrole>ADMINISTRATOR</runasrole>
       <status>RELEASED</status>

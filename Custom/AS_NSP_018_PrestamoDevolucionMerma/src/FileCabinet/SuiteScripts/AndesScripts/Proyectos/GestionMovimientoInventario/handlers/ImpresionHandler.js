@@ -1,17 +1,5 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
- * @description El comprobante en PDF del movimiento. Arma el payload que la
- *              plantilla espera y lo renderiza contra el FTL del tipo.
- *
- *              Son dos plantillas y no una con condicionales: el comprobante de
- *              prestamo lleva el seguimiento por linea (Prestada, Devuelta,
- *              Pendiente) y firma quien recibe el material; el de devolucion
- *              solo dice cuanto volvio, contra que prestamo, y firma al reves.
- *
- *              La plantilla no calcula nada: recibe los totales y las cantidades
- *              ya como texto, para que el locale de la cuenta no le meta
- *              separador de miles a una cantidad de insumos.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -24,6 +12,15 @@ define(['N/render', 'N/file', '../lib/MovimientoInventarioConstants', '../reposi
         const movimiento = movimientoRepository.cargarMovimiento(idMovimiento);
         const tipo       = movimiento.getText({ fieldId: 'custrecord_as_mov_tipo' });
         const lineas     = movimientoRepository.buscarLineasPorMovimiento(idMovimiento);
+        const prestadaPorLinea = {};
+
+        if (tipo === CONSTANTES.TIPOS.DEVOLUCION) {
+            movimientoRepository.buscarLineasPorMovimiento(
+                movimiento.getValue({ fieldId: 'custrecord_as_mov_prestamo_ref' })
+            ).forEach((linea) => {
+                prestadaPorLinea[linea.id] = linea.cantidad;
+            });
+        }
 
         const totales = lineas.reduce((acumulado, linea) => ({
             cantidad : acumulado.cantidad + linea.cantidad,
@@ -37,6 +34,7 @@ define(['N/render', 'N/file', '../lib/MovimientoInventarioConstants', '../reposi
                 fecha      : movimiento.getText({ fieldId: 'custrecord_as_mov_fecha' }),
                 subsidiaria: movimiento.getText({ fieldId: 'custrecord_as_mov_subsidiaria' }),
                 servicio   : movimiento.getText({ fieldId: 'custrecord_as_mov_servicio' }),
+                entidad    : movimiento.getText({ fieldId: 'custrecord_as_mov_entidad_receptora' }) || '',
                 origen     : movimiento.getText({ fieldId: 'custrecord_as_mov_ubicacion' }),
                 destino    : movimiento.getText({ fieldId: 'custrecord_as_mov_ubicacion_dest' }),
                 responsable: movimiento.getText({ fieldId: 'custrecord_as_mov_usuario_resp' }),
@@ -51,6 +49,7 @@ define(['N/render', 'N/file', '../lib/MovimientoInventarioConstants', '../reposi
                 cantidad : String(linea.cantidad),
                 devuelta : String(linea.devuelta),
                 pendiente: String(linea.pendiente),
+                prestada : String(prestadaPorLinea[linea.lineaPrestamo] === undefined ? '' : prestadaPorLinea[linea.lineaPrestamo]),
             })),
             totales: {
                 articulos: String(lineas.length),
@@ -63,10 +62,7 @@ define(['N/render', 'N/file', '../lib/MovimientoInventarioConstants', '../reposi
         const plantilla = (tipo === CONSTANTES.TIPOS.PRESTAMO)
                         ? CONSTANTES.PLANTILLAS.PRESTAMO
                         : CONSTANTES.PLANTILLAS.DEVOLUCION;
-
-        // El alias 'jsonString' y el escape del & son los mismos que usa el motor
-        // de impresion de AS_NSP_008: las plantillas del repo leen el payload
-        // siempre igual, con <#assign doc = jsonString.text?eval>.
+                        
         const renderizador = render.create();
 
         renderizador.templateContent = file.load({ id: plantilla }).getContents();

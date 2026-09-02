@@ -140,6 +140,12 @@
 <td class="label">Servicio</td>
 <td class="value">${doc.cabecera.servicio}</td>
 </tr>
+<#if doc.cabecera.entidad?has_content>
+<tr>
+<td class="label">Entidad receptora</td>
+<td class="value">${doc.cabecera.entidad}</td>
+</tr>
+</#if>
 <tr>
 <td class="label">Ubicacion origen</td>
 <td class="value">${doc.cabecera.origen}</td>
@@ -173,20 +179,22 @@
 <table class="itemtable">
 <thead>
 <tr>
-<th style="width: 62%;">Articulo</th>
-<th style="width: 18%;">Unidad</th>
-<th style="width: 20%;" class="text-right">Cantidad devuelta</th>
+<th style="width: 52%;">Articulo</th>
+<th style="width: 16%;">Unidad</th>
+<th style="width: 16%;" class="text-right">Prestada</th>
+<th style="width: 16%;" class="text-right">Devuelta</th>
 </tr>
 </thead>
 <#list doc.lineas as linea>
 <tr>
 <td><span class="itemname">${linea.articulo}</span></td>
 <td>${linea.unidad}</td>
+<td class="text-right">${linea.prestada}</td>
 <td class="text-right">${linea.cantidad}</td>
 </tr>
 </#list>
 <tr class="totalrow">
-<td colspan="2">Total: ${doc.totales.articulos} articulos</td>
+<td colspan="3">Total: ${doc.totales.articulos} articulos</td>
 <td class="text-right">${doc.totales.cantidad}</td>
 </tr>
 </table>
