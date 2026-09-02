@@ -1,15 +1,5 @@
 /**
  * AS_NSP_020 — Impresion de Etiqueta con Codigo de Barras
- * @description Entry point del User Event sobre el articulo. Solo interviene la
- *              vista: oculta el boton nativo "Print Label", que abre
- *              barcodeprinter.nl y no da el formato que necesita bodega, deja
- *              los datos del articulo escritos en el formulario y pone el boton
- *              que imprime la etiqueta en la Zebra.
- *
- *              No sabe que existe el ZPL ni Text2 Barcode. Toda la impresion
- *              ocurre del lado del cliente: el servidor de NetSuite no tiene
- *              forma de hablar con una impresora de la bodega.
- *
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
  * @NModuleScope Public
@@ -19,10 +9,6 @@
  */
 define(['N/ui/serverWidget', './lib/EtiquetaArticuloConstants'],
     (serverWidget, CONSTANTES) => {
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // HOOK beforeLoad — solo VIEW
-    // ─────────────────────────────────────────────────────────────────────────
 
     const beforeLoad = (context) => {
         try {
@@ -76,19 +62,6 @@ define(['N/ui/serverWidget', './lib/EtiquetaArticuloConstants'],
         form.clientScriptModulePath = CONSTANTES.CLIENT_SCRIPT;
     };
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Datos para el Client Script
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Escribe los datos del articulo en campos ocultos del formulario, que es de
-     * donde los lee el Client Script. Ver CAMPOS_OCULTOS en las constantes para
-     * el motivo: en modo vista el navegador no puede leer los campos nativos.
-     *
-     * @param  {Object} form
-     * @param  {Object} articulo
-     * @return {Object} los valores escritos, por nivel
-     */
     const agregarDatosArticulo = (form, articulo) => {
         const datos = {};
 
@@ -108,10 +81,6 @@ define(['N/ui/serverWidget', './lib/EtiquetaArticuloConstants'],
 
         return datos;
     };
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Exports
-    // ─────────────────────────────────────────────────────────────────────────
 
     return { beforeLoad };
 });
