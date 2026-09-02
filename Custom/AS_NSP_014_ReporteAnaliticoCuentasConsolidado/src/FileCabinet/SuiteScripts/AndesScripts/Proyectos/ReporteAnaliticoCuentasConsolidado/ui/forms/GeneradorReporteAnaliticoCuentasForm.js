@@ -18,7 +18,9 @@ define(['N/ui/serverWidget'], function (serverWidget) {
         CLIENTE          : 'custpage_fil_cliente',
         PROVEEDOR        : 'custpage_fil_proveedor',
         FOLIO            : 'custpage_fil_folio',
-        OMITIR_NETO_CERO : 'custpage_fil_omit_net_cero'
+        OMITIR_NETO_CERO : 'custpage_fil_omit_net_cero',
+        DEPARTAMENTO     : 'custpage_fil_departamento',
+        RUT              : 'custpage_fil_rut'
     });
 
     /* ─── IDs de columnas de la sublista de logs ─────────────────── */
@@ -27,6 +29,7 @@ define(['N/ui/serverWidget'], function (serverWidget) {
         USUARIO        : 'custpage_col_usuario',
         SUBSIDIARIA    : 'custpage_col_subsidiar',
         FECHA_CORTE    : 'custpage_col_fecha_corte',
+        OTROS_FILTROS  : 'custpage_col_otros_filtros',
         NOMBRE_XLS     : 'custpage_col_nom_xls',
         LINK_DESCARGA  : 'custpage_col_link_xls',
         LINK_DETALLE   : 'custpage_col_link_det',  // columna oculta (display:none)
@@ -103,10 +106,7 @@ define(['N/ui/serverWidget'], function (serverWidget) {
             label    : 'Fecha de Corte',
             container: 'custpage_grp_filtros',
             value    : filtros.fecha,
-        }).updateDisplaySize({
-            height : 60,
-            width : 25
-        }).isMandatory = true;
+        }).updateDisplaySize({ height : 60, width : 25 }).isMandatory = true;
         _addField(form, {
             id       : FILTROS.CUENTA_CONTABLE,
             type     : serverWidget.FieldType.SELECT,
@@ -114,7 +114,20 @@ define(['N/ui/serverWidget'], function (serverWidget) {
             source   : 'account',
             container: 'custpage_grp_filtros',
             value    : filtros.cuentaContable,
+        }).updateBreakType({ breakType : serverWidget.FieldBreakType.STARTCOL });
+        _addField(form, {
+            id       : FILTROS.DEPARTAMENTO,
+            type     : serverWidget.FieldType.SELECT,
+            label    : 'Departamento',
+            source   : 'department',
+            container: 'custpage_grp_filtros',
         })
+        _addField(form, {
+            id       : FILTROS.RUT,
+            type     : serverWidget.FieldType.TEXT,
+            label    : 'RUT',
+            container: 'custpage_grp_filtros',
+        }).updateDisplaySize({ height: 60, width: 20 });
         _addField(form, {
             id       : FILTROS.OMITIR_NETO_CERO,
             type     : serverWidget.FieldType.CHECKBOX,
@@ -162,6 +175,7 @@ define(['N/ui/serverWidget'], function (serverWidget) {
         sl.addField({ id: COLS.USUARIO,        type: serverWidget.FieldType.TEXT,       label: 'Usuario'               });
         sl.addField({ id: COLS.SUBSIDIARIA,    type: serverWidget.FieldType.TEXT,       label: 'Subsidiaria'           });
         sl.addField({ id: COLS.FECHA_CORTE,    type: serverWidget.FieldType.TEXT,       label: 'Fecha'        });
+        sl.addField({ id: COLS.OTROS_FILTROS,  type: serverWidget.FieldType.TEXT,       label: 'Otros Filtros' });
         sl.addField({ id: COLS.NOMBRE_XLS,     type: serverWidget.FieldType.TEXT,       label: 'Nombre Archivo'  });
         sl.addField({ id: COLS.LINK_DESCARGA,  type: serverWidget.FieldType.TEXT, label: 'Descargar'       });
         //sl.addField({ id: COLS.LINK_DETALLE,   type: serverWidget.FieldType.TEXT, label: 'URL Detalle'           });
@@ -181,6 +195,7 @@ define(['N/ui/serverWidget'], function (serverWidget) {
                 line : i,
                 value: `<a href="${rlog.urlXls}" target="_blank">Descargar</a>`
             });
+            if (rlog.otrosFiltros) sl.setSublistValue({ id: COLS.OTROS_FILTROS,     line: i, value: rlog.otrosFiltros });
 
             // Columna oculta (display:none) con el link al detalle del histórico.
             // Parámetro fileId = idCsv → el Suitelet carga op=detail con el contenido del archivo.

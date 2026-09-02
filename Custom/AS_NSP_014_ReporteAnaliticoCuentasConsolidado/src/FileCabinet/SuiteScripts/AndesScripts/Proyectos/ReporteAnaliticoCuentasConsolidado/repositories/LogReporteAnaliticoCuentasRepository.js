@@ -23,6 +23,7 @@ define(['N/search', 'N/record'], function (search, record) {
         NOMBRE_CSV   : 'custrecord_as_log_rep_anal_cta_arch_csv',
         URL_CSV      : 'custrecord_as_log_rep_anal_cta_url_csv',
         RESULTADO    : 'custrecord_as_log_rep_anal_cta_result',
+        OTROS_FILTROS: 'custrecord_as_log_rep_anal_cta_o_filtros',
     };
 
     /* ─── Columnas comunes para todas las búsquedas ─────────────── */
@@ -42,6 +43,7 @@ define(['N/search', 'N/record'], function (search, record) {
             search.createColumn({ name: FIELDS.URL_CSV,     label: 'Url CSV' }),
             search.createColumn({ name: FIELDS.RESULTADO,   label: 'Resultado' }),
             search.createColumn({ name: FIELDS.SUBSIDIARIA, label: 'Subsidiaria'  }),
+            search.createColumn({ name: FIELDS.OTROS_FILTROS, label: 'Otros Filtros' })
         ];
     }
 
@@ -64,6 +66,7 @@ define(['N/search', 'N/record'], function (search, record) {
             nombreCsv    : r.getValue({ name: FIELDS.NOMBRE_CSV })        || '',
             urlCsv       : r.getValue({ name: FIELDS.URL_CSV })        || '',
             resultado    : r.getValue({ name: FIELDS.RESULTADO })        || '',
+            otrosFiltros : r.getValue({ name: FIELDS.OTROS_FILTROS }) || ''
         };
     }
 
@@ -216,6 +219,7 @@ define(['N/search', 'N/record'], function (search, record) {
         rec.setText({ fieldId: FIELDS.FECHA_CORTE,  text: datos.fechaCorte  || '' });
         if (datos.fechaInicio) rec.setText({ fieldId: FIELDS.FECHA_INICIO,  text: datos.fechaInicio  || '' });        
         rec.setValue({ fieldId: FIELDS.ESTADO,      value: datos.estado      || 'En Proceso' });
+        if (datos.otrosFiltros) rec.setValue({ fieldId: FIELDS.OTROS_FILTROS, value: datos.otrosFiltros });
         return rec.save();
     }
 

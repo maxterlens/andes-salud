@@ -27,6 +27,7 @@
  *    custscript_as_rpt_anlt_cta_ss_folderid   — ID de carpeta File Cabinet destino
  *    custscript_as_rpt_anlt_cta_ss_archtempid — ID del archivo CSV temporal (del SearchTask)
  *    custscript_as_rpt_anlt_cta_ss_omit_n0   — Omitir filas con neto = 0 ("T" = sí, cualquier otro valor = no)
+ *    custscript_as_rpt_anlt_cta_ss_usar_ql  — Usar modo SuiteQL (default T); F = modo SearchTask (auditoría)
  *
  * @NApiVersion 2.1
  * @NScriptType ScheduledScript
@@ -50,6 +51,9 @@ define([
         FOLDER_ID        : 'custscript_as_rpt_anlt_cta_ss_folderid',
         CSV_FILE_ID      : 'custscript_as_rpt_anlt_cta_ss_archtempid',
         OMITIR_NETO_CERO : 'custscript_as_rpt_anlt_cta_ss_omit_n0',
+        USAR_QL          : 'custscript_as_rpt_anlt_cta_ss_usar_ql',
+        DEPARTAMENTO     : 'custscript_as_rpt_anlt_cta_ss_departamen',
+        RUT              : 'custscript_as_rpt_anlt_cta_ss_rut',
     };
 
     /* ═══════════════════════════════════════════════════════════════════
@@ -64,10 +68,18 @@ define([
         const logId           = script.getParameter({ name: PARAM.LOG_ID });
         const csvFileId       = script.getParameter({ name: PARAM.CSV_FILE_ID });
         const omitirNetoCero  = script.getParameter({ name: PARAM.OMITIR_NETO_CERO }) === 'T' || script.getParameter({ name: PARAM.OMITIR_NETO_CERO })  == true;
+        const departamento    = script.getParameter({ name: PARAM.DEPARTAMENTO }) || '';
+        const rut             = script.getParameter({ name: PARAM.RUT })          || '';
+
+        /* Modo SuiteQL (default T en deployment) vs. SearchTask (auditoría F) */
+        const usarQL = script.getParameter({ name: PARAM.USAR_QL }) !== false
+                    && script.getParameter({ name: PARAM.USAR_QL }) !== 'F';
+        const colsMin    = 26; /* ambos modos (SuiteQL y SearchTask) exportan 24 columnas con RUT en [7] */
+        const buildRowFn = usarQL ? csvService.buildRowFromSuiteQL : csvService.buildRowFromCsv;
 
         log.error({
             title  : 'execute — Parámetros recibidos',
-            details: JSON.stringify({ subsidiariaId, fechaInicio, fechaCorte, folderId, logId, csvFileId, omitirNetoCero }),
+            details: JSON.stringify({ subsidiariaId, fechaInicio, fechaCorte, folderId, logId, csvFileId, omitirNetoCero, departamento, rut, usarQL }),
         });
 
         try {
@@ -78,52 +90,35 @@ define([
             /* Omitir la primera línea (encabezado) */
             iterator.each(function () { return false; });
 
-            /* ── 2. Parsear cada línea, construir filas y recolectar IDs de entidad ── */
-            const rows       = [];
-            const entityIds  = [];
-            const entitySeen = {};
+            /* ── 2. Parsear cada línea y construir filas ─────────────── */
+            const rows = [];
+
             iterator.each(function (line) {
                 if (!line.value || line.value.trim() === '') return true;
 
                 const cols = _parseCsvLine(line.value);
 
-                if (!cols || cols.length < 23) {
+                if (!cols || cols.length < colsMin) {
                     /*log.error({
                         title  : 'execute — Línea con columnas insuficientes',
-                        details: 'cols: ' + (cols ? cols.length : 0) + ' | se esperan 23 | línea: ' + line.value,
+                        details: 'cols: ' + (cols ? cols.length : 0) + ' | se esperan ' + colsMin + ' | línea: ' + line.value,
                     });*/
                     return true;
                 }
 
-                rows.push(csvService.buildRowFromCsv(cols));
-
-                /* Recolectar Id Entidad desde cols[5] durante el mismo recorrido */
-                const eid = cols[5] ? cols[5].trim() : '';
-                if (eid && !entitySeen[eid]) {
-                    entitySeen[eid] = true;
-                    entityIds.push(eid);
-                }
+                rows.push(buildRowFn(cols));
 
                 return true;
             });
 
             log.error({
                 title  : 'execute — Total filas parseadas',
-                details: 'total: ' + rows.length + ' | entidades únicas: ' + entityIds.length,
+                details: 'total: ' + rows.length,
             });
 
-            /* ── 3. Obtener RUTs de entidades únicas ─────────────────── */
-            /*const rutsPorEntidad = entidadRepo.getRutsPorEntidades(entityIds);
-
-            log.error({
-                title  : 'execute — RUTs obtenidos',
-                details: 'entidades: ' + entityIds.length + ' | RUTs: ' + Object.keys(rutsPorEntidad).length,
-            });*/
-
             /* ── 4. Generar archivo XLS ──────────────────────────────── */
-            const rutsPorEntidad = {}; /* reservado para RUTs de entidades (entidadRepo desactivado) */
             const nombreXls  = csvService.generarNombreArchivo(subsidiariaId, fechaCorte, 'xls');
-            const xlsId      = csvService.crearArchivoXls({ rows, nombre: nombreXls, folderId, fechaInicio, omitirNetoCero, rutsPorEntidad });
+            const xlsId      = csvService.crearArchivoXls({ rows, nombre: nombreXls, folderId, fechaInicio, omitirNetoCero, departamento, rut });
             const archivoXls = file.load({ id: xlsId });
 
             log.error({
@@ -154,23 +149,7 @@ define([
             logRepo.marcarError(logId, e.message || String(e));
         }
     }
-
-    /* ═══════════════════════════════════════════════════════════════════
-     *  _toYYYYMMDD  (no se usa en este script — la comparación se hace
-     *  en CsvService usando row[17] = cols[21] directamente)
-     *  Convierte una fecha en formato DD/MM/YYYY (NetSuite LATAM) al entero YYYYMMDD.
-     *  Devuelve 0 si la fecha es nula, vacía o tiene formato inválido.
-     * ═══════════════════════════════════════════════════════════════════ */
-    function _toYYYYMMDD(fecha) {
-        if (!fecha) return 0;
-        var parts = fecha.split('/');
-        if (parts.length !== 3) return 0;
-        var dd   = parts[0].length === 1 ? '0' + parts[0] : parts[0];
-        var mm   = parts[1].length === 1 ? '0' + parts[1] : parts[1];
-        var yyyy = parts[2];
-        return parseInt(yyyy + mm + dd, 10) || 0;
-    }
-
+    
     /* ═══════════════════════════════════════════════════════════════════
      *  _parseCsvLine
      *  Parser CSV que respeta campos entre comillas dobles,

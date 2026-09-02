@@ -30,7 +30,14 @@ define(['N/file'], function (file) {
     /* ─── Grupos de tipos de registro (valores internos Oracle) ──────── */
     const RT_FACTURA = ['invoice', 'vendorbill', 'creditmemo', 'vendorcredit'];
     const RT_PAGO    = ['customerdeposit', 'vendorprepayment', 'customerpayment', 'vendorpayment'];
-    const RT_ASIENTO = 'journalentry';
+    const RT_ASIENTO = ['journalentry','advintercompanyjournalentry'];
+
+    /* ─── Cuentas que usan ficha paciente como folio en facturas de venta ─
+     *  Para invoice cuyo account.number (cols[15]) esté en esta lista,
+     *  el folio se toma de custbody_2w_as_ficha_paciente (cols[25])
+     *  en lugar de custbody_2winfolioacepta (cols[11]).
+     * ─────────────────────────────────────────────────────────────────── */
+    const CUENTAS_FICHA_PACIENTE = ['1140001'];
 
     /* ─── Cabecera del XLS (17 columnas) ────────────────────────────── */
     const XLS_HEADERS = [
@@ -96,7 +103,7 @@ define(['N/file'], function (file) {
         var folio = '';
         if (recordtype === 'vendorbill') {
             folio = _val(vals.tranid);
-        } else if (recordtype === RT_ASIENTO) {
+        } else if (RT_ASIENTO.indexOf(recordtype) !== -1) {
             folio = _val(vals['custcol_2w_folio']);
         } else {
             folio = _val(vals.custbody_2winfolioacepta);
@@ -128,7 +135,7 @@ define(['N/file'], function (file) {
 
     /* ──────────────────────────────────────────────────────────────────── */
     /**
-     * Mapea los 23 campos de una línea CSV (exportada por SearchTask) a un array
+     * Mapea los 24 campos de una línea CSV (exportada por SearchTask) a un array
      * de 19 valores crudos con la misma estructura que buildRow() más Nombre Cuenta y la fecha YYYYMMDD.
      *
      * Índices de entrada (cols[], 0-based):
@@ -137,45 +144,49 @@ define(['N/file'], function (file) {
      *   2  subsidiarynohierarchy → Subsidiaria (texto)
      *   3  type (display)        → Tipo de Transaccion
      *   4  recordtype            → Tipo Registro (vendorbill, journalentry, …)
-     *   5  formulanumeric {name.id} → Id Entidad
+     *   5  formulanumeric {entity.id} → Id Entidad
      *   6  entity (texto)        → Nombre
-     *   7  postingperiod         → Periodo Contable
-     *   8  trandate              → Fecha (formato DD/MM/YYYY del entorno)
-     *   9  tranid                → Numero Documento / Folio vendorbill
-     *   10 custbody_2winfolioacepta → Folio otros
-     *   11 custcol_2w_folio      → Folio journalentry
-     *   12 memo                  → Glosa
-     *   13 account.internalid    → Id Cuenta Contable
-     *   14 account.number (join)  → Numero de Cuenta
-     *   15 formulatext displayname→ Nombre Cuenta
-     *   16 accounttype           → (no se usa en el reporte)
-     *   17 mainline              → Main Line ("Yes"/"No")
-     *   18 debitamount           → Debe
-     *   19 creditamount          → Haber
-     *   20 amountremaining       → Importe Restante
-     *   21 amountpaid            → Importe Pagado
-     *   22 Fecha YYYYMMDD        → Entero numérico para comparación de fechaInicio
+     *   7  custentity_2wrut      → RUT (para rutsPorEntidad en el SS)
+     *   8  postingperiod         → Periodo Contable
+     *   9  trandate              → Fecha (formato DD/MM/YYYY del entorno)
+     *   10 tranid                → Numero Documento / Folio vendorbill
+     *   11 custbody_2winfolioacepta → Folio otros
+     *   12 custcol_2w_folio      → Folio journalentry
+     *   13 memo                  → Glosa
+     *   14 account.internalid    → Id Cuenta Contable
+     *   15 account.number (join)  → Numero de Cuenta
+     *   16 formulatext displayname → Nombre Cuenta
+     *   17 accounttype           → (no se usa en el reporte)
+     *   18 mainline              → Main Line ("Yes"/"No")
+     *   19 debitamount           → Debe
+     *   20 creditamount          → Haber
+     *   21 amountremaining       → Importe Restante
+     *   22 amountpaid            → Importe Pagado
+     *   23 Fecha YYYYMMDD        → Entero numérico para comparación de fechaInicio
      *
-     * @param   {string[]} cols  23 campos del CSV ya parseados (sin comillas)
+     * @param   {string[]} cols  24 campos del CSV ya parseados (sin comillas)
      * @returns {Array}          Array con 19 valores: [0..18]
      */
     function buildRowFromCsv(cols) {
         var recordtype = _strCsv(cols[4]);
-        var isMainline = _isMainlineCsv(cols[17]);  // era cols[16]; +1 por nueva col Nombre Cuenta
+        var isMainline = _isMainlineCsv(cols[18]);
 
-        var debe    = _numCsv(cols[18]);  // era cols[17]
-        var haber   = _numCsv(cols[19]);  // era cols[18]
-        var amtRem  = _numCsv(cols[20]);  // era cols[19]
-        var amtPaid = _numCsv(cols[21]);  // era cols[20]
+        var debe    = _numCsv(cols[19]);
+        var haber   = _numCsv(cols[20]);
+        var amtRem  = _numCsv(cols[21]);
+        var amtPaid = _numCsv(cols[22]);
 
         /* ── Folio según tipo de registro ────────────────────────────── */
         var folio = '';
         if (recordtype === 'vendorbill') {
-            folio = _strCsv(cols[9]);   // tranid
-        } else if (recordtype === 'journalentry' || recordtype === 'advintercompanyjournalentry' ) {
-            folio = _strCsv(cols[11]);  // custcol_2w_folio
+            folio = _strCsv(cols[10]);   // tranid
+        } else if (recordtype === 'journalentry' || recordtype === 'advintercompanyjournalentry') {
+            folio = _strCsv(cols[12]);   // custcol_2w_folio
+        } else if (recordtype === 'invoice'
+                && CUENTAS_FICHA_PACIENTE.indexOf(_strCsv(cols[15])) !== -1) {
+            folio = _strCsv(cols[25]);   // custbody_2w_as_ficha_paciente
         } else {
-            folio = _strCsv(cols[10]);  // custbody_2winfolioacepta
+            folio = _strCsv(cols[11]);   // custbody_2winfolioacepta
         }
 
         /* ── Saldo Debe / Saldo Haber ────────────────────────────────── */
@@ -183,24 +194,110 @@ define(['N/file'], function (file) {
 
         return [
             _strCsv(cols[0]),                          // [0]  Id Transaccion
-            _strCsv(cols[13]),                         // [1]  Id Cuenta Contable
+            _strCsv(cols[14]),                         // [1]  Id Cuenta Contable
             _strCsv(cols[2]),                          // [2]  Subsidiaria (texto)
             _strCsv(cols[3]),                          // [3]  Tipo de Transaccion
             _strCsv(cols[6]),                          // [4]  Nombre (entidad)
             folio,                                     // [5]  Folio
-            _strCsv(cols[9]),                          // [6]  Numero Documento (tranid)
-            _strCsv(cols[12]),                         // [7]  Glosa
-            _strCsv(cols[8]),                          // [8]  Fecha (DD/MM/YYYY)
-            _strCsv(cols[7]),                          // [9]  Periodo Contable
-            _strCsv(cols[14]),                         // [10] Numero de Cuenta
-            _strCsv(cols[15]),                         // [11] Nombre Cuenta
+            _strCsv(cols[10]),                         // [6]  Numero Documento (tranid)
+            _strCsv(cols[13]),                         // [7]  Glosa
+            _strCsv(cols[9]),                          // [8]  Fecha (DD/MM/YYYY)
+            _strCsv(cols[8]),                          // [9]  Periodo Contable
+            _strCsv(cols[15]),                         // [10] Numero de Cuenta
+            _strCsv(cols[16]),                         // [11] Nombre Cuenta
             debe,                                      // [12] Debe
             haber,                                     // [13] Haber
             saldo.saldoDebe,                           // [14] Saldo Debe
             saldo.saldoHaber,                          // [15] Saldo Haber
             _strCsv(cols[1]),                          // [16] Id Subsidiaria
             _strCsv(cols[5]),                          // [17] Id Entidad
-            parseInt(_strCsv(cols[22]), 10) || 0,      // [18] Fecha YYYYMMDD (cols[22]) — solo para filtro
+            parseInt(_strCsv(cols[23]), 10) || 0,      // [18] Fecha YYYYMMDD — solo para filtro
+            _strCsv(cols[7]),                          // [19] RUT
+            _strCsv(cols[24]),                         // [20] Id Departamento — solo para filtro
+        ];
+    }
+
+    /* ──────────────────────────────────────────────────────────────────── */
+    /**
+     * Mapea los 26 campos de una línea CSV (exportada por SuiteQLTask) a un array
+     * de 21 valores crudos con la misma estructura que buildRowFromCsv().
+     *
+     * Índices de entrada (cols[], 0-based):
+     *   0  id (t.id)                               → Id Transaccion
+     *   1  idSubsidiaria (tl.subsidiary)            → Id Subsidiaria
+     *   2  subsidiaria (s.name)                     → Subsidiaria (texto)
+     *   3  tipo (t.type)                            → Tipo de Transaccion
+     *   4  tipoRegistro (t.recordtype)              → recordtype
+     *   5  idEntidad (tl.entity)                    → Id Entidad
+     *   6  entidad (BUILTIN.DF(tl.entity))          → Nombre (entidad texto)
+     *   7  rut (e.custentity_2wrut)                 → RUT (para rutsPorEntidad en el SS)
+     *   8  periodo (BUILTIN.DF(t.postingperiod))    → Periodo Contable
+     *   9  fecha (t.trandate)                       → Fecha (DD/MM/YYYY)
+     *   10 numeroDocumento (t.tranid)               → Numero Documento / Folio vendorbill
+     *   11 folio (t.custbody_2winfolioacepta)       → Folio otros
+     *   12 folioColumna (tl.custcol_2w_folio)       → Folio journalentry
+     *   13 nota (tl.memo)                           → Glosa
+     *   14 idCuenta (tal.account)                   → Id Cuenta Contable
+     *   15 numeroCuenta (a.acctnumber)              → Numero de Cuenta
+     *   16 nombreCuenta (SUBSTR...)                 → Nombre Cuenta
+     *   17 tipoCuenta (a.accttype)                  → (no se usa en el reporte)
+     *   18 linePrincipal (tl.mainline)              → isMainline ("T"/"F")
+     *   19 debito (NVL(tal.debit,0))                → Debe
+     *   20 credito (NVL(tal.credit,0))              → Haber
+     *   21 importeRestante (CASE...)                → amountremaining
+     *   22 importePagado (CASE...)                  → amountpaid
+     *   23 fechaNumero (TO_CHAR(t.trandate,'YYYYMMDD')) → Entero numérico para filtro
+     *
+     * @param   {string[]} cols  24 campos del CSV ya parseados (sin comillas)
+     * @returns {Array}          Array con 19 valores: [0..18]
+     */
+    function buildRowFromSuiteQL(cols) {
+        var recordtype = _strCsv(cols[4]);
+        var isMainline = _isMainlineSql(cols[18]);  // SuiteQL devuelve "T"/"F"
+
+        var debe    = _numCsv(cols[19]);
+        var haber   = _numCsv(cols[20]);
+        var amtRem  = _numCsv(cols[21]);
+        var amtPaid = _numCsv(cols[22]);
+
+        /* ── Folio según tipo de registro ────────────────────────────── */
+        var folio = '';
+        if (recordtype === 'vendorbill') {
+            folio = _strCsv(cols[10]);   // tranid
+        } else if (recordtype === 'journalentry' || recordtype === 'advintercompanyjournalentry') {
+            folio = _strCsv(cols[12]);   // custcol_2w_folio
+        } else if (recordtype === 'invoice'
+                && CUENTAS_FICHA_PACIENTE.indexOf(_strCsv(cols[15])) !== -1) {
+            folio = _strCsv(cols[24]);   // custbody_2w_as_ficha_paciente (col[24] en query actual)
+        } else {
+            folio = _strCsv(cols[11]);   // custbody_2winfolioacepta
+        }
+
+        /* ── Saldo Debe / Saldo Haber ────────────────────────────────── */
+        var saldo = _calcSaldo(recordtype, isMainline, debe, haber, amtRem, amtPaid);
+
+        return [
+            _strCsv(cols[0]),                          // [0]  Id Transaccion
+            _strCsv(cols[14]),                         // [1]  Id Cuenta Contable
+            _strCsv(cols[2]),                          // [2]  Subsidiaria (texto)
+            _strCsv(cols[3]),                          // [3]  Tipo de Transaccion
+            _strCsv(cols[6]),                          // [4]  Nombre (entidad)
+            folio,                                     // [5]  Folio
+            _strCsv(cols[10]),                         // [6]  Numero Documento (tranid)
+            _strCsv(cols[13]),                         // [7]  Glosa
+            _strCsv(cols[9]),                          // [8]  Fecha (DD/MM/YYYY)
+            _strCsv(cols[8]),                          // [9]  Periodo Contable
+            _strCsv(cols[15]),                         // [10] Numero de Cuenta
+            _strCsv(cols[16]),                         // [11] Nombre Cuenta
+            debe,                                      // [12] Debe
+            haber,                                     // [13] Haber
+            saldo.saldoDebe,                           // [14] Saldo Debe
+            saldo.saldoHaber,                          // [15] Saldo Haber
+            _strCsv(cols[1]),                          // [16] Id Subsidiaria
+            _strCsv(cols[5]),                          // [17] Id Entidad
+            parseInt(_strCsv(cols[25]), 10) || 0,      // [18] Fecha YYYYMMDD — col[25] en query actual
+            _strCsv(cols[7]),                          // [19] RUT
+            _strCsv(cols[23]),                         // [20] Id Departamento — col[23] en query actual
         ];
     }
 
@@ -252,7 +349,9 @@ define(['N/file'], function (file) {
      * @param   {string|number}  opts.folderId          ID de la carpeta en File Cabinet
      * @param   {string}         [opts.fechaInicio]     Fecha de inicio DD/MM/YYYY (opcional)
      * @param   {boolean}        [opts.omitirNetoCero]   true → elimina filas agrupadas con neto = 0
-     * @param   {Object}         [opts.rutsPorEntidad]   Mapa { internalId: rut } para columna RUT
+     * @param   {string}         [opts.fechaInicio]      Fecha de inicio DD/MM/YYYY (opcional)
+     * @param   {string}         [opts.departamento]     Internal ID de departamento (opcional)
+     * @param   {string}         [opts.rut]              RUT de la entidad (opcional)
      * @returns {number}  Internal ID del archivo creado
      */
     function crearArchivoXls(opts) {
@@ -261,28 +360,34 @@ define(['N/file'], function (file) {
         const folderId       = opts.folderId       || -15;
         const fechaInicio    = opts.fechaInicio    || null;
         const omitirNetoCero = opts.omitirNetoCero || false;
-        const rutsPorEntidad = opts.rutsPorEntidad || {};
+        const departamento   = opts.departamento   || '';
+        /* rut se filtra en el WHERE de la SuiteQL; no se procesa aquí */
 
         /* ── 1. Agrupar y compensar filas (waterfall) ──────────────────── */
         var rowsXls = _compensarFilas(rows, omitirNetoCero);
 
-        /* ── 4. Filtrar por fecha de inicio (después de agrupar) ─────── *
-         *  row[17] = Fecha en formato YYYYMMDD (integer) proveniente de cols[21].
-         *  Esto evita parsear el formato DD/MM/YYYY de row[8] que varía por entorno.
-         * ─────────────────────────────────────────────────────────────── */
-        if (fechaInicio) {
-            var fechaInicioNum = _toYYYYMMDD(fechaInicio);
-            if (fechaInicioNum) {
-                var totalAntes = rowsXls.length;
-                rowsXls = rowsXls.filter(function (row) {
-                    return (Number(row[18]) || 0) >= fechaInicioNum;
-                });
-                log.error({
-                    title  : 'crearArchivoXls — Filtro fechaInicio aplicado',
-                    details: 'fechaInicio: ' + fechaInicio + ' (' + fechaInicioNum + ')' +
-                             ' | antes: ' + totalAntes + ' | después: ' + rowsXls.length,
-                });
-            }
+        /* ── 2. Filtro unificado de parámetros opcionales (post-agrupación) ──
+         *  row[18] = Fecha YYYYMMDD (int)  — para fechaInicio
+         *  row[20] = Id Departamento       — para departamento
+         *  (RUT ya viene filtrado desde la query SuiteQL)
+         * ────────────────────────────────────────────────────────────────── */
+        var fechaInicioNum = fechaInicio ? _toYYYYMMDD(fechaInicio) : 0;
+        var hayFiltros     = fechaInicioNum || departamento;
+
+        if (hayFiltros) {
+            var totalAntes = rowsXls.length;
+            rowsXls = rowsXls.filter(function (row) {
+                if (fechaInicioNum && (Number(row[18]) || 0) < fechaInicioNum) return false;
+                if (departamento   && String(row[20] || '') !== departamento)  return false;
+                return true;
+            });
+            log.error({
+                title  : 'crearArchivoXls — Filtros opcionales aplicados',
+                details: 'fechaInicio: '  + (fechaInicio  || '—') +
+                         ' | depto: '      + (departamento || '—') +
+                         ' | antes: '      + totalAntes +
+                         ' | después: '    + rowsXls.length,
+            });
         }
 
         /* Encabezado XML + definición de estilos + primera fila de headers en negrita */
@@ -315,14 +420,14 @@ define(['N/file'], function (file) {
             encoding: file.Encoding.UTF_8,
         });
 
-        /* Filas de datos — 17 columnas con RUT y nuevas columnas de cuenta */
+        /* Filas de datos — 17 columnas */
         for (const row of rowsXls) {
             var xlsRow = [
                 row[0],                           // Id Transaccion
                 row[1],                           // Id Cuenta Contable
                 row[2],                           // Subsidiaria
                 row[3],                           // Tipo de Transaccion
-                rutsPorEntidad[row[17]] || '',    // RUT (del mapa por Id Entidad)
+                row[19] || '',                    // RUT (directo del CSV)
                 row[4],                           // Nombre
                 row[5],                           // Folio
                 row[6],                           // Numero Documento
@@ -551,7 +656,7 @@ define(['N/file'], function (file) {
                 saldoDebe  = debe;
                 saldoHaber = haber;
             }
-        } else if (RT_PAGO.indexOf(recordtype) !== -1 || recordtype === RT_ASIENTO) {
+        } else if (RT_PAGO.indexOf(recordtype) !== -1 || RT_ASIENTO.indexOf(recordtype) !== -1) {
             var saldo = Math.abs(debe - haber) - amtPaid;
             if (debe > 0)  saldoDebe  = saldo;
             else           saldoHaber = saldo;
@@ -659,13 +764,22 @@ define(['N/file'], function (file) {
     }
 
     /**
-     * Interpreta el campo mainline del CSV como booleano.
+     * Interpreta el campo mainline del CSV (SearchTask) como booleano.
      * Acepta: "Yes", "*", "T", "1", "true", "sí", "si" (case-insensitive).
      */
     function _isMainlineCsv(val) {
         if (val === null || val === undefined) return false;
         var s = String(val).trim().toLowerCase();
         return s === 'yes' || s === '*' || s === 't' || s === '1' || s === 'true' || s === 'sí' || s === 'si';
+    }
+
+    /**
+     * Interpreta el campo mainline del CSV (SuiteQLTask) como booleano.
+     * SuiteQL devuelve "T" para verdadero y "F" para falso.
+     */
+    function _isMainlineSql(val) {
+        if (val === null || val === undefined) return false;
+        return String(val).trim().toUpperCase() === 'T';
     }
 
     /** Escapa un valor para CSV: encierra en comillas si tiene coma, comilla o salto de línea */
@@ -677,12 +791,11 @@ define(['N/file'], function (file) {
     }
 
     return {
-        CSV_HEADERS         : CSV_HEADERS,
-        XLS_HEADERS         : XLS_HEADERS,
-        buildRow            : buildRow,
-        buildRowFromCsv     : buildRowFromCsv,
-        crearArchivoCsv     : crearArchivoCsv,
-        crearArchivoXls     : crearArchivoXls,
-        generarNombreArchivo: generarNombreArchivo,
+        buildRow             : buildRow,
+        buildRowFromCsv      : buildRowFromCsv,
+        buildRowFromSuiteQL  : buildRowFromSuiteQL,
+        crearArchivoCsv      : crearArchivoCsv,
+        crearArchivoXls      : crearArchivoXls,
+        generarNombreArchivo : generarNombreArchivo,
     };
 });
