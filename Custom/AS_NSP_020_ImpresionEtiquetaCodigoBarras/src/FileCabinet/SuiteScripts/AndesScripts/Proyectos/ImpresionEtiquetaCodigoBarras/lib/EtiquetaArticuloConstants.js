@@ -25,11 +25,6 @@ define([],
         UPC   : 'custpage_etiqueta_upc',
     };
 
-    const IMPRESORA = {
-        LIBRERIA  : 'https://labeldictate.com/text2barcode/lib/t2bprinter.js',
-        FABRICANTE: 'Zebra',
-    };
-
     const ETIQUETA = {
         ANCHO: 479,
         ALTO : 320,
@@ -50,8 +45,8 @@ define([],
     const COPIAS = 1;
     const MENSAJES = {
         SIN_UPC      : 'El articulo no tiene UPC Code cargado, no se puede generar el codigo de barras.',
-        SIN_IMPRESORA: 'No se encontro la impresora. Verifica que Text2 Barcode este abierto en este equipo.',
-        SIN_LIBRERIA : 'No se pudo cargar la libreria de Text2 Barcode.',
+        SIN_IMPRESORA: 'No se encontro la impresora. Verifica que Browser Print este abierto en este equipo.',
+        SIN_LIBRERIA : 'No se pudo cargar la libreria de Browser Print.',
         ENVIADA      : 'Etiqueta enviada a ',
         FALLO_ENVIO  : 'No se pudo imprimir: ',
     };
@@ -62,7 +57,6 @@ define([],
         BOTON_ETIQUETA: BOTON_ETIQUETA,
         CAMPOS        : CAMPOS,
         CAMPOS_OCULTOS: CAMPOS_OCULTOS,
-        IMPRESORA     : IMPRESORA,
         ETIQUETA      : ETIQUETA,
         NOMBRE        : NOMBRE,
         CODIGO_BARRAS : CODIGO_BARRAS,
