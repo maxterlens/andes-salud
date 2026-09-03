@@ -9,7 +9,6 @@ define(['./EtiquetaArticuloConstants'],
     const construir = (datos) => {
         return abrirEtiqueta()
              + nombreArticulo(datos.nombre)
-             + descripcionArticulo(datos.descripcion)
              + codigoBarras(datos.upc)
              + cerrarEtiqueta();
     };
@@ -26,13 +25,6 @@ define(['./EtiquetaArticuloConstants'],
              + '^A0N,' + CONSTANTES.NOMBRE.FUENTE + ',' + CONSTANTES.NOMBRE.FUENTE
              + '^FB' + CONSTANTES.ETIQUETA.ANCHO + ',' + CONSTANTES.NOMBRE.LINEAS + ',0,C,0'
              + '^FD' + nombre + '\\&^FS';
-    };
-
-    const descripcionArticulo = (descripcion) => {
-        return '^FO0,' + CONSTANTES.DESCRIPCION.Y
-             + '^A0N,' + CONSTANTES.DESCRIPCION.FUENTE + ',' + CONSTANTES.DESCRIPCION.FUENTE
-             + '^FB' + CONSTANTES.ETIQUETA.ANCHO + ',' + CONSTANTES.DESCRIPCION.LINEAS + ',0,C,0'
-             + '^FD' + descripcion + '\\&^FS';
     };
 
     const centrarCodigoBarras = (upc) => {

@@ -17,7 +17,6 @@ define(['N/currentRecord', './lib/EtiquetaArticuloConstants', './lib/EtiquetaZpl
         log.debug({
             title  : 'ETIQUETA DATOS',
             details: 'nombre: [' + datos.nombre + ']'
-                   + ' | descripcion: [' + datos.descripcion + ']'
                    + ' | upc: [' + datos.upc + ']',
         });
 
@@ -40,9 +39,8 @@ define(['N/currentRecord', './lib/EtiquetaArticuloConstants', './lib/EtiquetaZpl
         const articulo = currentRecord.get();
 
         return {
-            nombre     : articulo.getValue({ fieldId: CONSTANTES.CAMPOS_OCULTOS.NOMBRE }),
-            descripcion: articulo.getValue({ fieldId: CONSTANTES.CAMPOS_OCULTOS.DESCRIPCION }),
-            upc        : articulo.getValue({ fieldId: CONSTANTES.CAMPOS_OCULTOS.UPC }),
+            nombre: articulo.getValue({ fieldId: CONSTANTES.CAMPOS_OCULTOS.NOMBRE }),
+            upc   : articulo.getValue({ fieldId: CONSTANTES.CAMPOS_OCULTOS.UPC }),
         };
     };
 

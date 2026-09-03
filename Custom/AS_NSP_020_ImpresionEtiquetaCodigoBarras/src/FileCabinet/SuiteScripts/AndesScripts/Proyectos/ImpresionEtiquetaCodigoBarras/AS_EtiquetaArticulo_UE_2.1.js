@@ -4,7 +4,6 @@
  * @NScriptType UserEventScript
  * @NModuleScope Public
  * @scriptid     customscript_as_ue_etiqueta_articulo
- * @deploymentid customdeploy_as_ue_etiq_art_inv
  * @recordtype   inventoryitem, lotnumberedinventoryitem, serializedinventoryitem
  */
 define(['N/ui/serverWidget', './lib/EtiquetaArticuloConstants'],
@@ -28,7 +27,6 @@ define(['N/ui/serverWidget', './lib/EtiquetaArticuloConstants'],
                        + ' | tipo: ' + context.newRecord.type
                        + ' | boton nativo oculto: ' + botonNativoOculto
                        + ' | nombre: [' + datos.NOMBRE + ']'
-                       + ' | descripcion: [' + datos.DESCRIPCION + ']'
                        + ' | upc: [' + datos.UPC + ']',
             });
         } catch (fallo) {
