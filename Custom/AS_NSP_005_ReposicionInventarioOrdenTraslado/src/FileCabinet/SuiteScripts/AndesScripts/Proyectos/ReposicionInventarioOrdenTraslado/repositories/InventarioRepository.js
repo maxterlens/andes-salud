@@ -110,7 +110,9 @@ define(['N/query', 'N/search'], (query, search) => {
                     "AND",
                     ["transactionlinetype","anyof","RECEIVING"],
                     "AND",
-                    ["formulanumeric: NVL({quantity},0) - NVL({quantityshiprecv},0)","greaterthan","0"]
+                    ["formulanumeric: NVL({quantity},0) - NVL({quantityshiprecv},0)","greaterthan","0"],
+                    "AND",
+                    ["status","noneof","TrnfrOrd:H"]
                 ],
                 columns:[
                     search.createColumn({ name: "item", summary: "GROUP"}),

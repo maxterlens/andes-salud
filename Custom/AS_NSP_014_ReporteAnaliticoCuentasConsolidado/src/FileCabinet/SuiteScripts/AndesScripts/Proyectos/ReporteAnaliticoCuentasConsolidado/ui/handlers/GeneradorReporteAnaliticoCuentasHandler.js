@@ -177,15 +177,15 @@ define([
             ssTask.deploymentId = SS_DEPLOY_ID;
             ssTask.params       = {
                 custscript_as_rpt_anlt_cta_ss_subsi      : subsidiaria,
-                custscript_as_rpt_anlt_cta_ss_fecha_ini  : fechaInicio || null,
+                custscript_as_rpt_anlt_cta_ss_fecha_ini  : fechaInicio,
                 custscript_as_rpt_anlt_cta_ss_fecha_cort : fecha,
-                custscript_as_rpt_anlt_cta_ss_cta_cont   : cuentaContable || null,
+                custscript_as_rpt_anlt_cta_ss_cta_cont   : cuentaContable,
                 custscript_as_rpt_anlt_cta_ss_omit_n0    : omitirNetoCero,
                 custscript_as_rpt_anlt_cta_ss_log_id     : logId,
                 custscript_as_rpt_anlt_cta_ss_folderid   : folderId,
                 custscript_as_rpt_anlt_cta_ss_archtempid : tmpFileId,
-                custscript_as_rpt_anlt_cta_ss_departamen : departamento || null,
-                custscript_as_rpt_anlt_cta_ss_rut        : rut          || null,
+                custscript_as_rpt_anlt_cta_ss_departamen : departamento,
+                custscript_as_rpt_anlt_cta_ss_rut        : rut,
             };
 
             /* ══════════════════════════════════════════════════════════
