@@ -16,15 +16,13 @@ define([],
     };
 
     const CAMPOS = {
-        NOMBRE     : 'itemid',
-        DESCRIPCION: 'purchasedescription',
-        UPC        : 'upccode',
+        NOMBRE: 'itemid',
+        UPC   : 'upccode',
     };
 
     const CAMPOS_OCULTOS = {
-        NOMBRE     : 'custpage_etiqueta_nombre',
-        DESCRIPCION: 'custpage_etiqueta_descripcion',
-        UPC        : 'custpage_etiqueta_upc',
+        NOMBRE: 'custpage_etiqueta_nombre',
+        UPC   : 'custpage_etiqueta_upc',
     };
 
     const IMPRESORA = {
@@ -34,23 +32,17 @@ define([],
 
     const ETIQUETA = {
         ANCHO: 479,
-        ALTO : 280,
+        ALTO : 320,
     };
 
     const NOMBRE = {
-        Y     : 45,
+        Y     : 85,
         FUENTE: 26,
         LINEAS: 2,
     };
 
-    const DESCRIPCION = {
-        Y     : 108,
-        FUENTE: 22,
-        LINEAS: 1,
-    };
-
     const CODIGO_BARRAS = {
-        Y     : 140,
+        Y     : 180,
         ALTO  : 70,
         MODULO: 2,
     };
@@ -73,7 +65,6 @@ define([],
         IMPRESORA     : IMPRESORA,
         ETIQUETA      : ETIQUETA,
         NOMBRE        : NOMBRE,
-        DESCRIPCION   : DESCRIPCION,
         CODIGO_BARRAS : CODIGO_BARRAS,
         COPIAS        : COPIAS,
         MENSAJES      : MENSAJES,
