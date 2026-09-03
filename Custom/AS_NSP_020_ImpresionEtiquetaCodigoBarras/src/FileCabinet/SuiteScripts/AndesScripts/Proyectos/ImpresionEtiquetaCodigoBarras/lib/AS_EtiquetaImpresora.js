@@ -3,7 +3,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['./EtiquetaArticuloConstants'],
+define(['./AS_EtiquetaArticuloConstants'],
     (CONSTANTES) => {
 
     const imprimir = async (zpl) => {
