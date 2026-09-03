@@ -7,10 +7,12 @@
 define(['N/currentRecord',
         './lib/LibreriaZebra/BrowserPrint-3.1.250.min.js',
         './lib/LibreriaZebra/BrowserPrint-Zebra-1.1.250.min.js',
-        './lib/EtiquetaArticuloConstants', './lib/EtiquetaZpl', './lib/ZebraPrinter'],
-    (currentRecord, _browserPrint, _browserPrintZebra, CONSTANTES, etiquetaZpl, zebraPrinter) => {
+        './lib/AS_EtiquetaArticuloConstants', './lib/AS_EtiquetaZpl',
+        './lib/AS_EtiquetaSelector', './lib/AS_EtiquetaImpresora'],
+    (currentRecord, _browserPrint, _browserPrintZebra,
+     CONSTANTES, etiquetaZpl, etiquetaSelector, etiquetaImpresora) => {
 
-    const imprimirEtiquetaArticulo = () => {
+    const imprimirEtiquetaArticulo = async () => {
         const datos = obtenerDatosArticulo();
 
         log.debug({
@@ -25,11 +27,28 @@ define(['N/currentRecord',
             return;
         }
 
-        const zpl = etiquetaZpl.construir(datos);
+        const configuracion = obtenerConfiguracion();
+
+        if (!configuracion.formatos.length) {
+            alert(CONSTANTES.MENSAJES.SIN_FORMATO);
+
+            return;
+        }
+
+        const formato = await etiquetaSelector.elegir(
+            configuracion.subsidiarias, configuracion.formatos, datos.subsidiaria);
+
+        if (!formato) {
+            return;
+        }
+
+        log.debug({ title: 'ETIQUETA FORMATO', details: formato.nombre + ' | ' + JSON.stringify(formato) });
+
+        const zpl = etiquetaZpl.construir(datos, formato);
 
         log.debug({ title: 'ETIQUETA ZPL', details: zpl });
 
-        zebraPrinter.imprimir(zpl)
+        etiquetaImpresora.imprimir(zpl)
             .then(mostrarResultado)
             .catch((fallo) => alert(fallo.message || fallo));
     };
@@ -38,9 +57,16 @@ define(['N/currentRecord',
         const articulo = currentRecord.get();
 
         return {
-            nombre: articulo.getValue({ fieldId: CONSTANTES.CAMPOS_OCULTOS.NOMBRE }),
-            upc   : articulo.getValue({ fieldId: CONSTANTES.CAMPOS_OCULTOS.UPC }),
+            nombre     : articulo.getValue({ fieldId: CONSTANTES.CAMPOS_OCULTOS.NOMBRE }),
+            upc        : articulo.getValue({ fieldId: CONSTANTES.CAMPOS_OCULTOS.UPC }),
+            subsidiaria: articulo.getValue({ fieldId: CONSTANTES.CAMPO_SUBSIDIARIA.OCULTO }),
         };
+    };
+
+    const obtenerConfiguracion = () => {
+        const texto = currentRecord.get().getValue({ fieldId: CONSTANTES.CAMPO_CONFIGURACION });
+
+        return JSON.parse(texto);
     };
 
     const mostrarResultado = (resultado) => {

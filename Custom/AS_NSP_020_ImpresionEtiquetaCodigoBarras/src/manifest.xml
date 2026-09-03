@@ -4,6 +4,8 @@
   <dependencies>
     <features>
       <feature required="true">SERVERSIDESCRIPTING</feature>
+      <feature required="true">CUSTOMRECORDS</feature>
+      <feature required="true">SUBSIDIARIES</feature>
       <feature required="true">UNITSOFMEASURE</feature>
     </features>
   </dependencies>
