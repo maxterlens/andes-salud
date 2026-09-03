@@ -4,12 +4,11 @@
  * @NScriptType ClientScript
  * @NModuleScope Public
  */
-define(['N/currentRecord', './lib/EtiquetaArticuloConstants', './lib/EtiquetaZpl', './lib/ZebraPrinter'],
-    (currentRecord, CONSTANTES, etiquetaZpl, zebraPrinter) => {
-
-    const pageInit = (_context) => {
-        zebraPrinter.precargar();
-    };
+define(['N/currentRecord',
+        './lib/LibreriaZebra/BrowserPrint-3.1.250.min.js',
+        './lib/LibreriaZebra/BrowserPrint-Zebra-1.1.250.min.js',
+        './lib/EtiquetaArticuloConstants', './lib/EtiquetaZpl', './lib/ZebraPrinter'],
+    (currentRecord, _browserPrint, _browserPrintZebra, CONSTANTES, etiquetaZpl, zebraPrinter) => {
 
     const imprimirEtiquetaArticulo = () => {
         const datos = obtenerDatosArticulo();
@@ -58,7 +57,6 @@ define(['N/currentRecord', './lib/EtiquetaArticuloConstants', './lib/EtiquetaZpl
     };
 
     return {
-        pageInit                : pageInit,
         imprimirEtiquetaArticulo: imprimirEtiquetaArticulo,
     };
 });

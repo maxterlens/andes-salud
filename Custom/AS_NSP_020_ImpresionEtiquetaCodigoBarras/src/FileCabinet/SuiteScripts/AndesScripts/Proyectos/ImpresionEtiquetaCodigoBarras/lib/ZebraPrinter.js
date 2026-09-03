@@ -7,8 +7,6 @@ define(['./EtiquetaArticuloConstants'],
     (CONSTANTES) => {
 
     const imprimir = async (zpl) => {
-        await cargarLibreria();
-
         const impresora = await buscarImpresora();
 
         if (!impresora) {
@@ -18,45 +16,34 @@ define(['./EtiquetaArticuloConstants'],
         return enviar(impresora, zpl);
     };
 
-    let promesaLibreria = null;
-
-    const cargarLibreria = () => {
-        if (promesaLibreria) {
-            return promesaLibreria;
-        }
-
-        promesaLibreria = new Promise((resolver, rechazar) => {
-            const script = document.createElement('script');
-
-            script.src     = CONSTANTES.IMPRESORA.LIBRERIA;
-            script.onload  = resolver;
-            script.onerror = () => rechazar(new Error(CONSTANTES.MENSAJES.SIN_LIBRERIA));
-
-            document.head.appendChild(script);
+    const buscarImpresora = () => {
+        return new Promise((resolver) => {
+            BrowserPrint.getDefaultDevice('printer', (impresora) => {
+                log.debug({ title: 'ZEBRA IMPRESORA', details: 'encontrada: ' + impresora.name });
+                resolver(impresora);
+            }, (error) => {
+                log.debug({ title: 'ZEBRA IMPRESORA', details: 'no encontrada: ' + error });
+                resolver(null);
+            });
         });
-
-        return promesaLibreria;
     };
 
-    const buscarImpresora = async () => {
-        const zebra = await T2bPrinter.find((dispositivo) => dispositivo.manufacturer === CONSTANTES.IMPRESORA.FABRICANTE);
-
-        return zebra || T2bPrinter.default();
-    };
-
-    const enviar = async (impresora, zpl) => {
-        const respuesta = await T2bPrinter.write(impresora, zpl);
-
-        return {
-            exito    : respuesta.success,
-            mensaje  : respuesta.message,
-            impresora: impresora.name,
-        };
+    const enviar = (impresora, zpl) => {
+        return new Promise((resolver) => {
+            impresora.send(zpl,
+                () => {
+                    log.debug({ title: 'ZEBRA ENVIO', details: 'ok: ' + impresora.name });
+                    resolver({ exito: true, mensaje: '', impresora: impresora.name });
+                },
+                (error) => {
+                    log.debug({ title: 'ZEBRA ENVIO', details: 'error: ' + error });
+                    resolver({ exito: false, mensaje: error, impresora: impresora.name });
+                });
+        });
     };
 
 
     return {
-        precargar: cargarLibreria,
-        imprimir : imprimir,
+        imprimir: imprimir,
     };
 });
