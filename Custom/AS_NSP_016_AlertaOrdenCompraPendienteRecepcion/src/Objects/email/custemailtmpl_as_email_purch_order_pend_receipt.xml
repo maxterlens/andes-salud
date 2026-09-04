@@ -1,0 +1,12 @@
+<emailtemplate scriptid="custemailtmpl_as_email_purch_order_pend_receipt">
+  <addcompanyaddress>T</addcompanyaddress>
+  <addunsubscribelink>T</addunsubscribelink>
+  <description>Notificación enviada al proveedor cuando una Orden de Compra aprobada continúa en Pending Receipt con 5 o más días de antigüedad.</description>
+  <isinactive>F</isinactive>
+  <isprivate>F</isprivate>
+  <mediaitem></mediaitem>
+  <name>Correo Alerta Orden de Compra Pendiente de Recepción</name>
+  <recordtype>TRANSACTION</recordtype>
+  <subject>Orden de Compra ${transaction.tranid} - Pendiente de Recepción ({{DIAS}} días)</subject>
+  <usesmedia>F</usesmedia>
+</emailtemplate>

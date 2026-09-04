@@ -3,14 +3,14 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['./AS_EtiquetaArticuloConstants'],
-    (CONSTANTES) => {
+define([],
+    () => {
 
-    const construir = (datos, formato) => {
+    const construir = (datos, formato, cantidad) => {
         return abrirEtiqueta(formato)
              + nombreArticulo(datos.nombre, formato)
              + codigoBarras(datos.upc, formato)
-             + cerrarEtiqueta();
+             + cerrarEtiqueta(cantidad);
     };
 
     const abrirEtiqueta = (formato) => {
@@ -40,8 +40,8 @@ define(['./AS_EtiquetaArticuloConstants'],
              + '^FD' + upc + '^FS';
     };
 
-    const cerrarEtiqueta = () => {
-        return '^PQ' + CONSTANTES.COPIAS + ',0,1,Y'
+    const cerrarEtiqueta = (cantidad) => {
+        return '^PQ' + cantidad + ',0,1,Y'
              + '^XZ';
     };
 

@@ -66,7 +66,7 @@
       <isformula>F</isformula>
       <ismandatory>T</ismandatory>
       <isparent>F</isparent>
-      <label>Sucursal / Subsidiaria</label>
+      <label>Sucursal</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -103,11 +103,11 @@
       <encryptatrest>F</encryptatrest>
       <fieldtype>INTEGER</fieldtype>
       <globalsearch>F</globalsearch>
-      <help>Lo dice la ficha tecnica del equipo, normalmente 203 o 300. Sirve de referencia para calcular las medidas de abajo: a 203 DPI cada milimetro son 8 puntos, a 300 DPI son casi 12.</help>
+      <help>Lo dice la ficha tecnica del equipo, normalmente 203 o 300. No cambia la impresion por si solo: sirve para calcular los demas valores. A 203 DPI cada milimetro son 8 puntos.</help>
       <isformula>F</isformula>
       <ismandatory>T</ismandatory>
       <isparent>F</isparent>
-      <label>Resolucion de la impresora (DPI)</label>
+      <label>Resolucion (DPI)</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -144,11 +144,11 @@
       <encryptatrest>F</encryptatrest>
       <fieldtype>INTEGER</fieldtype>
       <globalsearch>F</globalsearch>
-      <help>De borde a borde, a lo ancho. Mide la etiqueta en milimetros y multiplica por 8 si la impresora es de 203 DPI. Ejemplo: 60 mm de ancho = 479 puntos.</help>
+      <help>En puntos, de borde a borde. Mide la etiqueta en milimetros y multiplica por 8 si la impresora es de 203 DPI. Ejemplo: 60 mm = 479 puntos.</help>
       <isformula>F</isformula>
       <ismandatory>T</ismandatory>
       <isparent>F</isparent>
-      <label>1. Ancho de la etiqueta (puntos)</label>
+      <label>Etiqueta: ancho</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -185,11 +185,11 @@
       <encryptatrest>F</encryptatrest>
       <fieldtype>INTEGER</fieldtype>
       <globalsearch>F</globalsearch>
-      <help>De arriba a abajo. Mide en milimetros y multiplica por 8 si es de 203 DPI. Ejemplo: 40 mm de alto = 320 puntos.</help>
+      <help>En puntos, de arriba a abajo. Mide en milimetros y multiplica por 8 si es de 203 DPI. Ejemplo: 40 mm = 320 puntos.</help>
       <isformula>F</isformula>
       <ismandatory>T</ismandatory>
       <isparent>F</isparent>
-      <label>2. Alto de la etiqueta (puntos)</label>
+      <label>Etiqueta: alto</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -226,11 +226,11 @@
       <encryptatrest>F</encryptatrest>
       <fieldtype>INTEGER</fieldtype>
       <globalsearch>F</globalsearch>
-      <help>Distancia desde el borde superior de la etiqueta hasta donde arranca el texto. Mientras mas grande el numero, mas abajo se imprime. A 203 DPI, 80 puntos es 1 centimetro.</help>
+      <help>En puntos, desde el borde superior hasta donde arranca el texto. Mientras mas grande, mas abajo se imprime. A 203 DPI, 80 puntos es 1 centimetro.</help>
       <isformula>F</isformula>
       <ismandatory>T</ismandatory>
       <isparent>F</isparent>
-      <label>3. Nombre del producto: que tan abajo empieza</label>
+      <label>Nombre: distancia desde arriba</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -267,11 +267,11 @@
       <encryptatrest>F</encryptatrest>
       <fieldtype>INTEGER</fieldtype>
       <globalsearch>F</globalsearch>
-      <help>Alto de cada letra. Si el nombre se ve muy chico subelo; si no entra en la etiqueta, bajalo.</help>
+      <help>Alto de cada letra en puntos. Si el nombre se ve muy chico subelo; si no entra en la etiqueta, bajalo.</help>
       <isformula>F</isformula>
       <ismandatory>T</ismandatory>
       <isparent>F</isparent>
-      <label>4. Nombre del producto: tamaño de letra</label>
+      <label>Nombre: tamaño de letra</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -308,11 +308,11 @@
       <encryptatrest>F</encryptatrest>
       <fieldtype>INTEGER</fieldtype>
       <globalsearch>F</globalsearch>
-      <help>Si el nombre del producto es largo, en cuantas lineas se puede partir. Con 2, un nombre largo usa hasta 2 renglones y lo que sobra no se imprime.</help>
+      <help>En cuantos renglones se puede partir un nombre largo. Con 2, usa hasta 2 lineas y lo que sobra no se imprime.</help>
       <isformula>F</isformula>
       <ismandatory>T</ismandatory>
       <isparent>F</isparent>
-      <label>5. Nombre del producto: cuantos renglones puede ocupar</label>
+      <label>Nombre: lineas maximas</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -349,11 +349,11 @@
       <encryptatrest>F</encryptatrest>
       <fieldtype>INTEGER</fieldtype>
       <globalsearch>F</globalsearch>
-      <help>Distancia desde el borde superior hasta donde arrancan las barras. Tiene que quedar mas abajo que el nombre, si no se encimarian.</help>
+      <help>En puntos, desde el borde superior hasta donde arrancan las barras. Tiene que quedar mas abajo que el nombre, si no se encimarian.</help>
       <isformula>F</isformula>
       <ismandatory>T</ismandatory>
       <isparent>F</isparent>
-      <label>6. Codigo de barras: que tan abajo empieza</label>
+      <label>Codigo: distancia desde arriba</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -390,11 +390,11 @@
       <encryptatrest>F</encryptatrest>
       <fieldtype>INTEGER</fieldtype>
       <globalsearch>F</globalsearch>
-      <help>Que tan altas se imprimen las barras. No cambia el ancho del codigo. Ojo que la altura mas la posicion no se pasen del alto de la etiqueta.</help>
+      <help>Que tan altas se imprimen las barras, en puntos. Ojo que la altura mas la distancia desde arriba no se pasen del alto de la etiqueta.</help>
       <isformula>F</isformula>
       <ismandatory>T</ismandatory>
       <isparent>F</isparent>
-      <label>7. Codigo de barras: altura de las barras</label>
+      <label>Codigo: altura de barras</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -431,11 +431,11 @@
       <encryptatrest>F</encryptatrest>
       <fieldtype>INTEGER</fieldtype>
       <globalsearch>F</globalsearch>
-      <help>Normalmente 2 o 3. Mientras mas grande, mas ancho sale el codigo completo. Si el codigo se sale por los costados de la etiqueta, baja este numero.</help>
+      <help>Normalmente 2 o 3. Mientras mas grande, mas ancho sale el codigo completo. Si se sale por los costados de la etiqueta, baja este numero.</help>
       <isformula>F</isformula>
       <ismandatory>T</ismandatory>
       <isparent>F</isparent>
-      <label>8. Codigo de barras: grosor de las barras</label>
+      <label>Codigo: grosor de barras</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -472,11 +472,11 @@
       <encryptatrest>F</encryptatrest>
       <fieldtype>CHECKBOX</fieldtype>
       <globalsearch>F</globalsearch>
-      <help>Marca esta casilla en la configuracion que quieres que aparezca ya seleccionada al abrir un articulo. Solo una debe estar marcada.</help>
+      <help>Marca la configuracion que quieres que aparezca ya seleccionada al imprimir. Solo una debe estar marcada.</help>
       <isformula>F</isformula>
       <ismandatory>F</ismandatory>
       <isparent>F</isparent>
-      <label>Usar por defecto</label>
+      <label>Predeterminado</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>

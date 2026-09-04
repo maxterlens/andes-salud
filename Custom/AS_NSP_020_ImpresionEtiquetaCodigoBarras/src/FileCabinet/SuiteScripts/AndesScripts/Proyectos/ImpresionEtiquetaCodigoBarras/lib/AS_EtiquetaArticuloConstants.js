@@ -6,8 +6,6 @@
 define([],
     () => {
 
-    // Ruta absoluta a proposito: una relativa se resolveria desde la carpeta del modulo que
-    // asigna clientScriptModulePath (hoy el handler, en handlers/), no desde esta.
     const CLIENT_SCRIPT = '/SuiteScripts/AndesScripts/Proyectos/ImpresionEtiquetaCodigoBarras/AS_EtiquetaArticulo_CS_2.1.js';
     const BOTON_NATIVO = 'printlabel';
 
@@ -38,9 +36,12 @@ define([],
         TITULO     : 'Imprimir Etiqueta',
         SUBSIDIARIA: 'Subsidiaria',
         FORMATO    : 'Formato de etiqueta',
+        CANTIDAD   : 'Cantidad de etiquetas',
         ACEPTAR    : 'Imprimir',
         CANCELAR   : 'Cancelar',
     };
+
+    const CANTIDAD_INICIAL = 1;
 
     // Las medidas de la etiqueta viven en este custom record, una fila por formato
     const FORMATO = {
@@ -57,10 +58,9 @@ define([],
         PREDETERMINADO: 'custrecord_as_fe_predeterminado',
     };
 
-    const COPIAS = 1;
-
     const MENSAJES = {
         SIN_UPC      : 'El articulo no tiene UPC Code cargado, no se puede generar el codigo de barras.',
+        SIN_CANTIDAD : 'Indica cuantas etiquetas quieres imprimir.',
         SIN_FORMATO  : 'No hay ningun formato de etiqueta configurado. Creelo en AS Configuracion Etiqueta Impresora.',
         SIN_IMPRESORA: 'No se encontro la impresora. Verifica que Browser Print este abierto en este equipo.',
         SIN_LIBRERIA : 'No se pudo cargar la libreria de Browser Print.',
@@ -78,7 +78,7 @@ define([],
         CAMPO_CONFIGURACION: CAMPO_CONFIGURACION,
         SELECTOR           : SELECTOR,
         FORMATO            : FORMATO,
-        COPIAS             : COPIAS,
+        CANTIDAD_INICIAL   : CANTIDAD_INICIAL,
         MENSAJES           : MENSAJES,
     };
 });
