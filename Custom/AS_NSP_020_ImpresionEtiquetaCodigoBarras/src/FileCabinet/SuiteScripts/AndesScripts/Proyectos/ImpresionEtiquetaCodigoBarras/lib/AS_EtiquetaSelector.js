@@ -6,29 +6,30 @@
 define(['./AS_EtiquetaArticuloConstants'],
     (CONSTANTES) => {
         
-    const elegir = (subsidiarias, formatos, subsidiariaArticulo) => {
+    const elegir = (formatos, subsidiariaArticulo) => {
         return new Promise((resolver) => {
             const fondo  = crearFondo();
             const panel  = crearPanel();
             const titulo = crearTitulo();
 
-            const opcionesSubsidiaria = [{ valor: '', texto: '' }].concat(
-                subsidiarias.map((subsidiaria) => ({ valor: subsidiaria.id, texto: subsidiaria.nombre })));
-
-            const selectorSubsidiaria = crearSelector(opcionesSubsidiaria);
+            const selectorSubsidiaria = crearSelector(subsidiariasConFormato(formatos));
             const selectorFormato     = crearSelector([]);
+            const campoCantidad       = crearCampoCantidad();
 
             selectorSubsidiaria.onchange = () => {
                 llenarSelector(selectorFormato, formatosDe(formatos, selectorSubsidiaria.value));
             };
-
             selectorSubsidiaria.value = subsidiariaArticulo;
+
+            if (!selectorSubsidiaria.value) {
+                selectorSubsidiaria.selectedIndex = 0;
+            }
 
             llenarSelector(selectorFormato, formatosDe(formatos, selectorSubsidiaria.value));
 
-            const cerrar = (formatoId) => {
+            const cerrar = (eleccion) => {
                 document.body.removeChild(fondo);
-                resolver(formatos.find((formato) => formato.id === formatoId) || null);
+                resolver(eleccion);
             };
 
             const aceptar = () => {
@@ -38,7 +39,26 @@ define(['./AS_EtiquetaArticuloConstants'],
                     return;
                 }
 
-                cerrar(selectorFormato.value);
+                const cantidad = Math.floor(Number(campoCantidad.value));
+
+                if (!cantidad || cantidad < 1) {
+                    alert(CONSTANTES.MENSAJES.SIN_CANTIDAD);
+
+                    return;
+                }
+
+                const formatoElegido = formatos.find((formato) => formato.id === selectorFormato.value);
+
+                log.debug({
+                    title  : 'ETIQUETA FORMATO',
+                    details: formatoElegido.nombre + ' | cantidad: ' + cantidad
+                           + ' | ' + JSON.stringify(formatoElegido),
+                });
+
+                cerrar({
+                    formato : formatoElegido,
+                    cantidad: cantidad,
+                });
             };
 
             panel.appendChild(titulo);
@@ -46,11 +66,25 @@ define(['./AS_EtiquetaArticuloConstants'],
             panel.appendChild(selectorSubsidiaria);
             panel.appendChild(crearEtiqueta(CONSTANTES.SELECTOR.FORMATO));
             panel.appendChild(selectorFormato);
-            panel.appendChild(crearBotones(aceptar, () => cerrar('')));
+            panel.appendChild(crearEtiqueta(CONSTANTES.SELECTOR.CANTIDAD));
+            panel.appendChild(campoCantidad);
+            panel.appendChild(crearBotones(aceptar, () => cerrar(null)));
 
             fondo.appendChild(panel);
             document.body.appendChild(fondo);
         });
+    };
+
+    const subsidiariasConFormato = (formatos) => {
+        const opciones = [];
+
+        formatos.forEach((formato) => {
+            if (!opciones.some((opcion) => opcion.valor === formato.subsidiariaId)) {
+                opciones.push({ valor: formato.subsidiariaId, texto: formato.subsidiariaNombre });
+            }
+        });
+
+        return opciones;
     };
 
     const formatosDe = (formatos, subsidiariaId) => {
@@ -105,6 +139,18 @@ define(['./AS_EtiquetaArticuloConstants'],
         llenarSelector(selector, opciones);
 
         return selector;
+    };
+
+    const crearCampoCantidad = () => {
+        const campo = document.createElement('input');
+
+        campo.type  = 'number';
+        campo.min   = '1';
+        campo.value = CONSTANTES.CANTIDAD_INICIAL;
+        campo.style.cssText = 'width:100%;padding:6px;margin-bottom:16px;font-size:13px;'
+                            + 'box-sizing:border-box;';
+
+        return campo;
     };
 
     const llenarSelector = (selector, opciones) => {

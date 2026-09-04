@@ -6,25 +6,6 @@
 define(['N/search', '../lib/AS_EtiquetaArticuloConstants'],
     (search, CONSTANTES) => {
 
-    const buscarSubsidiarias = () => {
-        const subsidiarias = [];
-
-        search.create({
-            type   : search.Type.SUBSIDIARY,
-            filters: [['isinactive', 'is', 'F']],
-            columns: [search.createColumn({ name: 'name', sort: search.Sort.ASC })],
-        }).run().each((resultado) => {
-            subsidiarias.push({
-                id    : resultado.id,
-                nombre: resultado.getValue({ name: 'name' }),
-            });
-
-            return true;
-        });
-
-        return subsidiarias;
-    };
-
     const buscarFormatos = () => {
         const formatos = [];
 
@@ -45,9 +26,10 @@ define(['N/search', '../lib/AS_EtiquetaArticuloConstants'],
             ],
         }).run().each((resultado) => {
             formatos.push({
-                id           : resultado.id,
-                nombre       : resultado.getValue({ name: 'name' }),
-                subsidiariaId: resultado.getValue({ name: CONSTANTES.FORMATO.SUBSIDIARIA }),
+                id               : resultado.id,
+                nombre           : resultado.getValue({ name: 'name' }),
+                subsidiariaId    : resultado.getValue({ name: CONSTANTES.FORMATO.SUBSIDIARIA }),
+                subsidiariaNombre: resultado.getText({ name: CONSTANTES.FORMATO.SUBSIDIARIA }),
                 ancho        : Number(resultado.getValue({ name: CONSTANTES.FORMATO.ANCHO })),
                 alto         : Number(resultado.getValue({ name: CONSTANTES.FORMATO.ALTO })),
                 yNombre      : Number(resultado.getValue({ name: CONSTANTES.FORMATO.Y_NOMBRE })),
@@ -64,8 +46,5 @@ define(['N/search', '../lib/AS_EtiquetaArticuloConstants'],
         return formatos;
     };
 
-    return {
-        buscarSubsidiarias: buscarSubsidiarias,
-        buscarFormatos    : buscarFormatos,
-    };
+    return { buscarFormatos: buscarFormatos };
 });

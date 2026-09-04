@@ -1,0 +1,21 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>AS_NSP_016_AlertaOrdenCompraPendienteRecepcion</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="true">SERVERSIDESCRIPTING</feature>
+      <feature required="true">CUSTOMRECORDS</feature>
+      <feature required="true">SUBSIDIARIES</feature>
+      <feature required="true">PURCHASEORDERS</feature>
+      <feature required="true">ACCOUNTING</feature>
+      <feature required="false">ADVRECEIVING</feature>
+      <feature required="false">MAILMERGE</feature>
+      <feature required="false">MULTILANGUAGE</feature>
+      <feature required="true">CRM</feature>
+    </features>
+    <objects>
+      <object>custbody_as_correo_notif_email</object>
+      <object>custbody_as_ultimo_fecha_aprobador</object>
+    </objects>
+  </dependencies>
+</manifest>

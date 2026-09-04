@@ -23,8 +23,7 @@ define(['N/ui/serverWidget', '../lib/AS_EtiquetaArticuloConstants', '../reposito
                    + ' | nombre: [' + datos.NOMBRE + ']'
                    + ' | upc: [' + datos.UPC + ']'
                    + ' | subsidiaria: ' + subsidiaria
-                   + ' | formatos: ' + configuracion.formatos.length
-                   + ' | subsidiarias: ' + configuracion.subsidiarias.length,
+                   + ' | formatos: ' + configuracion.formatos.length,
         });
     };
 
@@ -75,10 +74,7 @@ define(['N/ui/serverWidget', '../lib/AS_EtiquetaArticuloConstants', '../reposito
     };
 
     const agregarConfiguracionEtiqueta = (form) => {
-        const configuracion = {
-            subsidiarias: formatoEtiquetaRepository.buscarSubsidiarias(),
-            formatos    : formatoEtiquetaRepository.buscarFormatos(),
-        };
+        const configuracion = { formatos: formatoEtiquetaRepository.buscarFormatos() };
 
         const campo = form.addField({
             id   : CONSTANTES.CAMPO_CONFIGURACION,

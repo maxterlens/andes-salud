@@ -35,16 +35,13 @@ define(['N/currentRecord',
             return;
         }
 
-        const formato = await etiquetaSelector.elegir(
-            configuracion.subsidiarias, configuracion.formatos, datos.subsidiaria);
+        const eleccion = await etiquetaSelector.elegir(configuracion.formatos, datos.subsidiaria);
 
-        if (!formato) {
+        if (!eleccion) {
             return;
         }
 
-        log.debug({ title: 'ETIQUETA FORMATO', details: formato.nombre + ' | ' + JSON.stringify(formato) });
-
-        const zpl = etiquetaZpl.construir(datos, formato);
+        const zpl = etiquetaZpl.construir(datos, eleccion.formato, eleccion.cantidad);
 
         log.debug({ title: 'ETIQUETA ZPL', details: zpl });
 
