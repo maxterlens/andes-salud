@@ -4,6 +4,7 @@
  */
 define(['N/ui/message', 'N/log'], (message, log) => {
 
+    
     // ─── Funcionalidades beforeLoad ───────────────────────────────────────────
 
     /**
@@ -39,7 +40,6 @@ define(['N/ui/message', 'N/log'], (message, log) => {
         //form.clientScriptModulePath = '/SuiteScripts/AndesScripts/Transacciones/AS_FacturaCompra_CS_2.1.js';
     };
 
-    // ─── Triggers (índice público) ───────────────────────────────────────────
 
     return {
         manejarAlertaFacturaPagada,
