@@ -51,7 +51,7 @@ define(['N/search', 'N/ui/dialog'], (search, dialog) => {
         if (!folio) {
             dialog.alert({
                 title: 'Campo requerido',
-                message: 'Debe ingresar el folio.'
+                message: 'Debe ingresar el Reference No.'
             });
             return false;
         }
