@@ -1,0 +1,39 @@
+/**
+ * AS_NSP_022 — Reclasificacion de Factura de Compra a Factoring
+ * @description Lo unico que hace el boton: recargar la misma factura con la marca
+ *              que el User Event lee para encolar la reclasificacion. Toda la
+ *              decision vive del lado del servidor.
+ *
+ * @NApiVersion 2.1
+ * @NScriptType ClientScript
+ * @NModuleScope Public
+ */
+define(['./lib/AS_FactoringConstants'],
+    (CONSTANTES) => {
+
+    const pageInit = () => {
+    };
+
+    // Apaga el boton para que un doble clic no encole dos veces y recarga la misma factura
+    // con la marca que el User Event lee.
+    //
+    // La marca se limpia aqui y no en pageInit porque en modo vista NetSuite solo ejecuta la
+    // funcion del boton: pageInit no corre. Si no se limpiara, cada clic dejaria una marca
+    // mas pegada en la URL.
+    const reclasificarFactoring = () => {
+        const boton = document.getElementById(CONSTANTES.BOTON.ID);
+
+        if (boton) {
+            boton.disabled = true;
+        }
+
+        const marca = CONSTANTES.BOTON.PARAMETRO + '=' + CONSTANTES.BOTON.MARCA;
+
+        window.location.href = window.location.href.split('&' + marca).join('') + '&' + marca;
+    };
+
+    return {
+        pageInit             : pageInit,
+        reclasificarFactoring: reclasificarFactoring,
+    };
+});

@@ -33,6 +33,7 @@ define(['N/ui/message', 'N/log'], (message, log) => {
                 'No realizar cambios sin la autorización previa del encargado de Tesorería.'
         });
 
+        
         // ── Banner inferior (Client Script vía DOM) ──────────────────────────
         // El CS inserta el mismo aviso justo encima de los botones inferiores
         // del formulario, donde también existen controles de guardado.
