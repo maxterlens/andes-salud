@@ -22,7 +22,6 @@
  */
 
 define([], () => {
-
     const saveRecord = (context) => {
 
         const rec      = context.currentRecord;
