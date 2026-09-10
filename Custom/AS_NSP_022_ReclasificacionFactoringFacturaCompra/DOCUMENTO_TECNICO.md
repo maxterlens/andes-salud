@@ -346,6 +346,12 @@ Después de desplegar, en la cuenta:
   usuario recibe el aviso de proceso ocupado. Un deployment de Map/Reduce tampoco encola:
   ejecuta de a una, igual que un Scheduled. (Fuente: comentario en
   `AS_ReclasificacionFactoring_MPRD_2.1.js`)
+- **El aviso de proceso en curso se dispara también con la propia factura.** La marca
+  `as_factoring=T` queda en la URL después del clic, así que recargar la página vuelve a
+  entrar por el camino de encolar. Si el Map/Reduce que se lanzó recién sigue corriendo, la
+  factura todavía no tiene diario, pasa los cinco faltantes y el `submit` falla. Por eso el
+  mensaje no afirma que sea otra factura: `encolarDiario` solo sabe que `submit` falló, no
+  qué factura está procesando el Map/Reduce.
 - **Payment Hold.** Con la factura retenida NetSuite no la lista en el selector de
   transacción relacionada, así que el diario no se puede aplicar. Por eso el User Event
   exige desmarcarlo antes de dejar encolar. (Fuente: versión anterior de este documento)
@@ -472,6 +478,9 @@ terceros.
   nunca. Si la restricción es real por contrato, el faltante es permanente y además
   convendría filtrar el selector de **Proveedor Factoring**, que hoy muestra todos los
   proveedores de la cuenta.
+- **La marca `as_factoring=T` sobrevive en la URL después de encolar.** Recargar la página
+  reintenta el encolado y produce el aviso de proceso en curso sobre la propia factura. El
+  mensaje se redactó para cubrir ese caso, pero el reintento en sí sigue ocurriendo.
 - `obtenerDatosFactura` lee cada campo dos veces: una para el `log.debug`
   `FACTORING DATOS` y otra para el objeto que devuelve.
 - El `3` (Administrator) sigue en `ROLES_AUTORIZADOS`.

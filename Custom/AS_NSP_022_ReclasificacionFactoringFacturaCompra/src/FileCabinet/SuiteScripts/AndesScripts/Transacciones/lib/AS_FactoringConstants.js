@@ -63,7 +63,7 @@ define([], () => {
         TITULO_PENDIENTE: 'Falta completar la factura para reclasificarla',
         TITULO_LISTA    : 'Factura ya reclasificada',
         TITULO_ENCOLADA : 'Reclasificacion en proceso',
-        TITULO_OCUPADO  : 'Hay otra reclasificacion en curso',
+        TITULO_OCUPADO  : 'Reclasificacion en curso',
 
         ENCABEZADO_PENDIENTE: 'Edita la factura y completa lo siguiente antes de reclasificarla a factoring:',
         SIN_APROBAR         : '<b>Estado de aprobación</b>: la factura debe estar <b>Aprobado</b>. Aprueba la'
@@ -80,8 +80,8 @@ define([], () => {
         CON_DIARIO: 'Esta factura ya se reclasifico y no se puede volver a reclasificar.'
                   + ' El diario generado es el ',
 
-        OCUPADO: 'El proceso esta ocupado reclasificando otra factura. Espera unos segundos y vuelve'
-               + ' a presionar el boton: solo puede procesarse una factura a la vez.',
+        OCUPADO: ' Espera unos segundos y recarga la factura'
+               + ' para ver el resultado.',
 
         ENCOLADA: 'Se esta generando el diario que traspasa la deuda al factoring.'
                 + ' Puede demorar unos minutos: vuelve a cargar la factura para ver el resultado.',

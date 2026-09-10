@@ -90,7 +90,7 @@ El botón siempre recarga la misma factura y muestra uno de estos cuatro mensaje
 | **Reclasificacion en proceso** | Todo estaba en orden y el proceso se encoló. El asiento se está generando; puede demorar unos minutos. |
 | **Falta completar la factura para reclasificarla** | La factura no cumple uno o más requisitos. El mensaje lista cuáles. |
 | **Factura ya reclasificada** | Esta factura ya tiene su asiento. El mensaje incluye el enlace al asiento generado. |
-| **Hay otra reclasificacion en curso** | Otro usuario está reclasificando en este momento. Se procesa una factura a la vez: espera unos segundos y vuelve a presionar el botón. |
+| **Reclasificacion en curso** | Hay una reclasificación procesándose y solo se procesa una a la vez. Casi siempre es la de esta misma factura, si acabas de presionar el botón. Espera unos segundos y recarga. |
 
 El botón se desactiva al presionarlo, para que un doble clic no encole el proceso dos
 veces.
@@ -154,7 +154,8 @@ y sean correctos:
 | "Proveedor Factoring: elige la entidad…" | Falta el factor | Editar la factura, elegir el **Proveedor Factoring**, guardar |
 | "Retención del pago: desmarcalo…" | La factura está retenida | Editar la factura, desmarcar **Retención del pago**, guardar |
 | "Proveedor Factoring: … no está habilitado en la subsidiaria …" | El factor elegido no tiene esa subsidiaria en su pestaña Subsidiarias | Elegir otro factor que sí la tenga, o pedir que agreguen esa subsidiaria al proveedor y reintentar |
-| "Hay otra reclasificacion en curso" | Hay otra factura procesándose | Esperar unos segundos y volver a presionar el botón |
+| "Reclasificacion en curso" justo después de presionar el botón | Es tu propia reclasificación: ya se encoló y sigue procesándose | Esperar unos segundos y recargar la factura. El asiento aparece cuando el proceso termina |
+| "Reclasificacion en curso" sin haber presionado el botón | Otro usuario está reclasificando una factura en este momento; esta factura no se encoló | Esperar unos segundos y volver a presionar el botón |
 | Presioné el botón, dice "en proceso", pero la factura no muestra el asiento | El proceso puede demorar unos minutos | Recargar la factura. Si sigue sin aparecer, pedir a desarrollo que revise el log del proceso |
 
 ## Resultado esperado
