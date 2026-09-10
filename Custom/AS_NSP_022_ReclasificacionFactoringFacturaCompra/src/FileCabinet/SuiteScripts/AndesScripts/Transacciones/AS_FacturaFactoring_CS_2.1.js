@@ -14,12 +14,6 @@ define(['./lib/AS_FactoringConstants'],
     const pageInit = () => {
     };
 
-    // Apaga el boton para que un doble clic no encole dos veces y recarga la misma factura
-    // con la marca que el User Event lee.
-    //
-    // La marca se limpia aqui y no en pageInit porque en modo vista NetSuite solo ejecuta la
-    // funcion del boton: pageInit no corre. Si no se limpiara, cada clic dejaria una marca
-    // mas pegada en la URL.
     const reclasificarFactoring = () => {
         const boton = document.getElementById(CONSTANTES.BOTON.ID);
 

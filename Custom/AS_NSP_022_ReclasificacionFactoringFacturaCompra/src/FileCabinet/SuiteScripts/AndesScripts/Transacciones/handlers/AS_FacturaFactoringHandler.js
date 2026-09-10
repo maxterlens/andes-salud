@@ -1,32 +1,17 @@
 /**
  * AS_NSP_022 — Reclasificacion de Factura de Compra a Factoring
- * @description Todo el comportamiento del User Event sobre la Factura de Compra.
- *              Si algo se ve mal en la pantalla de la factura, es aqui.
- *
- *              construirVista hace dos cosas segun como se entro. En una vista
- *              normal solo pinta el boton. Cuando el boton recarga la pagina con
- *              su marca en la URL, decide entre tres finales: la factura ya se
- *              reclasifico y muestra el enlace al diario, le falta algo y muestra
- *              la lista de lo que hay que completar, o esta lista y encola la
- *              tarea que crea el diario.
- *
- *              La lista de faltantes se arma completa de una pasada, no de a uno,
- *              para que el usuario corrija todo junto en vez de descubrir un
- *              pendiente nuevo en cada intento.
- *
- *              El Payment Hold es el faltante que menos se entiende, por eso su
- *              mensaje explica el porque: con la factura retenida NetSuite no la
- *              lista en el select de transaccion relacionada y el diario no se
- *              puede aplicar.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/task', 'N/ui/message', '../lib/AS_FactoringConstants'],
-    (task, message, CONSTANTES) => {
+define(['N/runtime', 'N/task', 'N/ui/message', '../repositories/AS_FacturaCompraRepository', '../lib/AS_FactoringConstants'],
+    (runtime, task, message, facturaCompraRepository, CONSTANTES) => {
 
     const construirVista = (context) => {
         if (context.type !== context.UserEventType.VIEW) {
+            return;
+        }
+
+        if (!CONSTANTES.ROLES_AUTORIZADOS.includes(runtime.getCurrentUser().role)) {
             return;
         }
 
@@ -39,17 +24,19 @@ define(['N/task', 'N/ui/message', '../lib/AS_FactoringConstants'],
         const diario = context.newRecord.getValue({ fieldId: CONSTANTES.CAMPOS.DIARIO });
 
         if (diario) {
+            const nombreDiario = context.newRecord.getText({ fieldId: CONSTANTES.CAMPOS.DIARIO });
+
             avisar(context.form, message.Type.INFORMATION, CONSTANTES.MENSAJES.TITULO_LISTA,
-                   CONSTANTES.MENSAJES.CON_DIARIO + enlaceDiario(diario));
+                   CONSTANTES.MENSAJES.CON_DIARIO + armarEnlaceDiario(diario, nombreDiario));
 
             return;
         }
 
-        const faltantes = faltantesDeLaFactura(context.newRecord);
+        const faltantes = obtenerFaltantes(context.newRecord);
 
         if (faltantes.length) {
             avisar(context.form, message.Type.WARNING, CONSTANTES.MENSAJES.TITULO_PENDIENTE,
-                   listaDeFaltantes(faltantes));
+                   armarListaFaltantes(faltantes));
 
             return;
         }
@@ -75,35 +62,22 @@ define(['N/task', 'N/ui/message', '../lib/AS_FactoringConstants'],
         form.clientScriptModulePath = CONSTANTES.CLIENT_SCRIPT;
     };
 
-    const faltantesDeLaFactura = (factura) => {
+    const obtenerFaltantes = (factura) => {
         const faltantes = [];
+        const factor    = factura.getValue({ fieldId: CONSTANTES.CAMPOS.FACTOR });
 
         if (factura.getValue({ fieldId: CONSTANTES.CAMPOS.APROBACION }) !== CONSTANTES.APROBACION_APROBADA) faltantes.push(CONSTANTES.MENSAJES.SIN_APROBAR);
         if (!factura.getValue({ fieldId: CONSTANTES.CAMPOS.FACTORING })) faltantes.push(CONSTANTES.MENSAJES.SIN_FACTORING);
-        if (!factura.getValue({ fieldId: CONSTANTES.CAMPOS.FACTOR }))    faltantes.push(CONSTANTES.MENSAJES.SIN_FACTOR);
+        if (!factor)                                                     faltantes.push(CONSTANTES.MENSAJES.SIN_FACTOR);
         if (factura.getValue({ fieldId: CONSTANTES.CAMPOS.HOLD }))       faltantes.push(CONSTANTES.MENSAJES.CON_HOLD);
 
+        if (factor) {
+            const subsidiarias = facturaCompraRepository.obtenerSubsidiariasDelFactor(factor);
+
+            if (!subsidiarias.includes(factura.getValue({ fieldId: 'subsidiary' }))) faltantes.push(armarMensajeSubsidiaria(factura));
+        }
+
         return faltantes;
-    };
-
-    const listaDeFaltantes = (faltantes) => {
-        return CONSTANTES.MENSAJES.ENCABEZADO_PENDIENTE
-             + '<ul style="margin:8px 0 0 18px;padding:0;">'
-             + faltantes.map((faltante) => '<li style="margin-bottom:4px;">' + faltante + '</li>').join('')
-             + '</ul>';
-    };
-
-    const enlaceDiario = (idDiario) => {
-        return '<a href="/app/accounting/transactions/transaction.nl?id=' + idDiario + '" target="_blank">'
-             + 'diario ' + idDiario + '</a>.';
-    };
-
-    const avisar = (form, tipo, titulo, texto) => {
-        form.addPageInitMessage({
-            type   : tipo,
-            title  : titulo,
-            message: texto,
-        });
     };
 
     const encolarDiario = (idFactura) => {
@@ -131,6 +105,33 @@ define(['N/task', 'N/ui/message', '../lib/AS_FactoringConstants'],
 
             return false;
         }
+    };
+
+    const armarMensajeSubsidiaria = (factura) => {
+        return CONSTANTES.MENSAJES.SIN_SUBSIDIARIA_INICIO
+             + factura.getText({ fieldId: CONSTANTES.CAMPOS.FACTOR })
+             + CONSTANTES.MENSAJES.SIN_SUBSIDIARIA_MEDIO
+             + factura.getText({ fieldId: 'subsidiary' });
+    };
+
+    const armarListaFaltantes = (faltantes) => {
+        return CONSTANTES.MENSAJES.ENCABEZADO_PENDIENTE
+             + '<ul style="margin:8px 0 0 18px;padding:0;">'
+             + faltantes.map((faltante) => '<li style="margin-bottom:4px;">' + faltante + '</li>').join('')
+             + '</ul>';
+    };
+
+    const armarEnlaceDiario = (idDiario, nombreDiario) => {
+        return '<a href="/app/accounting/transactions/transaction.nl?id=' + idDiario + '" target="_blank">'
+             + nombreDiario + '</a>.';
+    };
+
+    const avisar = (form, tipo, titulo, texto) => {
+        form.addPageInitMessage({
+            type   : tipo,
+            title  : titulo,
+            message: texto,
+        });
     };
 
     return { construirVista: construirVista };

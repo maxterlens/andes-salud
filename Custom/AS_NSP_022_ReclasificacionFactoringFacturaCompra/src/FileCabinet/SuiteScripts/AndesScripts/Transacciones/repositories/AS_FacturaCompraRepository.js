@@ -1,17 +1,5 @@
 /**
  * AS_NSP_022 — Reclasificacion de Factura de Compra a Factoring
- * @description Unico punto del proyecto que lee la Factura de Compra y le escribe
- *              de vuelta el diario generado.
- *
- *              obtenerDatosFactura devuelve todo lo que el diario necesita en una
- *              sola carga: la cabecera contable de la factura mas el factor al que
- *              se le cede la deuda. Incluye el diario ya escrito, porque de ese
- *              dato depende que el handler corte antes de crear uno repetido.
- *
- *              La cuenta que devuelve es la de la propia factura, no una fija: la
- *              linea del debe tiene que golpear la misma cuenta por pagar en la
- *              que quedo la deuda con el proveedor, o la factura no se salda.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -47,6 +35,22 @@ define(['N/record', '../lib/AS_FactoringConstants'],
         };
     };
 
+    const obtenerSubsidiariasDelFactor = (idFactor) => {
+        const factor       = record.load({ type: record.Type.VENDOR, id: idFactor });
+        const cantidad     = factor.getLineCount({ sublistId: 'submachine' });
+        const subsidiarias = [];
+
+        for (let linea = 0; linea < cantidad; linea++) {
+            subsidiarias.push(String(factor.getSublistValue({
+                sublistId: 'submachine',
+                fieldId  : 'subsidiary',
+                line     : linea,
+            })));
+        }
+
+        return subsidiarias;
+    };
+
     const escribirDiario = (idFactura, idDiario) => {
         record.submitFields({
             type  : record.Type.VENDOR_BILL,
@@ -56,7 +60,8 @@ define(['N/record', '../lib/AS_FactoringConstants'],
     };
 
     return {
-        obtenerDatosFactura: obtenerDatosFactura,
-        escribirDiario     : escribirDiario,
+        obtenerDatosFactura         : obtenerDatosFactura,
+        obtenerSubsidiariasDelFactor: obtenerSubsidiariasDelFactor,
+        escribirDiario              : escribirDiario,
     };
 });

@@ -8,7 +8,6 @@
  */
 define([], () => {
 
-    // Campos que ya existen en la cuenta. No se crea ninguno nuevo.
     const CAMPOS = {
         FACTORING: 'custbody_factoring',
         FACTOR   : 'custbody_factoring_vendor',
@@ -18,8 +17,6 @@ define([], () => {
         APROBACION : 'approvalstatus',
     };
 
-    // Columnas del AS_NSP_003. Marcarlas es lo que aplica el diario a la factura
-    // y deja la factura pagada: es la unica diferencia con el flujo actual.
     const COLUMNAS = {
         APLICAR    : 'custcol_as_aplicar_trans_relacionada',
         TRANSACCION: 'custcol_as_transaccion_relacionada',
@@ -35,6 +32,7 @@ define([], () => {
     };
 
     const CLIENT_SCRIPT = '/SuiteScripts/AndesScripts/Transacciones/AS_FacturaFactoring_CS_2.1.js';
+    const ROLES_AUTORIZADOS = [3, 1484, 1520, 1461];
 
     const MAPREDUCE = {
         SCRIPT    : 'customscript_as_mr_reclasif_factoring',
@@ -42,22 +40,15 @@ define([], () => {
         FACTURA   : 'custscript_as_rf_factura',
     };
 
-    // Los dos valores estan confirmados en customrecord_2w_parametros_facturacion:
-    //   andes_salud_factoring_cta_credito_diario = 577  -> 2120005 Factoring por pagar
-    //   andes_salud_factoring_tipo_diario        = 3    -> Factoring
-    // Verificar los dos antes de pasar a Produccion: son ids internos de esta cuenta.
     const CUENTA_FACTORING      = '577';
-
     const TIPO_DIARIO_FACTORING = '3';
-
-    // approvalstatus, mismo campo y mismos valores en la Factura de Compra y en el Diario:
-    // 1 Pendiente de aprobacion, 2 Aprobada, 3 Rechazada
     const APROBACION_APROBADA = '2';
 
     const LOGS = {
         ENCOLADA: 'FACTORING ENCOLADA',
         OCUPADO : 'FACTORING PROCESO OCUPADO',
         CREADO  : 'FACTORING DIARIO CREADO',
+        ASIENTO : 'FACTORING ASIENTO',
         YA_HECHA: 'FACTORING YA RECLASIFICADA',
         DATOS   : 'FACTORING DATOS',
         ERROR   : 'FACTORING ERROR',
@@ -83,6 +74,9 @@ define([], () => {
                             + ' vincularla al diario de factoring. Una vez reclasificada queda pagada, asi que'
                             + ' ya nadie puede pagarle al proveedor original.',
 
+        SIN_SUBSIDIARIA_INICIO: '<b>Proveedor Factoring</b>: ',
+        SIN_SUBSIDIARIA_MEDIO : ' no está habilitado en la subsidiaria ',
+
         CON_DIARIO: 'Esta factura ya se reclasifico y no se puede volver a reclasificar.'
                   + ' El diario generado es el ',
 
@@ -98,6 +92,7 @@ define([], () => {
         COLUMNAS     : COLUMNAS,
         BOTON        : BOTON,
         CLIENT_SCRIPT: CLIENT_SCRIPT,
+        ROLES_AUTORIZADOS: ROLES_AUTORIZADOS,
         MAPREDUCE    : MAPREDUCE,
         CUENTA_FACTORING     : CUENTA_FACTORING,
         TIPO_DIARIO_FACTORING: TIPO_DIARIO_FACTORING,

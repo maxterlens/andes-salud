@@ -1,12 +1,5 @@
 /**
  * AS_NSP_022 — Reclasificacion de Factura de Compra a Factoring
- * @description Entry point del User Event sobre la Factura de Compra. Solo rutea:
- *              el hook lo resuelve AS_FacturaFactoringHandler.
- *
- *              beforeLoad → pinta el boton de reclasificacion y, cuando el boton
- *                           recarga la pagina con su marca, valida la factura y
- *                           encola la tarea que crea el diario.
- *
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
  * @NModuleScope Public

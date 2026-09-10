@@ -1,27 +1,5 @@
 /**
  * AS_NSP_022 — Reclasificacion de Factura de Compra a Factoring
- * @description Unico punto del proyecto que crea el asiento del factoring. Si el
- *              asiento falla al guardar, el problema esta aqui: la cuenta, el
- *              factor, la subsidiaria o las columnas de aplicacion.
- *
- *              El asiento son dos lineas y siempre las mismas. El debe golpea la
- *              cuenta por pagar de la factura con el proveedor original y la deja
- *              saldada; el haber levanta la deuda con el factor en la cuenta de
- *              factoring. No hay movimiento de caja: es un traspaso de acreedor
- *              dentro del pasivo.
- *
- *              Se crea aprobado a proposito. Un asiento en Pending Approval no
- *              impacta el mayor, asi que la factura seguiria abierta y el usuario
- *              veria una reclasificacion que no reclasifico nada.
- *
- *              La transaccion relacionada se escribe por id y no por texto. Por
- *              texto fallaba con la interfaz en espanol: setSublistText busca la
- *              etiqueta que se muestra y esa esta traducida, asi que 'Bill #0002'
- *              no existia como opcion. El id no depende del idioma.
- *
- *              Ese select tampoco lista las facturas con Payment Hold marcado: por
- *              eso el User Event exige desmarcarlo antes de dejar encolar.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -40,11 +18,23 @@ define(['N/record', '../lib/AS_FactoringConstants'],
         agregarLineaDebe(asiento, datos);
         agregarLineaHaber(asiento, datos);
 
-        return asiento.save();
+        const idAsiento = asiento.save();
+
+        log.debug({
+            title  : CONSTANTES.LOGS.ASIENTO,
+            details: 'diario: ' + idAsiento + ' | subsidiaria: ' + datos.subsidiaria
+                   + ' | moneda: ' + datos.moneda + ' | tipo de cambio: ' + datos.tipoCambio
+                   + ' | debe: cuenta ' + datos.cuenta + ' proveedor ' + datos.proveedor
+                   + ' por ' + datos.monto
+                   + ' | haber: cuenta ' + CONSTANTES.CUENTA_FACTORING + ' factor ' + datos.factor
+                   + ' por ' + datos.monto
+                   + ' | aplicado a la factura ' + datos.factura,
+        });
+
+        return idAsiento;
     };
 
     // Cancela la deuda con el proveedor original. Las dos columnas de aplicacion son la
-    // diferencia con el flujo actual: con ellas el AS_NSP_003 deja la factura pagada.
     const agregarLineaDebe = (asiento, datos) => {
         asiento.setSublistValue({ sublistId: 'line', fieldId: 'account', line: 0, value: datos.cuenta });
         asiento.setSublistValue({ sublistId: 'line', fieldId: 'entity',  line: 0, value: datos.proveedor });
@@ -53,15 +43,7 @@ define(['N/record', '../lib/AS_FactoringConstants'],
         asiento.setSublistValue({ sublistId: 'line', fieldId: CONSTANTES.COLUMNAS.FOLIO, line: 0, value: datos.folio });
 
         asiento.setSublistValue({ sublistId: 'line', fieldId: CONSTANTES.COLUMNAS.APLICAR,     line: 0, value: true });
-
-        log.debug({
-            title  : CONSTANTES.LOGS.DATOS,
-            details: 'columna: ' + CONSTANTES.COLUMNAS.TRANSACCION
-                   + ' | id que se envia: [' + datos.factura + ']',
-        });
-
-        asiento.setSublistValue({ sublistId: 'line', fieldId: CONSTANTES.COLUMNAS.TRANSACCION, line: 0,
-                                  value: datos.factura });
+        asiento.setSublistValue({ sublistId: 'line', fieldId: CONSTANTES.COLUMNAS.TRANSACCION, line: 0, value: datos.factura });
     };
 
     // Genera la deuda con el factor
