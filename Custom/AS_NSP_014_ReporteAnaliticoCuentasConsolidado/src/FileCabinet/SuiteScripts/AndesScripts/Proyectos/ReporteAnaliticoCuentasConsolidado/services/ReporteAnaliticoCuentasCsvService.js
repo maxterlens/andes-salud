@@ -39,13 +39,14 @@ define(['N/file'], function (file) {
      * ─────────────────────────────────────────────────────────────────── */
     const CUENTAS_FICHA_PACIENTE = ['1140001'];
 
-    /* ─── Cabecera del XLS (17 columnas) ────────────────────────────── */
+    /* ─── Cabecera del XLS (18 columnas) ────────────────────────────── */
     const XLS_HEADERS = [
         'Id Transaccion',
         'Id Cuenta Contable',
         'Subsidiaria',
         'Tipo de Transaccion',
         'RUT',
+        'Id Entidad',
         'Nombre',
         'Folio',
         'Numero Documento',
@@ -420,7 +421,7 @@ define(['N/file'], function (file) {
             encoding: file.Encoding.UTF_8,
         });
 
-        /* Filas de datos — 17 columnas */
+        /* Filas de datos — 18 columnas */
         for (const row of rowsXls) {
             var xlsRow = [
                 row[0],                           // Id Transaccion
@@ -428,6 +429,7 @@ define(['N/file'], function (file) {
                 row[2],                           // Subsidiaria
                 row[3],                           // Tipo de Transaccion
                 row[19] || '',                    // RUT (directo del CSV)
+                row[17],                          // Id Entidad
                 row[4],                           // Nombre
                 row[5],                           // Folio
                 row[6],                           // Numero Documento
