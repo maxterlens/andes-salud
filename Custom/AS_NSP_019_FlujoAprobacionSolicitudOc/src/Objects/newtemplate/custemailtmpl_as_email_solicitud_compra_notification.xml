@@ -1,0 +1,12 @@
+<emailtemplate scriptid="custemailtmpl_as_email_solicitud_compra_notification">
+  <addcompanyaddress>T</addcompanyaddress>
+  <addunsubscribelink>T</addunsubscribelink>
+  <description></description>
+  <isinactive>F</isinactive>
+  <isprivate>F</isprivate>
+  <mediaitem></mediaitem>
+  <name>Correo Notificación Solicitud de Compra</name>
+  <recordtype>TRANSACTION</recordtype>
+  <subject>Aprobación de Solicitud de Compra</subject>
+  <usesmedia>F</usesmedia>
+</emailtemplate>
