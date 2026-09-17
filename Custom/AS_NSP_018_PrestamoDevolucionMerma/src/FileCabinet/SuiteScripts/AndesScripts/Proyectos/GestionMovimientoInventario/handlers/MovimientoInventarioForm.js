@@ -1,5 +1,11 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
+ *
+ * CHANGELOG 2026-09-17:
+ * - [FEAT] Las columnas Disponible, Cantidad y Cantidad a Devolver pasan de
+ *          INTEGER a FLOAT para aceptar cantidades con decimales en los tres
+ *          tipos de movimiento.
+ *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -86,6 +92,32 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
             source: 'subsidiary',
         });
         campoSubsidiaria.isMandatory = true;
+
+        let cuentasAjuste = [];
+
+        if (nombreTipo === CONSTANTES.TIPOS.MERMA) {
+            cuentasAjuste = movimientoRepository.listarCuentasAjuste();
+
+            const campoCuentaAjuste = form.addField({
+                id   : 'custpage_cuenta_ajuste',
+                type : serverWidget.FieldType.SELECT,
+                label: 'Cuenta de Ajuste',
+            });
+            campoCuentaAjuste.isMandatory = true;
+            campoCuentaAjuste.addSelectOption({ value: '', text: '' });
+
+            if (movimiento) {
+                const subsidiariaGuardada = String(movimiento.getValue({ fieldId: 'custrecord_as_mov_subsidiaria' }));
+
+                cuentasAjuste.forEach((cuenta) => {
+                    if (cuenta.subsidiarias.indexOf(subsidiariaGuardada) === -1) {
+                        return;
+                    }
+
+                    campoCuentaAjuste.addSelectOption({ value: cuenta.id, text: cuenta.nombre });
+                });
+            }
+        }
         let prestamosPendientes = [];
 
         if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION) {
@@ -127,7 +159,7 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
         const campoFrom = form.addField({
             id   : 'custpage_ubicacion',
             type : serverWidget.FieldType.SELECT,
-            label: 'Ubicacion Origen',
+            label: CONSTANTES.ETIQUETAS_UBICACION[nombreTipo] || 'Ubicacion Origen',
         });
         campoFrom.isMandatory = true;
         campoFrom.addSelectOption({ value: '', text: '' });
@@ -167,13 +199,18 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
         campoUbicaciones.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         campoUbicaciones.defaultValue = JSON.stringify({
             esPrestamo : (nombreTipo === CONSTANTES.TIPOS.PRESTAMO),
+            esMerma    : (nombreTipo === CONSTANTES.TIPOS.MERMA),
             ubicaciones: ubicaciones,
             prestamos  : prestamosPendientes,
             entidades  : movimientoRepository.listarEntidadesPorSubsidiaria(),
+            cuentas    : cuentasAjuste,
         });
 
         if (nombreTipo === CONSTANTES.TIPOS.MERMA) {
             campoEntidad.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+
+            campoTo.isMandatory = false;
+            campoTo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         }
 
         if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION && !idPrestamo) {
@@ -233,7 +270,7 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
 
         sublista.addField({
             id   : 'custpage_col_disponible',
-            type : serverWidget.FieldType.INTEGER,
+            type : serverWidget.FieldType.FLOAT,
             label: 'Disponible',
         }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
 
@@ -247,7 +284,7 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
 
         sublista.addField({
             id   : 'custpage_col_cantidad',
-            type : serverWidget.FieldType.INTEGER,
+            type : serverWidget.FieldType.FLOAT,
             label: etiquetaCantidad,
         }).isMandatory = true;
     }
@@ -307,7 +344,7 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
 
         sublista.addField({
             id   : 'custpage_col_a_devolver',
-            type : serverWidget.FieldType.INTEGER,
+            type : serverWidget.FieldType.FLOAT,
             label: 'Cantidad a Devolver',
         });
 
@@ -398,6 +435,9 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
 
             campoMotivo.defaultValue = movimiento.getValue({ fieldId: 'custrecord_as_mov_motivo' });
             campoMotivo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
+
+            form.getField({ id: 'custpage_cuenta_ajuste' }).defaultValue =
+                movimiento.getValue({ fieldId: 'custrecord_as_mov_cuenta_ajuste' });
         }
 
         const entidadGuardada = movimiento.getValue({ fieldId: 'custrecord_as_mov_entidad_receptora' });
@@ -429,10 +469,14 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
         campoFrom.defaultValue        = ubicacionOrigen;
         campoTo.defaultValue          = ubicacionDestino;
 
+        const displayDestino = (nombreTipo === CONSTANTES.TIPOS.MERMA)
+                             ? serverWidget.FieldDisplayType.HIDDEN
+                             : serverWidget.FieldDisplayType.DISABLED;
+
         campoSubsidiaria.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
         campoServicio.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
         campoFrom.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-        campoTo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
+        campoTo.updateDisplayType({ displayType: displayDestino });
 
         precargarDetalleSalida(form, movimiento.id, ubicacionOrigen);
 

@@ -195,6 +195,15 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/Movimiento
     }
 
     function cargarLotesDelArticulo(registroActual, lotes) {
+        const campoLote = registroActual.getSublistField({
+            sublistId: 'custpage_sl_detalle',
+            fieldId  : 'custpage_col_lote',
+            line     : registroActual.getCurrentSublistIndex({ sublistId: 'custpage_sl_detalle' }),
+        });
+
+        campoLote.removeSelectOption({ value: null });
+        campoLote.insertSelectOption({ value: '', text: '' });
+
         if (!lotes.length) {
             return;
         }
@@ -202,12 +211,6 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/Movimiento
         const articulo = registroActual.getCurrentSublistText({
             sublistId: 'custpage_sl_detalle',
             fieldId  : 'custpage_col_articulo',
-        });
-
-        const campoLote = registroActual.getSublistField({
-            sublistId: 'custpage_sl_detalle',
-            fieldId  : 'custpage_col_lote',
-            line     : registroActual.getCurrentSublistIndex({ sublistId: 'custpage_sl_detalle' }),
         });
 
         const idArticulo = registroActual.getCurrentSublistValue({
@@ -328,6 +331,29 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/Movimiento
 
         cargarUbicacionesDeSubsidiaria(registroActual);
         cargarEntidadesDeSubsidiaria(registroActual);
+        cargarCuentasDeSubsidiaria(registroActual);
+    }
+
+    function cargarCuentasDeSubsidiaria(registroActual) {
+        const campoCuenta = registroActual.getField({ fieldId: 'custpage_cuenta_ajuste' });
+
+        if (!campoCuenta) {
+            return;
+        }
+
+        const subsidiaria = registroActual.getValue({ fieldId: 'custpage_subsidiaria' });
+        const datos       = JSON.parse(registroActual.getValue({ fieldId: 'custpage_ubicaciones_data' }));
+
+        campoCuenta.removeSelectOption({ value: null });
+        campoCuenta.insertSelectOption({ value: '', text: '' });
+
+        datos.cuentas.forEach((cuenta) => {
+            if (cuenta.subsidiarias.indexOf(subsidiaria) === -1) {
+                return;
+            }
+
+            campoCuenta.insertSelectOption({ value: cuenta.id, text: cuenta.nombre });
+        });
     }
 
     function cargarEntidadesDeSubsidiaria(registroActual) {
@@ -339,6 +365,10 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/Movimiento
 
         const subsidiaria = registroActual.getValue({ fieldId: 'custpage_subsidiaria' });
         const datos       = JSON.parse(registroActual.getValue({ fieldId: 'custpage_ubicaciones_data' }));
+
+        if (datos.esMerma) {
+            return;
+        }
 
         campoEntidad.removeSelectOption({ value: null });
         campoEntidad.insertSelectOption({ value: '', text: '' });
@@ -384,8 +414,10 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/Movimiento
         campoFrom.removeSelectOption({ value: null });
         campoFrom.insertSelectOption({ value: '', text: '' });
 
-        campoTo.removeSelectOption({ value: null });
-        campoTo.insertSelectOption({ value: '', text: '' });
+        if (!datos.esMerma) {
+            campoTo.removeSelectOption({ value: null });
+            campoTo.insertSelectOption({ value: '', text: '' });
+        }
 
         datos.ubicaciones.forEach((ubicacion) => {
             if (ubicacion.subsidiaria !== subsidiaria) {
@@ -394,6 +426,10 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/Movimiento
 
             if (!datos.esPrestamo || !ubicacion.esBodegaPrestamo) {
                 campoFrom.insertSelectOption({ value: ubicacion.id, text: ubicacion.nombre });
+            }
+
+            if (datos.esMerma) {
+                return;
             }
 
             if (!datos.esPrestamo || ubicacion.esBodegaPrestamo) {
@@ -476,6 +512,19 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/Movimiento
         });
     }
 
+    function generarAjusteMerma() {
+        avisarProcesando('Se esta generando el ajuste de inventario de la merma.');
+
+        window.location.href = url.resolveScript({
+            scriptId    : CONSTANTES.SUITELET.SCRIPT,
+            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
+            params      : {
+                op          : CONSTANTES.OPERACIONES.MERMAR,
+                idMovimiento: currentRecord.get().id,
+            },
+        });
+    }
+
     return {
         saveRecord                : saveRecord,
         fieldChanged              : fieldChanged,
@@ -484,5 +533,6 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/Movimiento
         anularMovimientoInventario: anularMovimientoInventario,
         generarTransferPrestamo   : generarTransferPrestamo,
         generarTransferDevolucion : generarTransferDevolucion,
+        generarAjusteMerma        : generarAjusteMerma,
     };
 });

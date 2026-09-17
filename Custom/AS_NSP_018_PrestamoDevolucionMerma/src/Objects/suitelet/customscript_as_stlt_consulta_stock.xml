@@ -1,0 +1,25 @@
+<suitelet scriptid="customscript_as_stlt_consulta_stock">
+  <description>Herramienta de apoyo a desarrollo y QA: lista los articulos con stock disponible de una ubicacion, para elegir articulos validos antes de probar un Prestamo, una Devolucion o una Merma. Solo consulta, no crea ni modifica nada.</description>
+  <isinactive>F</isinactive>
+  <name>AS Consulta Stock por Ubicacion STLT</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/AS_ConsultaStock_STLT_2.1.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_stlt_consulta_stock">
+      <allemployees>F</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>F</allroles>
+      <audslctrole>ADMINISTRATOR</audslctrole>
+      <eventtype></eventtype>
+      <isdeployed>T</isdeployed>
+      <isonline>F</isonline>
+      <loglevel>DEBUG</loglevel>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>RELEASED</status>
+      <title>AS Consulta Stock por Ubicacion STLT</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>

@@ -67,6 +67,7 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
 
         context.form.getField({ id: 'custrecord_as_mov_fecha' }).label          = CONSTANTES.ETIQUETAS_FECHA[tipo] || 'Fecha';
         context.form.getField({ id: 'custrecord_as_mov_usuario_resp' }).label   = CONSTANTES.ETIQUETAS_RESPONSABLE[tipo] || 'Usuario Responsable';
+        context.form.getField({ id: 'custrecord_as_mov_ubicacion' }).label      = CONSTANTES.ETIQUETAS_UBICACION[tipo] || 'Ubicacion Origen';
 
         if (!esVista) {
             CAMPOS_BLOQUEADOS_EN_EDICION.forEach((idCampo) => {
@@ -78,10 +79,14 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
         if (tipo !== CONSTANTES.TIPOS.MERMA) {
             context.form.getField({ id: 'custrecord_as_mov_motivo' })
                 .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+            context.form.getField({ id: 'custrecord_as_mov_cuenta_ajuste' })
+                .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         }
 
         if (tipo === CONSTANTES.TIPOS.MERMA) {
             context.form.getField({ id: 'custrecord_as_mov_entidad_receptora' })
+                .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+            context.form.getField({ id: 'custrecord_as_mov_ubicacion_dest' })
                 .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         }
 
@@ -254,6 +259,14 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
                 id          : 'custpage_btn_devolver',
                 label       : 'Procesar Devolucion',
                 functionName: 'generarTransferDevolucion',
+            });
+        }
+
+        if (tipo === CONSTANTES.TIPOS.MERMA && estado === CONSTANTES.ESTADOS.PENDIENTE_PROCESAR) {
+            context.form.addButton({
+                id          : 'custpage_btn_mermar',
+                label       : 'Procesar Merma',
+                functionName: 'generarAjusteMerma',
             });
         }
     }

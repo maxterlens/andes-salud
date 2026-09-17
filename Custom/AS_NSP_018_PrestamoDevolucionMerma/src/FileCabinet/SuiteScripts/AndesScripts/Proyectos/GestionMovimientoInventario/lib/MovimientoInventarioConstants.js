@@ -36,6 +36,12 @@ define([], () => {
         Merma     : 'Responsable de la Merma',
     };
 
+    const ETIQUETAS_UBICACION = {
+        Prestamo  : 'Ubicacion Origen',
+        Devolucion: 'Ubicacion Origen',
+        Merma     : 'Ubicacion de la Merma',
+    };
+
     const LOGS = {
         REGISTRADO: 'MOVIMIENTO REGISTRADO',
         PROCESADO : 'MOVIMIENTO PROCESADO',
@@ -58,6 +64,7 @@ define([], () => {
         DETALLE   : 'customrecord_as_mov_inventario_det',
         RECEPTOR  : 'customrecord_as_receptor_subsidiaria',
         TRASLADO  : 'inventorytransfer',
+        AJUSTE    : 'inventoryadjustment',
     };
 
     const LISTAS = {
@@ -76,6 +83,7 @@ define([], () => {
         GUARDADO  : 'guardado',
         PROCESAR  : 'procesar',
         DEVOLVER  : 'devolver',
+        MERMAR    : 'mermar',
         ANULAR    : 'anular',
         IMPRIMIR  : 'imprimir',
         DISPONIBLE: 'disponible',
@@ -90,6 +98,8 @@ define([], () => {
     
     const ROLES_AUTORIZADOS = [3, 1371];
 
+    const TIPOS_CUENTA_AJUSTE = ['Expense', 'COGS', 'OthExpense'];
+
     return {
         TIPOS      : TIPOS,
         ORDEN_TIPOS: ORDEN_TIPOS,
@@ -99,6 +109,7 @@ define([], () => {
 
         ETIQUETAS_FECHA      : ETIQUETAS_FECHA,
         ETIQUETAS_RESPONSABLE: ETIQUETAS_RESPONSABLE,
+        ETIQUETAS_UBICACION  : ETIQUETAS_UBICACION,
         ETIQUETAS_DETALLE    : ETIQUETAS_DETALLE,
 
         RECORDS: RECORDS,
@@ -109,7 +120,8 @@ define([], () => {
         CLIENT_SCRIPT: CLIENT_SCRIPT,
         PLANTILLAS   : PLANTILLAS,
 
-        LOGS             : LOGS,
-        ROLES_AUTORIZADOS: ROLES_AUTORIZADOS,
+        LOGS               : LOGS,
+        ROLES_AUTORIZADOS  : ROLES_AUTORIZADOS,
+        TIPOS_CUENTA_AJUSTE: TIPOS_CUENTA_AJUSTE,
     };
 });

@@ -116,6 +116,15 @@
           <sameRowAsPrevious>F</sameRowAsPrevious>
         </field>
         <field>
+          <id>[scriptid=customrecord_as_movimiento_inventario.custrecord_as_mov_cuenta_ajuste]</id>
+          <label>Cuenta de Ajuste</label>
+          <visible>T</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
           <id>[scriptid=customrecord_as_movimiento_inventario.custrecord_as_mov_prestamo_ref]</id>
           <label>Prestamo Relacionado</label>
           <visible>T</visible>

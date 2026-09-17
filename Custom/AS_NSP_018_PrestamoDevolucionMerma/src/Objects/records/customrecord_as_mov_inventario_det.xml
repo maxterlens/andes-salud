@@ -172,7 +172,7 @@
       <displaywidth></displaywidth>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
-      <fieldtype>INTEGER</fieldtype>
+      <fieldtype>FLOAT</fieldtype>
       <globalsearch>F</globalsearch>
       <help></help>
       <isformula>F</isformula>
@@ -182,7 +182,7 @@
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
-      <minvalue>1</minvalue>
+      <minvalue>0</minvalue>
       <onparentdelete></onparentdelete>
       <parentsubtab></parentsubtab>
       <rolerestrict>F</rolerestrict>
@@ -211,7 +211,7 @@
       <displaywidth></displaywidth>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
-      <fieldtype>INTEGER</fieldtype>
+      <fieldtype>FLOAT</fieldtype>
       <globalsearch>F</globalsearch>
       <help></help>
       <isformula>F</isformula>
@@ -250,7 +250,7 @@
       <displaywidth></displaywidth>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
-      <fieldtype>INTEGER</fieldtype>
+      <fieldtype>FLOAT</fieldtype>
       <globalsearch>F</globalsearch>
       <help></help>
       <isformula>F</isformula>

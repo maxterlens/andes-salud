@@ -1,10 +1,17 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
+ *
+ * CHANGELOG 2026-09-17:
+ * - [FEAT] Las cantidades de Prestamo, Devolucion y Merma aceptan decimales. La
+ *          cantidad que llega en el request se lee con format.parse: el campo
+ *          FLOAT del Suitelet la envia con el separador decimal del usuario
+ *          (es_ES usa coma) y Number('0,5') daria NaN.
+ *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConstants', '../repositories/MovimientoInventarioRepository', '../repositories/InventoryTransferRepository'],
-    (redirect, error, runtime, CONSTANTES, movimientoRepository, inventoryTransferRepository) => {
+define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../lib/MovimientoInventarioConstants', '../repositories/MovimientoInventarioRepository', '../repositories/InventoryTransferRepository'],
+    (redirect, error, runtime, format, CONSTANTES, movimientoRepository, inventoryTransferRepository) => {
 
     function validarPermisoEscritura() {
         if (CONSTANTES.ROLES_AUTORIZADOS.includes(runtime.getCurrentUser().role)) {
@@ -30,6 +37,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
             ubicacionDestino  : request.parameters.custpage_ubicacion_dest,
             usuarioResponsable: request.parameters.custpage_usuario_resp,
             motivo            : request.parameters.custpage_motivo,
+            cuentaAjuste      : request.parameters.custpage_cuenta_ajuste,
             prestamo          : request.parameters.custpage_prestamo_ref,
             entidadReceptora  : request.parameters.custpage_entidad_receptora,
             comentarios       : request.parameters.custpage_comentarios,
@@ -71,7 +79,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
 
             if (nombreTipo !== CONSTANTES.TIPOS.DEVOLUCION) {
                 for (let i = 0; i < totalLineas; i++) {
-                    if (Number(request.getSublistValue({ group: 'custpage_sl_detalle', name: 'custpage_col_cantidad', line: i })) <= 0) {
+                    if (format.parse({ value: request.getSublistValue({ group: 'custpage_sl_detalle', name: 'custpage_col_cantidad', line: i }), type: format.Type.FLOAT }) <= 0) {
                         throw error.create({
                             name     : 'AS_CANTIDAD_INVALIDA',
                             message  : 'La cantidad de cada articulo tiene que ser mayor que cero.',
@@ -85,7 +93,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
                 let lineasConCantidad = 0;
 
                 for (let i = 0; i < totalLineas; i++) {
-                    if (Number(request.getSublistValue({ group: 'custpage_sl_detalle', name: 'custpage_col_a_devolver', line: i })) > 0) {
+                    if (format.parse({ value: request.getSublistValue({ group: 'custpage_sl_detalle', name: 'custpage_col_a_devolver', line: i }), type: format.Type.FLOAT }) > 0) {
                         lineasConCantidad++;
                     }
                 }
@@ -114,6 +122,10 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
                 comentarios       : parametros.comentarios,
             });
 
+            if (nombreTipo === CONSTANTES.TIPOS.MERMA) {
+                movimientoRepository.actualizarCuentaAjuste(idMovimiento, parametros.cuentaAjuste);
+            }
+
             if (rehaceDetalle) {
                 movimientoRepository.eliminarLineasMovimiento(idMovimiento);
             }
@@ -139,6 +151,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
                 estado             : movimientoRepository.obtenerIdEstadoMovimiento(CONSTANTES.ESTADOS.PENDIENTE_PROCESAR),
                 usuarioResponsable : parametros.usuarioResponsable,
                 motivo             : parametros.motivo,
+                cuentaAjuste       : parametros.cuentaAjuste,
                 prestamoRelacionado: parametros.prestamo,
                 entidadReceptora   : parametros.entidadReceptora,
                 comentarios        : parametros.comentarios,
@@ -179,10 +192,13 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
             name : 'custpage_col_articulo',
             line : linea,
         });
-        const cantidad = request.getSublistValue({
-            group: 'custpage_sl_detalle',
-            name : 'custpage_col_cantidad',
-            line : linea,
+        const cantidad = format.parse({
+            value: request.getSublistValue({
+                group: 'custpage_sl_detalle',
+                name : 'custpage_col_cantidad',
+                line : linea,
+            }),
+            type : format.Type.FLOAT,
         });
         const lote = request.getSublistValue({
             group: 'custpage_sl_detalle',
@@ -206,11 +222,14 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
             name : 'custpage_col_articulo_id',
             line : linea,
         });
-        const cantidad = Number(request.getSublistValue({
-            group: 'custpage_sl_detalle',
-            name : 'custpage_col_a_devolver',
-            line : linea,
-        }));
+        const cantidad = format.parse({
+            value: request.getSublistValue({
+                group: 'custpage_sl_detalle',
+                name : 'custpage_col_a_devolver',
+                line : linea,
+            }),
+            type : format.Type.FLOAT,
+        });
 
         if (cantidad <= 0) {
             return null;

@@ -8,14 +8,15 @@
  *                                   movimiento.
  *              GET op=procesar    → genera el traslado del prestamo indicado.
  *              GET op=devolver    → genera el traslado de la devolucion indicada.
+ *              GET op=mermar      → genera el ajuste de inventario de la merma.
  *              GET op=disponible  → responde en JSON el stock de un articulo.
  *              GET op=anular      → anula el movimiento indicado.
  *              GET op=imprimir    → devuelve el comprobante en PDF.
  *              POST               → guarda la cabecera y sus lineas de detalle,
  *                                   o actualiza el movimiento que se edita.
  *
- *              Las cuatro que escriben -guardar, procesar, devolver y anular-
- *              pasan antes por validarPermisoEscritura. Las tres que solo leen
+ *              Las cinco que escriben -guardar, procesar, devolver, mermar y
+ *              anular- pasan antes por validarPermisoEscritura. Las tres que solo leen
  *              van directo: el formulario no guarda nada por si solo, el
  *              comprobante lo necesita quien recibe el material, y el stock lo
  *              consulta el propio formulario.
@@ -30,8 +31,8 @@
  * @scriptid     customscript_as_stlt_movimiento_inv
  * @deploymentid customdeploy_as_stlt_movimiento_inv
  */
-define(['./lib/MovimientoInventarioConstants', './handlers/MovimientoInventarioForm', './handlers/MovimientoInventarioHandler', './handlers/PrestamoHandler', './handlers/DevolucionHandler', './handlers/ImpresionHandler'],
-    (CONSTANTES, formulario, movimientoHandler, prestamoHandler, devolucionHandler, impresionHandler) => {
+define(['./lib/MovimientoInventarioConstants', './handlers/MovimientoInventarioForm', './handlers/MovimientoInventarioHandler', './handlers/PrestamoHandler', './handlers/DevolucionHandler', './handlers/AS_MermaHandler', './handlers/ImpresionHandler'],
+    (CONSTANTES, formulario, movimientoHandler, prestamoHandler, devolucionHandler, mermaHandler, impresionHandler) => {
 
     const OPERACIONES = CONSTANTES.OPERACIONES;
     
@@ -48,6 +49,9 @@ define(['./lib/MovimientoInventarioConstants', './handlers/MovimientoInventarioF
             } else if (parametros.operacion === OPERACIONES.DEVOLVER) {
                 movimientoHandler.validarPermisoEscritura();
                 devolucionHandler.generarTransferDevolucion(context);
+            } else if (parametros.operacion === OPERACIONES.MERMAR) {
+                movimientoHandler.validarPermisoEscritura();
+                mermaHandler.generarAjusteMerma(context);
             } else if (parametros.operacion === OPERACIONES.ANULAR) {
                 movimientoHandler.validarPermisoEscritura();
                 movimientoHandler.anularMovimientoInventario(context);

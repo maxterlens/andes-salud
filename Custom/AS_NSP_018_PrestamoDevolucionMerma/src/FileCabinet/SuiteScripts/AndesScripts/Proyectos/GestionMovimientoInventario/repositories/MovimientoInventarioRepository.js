@@ -51,6 +51,7 @@ define(['N/record', 'N/search', 'N/query', '../lib/MovimientoInventarioConstants
         cabecera.setValue({ fieldId: 'custrecord_as_mov_estado',         value: datos.estado });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_usuario_resp',   value: datos.usuarioResponsable });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_motivo',         value: datos.motivo });
+        cabecera.setValue({ fieldId: 'custrecord_as_mov_cuenta_ajuste',  value: datos.cuentaAjuste });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_prestamo_ref',   value: datos.prestamoRelacionado });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_entidad_receptora', value: datos.entidadReceptora });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_comentarios',    value: datos.comentarios });
@@ -70,6 +71,14 @@ define(['N/record', 'N/search', 'N/query', '../lib/MovimientoInventarioConstants
                 custrecord_as_mov_usuario_resp: datos.usuarioResponsable,
                 custrecord_as_mov_comentarios : datos.comentarios,
             },
+        });
+    }
+
+    function actualizarCuentaAjuste(idMovimiento, cuentaAjuste) {
+        record.submitFields({
+            type  : CONSTANTES.RECORDS.MOVIMIENTO,
+            id    : idMovimiento,
+            values: { custrecord_as_mov_cuenta_ajuste: cuentaAjuste },
         });
     }
 
@@ -237,6 +246,29 @@ define(['N/record', 'N/search', 'N/query', '../lib/MovimientoInventarioConstants
         }));
     }
 
+    function listarCuentasAjuste() {
+        const tipos = CONSTANTES.TIPOS_CUENTA_AJUSTE;
+
+        const filas = query.runSuiteQL({
+            query: [
+                'SELECT a.id AS id,',
+                '       a.accountsearchdisplayname AS nombre,',
+                '       a.subsidiary AS subsidiarias',
+                'FROM account a',
+                'WHERE a.isinactive = ?',
+                '  AND a.accttype IN (' + tipos.map(() => '?').join(', ') + ')',
+                'ORDER BY a.accountsearchdisplayname',
+            ].join(' '),
+            params: ['F'].concat(tipos),
+        }).asMappedResults();
+
+        return filas.map((fila) => ({
+            id          : String(fila.id),
+            nombre      : fila.nombre,
+            subsidiarias: String(fila.subsidiarias).split(',').map((subsidiaria) => subsidiaria.trim()),
+        }));
+    }
+
     function listarPrestamosPendientes() {
         const filas = query.runSuiteQL({
             query: [
@@ -293,6 +325,7 @@ define(['N/record', 'N/search', 'N/query', '../lib/MovimientoInventarioConstants
         obtenerEstadoMovimiento        : obtenerEstadoMovimiento,
         crearMovimiento                : crearMovimiento,
         actualizarDatosMovimiento      : actualizarDatosMovimiento,
+        actualizarCuentaAjuste         : actualizarCuentaAjuste,
         actualizarEstadoMovimiento     : actualizarEstadoMovimiento,
         actualizarProcesoMovimiento    : actualizarProcesoMovimiento,
         crearLineaDetalle              : crearLineaDetalle,
@@ -306,6 +339,7 @@ define(['N/record', 'N/search', 'N/query', '../lib/MovimientoInventarioConstants
         listarMotivosBaja              : listarMotivosBaja,
         listarUbicacionesPorSubsidiaria: listarUbicacionesPorSubsidiaria,
         listarEntidadesPorSubsidiaria  : listarEntidadesPorSubsidiaria,
+        listarCuentasAjuste            : listarCuentasAjuste,
         listarPrestamosPendientes      : listarPrestamosPendientes,
     };
 });

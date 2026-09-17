@@ -1,5 +1,12 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
+ *
+ * CHANGELOG 2026-09-17:
+ * - [FEAT] Las cantidades aceptan decimales. Lo devuelto y lo pendiente se
+ *          redondean a 5 decimales al recalcularse: sin eso 0.3 - 0.1 - 0.2
+ *          deja 2.7e-17 pendiente, el prestamo nunca llega a Devuelto Total y
+ *          sigue apareciendo en el selector de devoluciones.
+ *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -124,8 +131,8 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
         lineas.forEach((linea) => {
             const original = pendientePorLinea[linea.lineaPrestamo];
 
-            const devuelta  = original.devuelta + linea.cantidad;
-            const pendiente = original.pendiente - linea.cantidad;
+            const devuelta  = Math.round((original.devuelta + linea.cantidad) * 100000) / 100000;
+            const pendiente = Math.round((original.pendiente - linea.cantidad) * 100000) / 100000;
 
             movimientoRepository.actualizarCantidadesDevolucion(original.id, devuelta, pendiente);
         });
@@ -182,8 +189,8 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
             if (porSaltar > 0) {
                 const salta = Math.min(porSaltar, quedan);
 
-                porSaltar -= salta;
-                quedan    -= salta;
+                porSaltar = Math.round((porSaltar - salta) * 100000) / 100000;
+                quedan    = Math.round((quedan - salta) * 100000) / 100000;
             }
 
             if (quedan <= 0) {
@@ -192,7 +199,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
 
             const toma = Math.min(porTomar, quedan);
 
-            porTomar -= toma;
+            porTomar = Math.round((porTomar - toma) * 100000) / 100000;
 
             tomados.push({
                 numeroInventario: lote.numeroInventario,
