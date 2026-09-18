@@ -38,6 +38,19 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
 
     function construirVista(context) {
         const esVista = (context.type === context.UserEventType.VIEW);
+        const rolAutorizado = CONSTANTES.ROLES_AUTORIZADOS.includes(runtime.getCurrentUser().role);
+        const intentaEscribir = context.type === context.UserEventType.CREATE
+                             || context.type === context.UserEventType.COPY
+                             || context.type === context.UserEventType.EDIT;
+
+        if (!rolAutorizado && intentaEscribir) {
+            redirect.toSuitelet({
+                scriptId    : CONSTANTES.SUITELET.SCRIPT,
+                deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
+            });
+
+            return;
+        }
 
         if (context.type === context.UserEventType.CREATE || context.type === context.UserEventType.COPY) {
             redirect.toSuitelet({
@@ -107,8 +120,6 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
         if (!esVista) {
             return;
         }
-
-        const rolAutorizado = CONSTANTES.ROLES_AUTORIZADOS.includes(runtime.getCurrentUser().role);
 
         pintarDetalle(context, tipo);
 
@@ -213,6 +224,11 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
             context.form.removeButton({ id: 'edit' });
         }
 
+        if (!rolAutorizado) {
+            context.form.removeButton({ id: 'delete' });
+            context.form.removeButton({ id: 'makecopy' });
+        }
+
         context.form.clientScriptModulePath = CONSTANTES.CLIENT_SCRIPT;
 
         if (rolAutorizado) {
@@ -271,6 +287,21 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
     }
 
     function validarEdicion(context) {
+        const esEscritura = context.type === context.UserEventType.CREATE
+                         || context.type === context.UserEventType.COPY
+                         || context.type === context.UserEventType.EDIT
+                         || context.type === context.UserEventType.XEDIT
+                         || context.type === context.UserEventType.DELETE;
+
+        if (esEscritura
+            && !CONSTANTES.ROLES_AUTORIZADOS.includes(runtime.getCurrentUser().role)) {
+            throw error.create({
+                name     : 'AS_ROL_NO_AUTORIZADO',
+                message  : 'Tu rol es de solo consulta. No puedes crear, editar ni eliminar movimientos de inventario.',
+                notifyOff: true,
+            });
+        }
+
         if (context.type !== context.UserEventType.EDIT) {
             return;
         }

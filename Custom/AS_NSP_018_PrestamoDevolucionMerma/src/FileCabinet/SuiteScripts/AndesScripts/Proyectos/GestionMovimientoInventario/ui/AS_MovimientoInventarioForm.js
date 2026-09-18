@@ -3,10 +3,15 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_ConsultaStockRepository'],
-    (serverWidget, CONSTANTES, movimientoRepository, consultaStockRepository) => {
+define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_ConsultaStockRepository'],
+    (serverWidget, message, runtime, CONSTANTES, movimientoRepository, consultaStockRepository) => {
 
     function renderizarFormulario(context) {
+        if (!CONSTANTES.ROLES_AUTORIZADOS.includes(runtime.getCurrentUser().role)) {
+            renderizarAvisoSoloConsulta(context);
+            return;
+        }
+
         const parametros = obtenerParametrosFormulario(context.request);
 
         const idMovimiento = parametros.movimiento;
@@ -270,6 +275,28 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repo
         if (nombreTipo !== CONSTANTES.TIPOS.DEVOLUCION || idPrestamo) {
             form.addSubmitButton({ label: etiquetaGuardar });
         }
+
+        context.response.writePage(form);
+    }
+
+    function renderizarAvisoSoloConsulta(context) {
+        const form = serverWidget.createForm({ title: 'Movimiento de Inventario - Solo Consulta' });
+
+        form.addPageInitMessage({
+            type   : message.Type.WARNING,
+            title  : 'Tu rol es de solo consulta',
+            message: 'No puedes crear ni editar movimientos de inventario. '
+                   + 'Puedes buscarlos, abrirlos en modo Ver e imprimir sus comprobantes.',
+        });
+
+        const aviso = form.addField({
+            id   : 'custpage_aviso_solo_consulta',
+            type : serverWidget.FieldType.INLINEHTML,
+            label: 'Aviso',
+        });
+
+        aviso.defaultValue = '<p>Ingresa a <strong>Transacciones &gt; Gestion de Movimientos '
+                           + '&gt; Movimientos de Inventario &gt; Buscar</strong> para consultar los registros.</p>';
 
         context.response.writePage(form);
     }
