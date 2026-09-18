@@ -1,12 +1,5 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
- *
- * CHANGELOG 2026-09-17:
- * - [FEAT] Las cantidades de Prestamo, Devolucion y Merma aceptan decimales. La
- *          cantidad que llega en el request se lee con format.parse: el campo
- *          FLOAT del Suitelet la envia con el separador decimal del usuario
- *          (es_ES usa coma) y Number('0,5') daria NaN.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -24,24 +17,6 @@ define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../lib/AS_MovimientoI
                      + 'Para registrar, editar, procesar o anular uno necesitas el rol autorizado.',
             notifyOff: true,
         });
-    }
-
-    function obtenerParametrosGuardado(request) {
-        return {
-            movimiento        : request.parameters.custpage_movimiento,
-            tipo              : request.parameters.custpage_tipo,
-            fecha             : request.parameters.custpage_fecha,
-            subsidiaria       : request.parameters.custpage_subsidiaria,
-            servicio          : request.parameters.custpage_servicio,
-            ubicacionOrigen   : request.parameters.custpage_ubicacion,
-            ubicacionDestino  : request.parameters.custpage_ubicacion_dest,
-            usuarioResponsable: request.parameters.custpage_usuario_resp,
-            motivo            : request.parameters.custpage_motivo,
-            cuentaAjuste      : request.parameters.custpage_cuenta_ajuste,
-            prestamo          : request.parameters.custpage_prestamo_ref,
-            entidadReceptora  : request.parameters.custpage_entidad_receptora,
-            comentarios       : request.parameters.custpage_comentarios,
-        };
     }
 
     function guardarMovimiento(context) {
@@ -186,29 +161,22 @@ define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../lib/AS_MovimientoI
         });
     }
 
-    function guardarLineaSalida(request, idCabecera, linea) {
-        const articulo = request.getSublistValue({
-            group: 'custpage_sl_detalle',
-            name : 'custpage_col_articulo',
-            line : linea,
-        });
-        const cantidad = format.parse({
-            value: request.getSublistValue({
-                group: 'custpage_sl_detalle',
-                name : 'custpage_col_cantidad',
-                line : linea,
-            }),
-            type : format.Type.FLOAT,
-        });
-        const lote = request.getSublistValue({
-            group: 'custpage_sl_detalle',
-            name : 'custpage_col_lote',
-            line : linea,
-        });
-
-        movimientoRepository.crearLineaDetalle(idCabecera, articulo, cantidad, lote);
-
-        return { articulo: articulo, cantidad: cantidad };
+    function obtenerParametrosGuardado(request) {
+        return {
+            movimiento        : request.parameters.custpage_movimiento,
+            tipo              : request.parameters.custpage_tipo,
+            fecha             : request.parameters.custpage_fecha,
+            subsidiaria       : request.parameters.custpage_subsidiaria,
+            servicio          : request.parameters.custpage_servicio,
+            ubicacionOrigen   : request.parameters.custpage_ubicacion,
+            ubicacionDestino  : request.parameters.custpage_ubicacion_dest,
+            usuarioResponsable: request.parameters.custpage_usuario_resp,
+            motivo            : request.parameters.custpage_motivo,
+            cuentaAjuste      : request.parameters.custpage_cuenta_ajuste,
+            prestamo          : request.parameters.custpage_prestamo_ref,
+            entidadReceptora  : request.parameters.custpage_entidad_receptora,
+            comentarios       : request.parameters.custpage_comentarios,
+        };
     }
 
     function guardarLineaDevolucion(request, idCabecera, linea) {
@@ -236,6 +204,31 @@ define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../lib/AS_MovimientoI
         }
 
         movimientoRepository.crearLineaDevolucion(idCabecera, articulo, cantidad, idLineaPrestamo);
+
+        return { articulo: articulo, cantidad: cantidad };
+    }
+
+    function guardarLineaSalida(request, idCabecera, linea) {
+        const articulo = request.getSublistValue({
+            group: 'custpage_sl_detalle',
+            name : 'custpage_col_articulo',
+            line : linea,
+        });
+        const cantidad = format.parse({
+            value: request.getSublistValue({
+                group: 'custpage_sl_detalle',
+                name : 'custpage_col_cantidad',
+                line : linea,
+            }),
+            type : format.Type.FLOAT,
+        });
+        const lote = request.getSublistValue({
+            group: 'custpage_sl_detalle',
+            name : 'custpage_col_lote',
+            line : linea,
+        });
+
+        movimientoRepository.crearLineaDetalle(idCabecera, articulo, cantidad, lote);
 
         return { articulo: articulo, cantidad: cantidad };
     }

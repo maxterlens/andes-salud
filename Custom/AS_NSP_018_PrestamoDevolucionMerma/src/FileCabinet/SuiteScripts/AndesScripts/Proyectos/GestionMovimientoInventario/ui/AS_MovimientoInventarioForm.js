@@ -1,35 +1,10 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
- *
- * CHANGELOG 2026-09-17:
- * - [FEAT] Las columnas Disponible, Cantidad y Cantidad a Devolver pasan de
- *          INTEGER a FLOAT para aceptar cantidades con decimales en los tres
- *          tipos de movimiento.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
 define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_ConsultaStockRepository'],
     (serverWidget, CONSTANTES, movimientoRepository, consultaStockRepository) => {
-
-    function obtenerParametrosFormulario(request) {
-        return {
-            movimiento : request.parameters.movimiento,
-            tipo       : request.parameters.tipo,
-            prestamo   : request.parameters.prestamo,
-            fecha      : decodeURIComponent(request.parameters.fecha || ''),
-            responsable: request.parameters.responsable || '',
-            comentarios: decodeURIComponent(request.parameters.comentarios || ''),
-        };
-    }
-
-    function agregarCampo(form, opciones, contenedor) {
-        if (contenedor) {
-            opciones.container = contenedor;
-        }
-
-        return form.addField(opciones);
-    }
 
     function renderizarFormulario(context) {
         const parametros = obtenerParametrosFormulario(context.request);
@@ -294,52 +269,23 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repo
         context.response.writePage(form);
     }
 
-    function armarDetalleSalida(form, nombreTipo) {
-        const sublista = form.addSublist({
-            id   : 'custpage_sl_detalle',
-            type : serverWidget.SublistType.INLINEEDITOR,
-            label: obtenerEtiquetaDetalle(nombreTipo),
-        });
-
-        sublista.addField({
-            id    : 'custpage_col_articulo',
-            type  : serverWidget.FieldType.SELECT,
-            label : CONSTANTES.ETIQUETAS_DETALLE.ARTICULO,
-            source: 'item',
-        }).isMandatory = true;
-
-        sublista.addField({
-            id   : 'custpage_col_unidad',
-            type : serverWidget.FieldType.TEXT,
-            label: CONSTANTES.ETIQUETAS_DETALLE.UNIDAD,
-        }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-
-        sublista.addField({
-            id   : 'custpage_col_disponible',
-            type : serverWidget.FieldType.FLOAT,
-            label: 'Disponible',
-        }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-
-        sublista.addField({
-            id   : 'custpage_col_lote',
-            type : serverWidget.FieldType.SELECT,
-            label: CONSTANTES.ETIQUETAS_DETALLE.LOTE,
-        }).addSelectOption({ value: '', text: '' });
-
-        const etiquetaCantidad = (nombreTipo === CONSTANTES.TIPOS.MERMA) ? 'Cantidad a Dar de Baja' : 'Cantidad Prestada';
-
-        sublista.addField({
-            id   : 'custpage_col_cantidad',
-            type : serverWidget.FieldType.FLOAT,
-            label: etiquetaCantidad,
-        }).isMandatory = true;
+    function obtenerParametrosFormulario(request) {
+        return {
+            movimiento : request.parameters.movimiento,
+            tipo       : request.parameters.tipo,
+            prestamo   : request.parameters.prestamo,
+            fecha      : decodeURIComponent(request.parameters.fecha || ''),
+            responsable: request.parameters.responsable || '',
+            comentarios: decodeURIComponent(request.parameters.comentarios || ''),
+        };
     }
 
-    function obtenerEtiquetaDetalle(nombreTipo) {
-        if (nombreTipo === CONSTANTES.TIPOS.PRESTAMO) return '4. Productos a Prestar';
-        if (nombreTipo === CONSTANTES.TIPOS.MERMA) return '4. Productos que se Daran de Baja';
-        if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION) return '4. Productos a Devolver';
-        return '3. ' + CONSTANTES.ETIQUETAS_DETALLE.TITULO;
+    function agregarCampo(form, opciones, contenedor) {
+        if (contenedor) {
+            opciones.container = contenedor;
+        }
+
+        return form.addField(opciones);
     }
 
     function armarDetalleDevolucion(form, datos) {
@@ -436,18 +382,68 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repo
         datos.campoTo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.INLINE });
 
         movimientoRepository.buscarLineasPorMovimiento(datos.idPrestamo).forEach((linea, indice) => {
+            const pendienteDosDecimales = Math.floor(Math.round(linea.pendiente * 1000000) / 10000) / 100;
+
             sublista.setSublistValue({ id: 'custpage_col_linea',       line: indice, value: String(linea.id) });
             sublista.setSublistValue({ id: 'custpage_col_articulo_id', line: indice, value: String(linea.articulo) });
             sublista.setSublistValue({ id: 'custpage_col_articulo',    line: indice, value: linea.articuloTexto });
             sublista.setSublistValue({ id: 'custpage_col_prestada',    line: indice, value: String(linea.cantidad) });
             sublista.setSublistValue({ id: 'custpage_col_devuelta',    line: indice, value: String(linea.devuelta) });
             sublista.setSublistValue({ id: 'custpage_col_pendiente',   line: indice, value: String(linea.pendiente) });
-            sublista.setSublistValue({ id: 'custpage_col_a_devolver',  line: indice, value: String(linea.pendiente) });
+            sublista.setSublistValue({ id: 'custpage_col_a_devolver',  line: indice, value: String(pendienteDosDecimales) });
 
             if (linea.unidadTexto) {
                 sublista.setSublistValue({ id: 'custpage_col_unidad', line: indice, value: linea.unidadTexto });
             }
         });
+    }
+
+    function armarDetalleSalida(form, nombreTipo) {
+        const sublista = form.addSublist({
+            id   : 'custpage_sl_detalle',
+            type : serverWidget.SublistType.INLINEEDITOR,
+            label: obtenerEtiquetaDetalle(nombreTipo),
+        });
+
+        sublista.addField({
+            id    : 'custpage_col_articulo',
+            type  : serverWidget.FieldType.SELECT,
+            label : CONSTANTES.ETIQUETAS_DETALLE.ARTICULO,
+            source: 'item',
+        }).isMandatory = true;
+
+        sublista.addField({
+            id   : 'custpage_col_unidad',
+            type : serverWidget.FieldType.TEXT,
+            label: CONSTANTES.ETIQUETAS_DETALLE.UNIDAD,
+        }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
+
+        sublista.addField({
+            id   : 'custpage_col_disponible',
+            type : serverWidget.FieldType.FLOAT,
+            label: 'Disponible',
+        }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
+
+        sublista.addField({
+            id   : 'custpage_col_lote',
+            type : serverWidget.FieldType.SELECT,
+            label: CONSTANTES.ETIQUETAS_DETALLE.LOTE,
+        }).addSelectOption({ value: '', text: '' });
+
+        const etiquetaCantidad = (nombreTipo === CONSTANTES.TIPOS.MERMA) ? 'Cantidad a Dar de Baja' : 'Cantidad Prestada';
+
+        sublista.addField({
+            id   : 'custpage_col_cantidad',
+            type : serverWidget.FieldType.FLOAT,
+            label: etiquetaCantidad,
+        }).isMandatory = true;
+    }
+
+    function obtenerEtiquetaDetalle(nombreTipo) {
+        if (nombreTipo === CONSTANTES.TIPOS.PRESTAMO) return '4. Productos a Prestar';
+        if (nombreTipo === CONSTANTES.TIPOS.MERMA) return '4. Productos que se Daran de Baja';
+        if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION) return '4. Productos a Devolver';
+        return '3. ' + CONSTANTES.ETIQUETAS_DETALLE.TITULO;
     }
 
     function aplicarModoEdicion(form, movimiento, nombreTipo, idPrestamo) {
@@ -547,6 +543,20 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repo
         }
     }
 
+    function precargarCantidadesDevolucion(form, idMovimiento, idPrestamo) {
+        const sublista = form.getSublist({ id: 'custpage_sl_detalle' });
+
+        const lineasPrestamo   = movimientoRepository.buscarLineasPorMovimiento(idPrestamo);
+        const lineasDevolucion = movimientoRepository.buscarLineasPorMovimiento(idMovimiento);
+
+        lineasPrestamo.forEach((lineaPrestamo, indice) => {
+            const guardada = lineasDevolucion.filter((linea) => linea.lineaPrestamo === lineaPrestamo.id)[0];
+            const cantidad = guardada ? guardada.cantidad : 0;
+
+            sublista.setSublistValue({ id: 'custpage_col_a_devolver', line: indice, value: String(cantidad) });
+        });
+    }
+
     function precargarDetalleSalida(form, idMovimiento, ubicacionOrigen) {
         const sublista = form.getSublist({ id: 'custpage_sl_detalle' });
         const lineas   = movimientoRepository.buscarLineasPorMovimiento(idMovimiento);
@@ -597,20 +607,6 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repo
             if (linea.unidadTexto) {
                 sublista.setSublistValue({ id: 'custpage_col_unidad', line: indice, value: linea.unidadTexto });
             }
-        });
-    }
-
-    function precargarCantidadesDevolucion(form, idMovimiento, idPrestamo) {
-        const sublista = form.getSublist({ id: 'custpage_sl_detalle' });
-
-        const lineasPrestamo   = movimientoRepository.buscarLineasPorMovimiento(idPrestamo);
-        const lineasDevolucion = movimientoRepository.buscarLineasPorMovimiento(idMovimiento);
-
-        lineasPrestamo.forEach((lineaPrestamo, indice) => {
-            const guardada = lineasDevolucion.filter((linea) => linea.lineaPrestamo === lineaPrestamo.id)[0];
-            const cantidad = guardada ? guardada.cantidad : 0;
-
-            sublista.setSublistValue({ id: 'custpage_col_a_devolver', line: indice, value: String(cantidad) });
         });
     }
 

@@ -206,10 +206,6 @@ define(['N/record', 'N/search', 'N/query', '../lib/AS_MovimientoInventarioConsta
         return buscarOpcionesCustomList(CONSTANTES.LISTAS.TIPO_MOVIMIENTO);
     }
 
-    function listarMotivosBaja() {
-        return buscarOpcionesCustomList(CONSTANTES.LISTAS.MOTIVO_BAJA);
-    }
-
     function buscarOpcionesCustomList(lista) {
         const opciones = [];
 
@@ -222,6 +218,10 @@ define(['N/record', 'N/search', 'N/query', '../lib/AS_MovimientoInventarioConsta
         });
 
         return opciones;
+    }
+
+    function listarMotivosBaja() {
+        return buscarOpcionesCustomList(CONSTANTES.LISTAS.MOTIVO_BAJA);
     }
 
     function listarUbicacionesPorSubsidiaria() {
@@ -327,15 +327,15 @@ define(['N/record', 'N/search', 'N/query', '../lib/AS_MovimientoInventarioConsta
         crearLineaDetalle              : crearLineaDetalle,
         crearLineaDevolucion           : crearLineaDevolucion,
         buscarLineasPorMovimiento      : buscarLineasPorMovimiento,
+        eliminarLineasMovimiento       : eliminarLineasMovimiento,
         actualizarLoteLinea            : actualizarLoteLinea,
         actualizarCantidadesDevolucion : actualizarCantidadesDevolucion,
-        eliminarLineasMovimiento       : eliminarLineasMovimiento,
         obtenerIdEstadoMovimiento      : obtenerIdEstadoMovimiento,
         listarTiposMovimiento          : listarTiposMovimiento,
         listarMotivosBaja              : listarMotivosBaja,
         listarUbicacionesPorSubsidiaria: listarUbicacionesPorSubsidiaria,
-        listarEntidadesPorSubsidiaria  : listarEntidadesPorSubsidiaria,
         listarCuentasAjuste            : listarCuentasAjuste,
         listarPrestamosPendientes      : listarPrestamosPendientes,
+        listarEntidadesPorSubsidiaria  : listarEntidadesPorSubsidiaria,
     };
 });

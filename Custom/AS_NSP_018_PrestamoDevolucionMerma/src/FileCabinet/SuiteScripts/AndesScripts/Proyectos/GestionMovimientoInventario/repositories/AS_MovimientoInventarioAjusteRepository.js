@@ -12,12 +12,6 @@
  *              asigno el detalle de inventario por su cuenta, se respeta: volver
  *              a asignarlo duplica la cantidad y el registro no guarda.
  *
- * CHANGELOG 2026-09-17:
- * - [FEAT] Las cantidades aceptan decimales. El reparto automatico entre lotes
- *          redondea el saldo por asignar a 5 decimales: sin eso queda un resto
- *          de 1e-17 que abre una asignacion mas en el lote siguiente y el
- *          inventory detail no cuadra con la cantidad de la linea.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -121,7 +115,7 @@ define(['N/record', 'N/search', '../lib/AS_MovimientoInventarioConstants', './AS
 
             const cantidad = Math.min(porAsignar, lote.enMano);
 
-            porAsignar = Math.round((porAsignar - cantidad) * 100000) / 100000;
+            porAsignar = Math.round((porAsignar - cantidad) * 100000000) / 100000000;
 
             asignaciones.push({
                 numeroInventario: lote.numeroInventario,
