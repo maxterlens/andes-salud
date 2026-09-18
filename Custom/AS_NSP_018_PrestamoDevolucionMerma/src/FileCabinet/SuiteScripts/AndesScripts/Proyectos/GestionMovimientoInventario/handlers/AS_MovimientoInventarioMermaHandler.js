@@ -16,8 +16,8 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConstants', '../repositories/MovimientoInventarioRepository', '../repositories/InventoryTransferRepository', '../repositories/AS_InventoryAdjustmentRepository'],
-    (redirect, error, runtime, CONSTANTES, movimientoRepository, inventoryTransferRepository, inventoryAdjustmentRepository) => {
+define(['N/redirect', 'N/error', 'N/runtime', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_ConsultaStockRepository', '../repositories/AS_MovimientoInventarioAjusteRepository'],
+    (redirect, error, runtime, CONSTANTES, movimientoRepository, consultaStockRepository, ajusteRepository) => {
 
     function generarAjusteMerma(context) {
         const idMovimiento = context.request.parameters.idMovimiento;
@@ -33,7 +33,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
 
         const usuario = runtime.getCurrentUser().id;
 
-        const ajuste = inventoryAdjustmentRepository.crearInventoryAdjustment({
+        const ajuste = ajusteRepository.crearAjusteInventario({
             subsidiaria: cabecera.getValue({ fieldId: 'custrecord_as_mov_subsidiaria' }),
             servicio   : cabecera.getValue({ fieldId: 'custrecord_as_mov_servicio' }),
             cuenta     : cabecera.getValue({ fieldId: 'custrecord_as_mov_cuenta_ajuste' }),
@@ -90,7 +90,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
     }
 
     function obtenerFaltantes(lineas, ubicacion) {
-        const stock = inventoryTransferRepository.buscarStockPorArticulo(
+        const stock = consultaStockRepository.buscarStockPorArticulo(
             lineas.map((linea) => linea.articulo), ubicacion);
 
         const lotesPorArticulo = {};
@@ -102,7 +102,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
             }
 
             if (!lotesPorArticulo[linea.articulo]) {
-                lotesPorArticulo[linea.articulo] = inventoryTransferRepository.buscarLotesDisponibles(linea.articulo, ubicacion);
+                lotesPorArticulo[linea.articulo] = consultaStockRepository.buscarLotesDisponibles(linea.articulo, ubicacion);
             }
 
             const elegido = lotesPorArticulo[linea.articulo].filter((lote) => lote.nombreLote === linea.lote)[0];

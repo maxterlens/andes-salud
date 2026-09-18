@@ -18,11 +18,11 @@
  * @scriptid     customscript_as_stlt_consulta_stock
  * @deploymentid customdeploy_as_stlt_consulta_stock
  */
-define(['./handlers/AS_ConsultaStockHandler'], (consultaStockHandler) => {
+define(['./ui/AS_ConsultaStockForm'], (consultaStockForm) => {
 
     function onRequest(context) {
         try {
-            consultaStockHandler.construirVista(context);
+            consultaStockForm.construirVista(context);
         } catch (fallo) {
             log.error({
                 title  : 'CONSULTA STOCK ERROR',

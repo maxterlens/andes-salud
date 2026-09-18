@@ -10,8 +10,8 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../lib/MovimientoInventarioConstants', '../repositories/MovimientoInventarioRepository', '../repositories/InventoryTransferRepository'],
-    (redirect, error, runtime, format, CONSTANTES, movimientoRepository, inventoryTransferRepository) => {
+define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_ConsultaStockRepository'],
+    (redirect, error, runtime, format, CONSTANTES, movimientoRepository, consultaStockRepository) => {
 
     function validarPermisoEscritura() {
         if (CONSTANTES.ROLES_AUTORIZADOS.includes(runtime.getCurrentUser().role)) {
@@ -255,8 +255,8 @@ define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../lib/MovimientoInve
         const articulo  = context.request.parameters.articulo;
         const ubicacion = context.request.parameters.ubicacion;
 
-        const stock = inventoryTransferRepository.buscarStockPorArticulo([articulo], ubicacion);
-        const lotes = inventoryTransferRepository.buscarLotesDisponibles(articulo, ubicacion);
+        const stock = consultaStockRepository.buscarStockPorArticulo([articulo], ubicacion);
+        const lotes = consultaStockRepository.buscarLotesDisponibles(articulo, ubicacion);
 
         context.response.write(JSON.stringify({
             unidad    : stock[articulo].unidad,

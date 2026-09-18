@@ -10,8 +10,8 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConstants', '../repositories/MovimientoInventarioRepository', '../repositories/InventoryTransferRepository'],
-    (redirect, error, runtime, CONSTANTES, movimientoRepository, inventoryTransferRepository) => {
+define(['N/redirect', 'N/error', 'N/runtime', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_ConsultaStockRepository', '../repositories/AS_MovimientoInventarioTransferenciaRepository'],
+    (redirect, error, runtime, CONSTANTES, movimientoRepository, consultaStockRepository, transferenciaRepository) => {
 
     function generarTransferDevolucion(context) {
         const idMovimiento = context.request.parameters.idMovimiento;
@@ -61,7 +61,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
 
         const prestamo = movimientoRepository.cargarMovimiento(idPrestamo);
 
-        const lotesDelPrestamo = inventoryTransferRepository.buscarLotesDelTraslado(
+        const lotesDelPrestamo = transferenciaRepository.buscarLotesDelTraslado(
             prestamo.getValue({ fieldId: 'custrecord_as_mov_transfer' }));
 
         const yaDevuelto = {};
@@ -82,7 +82,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
 
         lineas.forEach((linea) => {
             if (!lotesEnLaBodega[linea.articulo]) {
-                lotesEnLaBodega[linea.articulo] = inventoryTransferRepository.buscarLotesDisponibles(linea.articulo, ubicacionOrigen);
+                lotesEnLaBodega[linea.articulo] = consultaStockRepository.buscarLotesDisponibles(linea.articulo, ubicacionOrigen);
             }
         });
 
@@ -112,7 +112,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
 
         const usuario = runtime.getCurrentUser().id;
 
-        const transfer = inventoryTransferRepository.crearInventoryTransfer({
+        const traslado = transferenciaRepository.crearTransferenciaInventario({
             subsidiaria     : subsidiaria,
             servicio        : cabecera.getValue({ fieldId: 'custrecord_as_mov_servicio' }),
             ubicacionOrigen : ubicacionOrigen,
@@ -149,7 +149,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
         const idEstadoPrestamo  = movimientoRepository.obtenerIdEstadoMovimiento(nombreEstadoPrestamo);
 
         movimientoRepository.actualizarProcesoMovimiento(idMovimiento, {
-            transfer        : transfer.id,
+            transfer        : traslado.id,
             estado          : idEstadoProcesado,
             ubicacionDestino: ubicacionRetorno,
             procesadoPor    : usuario,
@@ -162,7 +162,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
             title  : CONSTANTES.LOGS.PROCESADO,
             details: 'movimiento: ' + idMovimiento + ' | tipo: ' + CONSTANTES.TIPOS.DEVOLUCION
                    + ' | articulos: ' + lineas.map((linea) => linea.articulo + ' x' + linea.cantidad).join(' | ')
-                   + ' | traslado: ' + transfer.numero + ' (id ' + transfer.id + ')'
+                   + ' | traslado: ' + traslado.numero + ' (id ' + traslado.id + ')'
                    + ' | usuario: ' + usuario
                    + ' | prestamo ' + idPrestamo + ' queda: ' + nombreEstadoPrestamo,
         });

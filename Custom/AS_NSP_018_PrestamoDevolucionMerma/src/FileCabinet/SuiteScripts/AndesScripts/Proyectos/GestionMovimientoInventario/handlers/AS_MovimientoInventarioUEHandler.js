@@ -23,7 +23,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime', '../lib/MovimientoInventarioConstants', '../repositories/MovimientoInventarioRepository'],
+define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository'],
     (serverWidget, redirect, error, message, runtime, CONSTANTES, movimientoRepository) => {
 
     const CAMPOS_BLOQUEADOS_EN_EDICION = [
@@ -94,9 +94,6 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
             context.form.getField({ id: 'custrecord_as_mov_prestamo_ref' })
                 .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         }
-
-        context.form.getField({ id: 'custrecord_as_mov_fecha_devolucion' })
-            .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
 
         if (!context.newRecord.getValue({ fieldId: 'custrecord_as_mov_transfer' })) {
             context.form.getField({ id: 'custrecord_as_mov_transfer' })

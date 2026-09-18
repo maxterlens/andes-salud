@@ -1,7 +1,7 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
  * @description Entry point del User Event sobre la cabecera del movimiento. Solo
- *              rutea: los dos hooks los resuelve MovimientoInventarioUEHandler.
+ *              rutea: los dos hooks los resuelve AS_MovimientoInventarioUEHandler.
  *
  *              beforeLoad   → arma la vista: campos por tipo, tab de detalle,
  *                             botones de proceso, y manda la creacion y la
@@ -16,7 +16,7 @@
  * @deploymentid customdeploy_as_ue_movimiento_inv
  * @recordtype   customrecord_as_movimiento_inventario
  */
-define(['./lib/MovimientoInventarioConstants', './handlers/MovimientoInventarioUEHandler'],
+define(['./lib/AS_MovimientoInventarioConstants', './handlers/AS_MovimientoInventarioUEHandler'],
     (CONSTANTES, ueHandler) => {
 
     function beforeLoad(context) {

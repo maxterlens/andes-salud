@@ -3,8 +3,8 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConstants', '../repositories/MovimientoInventarioRepository', '../repositories/InventoryTransferRepository'],
-    (redirect, error, runtime, CONSTANTES, movimientoRepository, inventoryTransferRepository) => {
+define(['N/redirect', 'N/error', 'N/runtime', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_ConsultaStockRepository', '../repositories/AS_MovimientoInventarioTransferenciaRepository'],
+    (redirect, error, runtime, CONSTANTES, movimientoRepository, consultaStockRepository, transferenciaRepository) => {
 
     function generarTransferPrestamo(context) {
         const idMovimiento = context.request.parameters.idMovimiento;
@@ -28,7 +28,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
         const nombreUbicacionOrigen  = cabecera.getText({ fieldId: 'custrecord_as_mov_ubicacion' });
         const ubicacionDestino       = cabecera.getValue({ fieldId: 'custrecord_as_mov_ubicacion_dest' });
     
-        const stock = inventoryTransferRepository.buscarStockPorArticulo(
+        const stock = consultaStockRepository.buscarStockPorArticulo(
             lineas.map((linea) => linea.articulo), ubicacionOrigen);
         const lotesPorArticulo = {};
 
@@ -39,7 +39,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
             }
 
             if (!lotesPorArticulo[linea.articulo]) {
-                lotesPorArticulo[linea.articulo] = inventoryTransferRepository.buscarLotesDisponibles(linea.articulo, ubicacionOrigen);
+                lotesPorArticulo[linea.articulo] = consultaStockRepository.buscarLotesDisponibles(linea.articulo, ubicacionOrigen);
             }
 
             const elegido = lotesPorArticulo[linea.articulo].filter((lote) => lote.nombreLote === linea.lote)[0];
@@ -65,7 +65,7 @@ define(['N/redirect', 'N/error', 'N/runtime', '../lib/MovimientoInventarioConsta
 
         const usuario = runtime.getCurrentUser().id;
 
-        const traslado = inventoryTransferRepository.crearInventoryTransfer({
+        const traslado = transferenciaRepository.crearTransferenciaInventario({
             subsidiaria     : subsidiaria,
             servicio        : cabecera.getValue({ fieldId: 'custrecord_as_mov_servicio' }),
             ubicacionOrigen : ubicacionOrigen,

@@ -9,8 +9,8 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../repositories/MovimientoInventarioRepository', '../repositories/InventoryTransferRepository'],
-    (serverWidget, CONSTANTES, movimientoRepository, inventoryTransferRepository) => {
+define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_ConsultaStockRepository'],
+    (serverWidget, CONSTANTES, movimientoRepository, consultaStockRepository) => {
 
     function obtenerParametrosFormulario(request) {
         return {
@@ -551,7 +551,7 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
         const sublista = form.getSublist({ id: 'custpage_sl_detalle' });
         const lineas   = movimientoRepository.buscarLineasPorMovimiento(idMovimiento);
 
-        const stock = inventoryTransferRepository.buscarStockPorArticulo(
+        const stock = consultaStockRepository.buscarStockPorArticulo(
             lineas.map((linea) => linea.articulo), ubicacionOrigen);
         const campoLote = sublista.getField({ id: 'custpage_col_lote' });
 
@@ -565,7 +565,7 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
 
             nombresCargados[linea.articulo] = true;
 
-            inventoryTransferRepository.buscarLotesDisponibles(linea.articulo, ubicacionOrigen).forEach((lote) => {
+            consultaStockRepository.buscarLotesDisponibles(linea.articulo, ubicacionOrigen).forEach((lote) => {
                 nombresCargados[lote.nombreLote] = true;
                 stockDeLotes[linea.articulo + '|' + lote.nombreLote] = lote.enMano;
 

@@ -3,7 +3,7 @@
 <#-- AS_NSP_018 - Prestamo, Devolucion y Merma
      Comprobante de devolucion: lo que vuelve de la bodega de prestamos.
      Los datos llegan como JSON en el data source 'jsonString' que arma
-     ImpresionHandler: doc.cabecera, doc.lineas y doc.totales. Aqui no se
+     AS_MovimientoInventarioImpresionHandler: doc.cabecera, doc.lineas y doc.totales. Aqui no se
      calcula nada, solo se pinta. -->
 <#assign doc = jsonString.text?eval>
 <pdf>

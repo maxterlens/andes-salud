@@ -17,7 +17,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/record', 'N/search', 'N/query', '../lib/MovimientoInventarioConstants'],
+define(['N/record', 'N/search', 'N/query', '../lib/AS_MovimientoInventarioConstants'],
     (record, search, query, CONSTANTES) => {
 
     function cargarMovimiento(idMovimiento) {
@@ -56,8 +56,7 @@ define(['N/record', 'N/search', 'N/query', '../lib/MovimientoInventarioConstants
         cabecera.setValue({ fieldId: 'custrecord_as_mov_entidad_receptora', value: datos.entidadReceptora });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_comentarios',    value: datos.comentarios });
 
-        cabecera.setText({ fieldId: 'custrecord_as_mov_fecha',            text: datos.fecha });
-        cabecera.setText({ fieldId: 'custrecord_as_mov_fecha_devolucion', text: datos.fechaDevolucion });
+        cabecera.setText({ fieldId: 'custrecord_as_mov_fecha', text: datos.fecha });
 
         return cabecera.save();
     }

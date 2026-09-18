@@ -2,18 +2,16 @@
 
 ## Objetivo técnico
 
-Custom record de cabecera + detalle que representa un movimiento de material que sale de la
-clínica. Al procesarlo genera un **Inventory Transfer** nativo, que es lo único que mueve
-inventario de verdad.
+Custom record de cabecera + detalle que representa un movimiento de inventario. Al procesar
+un Préstamo o una Devolución genera un **Inventory Transfer**; al procesar una Merma genera
+un **Inventory Adjustment** negativo.
 
 La captura **no** usa el formulario nativo del custom record: el User Event redirige `CREATE` y
 `EDIT` a un Suitelet propio, porque el detalle es un child record y NetSuite no lo pinta junto
 a la cabecera.
 
-**Tres tipos declarados, dos implementados.** `Merma` existe en la customlist, en `ORDEN_TIPOS`
-y en el formulario de captura (con su campo Motivo), pero **no tiene handler de proceso, ni
-`op` en el router, ni botón**. Se registra y queda en *Pendiente de Procesar* para siempre.
-Fuera de alcance por decisión.
+Los tres tipos están implementados: `Prestamo`, `Devolucion` y `Merma`. Comparten cabecera,
+detalle y formulario; cada procesamiento tiene su propio handler y repositorio transaccional.
 
 ### El modelo de la bodega de préstamos
 
@@ -30,8 +28,9 @@ pendiente no se administra: se refleja.
 
 ## Arquitectura
 
-Tres capas: entry points → handlers → repositories. **No hay capa `services/`**, por decisión:
-la lógica de negocio vive en los handlers de cada operación.
+Cuatro responsabilidades: entry points → UI/handlers → repositories. **No hay capa `services/`**,
+por decisión: la lógica de negocio vive en los handlers de cada operación y la construcción
+del formulario en `ui/`.
 
 ```
 Client Script  →  Suitelet  →  Handlers  →  Repositories  →  N/record, N/search, N/query
@@ -52,21 +51,45 @@ Todo bajo
 | `AS_MovimientoInventario_STLT_2.1.js` | Router. Arma `operacion`, llama al handler, y en el `catch` emite el único `MOVIMIENTO ERROR` |
 | `AS_MovimientoInventario_UE_2.1.js` | Router de los dos hooks del User Event |
 | `AS_MovimientoInventario_CS_2.1.js` | Comportamiento de las dos pantallas: recarga, combos, topes, y las funciones de los botones |
-| `handlers/MovimientoInventarioForm.js` | Arma la pantalla de captura y el modo edición. Solo pinta, no escribe |
-| `handlers/MovimientoInventarioHandler.js` | Guardar, anular, disponibilidad y el control de rol |
-| `handlers/MovimientoInventarioUEHandler.js` | Vista del registro: campos por tipo, tab de detalle, botones, y el bloqueo de edición |
-| `handlers/PrestamoHandler.js` | Solo generar el traslado de un préstamo |
-| `handlers/DevolucionHandler.js` | Solo generar el traslado inverso y descontar del préstamo |
-| `handlers/ImpresionHandler.js` | Payload del PDF y render contra el FTL del tipo |
-| `repositories/MovimientoInventarioRepository.js` | Datos del módulo: cabecera, detalle y customlists |
-| `repositories/InventoryTransferRepository.js` | El traslado nativo, la asignación de lotes y las consultas de stock |
-| `lib/MovimientoInventarioConstants.js` | Contrato compartido: tipos, estados, records, operaciones, roles, plantillas |
+| `ui/AS_MovimientoInventarioForm.js` | Arma la pantalla de captura y el modo edición. Solo pinta, no escribe |
+| `ui/AS_ConsultaStockForm.js` | Arma la pantalla auxiliar de consulta de stock para desarrollo y QA |
+| `handlers/AS_MovimientoInventarioHandler.js` | Guardar, anular, disponibilidad y el control de rol |
+| `handlers/AS_MovimientoInventarioUEHandler.js` | Vista del registro: campos por tipo, tab de detalle, botones, y el bloqueo de edición |
+| `handlers/AS_MovimientoInventarioPrestamoHandler.js` | Solo generar el traslado de un préstamo |
+| `handlers/AS_MovimientoInventarioDevolucionHandler.js` | Solo generar el traslado inverso y descontar del préstamo |
+| `handlers/AS_MovimientoInventarioMermaHandler.js` | Valida y genera el ajuste de inventario de una merma |
+| `handlers/AS_MovimientoInventarioImpresionHandler.js` | Payload del PDF y render contra el FTL del tipo |
+| `repositories/AS_MovimientoInventarioRepository.js` | Datos del módulo: cabecera, detalle y customlists |
+| `repositories/AS_MovimientoInventarioTransferenciaRepository.js` | Crea el traslado nativo y lee sus asignaciones de lote |
+| `repositories/AS_MovimientoInventarioAjusteRepository.js` | Crea el ajuste de inventario utilizado por Merma |
+| `repositories/AS_ConsultaStockRepository.js` | Centraliza las consultas de stock, ubicaciones y lotes disponibles |
+| `lib/AS_MovimientoInventarioConstants.js` | Contrato compartido: tipos, estados, records, operaciones, roles, plantillas |
 | `templates/AS.FTL.PrestamoPDF.ftl` | Comprobante de préstamo |
 | `templates/AS.FTL.DevolucionPDF.ftl` | Comprobante de devolución |
+| `templates/AS.FTL.MermaPDF.ftl` | Comprobante de Merma |
 
-**No hay `MermaHandler.js`.** Si algún día se implementa, es un handler nuevo + un `else if` en
-el router + un botón en `agregarBotones`. El formulario y el guardado ya lo cubren por el
-camino de salida.
+Merma tiene su propio handler y repositorio de ajuste. El Suitelet conserva un único router
+para Préstamo, Devolución y Merma.
+
+### Migración de nombres internos
+
+SDF carga los archivos nuevos, pero no elimina los nombres anteriores del File Cabinet. Después
+de desplegar esta versión se deben borrar manualmente los archivos de la columna **Anterior**.
+
+| Anterior | Nuevo |
+|---|---|
+| `handlers/MovimientoInventarioForm.js` | `ui/AS_MovimientoInventarioForm.js` |
+| `handlers/AS_ConsultaStockHandler.js` | `ui/AS_ConsultaStockForm.js` |
+| `handlers/MovimientoInventarioHandler.js` | `handlers/AS_MovimientoInventarioHandler.js` |
+| `handlers/MovimientoInventarioUEHandler.js` | `handlers/AS_MovimientoInventarioUEHandler.js` |
+| `handlers/PrestamoHandler.js` | `handlers/AS_MovimientoInventarioPrestamoHandler.js` |
+| `handlers/DevolucionHandler.js` | `handlers/AS_MovimientoInventarioDevolucionHandler.js` |
+| `handlers/AS_MermaHandler.js` | `handlers/AS_MovimientoInventarioMermaHandler.js` |
+| `handlers/ImpresionHandler.js` | `handlers/AS_MovimientoInventarioImpresionHandler.js` |
+| `repositories/MovimientoInventarioRepository.js` | `repositories/AS_MovimientoInventarioRepository.js` |
+| `repositories/InventoryTransferRepository.js` | `repositories/AS_MovimientoInventarioTransferenciaRepository.js` |
+| `repositories/AS_InventoryAdjustmentRepository.js` | `repositories/AS_MovimientoInventarioAjusteRepository.js` |
+| `lib/MovimientoInventarioConstants.js` | `lib/AS_MovimientoInventarioConstants.js` |
 
 ## Flujo de ejecución
 
@@ -94,7 +117,7 @@ corta si estado != Pendiente de Procesar          → AS_MOVIMIENTO_YA_PROCESADO
 buscarStockPorArticulo() para todas las lineas
 por linea: si tiene lote → valida contra ese lote; si no → contra disponible del articulo
 faltantes                                          → AS_STOCK_INSUFICIENTE
-crearInventoryTransfer(origen → destino)
+crearTransferenciaInventario(origen → destino)
 actualizarProcesoMovimiento(): transfer, estado Pendiente de Devolucion, procesadoPor, fecha
 log MOVIMIENTO PROCESADO
 ```
@@ -108,23 +131,40 @@ buscarLotesDelTraslado(transfer del prestamo)     → plan de lotes por articulo
 yaDevuelto por articulo = suma de devuelta de las lineas del prestamo
 tomarLotesDelPrestamo(plan, saltar, cantidad)     → linea.lotes
 valida stock lote por lote en la bodega           → AS_STOCK_INSUFICIENTE
-crearInventoryTransfer(bodega → origen del prestamo)
+crearTransferenciaInventario(bodega → origen del prestamo)
 sella el lote en cada linea de la devolucion
 descuenta linea por linea del prestamo
 estado del prestamo: Devuelto Total si TODAS las lineas quedan en pendiente 0, si no Parcial
 log MOVIMIENTO PROCESADO
 ```
 
+### Merma — `op=mermar`
+
+```
+corta si estado != Pendiente de Procesar          → AS_MOVIMIENTO_YA_PROCESADO
+lee ubicación, subsidiaria, servicio y Cuenta de Ajuste de la cabecera
+buscarStockPorArticulo() para todas las líneas
+por línea: si tiene lote → valida existencia física; si no → valida disponible del artículo
+faltantes                                          → AS_STOCK_INSUFICIENTE
+crearAjusteInventario() con adjustqtyby negativo y la cuenta configurada
+actualizarProcesoMovimiento(): transacción, estado Procesado, misma ubicación, usuario, fecha
+log MOVIMIENTO PROCESADO
+```
+
+La Merma no crea traslado ni pendiente. El identificador del `Inventory Adjustment` se guarda
+en `custrecord_as_mov_transfer`, campo histórico que funciona como referencia a la transacción
+generada aunque su etiqueta mencione traslado.
+
 ### Impresión — `op=imprimir`
 
 ```
-ImpresionHandler → payload { cabecera, lineas, totales }
+AS_MovimientoInventarioImpresionHandler → payload { cabecera, lineas, totales }
 alias 'jsonString', & escapado, mismo contrato que AS_NSP_008
 render.create() + templateContent del FTL segun el tipo
 ```
 
 Motor propio, **no** el de `APIGlobales/ImpresionPDF`, para no compartir archivos con
-2WIN_SOLICITUD_CONSUMO. Solo Préstamo y Devolución tienen plantilla.
+2WIN_SOLICITUD_CONSUMO. Préstamo, Devolución y Merma tienen una plantilla independiente.
 
 ## Componentes
 
@@ -134,14 +174,15 @@ todo el módulo. Las operaciones se resuelven por el parámetro `op`:
 | `op` | Handler | Escribe |
 |---|---|---|
 | *(POST)* | `guardarMovimiento` | Sí |
-| `procesar` | `PrestamoHandler` | Sí |
-| `devolver` | `DevolucionHandler` | Sí |
+| `procesar` | `AS_MovimientoInventarioPrestamoHandler` | Sí |
+| `devolver` | `AS_MovimientoInventarioDevolucionHandler` | Sí |
+| `mermar` | `AS_MovimientoInventarioMermaHandler` | Sí |
 | `anular` | `anularMovimientoInventario` | Sí |
 | `disponible` | `consultarDisponible` | No |
-| `imprimir` | `ImpresionHandler` | No |
+| `imprimir` | `AS_MovimientoInventarioImpresionHandler` | No |
 | *(GET sin op)* | `renderizarFormulario` | No |
 
-Las cuatro que escriben pasan antes por `validarPermisoEscritura()`. **No hay op de Merma.**
+Las cinco operaciones que escriben pasan antes por `validarPermisoEscritura()`.
 
 **User Event `customscript_as_ue_movimiento_inv`** — dos hooks: redirige `CREATE`/`EDIT` al
 Suitelet, y en `VIEW` arma la vista del registro con su tab de detalle y sus botones.
@@ -154,16 +195,20 @@ las funciones que llaman a cada `op`.
 | Objeto | Script ID |
 |---|---|
 | Suitelet | `customscript_as_stlt_movimiento_inv` / `customdeploy_as_stlt_movimiento_inv` |
+| Suitelet auxiliar de stock | `customscript_as_stlt_consulta_stock` / `customdeploy_as_stlt_consulta_stock` |
 | User Event | `customscript_as_ue_movimiento_inv` / `customdeploy_as_ue_movimiento_inv` |
 | Cabecera | `customrecord_as_movimiento_inventario` |
 | Detalle | `customrecord_as_mov_inventario_det` |
 | Entidad receptora | `customrecord_as_receptor_subsidiaria` |
+| Cuenta de Merma por subsidiaria | `customrecord_as_cuenta_merma_subsidiaria` |
 | Checkbox en Location | `custrecord_as_es_bodega_prestamo` (`rectype -103`) |
 | Formulario | `custform_as_movimiento_inventario` |
 | Listas | `customlist_as_tipo_movimiento`, `customlist_as_estado_movimiento`, `customlist_as_motivo_baja` |
 
 **Suitelet:** `allemployees T`, `allroles F`, `runasrole ADMINISTRATOR`, `status RELEASED`,
 `loglevel DEBUG`.
+**Suitelet auxiliar de stock:** audiencia `ADMINISTRATOR`, `runasrole ADMINISTRATOR`,
+`status RELEASED`, `loglevel DEBUG`; es una herramienta de solo lectura para desarrollo y QA.
 **User Event:** sobre `customrecord_as_movimiento_inventario`, `executioncontext USERINTERFACE`,
 `allroles T`, `allemployees T`, `runasrole ADMINISTRATOR`, `loglevel DEBUG`.
 
@@ -178,13 +223,16 @@ las funciones que llaman a cada `op`.
 
 | Field | Rol |
 |---|---|
-| `custrecord_as_mov_estado` | **Única marca de que el traslado ya se generó.** Es lo que corta el doble proceso |
-| `custrecord_as_mov_transfer` | El Inventory Transfer generado. Su presencia bloquea el detalle |
+| `custrecord_as_mov_estado` | **Marca principal de que el proceso ya se ejecutó.** Es lo que corta el doble proceso |
+| `custrecord_as_mov_transfer` | Referencia a la transacción generada: Inventory Transfer o Inventory Adjustment. Su presencia bloquea el detalle |
+| `custrecord_as_mov_cuenta_ajuste` | Cuenta contable elegida para el `Inventory Adjustment` de Merma |
 | `custrecord_as_mov_ubicacion_dest` | Destino del préstamo. **El origen de la devolución sale de acá**, no del checkbox |
 | `custrecord_as_mov_det_linea_ref` | Apunta de la línea de devolución a la línea de préstamo. **Nunca cuadrar por artículo**: con el mismo artículo en dos líneas descuenta de más |
 | `custrecord_as_mov_det_cant_pendiente` | Nace igual a la cantidad prestada, no en cero |
 | `custrecord_as_mov_det_lote` | TEXT con el **nombre** del lote, no el id. El id se resuelve al procesar |
 | `custrecord_as_es_bodega_prestamo` | Checkbox en Location que identifica la bodega de préstamos de la subsidiaria |
+| `custrecord_as_cuenta_merma_subsidiaria` | Subsidiaria de una relación activa del maestro de cuentas de Merma |
+| `custrecord_as_cuenta_merma_cuenta` | Cuenta contable permitida para esa subsidiaria |
 
 ### Valores de lista, exactos
 
@@ -193,6 +241,7 @@ El código compara por **nombre**, y los valores están **sin tilde**:
 - Tipos: `Prestamo`, `Devolucion`, `Merma`
 - Estados: `Pendiente de Procesar`, `Pendiente de Devolucion`, `Devuelto Parcial`,
   `Devuelto Total`, `Procesado`, `Anulado`
+- Motivos iniciales de baja: `Vencimiento`, `Deterioro`, `Cuarentena`, `Otro`
 
 Agregarle una tilde a cualquiera de estos valores en NetSuite rompe el módulo.
 
@@ -209,6 +258,13 @@ Agregarle una tilde a cualquiera de estos valores en NetSuite rompe el módulo.
   check no debe romper préstamos ya hechos.
 - **Prestada se muestra en la devolución y Pendiente no**: Prestada es inmutable, Pendiente se
   mueve con cada devolución posterior.
+- **La cuenta de Merma no se consulta desde el plan completo de cuentas**: el formulario carga
+  únicamente filas activas de `customrecord_as_cuenta_merma_subsidiaria` y el Client Script las
+  filtra por la subsidiaria seleccionada.
+- **Subsidiaria + configuración activa = cuentas disponibles en Cuenta de Ajuste.** Cambiar una
+  cuenta requiere mantener el maestro, no editar código.
+- **La Merma se procesa en la misma ubicación**: crea cantidades negativas, queda `Procesado` y
+  no genera saldo pendiente.
 
 ### Botones — `agregarBotones`, orden exacto
 
@@ -216,18 +272,17 @@ El orden importa: hay un `return` en el medio.
 
 ```
 1. Nuevo Movimiento     si rolAutorizado (cualquier estado, incluido Anulado)
-2. Imprimir Comprobante si tipo IN (Prestamo, Devolucion) y no es devolucionSinPendiente
+2. Imprimir Comprobante si tipo IN (Prestamo, Devolucion, Merma) y no es devolucionSinPendiente
                         → NO depende del rol ni del estado. Se imprime hasta un Anulado
 3. return               si !rolAutorizado o estado == Anulado
 4. Anular Movimiento    si estado == Pendiente de Procesar
 5. Procesar Prestamo    si tipo == Prestamo y estado == Pendiente de Procesar
 6. Procesar Devolucion  si tipo == Devolucion, estado == Pendiente de Procesar y hay pendiente
+7. Procesar Merma       si tipo == Merma y estado == Pendiente de Procesar
 ```
 
 `devolucionSinPendiente` hace un `lookupFields` sobre el préstamo relacionado, y solo se evalúa
 si los dos primeros términos del `&&` son verdaderos.
-
-**Merma no aparece en 5 ni en 6**: por eso no se puede procesar.
 
 ## Consultas
 
@@ -235,35 +290,35 @@ si los dos primeros términos del `&&` son verdaderos.
 
 | Archivo → función | Fuente | Filtros | Dato | Uso |
 |---|---|---|---|---|
-| `MovimientoInventarioRepository → obtenerEstadoMovimiento` | lookupFields sobre la cabecera | por id | texto del estado | Saber cómo quedó el préstamo de una devolución, sin cargar el record |
-| `MovimientoInventarioRepository → buscarLineasPorMovimiento` | `customrecord_as_mov_inventario_det` | `custrecord_as_mov_det_ref anyof id` | artículo, unidad, lote, cantidad, devuelta, pendiente, línea de préstamo | Todo el módulo. Es la consulta más usada |
-| `MovimientoInventarioRepository → obtenerIdEstadoMovimiento` | `customlist_as_estado_movimiento` | `name is <nombre>` | id interno | Traducir nombre → id. **Por eso los ids de las listas pueden diferir entre cuentas sin romper nada** |
-| `MovimientoInventarioRepository → buscarOpcionesCustomList` | la customlist que reciba | ninguno | id + nombre | Poblar los combos de Tipo y Motivo |
-| `InventoryTransferRepository → crearInventoryTransfer` | lookupFields sobre `inventorytransfer` | por id recién guardado | `tranid` | El número legible para el log |
+| `AS_MovimientoInventarioRepository → obtenerEstadoMovimiento` | lookupFields sobre la cabecera | por id | texto del estado | Saber cómo quedó el préstamo de una devolución, sin cargar el record |
+| `AS_MovimientoInventarioRepository → buscarLineasPorMovimiento` | `customrecord_as_mov_inventario_det` | `custrecord_as_mov_det_ref anyof id` | artículo, unidad, lote, cantidad, devuelta, pendiente, línea de préstamo | Todo el módulo. Es la consulta más usada |
+| `AS_MovimientoInventarioRepository → obtenerIdEstadoMovimiento` | `customlist_as_estado_movimiento` | `name is <nombre>` | id interno | Traducir nombre → id. **Por eso los ids de las listas pueden diferir entre cuentas sin romper nada** |
+| `AS_MovimientoInventarioRepository → buscarOpcionesCustomList` | la customlist que reciba | ninguno | id + nombre | Poblar los combos de Tipo y Motivo |
+| `AS_MovimientoInventarioTransferenciaRepository → crearTransferenciaInventario` | lookupFields sobre `inventorytransfer` | por id recién guardado | `tranid` | El número legible para el log |
 
 ### SuiteQL
 
 | Archivo → función | Fuente | Filtros | Dato | Uso |
 |---|---|---|---|---|
-| `InventoryTransferRepository → buscarLotesDisponibles` | `InventoryBalance` + `InventoryNumberLocation` | item, location, ambos `quantityonhand > 0`, estado NOT IN (Bloqueado, En Inspección, Damaged) | lote, nombre, bin, en mano | Asignar lotes al traslado, poblar el combo Lote y validar stock por lote |
-| `InventoryTransferRepository → buscarStockPorArticulo` | `item` LEFT JOIN `AggregateItemLocation` | `i.id IN (...)`, location | unidad, disponible, en mano | Columna Disponible y validación de stock del préstamo |
-| `MovimientoInventarioRepository → listarUbicacionesPorSubsidiaria` | `location` + `LocationSubsidiaryMap` | `isinactive = F` | subsidiaria, id, nombre, es bodega préstamo | Combos de ubicación, filtrados en el cliente |
-| `MovimientoInventarioRepository → listarPrestamosPendientes` | cabecera + detalle + las dos customlists + location | tipo = Prestamo, estado IN (Pendiente de Devolucion, Devuelto Parcial), `HAVING SUM(pendiente) > 0` | id, nombre, subsidiaria, ubicación, pendiente | Combo Préstamo Relacionado. **Une por nombre contra las listas para no depender de ids internos** |
-| `MovimientoInventarioRepository → listarEntidadesPorSubsidiaria` | `customrecord_as_receptor_subsidiaria` | `isinactive = F` | subsidiaria, entidad, nombre | Combo Entidad Receptora |
+| `AS_ConsultaStockRepository → buscarLotesDisponibles` | `InventoryBalance` + `InventoryNumberLocation` | item, location, ambos `quantityonhand > 0`, estado NOT IN (Bloqueado, En Inspección, Damaged) | lote, nombre, bin, en mano | Asignar lotes, poblar el combo Lote y validar stock por lote |
+| `AS_ConsultaStockRepository → buscarStockPorArticulo` | `item` LEFT JOIN `AggregateItemLocation` | `i.id IN (...)`, location | unidad, disponible, en mano | Columna Disponible y validación de stock de los procesos |
+| `AS_MovimientoInventarioRepository → listarUbicacionesPorSubsidiaria` | `location` + `LocationSubsidiaryMap` | `isinactive = F` | subsidiaria, id, nombre, es bodega préstamo | Combos de ubicación, filtrados en el cliente |
+| `AS_MovimientoInventarioRepository → listarPrestamosPendientes` | cabecera + detalle + las dos customlists + location | tipo = Prestamo, estado IN (Pendiente de Devolucion, Devuelto Parcial), `HAVING SUM(pendiente) > 0` | id, nombre, subsidiaria, ubicación, pendiente | Combo Préstamo Relacionado. **Une por nombre contra las listas para no depender de ids internos** |
+| `AS_MovimientoInventarioRepository → listarEntidadesPorSubsidiaria` | `customrecord_as_receptor_subsidiaria` | `isinactive = F` | subsidiaria, entidad, nombre | Combo Entidad Receptora |
+| `AS_MovimientoInventarioRepository → listarCuentasAjuste` | `customrecord_as_cuenta_merma_subsidiaria` | `isinactive = F` | subsidiaria, cuenta y nombre de cuenta | Combo Cuenta de Ajuste, filtrado por subsidiaria en el cliente |
 
-`buscarLotesDisponibles` y `buscarStockPorArticulo` viven en `InventoryTransferRepository` pero
-**no son del traslado**: cuatro de sus seis usos son de pantalla. Es el punto más discutible del
-módulo.
+`buscarLotesDisponibles` y `buscarStockPorArticulo` están centralizadas en
+`AS_ConsultaStockRepository`; los handlers y la UI consumen el mismo criterio de disponibilidad.
 
 ## Hardcodes
 
 | Dónde | Valor | Riesgo |
 |---|---|---|
 | `Constants` | `ROLES_AUTORIZADOS = [3, 1371]` | Ids internos. Si en Producción el 1371 fuera otro rol, **falla abierto**: escribe sin error y sin log |
-| `InventoryTransferRepository` | `'Bloqueado'`, `'En Inspección'`, `'Damaged'` | Nombres de Inventory Status. Si se renombran en NetSuite, dejan de excluirse |
-| `InventoryTransferRepository` | `ORDER BY ib.lastmodifieddate ASC` | **No es antigüedad ni vencimiento.** El precedente de Andes (`2win_dao_numero_inventario.js`) usa FEFO |
+| `AS_ConsultaStockRepository` | `'Bloqueado'`, `'En Inspección'`, `'Damaged'` | Nombres de Inventory Status. Si se renombran en NetSuite, dejan de excluirse |
+| `AS_ConsultaStockRepository` | `ORDER BY ib.lastmodifieddate ASC` | **No es antigüedad ni vencimiento.** El precedente de Andes (`2win_dao_numero_inventario.js`) usa FEFO |
 | `Constants` | los seis nombres de estado y los tres de tipo | El código compara por nombre. Renombrar un valor rompe el módulo |
-| `Constants` | `CLIENT_SCRIPT` y las dos rutas de `PLANTILLAS` | Rutas absolutas del File Cabinet. Mover la carpeta las rompe |
+| `Constants` | `CLIENT_SCRIPT` y las tres rutas de `PLANTILLAS` | Rutas absolutas del File Cabinet. Mover la carpeta las rompe |
 | `Objects` | `selectrecordtype -2` en Entidad Receptora | Inferido: `-3` Vendedor y `-4` Employee están confirmados en el repo, `-2` no. Falta validar en NetSuite |
 
 ## Configuración
@@ -275,8 +330,9 @@ módulo.
 | Checkbox `custrecord_as_es_bodega_prestamo` en una Location | El combo Ubicación Destino queda vacío y no se puede guardar un préstamo |
 | **Make Inventory Available apagado** en esa bodega | Si se enciende, el material prestado vuelve a contar como stock usable |
 | Filas en `customrecord_as_receptor_subsidiaria` | El combo Entidad Receptora sale vacío (no bloquea: el campo es opcional) |
+| Filas activas en `customrecord_as_cuenta_merma_subsidiaria` | Cuenta de Ajuste queda vacía y no se puede guardar una Merma para esa subsidiaria |
 | `LocationSubsidiaryMap` | Una ubicación sin subsidiaria no aparece en ningún combo |
-| Valores de `customlist_as_motivo_baja` | Se pueden agregar libremente |
+| Valores de `customlist_as_motivo_baja` | Incluye Vencimiento, Deterioro, Cuarentena y Otro; se pueden agregar valores |
 
 ### Requiere código
 
@@ -306,8 +362,8 @@ suitecloud project:deploy
 | **Sin reverso** | Una devolución procesada no se puede revertir desde el módulo |
 | **Sin entrega parcial** | El traslado mueve exactamente lo registrado |
 | **Lote idéntico en la devolución** | Vuelve el mismo lote que salió; no admite reemplazo |
-| **Merma sin proceso** | Se registra y no genera nada |
 | **Guardado no transaccional** | Cabecera y líneas se crean por separado |
+| **Cuenta de Merma obligatoria** | Debe existir una configuración activa para la subsidiaria y quedar guardada en la cabecera |
 
 ## Manejo de errores
 
@@ -322,22 +378,24 @@ cubierto solo.
 
 ## Logs y diagnóstico
 
-Solo tres títulos en todo el módulo:
+El flujo de movimientos usa tres títulos y la herramienta auxiliar usa uno adicional:
 
 | Título | Nivel | Dónde | Contenido |
 |---|---|---|---|
-| `MOVIMIENTO REGISTRADO` | audit | `MovimientoInventarioHandler` | id, tipo, origen, destino, artículos con cantidades |
-| `MOVIMIENTO PROCESADO` | audit | `PrestamoHandler`, `DevolucionHandler` | id, tipo, artículos movidos, traslado, usuario |
+| `MOVIMIENTO REGISTRADO` | audit | `AS_MovimientoInventarioHandler` | id, tipo, origen, destino, artículos con cantidades |
+| `MOVIMIENTO PROCESADO` | audit | handlers de Préstamo, Devolución y Merma | id, tipo, artículos procesados, transacción, usuario |
 | `MOVIMIENTO ERROR` | error | los dos entry points | id, operación, motivo |
+| `CONSULTA STOCK ERROR` | error | `AS_ConsultaStock_STLT_2.1.js` | ubicación y motivo |
 
-Los dos deployments están en `loglevel DEBUG`. **Para Producción conviene AUDIT**: con AUDIT el
-log queda en una línea por operación, que es el diseño buscado.
+Los deployments SDF están en `loglevel DEBUG`. Para Producción conviene evaluar `AUDIT` en los
+scripts operativos; con AUDIT el log queda en una línea por operación, que es el diseño buscado.
 
 ### Troubleshooting
 
 | Síntoma | Causa |
 |---|---|
-| Un movimiento de Merma no tiene botón para procesar | Correcto: no está implementado |
+| Un movimiento de Merma no tiene botón para procesar | Debe estar en `Pendiente de Procesar` y el usuario debe tener un rol autorizado |
+| Cuenta de Ajuste vacía | No existen filas activas en `AS Cuenta de Merma por Subsidiaria` para la subsidiaria seleccionada |
 | Combo Ubicación Destino vacío en un préstamo | La subsidiaria no tiene ninguna Location con el checkbox |
 | `AS_STOCK_INSUFICIENTE` con stock a la vista | El préstamo mira *disponible*; la devolución mira *en mano*. Además valida **por lote** |
 | El traslado se guarda sin inventory detail | El artículo no maneja lotes, o todos sus lotes están en estado excluido |
@@ -367,7 +425,7 @@ id no corresponde al rol esperado, el usuario escribe igual y no queda rastro.
 **Tocar `custrecord_as_mov_det_linea_ref` o cuadrar por artículo** en vez de por línea rompe el
 descuento cuando el mismo artículo aparece en dos líneas de un préstamo.
 
-**Mover la carpeta del proyecto** rompe `CLIENT_SCRIPT` y las dos rutas de plantilla, que son
+**Mover la carpeta del proyecto** rompe `CLIENT_SCRIPT` y las tres rutas de plantilla, que son
 absolutas.
 
 **Cambiar el checkbox de bodega a otra Location** no afecta préstamos ya procesados — la
@@ -422,16 +480,26 @@ contrato de payload que AS_NSP_008 (alias `jsonString`, `&` escapado), pero copi
 `Bloqueado`, `En Inspección`, `Damaged` no se asignan al traslado. Mismo criterio que
 `2win_dao_assign_inv_details.js`.
 
+### Maestro de cuentas de Merma
+
+`customrecord_as_cuenta_merma_subsidiaria` evita exponer todas las cuentas contables en el
+formulario. Cada fila relaciona `custrecord_as_cuenta_merma_subsidiaria` con
+`custrecord_as_cuenta_merma_cuenta`. El estado activo/inactivo es el campo estándar
+`isinactive`; `listarCuentasAjuste()` solo devuelve filas con `isinactive = F`.
+
+No se hardcodea la cuenta `5113001` ni ninguna subsidiaria. Puerto Montt + `5113001 Costo
+medicamentos e insumos` es un ejemplo de datos de configuración, no una regla del código.
+
 ## Pendientes o deuda técnica
 
-- **Merma** — se registra pero no se procesa. Falta handler, `op` y botón.
 - **Reverso de devolución procesada** — no existe.
 - **FEFO** — el orden de lote cuando el usuario no elige uno es
   `ORDER BY ib.lastmodifieddate ASC`, que no es ni antigüedad ni vencimiento.
-- **`custrecord_as_mov_fecha_devolucion`** — se escribe pero está oculto en los tres tipos. O
-  se elimina o se llena.
 - **Guardado no transaccional** — cabecera huérfana si falla una línea.
 - **QF CASCH (1566)** — fuera de `ROLES_AUTORIZADOS`. Falta validar en NetSuite si el módulo se
   usa en Chillán.
 - **`selectrecordtype -2`** en Entidad Receptora — inferido, falta validar en NetSuite.
-- **`loglevel DEBUG`** en los dos deployments — bajar a AUDIT para Producción.
+- **`loglevel DEBUG`** en los deployments — evaluar AUDIT para los scripts operativos en Producción.
+- **Duplicidad en el maestro de cuentas de Merma** — el Custom Record no impone unicidad sobre
+  subsidiaria + cuenta; filas repetidas se ocultan en el selector por el `SELECT DISTINCT`, pero
+  conviene evitar duplicarlas para mantener el maestro limpio.

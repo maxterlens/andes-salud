@@ -21,10 +21,10 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/record', 'N/search', '../lib/MovimientoInventarioConstants', './InventoryTransferRepository'],
-    (record, search, CONSTANTES, inventoryTransferRepository) => {
+define(['N/record', 'N/search', '../lib/AS_MovimientoInventarioConstants', './AS_ConsultaStockRepository'],
+    (record, search, CONSTANTES, consultaStockRepository) => {
 
-    function crearInventoryAdjustment(datos, lineas, lotesPorArticulo) {
+    function crearAjusteInventario(datos, lineas, lotesPorArticulo) {
         const ajuste = record.create({
             type     : CONSTANTES.RECORDS.AJUSTE,
             isDynamic: true,
@@ -64,7 +64,7 @@ define(['N/record', 'N/search', '../lib/MovimientoInventarioConstants', './Inven
 
     function asignarLotes(ajuste, ubicacion, linea, lotesPorArticulo) {
         if (!lotesPorArticulo[linea.articulo]) {
-            lotesPorArticulo[linea.articulo] = inventoryTransferRepository.buscarLotesDisponibles(linea.articulo, ubicacion);
+            lotesPorArticulo[linea.articulo] = consultaStockRepository.buscarLotesDisponibles(linea.articulo, ubicacion);
         }
 
         const enLaUbicacion = lotesPorArticulo[linea.articulo];
@@ -133,5 +133,5 @@ define(['N/record', 'N/search', '../lib/MovimientoInventarioConstants', './Inven
         return asignaciones;
     }
 
-    return { crearInventoryAdjustment };
+    return { crearAjusteInventario };
 });

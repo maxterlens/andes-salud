@@ -12,7 +12,7 @@
  * @NScriptType ClientScript
  * @NModuleScope Public
  */
-define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/MovimientoInventarioConstants'],
+define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_MovimientoInventarioConstants'],
     (url, https, currentRecord, message, CONSTANTES) => {
 
     let movimientoEnProceso = false;

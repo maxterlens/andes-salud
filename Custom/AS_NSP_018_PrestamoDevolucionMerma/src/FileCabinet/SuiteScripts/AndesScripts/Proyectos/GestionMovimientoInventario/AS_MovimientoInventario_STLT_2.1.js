@@ -31,7 +31,7 @@
  * @scriptid     customscript_as_stlt_movimiento_inv
  * @deploymentid customdeploy_as_stlt_movimiento_inv
  */
-define(['./lib/MovimientoInventarioConstants', './handlers/MovimientoInventarioForm', './handlers/MovimientoInventarioHandler', './handlers/PrestamoHandler', './handlers/DevolucionHandler', './handlers/AS_MermaHandler', './handlers/ImpresionHandler'],
+define(['./lib/AS_MovimientoInventarioConstants', './ui/AS_MovimientoInventarioForm', './handlers/AS_MovimientoInventarioHandler', './handlers/AS_MovimientoInventarioPrestamoHandler', './handlers/AS_MovimientoInventarioDevolucionHandler', './handlers/AS_MovimientoInventarioMermaHandler', './handlers/AS_MovimientoInventarioImpresionHandler'],
     (CONSTANTES, formulario, movimientoHandler, prestamoHandler, devolucionHandler, mermaHandler, impresionHandler) => {
 
     const OPERACIONES = CONSTANTES.OPERACIONES;

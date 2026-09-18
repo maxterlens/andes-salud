@@ -4,8 +4,6 @@
  *              asignacion de lotes de cada linea. Si el traslado falla al
  *              guardar, el problema esta aqui: ubicaciones, subsidiaria, lineas
  *              de la sublista inventory o inventory detail.
- *              buscarStockPorArticulo alimenta la validacion de stock de los
- *              handlers y la columna Disponible del formulario de captura.
  *
  * CHANGELOG 2026-09-17:
  * - [FEAT] Las cantidades aceptan decimales. El reparto automatico entre lotes
@@ -16,10 +14,10 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/record', 'N/search', 'N/query', '../lib/MovimientoInventarioConstants'],
-    (record, search, query, CONSTANTES) => {
+define(['N/record', 'N/search', '../lib/AS_MovimientoInventarioConstants', './AS_ConsultaStockRepository'],
+    (record, search, CONSTANTES, consultaStockRepository) => {
 
-    function crearInventoryTransfer(datos, lineas) {
+    function crearTransferenciaInventario(datos, lineas) {
         const traslado = record.create({
             type     : CONSTANTES.RECORDS.TRASLADO,
             isDynamic: true,
@@ -56,7 +54,7 @@ define(['N/record', 'N/search', 'N/query', '../lib/MovimientoInventarioConstants
 
     function asignarLotes(traslado, ubicacionOrigen, linea, lotesPorArticulo) {
         if (!lotesPorArticulo[linea.articulo]) {
-            lotesPorArticulo[linea.articulo] = buscarLotesDisponibles(linea.articulo, ubicacionOrigen);
+            lotesPorArticulo[linea.articulo] = consultaStockRepository.buscarLotesDisponibles(linea.articulo, ubicacionOrigen);
         }
 
         const enLaUbicacion = lotesPorArticulo[linea.articulo];
@@ -165,67 +163,5 @@ define(['N/record', 'N/search', 'N/query', '../lib/MovimientoInventarioConstants
         return porArticulo;
     }
 
-    function buscarLotesDisponibles(articulo, ubicacion) {
-        const filas = query.runSuiteQL({
-            query: [
-                'SELECT ib.inventorynumber AS numeroinventario,',
-                '       BUILTIN.DF(ib.inventorynumber) AS nombrelote,',
-                '       ib.binnumber AS bin,',
-                '       inl.quantityonhand AS enmano',
-                'FROM InventoryBalance ib',
-                'INNER JOIN InventoryNumberLocation inl',
-                '  ON ib.inventorynumber = inl.inventorynumber AND ib.location = inl.location',
-                'WHERE ib.item = ?',
-                '  AND ib.location = ?',
-                '  AND ib.quantityonhand > 0',
-                '  AND inl.quantityonhand > 0',
-                '  AND NVL(ib.inventorystatus, -1) NOT IN (',
-                '        SELECT id FROM InventoryStatus WHERE name IN (?, ?, ?)',
-                '      )',
-                'ORDER BY ib.lastmodifieddate ASC',
-            ].join(' '),
-            params: [Number(articulo), Number(ubicacion), 'Bloqueado', 'En Inspección', 'Damaged'],
-        }).asMappedResults();
-
-        return filas.map((fila) => ({
-            numeroInventario: String(fila.numeroinventario),
-            nombreLote      : String(fila.nombrelote),
-            bin             : fila.bin,
-            enMano          : Number(fila.enmano),
-        }));
-    }
-
-    function buscarStockPorArticulo(articulos, ubicacion) {
-        if (articulos.length === 0) {
-            return {};
-        }
-
-        const filas = query.runSuiteQL({
-            query: [
-                'SELECT i.id AS articulo,',
-                '       BUILTIN.DF(i.stockunit) AS unidad,',
-                '       NVL(ail.quantityavailable, 0) AS disponible,',
-                '       NVL(ail.quantityonhand, 0) AS enmano',
-                'FROM item i',
-                'LEFT JOIN AggregateItemLocation ail',
-                '  ON ail.item = i.id AND ail.location = ?',
-                'WHERE i.id IN (' + articulos.join(',') + ')',
-            ].join(' '),
-            params: [Number(ubicacion)],
-        }).asMappedResults();
-
-        const stock = {};
-
-        filas.forEach((fila) => {
-            stock[String(fila.articulo)] = {
-                unidad    : fila.unidad,
-                disponible: Number(fila.disponible),
-                enMano    : Number(fila.enmano),
-            };
-        });
-
-        return stock;
-    }
-
-    return { crearInventoryTransfer, buscarLotesDelTraslado, buscarLotesDisponibles, buscarStockPorArticulo };
+    return { crearTransferenciaInventario, buscarLotesDelTraslado };
 });

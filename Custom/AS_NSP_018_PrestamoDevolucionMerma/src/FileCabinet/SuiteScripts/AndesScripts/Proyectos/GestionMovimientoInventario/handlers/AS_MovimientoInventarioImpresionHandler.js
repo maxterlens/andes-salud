@@ -3,7 +3,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/render', 'N/file', '../lib/MovimientoInventarioConstants', '../repositories/MovimientoInventarioRepository'],
+define(['N/render', 'N/file', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository'],
     (render, file, CONSTANTES, movimientoRepository) => {
 
     function imprimirMovimiento(context) {
