@@ -147,7 +147,8 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repo
             if (prestamoElegido) {
                 campoPrestamo.addSelectOption({
                     value: prestamoElegido.id,
-                    text : prestamoElegido.nombre + ' - ' + prestamoElegido.ubicacion
+                    text : prestamoElegido.nombre + ' - ' + prestamoElegido.entidad
+                         + ' - ' + prestamoElegido.ubicacion
                          + ' - pendiente ' + prestamoElegido.pendiente,
                 });
             }
@@ -173,6 +174,9 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repo
             label: etiquetaEntidad,
         }, grupoMovimiento);
         campoEntidad.addSelectOption({ value: '', text: '' });
+
+        if (esPrestamo) campoEntidad.isMandatory = true;
+
         const campoFrom = agregarCampo(form, {
             id   : 'custpage_ubicacion',
             type : serverWidget.FieldType.SELECT,
@@ -242,7 +246,8 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repo
             campoServicio.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
             campoFrom.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
             campoTo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-            campoEntidad.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+
+            form.insertField({ field: campoEntidad, nextfield: 'custpage_prestamo_ref' });
         }
 
         if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION) {
@@ -382,7 +387,7 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repo
         datos.campoTo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.INLINE });
 
         movimientoRepository.buscarLineasPorMovimiento(datos.idPrestamo).forEach((linea, indice) => {
-            const pendienteDosDecimales = Math.floor(Math.round(linea.pendiente * 1000000) / 10000) / 100;
+            const cantidadPendiente = Math.floor(Math.round(linea.pendiente * 1000000) / 10000) / 100;
 
             sublista.setSublistValue({ id: 'custpage_col_linea',       line: indice, value: String(linea.id) });
             sublista.setSublistValue({ id: 'custpage_col_articulo_id', line: indice, value: String(linea.articulo) });
@@ -390,7 +395,7 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants', '../repo
             sublista.setSublistValue({ id: 'custpage_col_prestada',    line: indice, value: String(linea.cantidad) });
             sublista.setSublistValue({ id: 'custpage_col_devuelta',    line: indice, value: String(linea.devuelta) });
             sublista.setSublistValue({ id: 'custpage_col_pendiente',   line: indice, value: String(linea.pendiente) });
-            sublista.setSublistValue({ id: 'custpage_col_a_devolver',  line: indice, value: String(pendienteDosDecimales) });
+            sublista.setSublistValue({ id: 'custpage_col_a_devolver',  line: indice, value: String(cantidadPendiente) });
 
             if (linea.unidadTexto) {
                 sublista.setSublistValue({ id: 'custpage_col_unidad', line: indice, value: linea.unidadTexto });

@@ -26,6 +26,10 @@ trazado por artículo y lote, pero con *Make Inventory Available* apagado no cue
 disponible. **El saldo de esa Location es el pendiente de devolución del módulo**, y por eso el
 pendiente no se administra: se refleja.
 
+Como la bodega no distingue a quién se prestó, ese dato vive en la cabecera:
+`custrecord_as_mov_entidad_receptora`. Es obligatorio al registrar un Préstamo y es el filtro
+para buscar el préstamo en una Devolución.
+
 ## Arquitectura
 
 Cuatro responsabilidades: entry points → UI/handlers → repositories. **No hay capa `services/`**,
@@ -99,6 +103,7 @@ de desplegar esta versión se deben borrar manualmente los archivos de la column
 STLT onRequest → validarPermisoEscritura() → guardarMovimiento()
     obtenerParametrosGuardado(request)
     rehaceDetalle = !idMovimiento || !movimiento.custrecord_as_mov_transfer
+    cantidades del request → format.parse({ type: format.Type.FLOAT })
     if (rehaceDetalle) → valida: sin lineas / cantidad <= 0 / devolucion toda en cero
     alta      → crearMovimiento(), estado Pendiente de Procesar
     edicion   → actualizarDatosMovimiento() y, si rehaceDetalle, eliminarLineasMovimiento()
@@ -187,8 +192,15 @@ Las cinco operaciones que escriben pasan antes por `validarPermisoEscritura()`.
 **User Event `customscript_as_ue_movimiento_inv`** — dos hooks: redirige `CREATE`/`EDIT` al
 Suitelet, y en `VIEW` arma la vista del registro con su tab de detalle y sus botones.
 
-**Client Script** — combos encadenados, tope de cantidades, preselección de la bodega destino y
-las funciones que llaman a cada `op`.
+**Client Script** — combos encadenados, redondeo y tope de cantidades, preselección de la bodega
+destino, filtro de préstamos por entidad en la Devolución y las funciones que llaman a cada `op`.
+
+| Función | Qué hace |
+|---|---|
+| `redondearCantidad` | Al escribir Cantidad o Cantidad a Devolver, deja el valor en 2 decimales con `Math.round(cantidad * 100) / 100`, con `ignoreFieldChange: true` |
+| `topearCantidadPrestada` / `topearCantidadADevolver` | Si la cantidad supera el disponible o el pendiente, la ajusta a ese máximo truncado a 2 decimales |
+| `cargarEntidadesConPendientes` | En Devolución, llena el filtro Entidad Receptora con las entidades de los préstamos pendientes de la subsidiaria, sin repetir |
+| `cargarPrestamosDeSubsidiaria` | Llena Préstamo Relacionado con los pendientes de la subsidiaria y, si hay entidad elegida, solo los de esa entidad |
 
 ## Objetos de NetSuite
 
@@ -203,6 +215,7 @@ las funciones que llaman a cada `op`.
 | Cuenta de Merma por subsidiaria | `customrecord_as_cuenta_merma_subsidiaria` |
 | Checkbox en Location | `custrecord_as_es_bodega_prestamo` (`rectype -103`) |
 | Formulario | `custform_as_movimiento_inventario` |
+| Menú | `custcentercategory_as_gestion_movimientos` |
 | Listas | `customlist_as_tipo_movimiento`, `customlist_as_estado_movimiento`, `customlist_as_motivo_baja` |
 
 **Suitelet:** `allemployees T`, `allroles F`, `runasrole ADMINISTRATOR`, `status RELEASED`,
@@ -214,6 +227,17 @@ las funciones que llaman a cada `op`.
 
 > `runasrole = ADMINISTRATOR` **no tapa el rol real**: `runtime.getCurrentUser().role` devuelve
 > el rol del usuario logueado. El runasrole solo cambia con qué permisos se ejecuta.
+
+**Menú:** `custcentercategory_as_gestion_movimientos` crea **Gestion de Movimientos** en el
+centro `BASIC`, pestaña `BASICCENTERTRANSACTIONS` (Transacciones), con tres links `LIST`:
+
+| `linklabel` | `linkobject` |
+|---|---|
+| `Movimientos de Inventario` | `customrecord_as_movimiento_inventario` |
+| `Entidades Receptoras` | `customrecord_as_receptor_subsidiaria` |
+| `Cuentas de Merma` | `customrecord_as_cuenta_merma_subsidiaria` |
+
+Los custom records no declaran `<links>` propios: el menú vive solo en la categoría.
 
 **Features del manifest:** `SERVERSIDESCRIPTING`, `CUSTOMRECORDS`, `SUBSIDIARIES`,
 `UNITSOFMEASURE`, `LOCATIONS`, `DEPARTMENTS` como requeridas; `MULTILANGUAGE`, `MATRIXITEMS`,
@@ -229,6 +253,9 @@ las funciones que llaman a cada `op`.
 | `custrecord_as_mov_ubicacion_dest` | Destino del préstamo. **El origen de la devolución sale de acá**, no del checkbox |
 | `custrecord_as_mov_det_linea_ref` | Apunta de la línea de devolución a la línea de préstamo. **Nunca cuadrar por artículo**: con el mismo artículo en dos líneas descuenta de más |
 | `custrecord_as_mov_det_cant_pendiente` | Nace igual a la cantidad prestada, no en cero |
+| `custrecord_as_mov_det_cantidad`, `custrecord_as_mov_det_cant_devuelta`, `custrecord_as_mov_det_cant_pendiente` | `FLOAT` con `minvalue 0`. Antes eran `INTEGER` y la cantidad tenía `minvalue 1`, que rechazaba `0,5` |
+| `custrecord_as_mov_entidad_receptora` | Entidad receptora (`selectrecordtype -2`). `ismandatory F` en el record: la obligatoriedad en Préstamo la pone el Suitelet |
+| `custrecord_as_recep_subsidiaria` / `custrecord_as_recep_entidad` | Subsidiaria y entidad de cada fila activa de `customrecord_as_receptor_subsidiaria` |
 | `custrecord_as_mov_det_lote` | TEXT con el **nombre** del lote, no el id. El id se resuelve al procesar |
 | `custrecord_as_es_bodega_prestamo` | Checkbox en Location que identifica la bodega de préstamos de la subsidiaria |
 | `custrecord_as_cuenta_merma_subsidiaria` | Subsidiaria de una relación activa del maestro de cuentas de Merma |
@@ -265,6 +292,19 @@ Agregarle una tilde a cualquiera de estos valores en NetSuite rompe el módulo.
   cuenta requiere mantener el maestro, no editar código.
 - **La Merma se procesa en la misma ubicación**: crea cantidades negativas, queda `Procesado` y
   no genera saldo pendiente.
+- **La Entidad Receptora es obligatoria solo en Préstamo**: `if (esPrestamo)
+  campoEntidad.isMandatory = true` en `renderizarFormulario`. En Merma el campo se oculta.
+- **En Devolución, antes de elegir el préstamo, la entidad es un filtro opcional**: el Form la
+  mueve delante de `custpage_prestamo_ref` con `form.insertField`. Sus opciones salen de los
+  préstamos pendientes, no de `customrecord_as_receptor_subsidiaria`, así nunca deja el combo de
+  préstamos vacío. Al elegir el préstamo la pantalla se recarga y la entidad queda heredada e
+  `INLINE`.
+- **Las cantidades que escribe el usuario van con 2 decimales como máximo**: redondeo al
+  escribir, tope truncado hacia abajo, y la Cantidad a Devolver se precarga con el pendiente
+  truncado (`Math.floor(Math.round(linea.pendiente * 1000000) / 10000) / 100`).
+- **Los cálculos internos redondean a 8 decimales**: devuelto y pendiente en
+  `generarTransferDevolucion`, los saldos de `tomarLotesDelPrestamo` y el `porAsignar` del
+  reparto por lotes en los dos repositories de transacción.
 
 ### Botones — `agregarBotones`, orden exacto
 
@@ -303,7 +343,7 @@ si los dos primeros términos del `&&` son verdaderos.
 | `AS_ConsultaStockRepository → buscarLotesDisponibles` | `InventoryBalance` + `InventoryNumberLocation` | item, location, ambos `quantityonhand > 0`, estado NOT IN (Bloqueado, En Inspección, Damaged) | lote, nombre, bin, en mano | Asignar lotes, poblar el combo Lote y validar stock por lote |
 | `AS_ConsultaStockRepository → buscarStockPorArticulo` | `item` LEFT JOIN `AggregateItemLocation` | `i.id IN (...)`, location | unidad, disponible, en mano | Columna Disponible y validación de stock de los procesos |
 | `AS_MovimientoInventarioRepository → listarUbicacionesPorSubsidiaria` | `location` + `LocationSubsidiaryMap` | `isinactive = F` | subsidiaria, id, nombre, es bodega préstamo | Combos de ubicación, filtrados en el cliente |
-| `AS_MovimientoInventarioRepository → listarPrestamosPendientes` | cabecera + detalle + las dos customlists + location | tipo = Prestamo, estado IN (Pendiente de Devolucion, Devuelto Parcial), `HAVING SUM(pendiente) > 0` | id, nombre, subsidiaria, ubicación, pendiente | Combo Préstamo Relacionado. **Une por nombre contra las listas para no depender de ids internos** |
+| `AS_MovimientoInventarioRepository → listarPrestamosPendientes` | cabecera + detalle + las dos customlists + location | tipo = Prestamo, estado IN (Pendiente de Devolucion, Devuelto Parcial), `HAVING SUM(pendiente) > 0` | id, nombre, subsidiaria, id y nombre de la entidad receptora, ubicación, pendiente | Combo Préstamo Relacionado y filtro Entidad Receptora de la Devolución. **Une por nombre contra las listas para no depender de ids internos**. Sin entidad devuelve `idEntidad ''` y `entidad 'SIN ENTIDAD'` |
 | `AS_MovimientoInventarioRepository → listarEntidadesPorSubsidiaria` | `customrecord_as_receptor_subsidiaria` | `isinactive = F` | subsidiaria, entidad, nombre | Combo Entidad Receptora |
 | `AS_MovimientoInventarioRepository → listarCuentasAjuste` | `customrecord_as_cuenta_merma_subsidiaria` | `isinactive = F` | subsidiaria, cuenta y nombre de cuenta | Combo Cuenta de Ajuste, filtrado por subsidiaria en el cliente |
 
@@ -320,6 +360,9 @@ si los dos primeros términos del `&&` son verdaderos.
 | `Constants` | los seis nombres de estado y los tres de tipo | El código compara por nombre. Renombrar un valor rompe el módulo |
 | `Constants` | `CLIENT_SCRIPT` y las tres rutas de `PLANTILLAS` | Rutas absolutas del File Cabinet. Mover la carpeta las rompe |
 | `Objects` | `selectrecordtype -2` en Entidad Receptora | Inferido: `-3` Vendedor y `-4` Employee están confirmados en el repo, `-2` no. Falta validar en NetSuite |
+| `AS_MovimientoInventario_CS_2.1.js`, `ui/AS_MovimientoInventarioForm.js` | `100` en el redondeo y el truncado | Fija el máximo de 2 decimales de la entrada. Cambiar la precisión exige tocar los tres puntos del CS y el del Form |
+| Handler de Devolución y repositories de transacción | `100000000` | Precisión interna de 8 decimales. Tiene que ser mayor que la de los saldos de lote de la cuenta, que llegan con 6 |
+| `AS_MovimientoInventarioRepository → listarPrestamosPendientes` | `'SIN ENTIDAD'` | Texto que ve el usuario para préstamos sin entidad |
 
 ## Configuración
 
@@ -329,7 +372,7 @@ si los dos primeros términos del `&&` son verdaderos.
 |---|---|
 | Checkbox `custrecord_as_es_bodega_prestamo` en una Location | El combo Ubicación Destino queda vacío y no se puede guardar un préstamo |
 | **Make Inventory Available apagado** en esa bodega | Si se enciende, el material prestado vuelve a contar como stock usable |
-| Filas en `customrecord_as_receptor_subsidiaria` | El combo Entidad Receptora sale vacío (no bloquea: el campo es opcional) |
+| Filas en `customrecord_as_receptor_subsidiaria` | El combo Entidad Receptora del Préstamo sale vacío y **no se puede guardar ningún Préstamo** de esa subsidiaria, porque el campo es obligatorio |
 | Filas activas en `customrecord_as_cuenta_merma_subsidiaria` | Cuenta de Ajuste queda vacía y no se puede guardar una Merma para esa subsidiaria |
 | `LocationSubsidiaryMap` | Una ubicación sin subsidiaria no aparece en ningún combo |
 | Valores de `customlist_as_motivo_baja` | Incluye Vencimiento, Deterioro, Cuarentena y Otro; se pueden agregar valores |
@@ -364,6 +407,9 @@ suitecloud project:deploy
 | **Lote idéntico en la devolución** | Vuelve el mismo lote que salió; no admite reemplazo |
 | **Guardado no transaccional** | Cabecera y líneas se crean por separado |
 | **Cuenta de Merma obligatoria** | Debe existir una configuración activa para la subsidiaria y quedar guardada en la cabecera |
+| **Entidad obligatoria solo en pantalla** | La pone el Suitelet; el record tiene `ismandatory F`. Un registro creado por otra vía puede quedar sin entidad |
+| **2 decimales solo en el cliente** | El redondeo es del Client Script. El handler no rechaza más decimales |
+| **Saldos con más de 2 decimales** | Por el truncado, de `7,566666` se mueven como máximo `7,56`; el resto queda en la ubicación |
 
 ## Manejo de errores
 
@@ -410,7 +456,8 @@ scripts operativos; con AUDIT el log queda en una línea por operación, que es 
 **Internas:** ninguna en tiempo de ejecución. El módulo no importa nada de `APIGlobales/`.
 
 **De NetSuite:** `N/record`, `N/search`, `N/query`, `N/render`, `N/runtime`, `N/redirect`,
-`N/ui/serverWidget`, `N/url`.
+`N/error`, `N/file`, `N/format`, `N/https`, `N/url`, `N/currentRecord`, `N/ui/serverWidget`,
+`N/ui/message`.
 
 **Del entorno:** el tipo de transacción nativo `inventorytransfer` y la funcionalidad de lotes.
 
@@ -475,6 +522,37 @@ contrato de payload que AS_NSP_008 (alias `jsonString`, `&` escapado), pero copi
 > `bold` y `<span style="font-size: Npt;">` inline. `linklabel` de un link de menú admite
 > **máximo 30 caracteres**.
 
+### Cantidades decimales
+
+Los campos de cantidad del detalle pasaron de `INTEGER` a `FLOAT`, igual que las columnas
+Disponible, Cantidad y Cantidad a Devolver del Suitelet.
+
+- **`format.parse` en vez de `Number()` al leer el request.** Las subsidiarias están en `es_ES`:
+  el campo FLOAT del Suitelet envía `'0,5'` y `Number('0,5')` da `NaN`. (Fuente: decisión
+  registrada al implementar, 2026-09-17)
+- **2 decimales en la entrada por decisión funcional.** Primero se probó rechazar el valor con
+  `validateField`; se reemplazó por redondear al escribir. (Fuente: decisión registrada al
+  implementar, 2026-09-17)
+- **El tope trunca, no redondea**, porque redondear `7,566666` a `7,57` pasaría el stock. El
+  `Math.round` interno absorbe el error binario: `0,29 * 100` da `28,999…` y un `floor` directo
+  lo bajaría a `0,28`.
+- **La precarga se trunca en el servidor** porque el redondeo del Client Script solo corre
+  cuando el usuario edita el campo; el valor precargado no pasaba por ahí.
+- **8 decimales internos, no 5.** Con 5, `0,3 - 0,1 - 0,2` ya quedaba en cero, pero los saldos
+  de lote llegan con 6 decimales por conversión de unidad y el reparto perdía el último dígito:
+  la suma del inventory detail no cuadraba con la línea. Sin ningún redondeo, el residuo
+  binario dejaba el préstamo sin llegar nunca a `Devuelto Total`.
+
+### Entidad Receptora obligatoria y filtro en Devolución
+
+La bodega de préstamos es una sola por subsidiaria, así que su saldo dice cuánto hay afuera
+pero no quién lo tiene. Por eso la entidad es obligatoria al prestar y es el filtro para
+encontrar el préstamo al devolver. (Fuente: decisión funcional, 2026-09-18)
+
+El filtro se arma desde los préstamos pendientes y no desde la lista blanca, para no ofrecer
+una entidad sin nada que devolver. Es opcional, para que los préstamos anteriores a la
+obligatoriedad, que no tienen entidad, sigan siendo alcanzables.
+
 ### Estados de inventario excluidos
 
 `Bloqueado`, `En Inspección`, `Damaged` no se asignan al traslado. Mismo criterio que
@@ -500,6 +578,14 @@ medicamentos e insumos` es un ejemplo de datos de configuración, no una regla d
   usa en Chillán.
 - **`selectrecordtype -2`** en Entidad Receptora — inferido, falta validar en NetSuite.
 - **`loglevel DEBUG`** en los deployments — evaluar AUDIT para los scripts operativos en Producción.
+- **Préstamos entre servicios internos** — la entidad es un cliente de NetSuite; un préstamo a
+  otro servicio de la misma clínica no tiene cómo registrarse con el campo obligatorio.
+- **Préstamo que llega del exterior** — cuando otra institución presta a Andes. Fuera de la
+  versión actual. (Fuente: decisión funcional, 2026-09-17)
+- **Validación de 2 decimales en el servidor** — solo existe en el Client Script.
+- **Datos de prueba en QA con más de 2 decimales** — movimientos grabados antes del límite
+  (por ejemplo MOV#000004, pendiente `0,43333`) no pueden llegar a `Devuelto Total` con el
+  truncado. Conviene anularlos.
 - **Duplicidad en el maestro de cuentas de Merma** — el Custom Record no impone unicidad sobre
   subsidiaria + cuenta; filas repetidas se ocultan en el selector por el `SELECT DISTINCT`, pero
   conviene evitar duplicarlas para mantener el maestro limpio.

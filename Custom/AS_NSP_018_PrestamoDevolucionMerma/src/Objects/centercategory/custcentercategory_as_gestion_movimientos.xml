@@ -1,0 +1,25 @@
+<centercategory scriptid="custcentercategory_as_gestion_movimientos">
+  <center>BASIC</center>
+  <centertab>BASICCENTERTRANSACTIONS</centertab>
+  <label>Gestion de Movimientos</label>
+  <links>
+    <link>
+      <linkobject>[scriptid=customrecord_as_movimiento_inventario]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <linklabel>Movimientos de Inventario</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkobject>[scriptid=customrecord_as_receptor_subsidiaria]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <linklabel>Entidades Receptoras</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkobject>[scriptid=customrecord_as_cuenta_merma_subsidiaria]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <linklabel>Cuentas de Merma</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

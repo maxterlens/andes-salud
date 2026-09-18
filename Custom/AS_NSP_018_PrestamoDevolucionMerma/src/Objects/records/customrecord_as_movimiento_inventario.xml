@@ -40,13 +40,6 @@
   <showowner>F</showowner>
   <showownerallowchange>F</showownerallowchange>
   <showowneronlist>F</showowneronlist>
-  <links>
-    <link>
-      <linkcategory>BASICTRANSACTIONSINVENTORY</linkcategory>
-      <linklabel>Movimiento de Inventario</linklabel>
-      <linktasktype>LIST</linktasktype>
-    </link>
-  </links>
   <customrecordcustomfields>
     <customrecordcustomfield scriptid="custrecord_as_mov_tipo">
       <accesslevel>2</accesslevel>

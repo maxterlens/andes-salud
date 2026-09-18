@@ -58,6 +58,11 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
             actualizarPorSubsidiaria(registroActual);
             return;
         }
+
+        if (context.fieldId === 'custpage_entidad_receptora' && esDevolucion(registroActual)) {
+            cargarPrestamosDeSubsidiaria(registroActual);
+            return;
+        }
     }
 
     function mostrarDisponible(registroActual) {
@@ -206,14 +211,14 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
         }));
 
         if (cantidad > disponible) {
-            const topeDosDecimales = Math.floor(Math.round(disponible * 1000000) / 10000) / 100;
+            const cantidadDisponible = Math.floor(Math.round(disponible * 1000000) / 10000) / 100;
 
-            alert('No hay tanto del lote ' + lote + ': quedan ' + disponible + '. Se ajusta a ' + topeDosDecimales + '.');
+            alert('No hay tanto del lote ' + lote + ': quedan ' + disponible + '. Se ajusta a ' + cantidadDisponible + '.');
 
             registroActual.setCurrentSublistValue({
                 sublistId: 'custpage_sl_detalle',
                 fieldId  : 'custpage_col_cantidad',
-                value    : topeDosDecimales,
+                value    : cantidadDisponible,
             });
         }
     }
@@ -241,14 +246,14 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
         }
 
         if (aDevolver > pendiente) {
-            const topeDosDecimales = Math.floor(Math.round(pendiente * 1000000) / 10000) / 100;
+            const cantidadPendiente = Math.floor(Math.round(pendiente * 1000000) / 10000) / 100;
 
-            alert('No se puede devolver mas de lo pendiente de esta linea: quedan ' + pendiente + '. Se ajusta a ' + topeDosDecimales + '.');
+            alert('No se puede devolver mas de lo pendiente de esta linea: quedan ' + pendiente + '. Se ajusta a ' + cantidadPendiente + '.');
 
             registroActual.setCurrentSublistValue({
                 sublistId: 'custpage_sl_detalle',
                 fieldId  : 'custpage_col_a_devolver',
-                value    : topeDosDecimales,
+                value    : cantidadPendiente,
             });
         }
     }
@@ -278,6 +283,7 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
 
     function actualizarPorSubsidiaria(registroActual) {
         if (esDevolucion(registroActual)) {
+            cargarEntidadesConPendientes(registroActual);
             cargarPrestamosDeSubsidiaria(registroActual);
             return;
         }
@@ -287,8 +293,40 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
         cargarCuentasDeSubsidiaria(registroActual);
     }
 
+    /**
+     * Filtro de la Devolucion: solo las entidades que tienen un prestamo pendiente en
+     * la subsidiaria, sacadas de los mismos prestamos del combo. Una entidad sin nada
+     * pendiente dejaria el combo de prestamos vacio.
+     */
+    function cargarEntidadesConPendientes(registroActual) {
+        const subsidiaria = registroActual.getValue({ fieldId: 'custpage_subsidiaria' });
+        const datos       = JSON.parse(registroActual.getValue({ fieldId: 'custpage_ubicaciones_data' }));
+
+        const campoEntidad = registroActual.getField({ fieldId: 'custpage_entidad_receptora' });
+
+        campoEntidad.removeSelectOption({ value: null });
+        campoEntidad.insertSelectOption({ value: '', text: '' });
+
+        const entidadesAgregadas = [];
+
+        datos.prestamos.forEach((prestamo) => {
+            if (prestamo.subsidiaria !== subsidiaria || !prestamo.idEntidad) {
+                return;
+            }
+
+            if (entidadesAgregadas.includes(prestamo.idEntidad)) {
+                return;
+            }
+
+            entidadesAgregadas.push(prestamo.idEntidad);
+
+            campoEntidad.insertSelectOption({ value: prestamo.idEntidad, text: prestamo.entidad });
+        });
+    }
+
     function cargarPrestamosDeSubsidiaria(registroActual) {
         const subsidiaria = registroActual.getValue({ fieldId: 'custpage_subsidiaria' });
+        const entidad     = registroActual.getValue({ fieldId: 'custpage_entidad_receptora' });
         const datos       = JSON.parse(registroActual.getValue({ fieldId: 'custpage_ubicaciones_data' }));
 
         const campoPrestamo = registroActual.getField({ fieldId: 'custpage_prestamo_ref' });
@@ -301,9 +339,14 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
                 return;
             }
 
+            if (entidad && prestamo.idEntidad !== entidad) {
+                return;
+            }
+
             campoPrestamo.insertSelectOption({
                 value: prestamo.id,
-                text : prestamo.nombre + ' - ' + prestamo.ubicacion
+                text : prestamo.nombre + ' - ' + prestamo.entidad
+                     + ' - ' + prestamo.ubicacion
                      + ' - pendiente ' + prestamo.pendiente,
             });
         });
