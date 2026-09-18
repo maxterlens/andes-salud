@@ -15,6 +15,8 @@
 define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/MovimientoInventarioConstants'],
     (url, https, currentRecord, message, CONSTANTES) => {
 
+    let movimientoEnProceso = false;
+
     const stockPorLote = {};
 
     function saveRecord(context) {
@@ -348,7 +350,7 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/Movimiento
         campoCuenta.insertSelectOption({ value: '', text: '' });
 
         datos.cuentas.forEach((cuenta) => {
-            if (cuenta.subsidiarias.indexOf(subsidiaria) === -1) {
+            if (cuenta.subsidiaria !== subsidiaria) {
                 return;
             }
 
@@ -486,7 +488,27 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/Movimiento
         }).show();
     }
 
+    function bloquearProcesamiento(idBoton) {
+        if (movimientoEnProceso) {
+            return false;
+        }
+
+        movimientoEnProceso = true;
+
+        const boton = document.getElementById(idBoton);
+
+        if (boton) {
+            boton.disabled = true;
+        }
+
+        return true;
+    }
+
     function generarTransferPrestamo() {
+        if (!bloquearProcesamiento('custpage_btn_procesar')) {
+            return;
+        }
+
         avisarProcesando('Se esta generando el traslado del prestamo.');
 
         window.location.href = url.resolveScript({
@@ -500,6 +522,10 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/Movimiento
     }
 
     function generarTransferDevolucion() {
+        if (!bloquearProcesamiento('custpage_btn_devolver')) {
+            return;
+        }
+
         avisarProcesando('Se esta generando el traslado de la devolucion.');
 
         window.location.href = url.resolveScript({
@@ -513,6 +539,10 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/Movimiento
     }
 
     function generarAjusteMerma() {
+        if (!bloquearProcesamiento('custpage_btn_mermar')) {
+            return;
+        }
+
         avisarProcesando('Se esta generando el ajuste de inventario de la merma.');
 
         window.location.href = url.resolveScript({

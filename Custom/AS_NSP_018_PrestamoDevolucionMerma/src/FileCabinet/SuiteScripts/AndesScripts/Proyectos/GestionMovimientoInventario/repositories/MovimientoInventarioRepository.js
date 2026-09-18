@@ -247,25 +247,22 @@ define(['N/record', 'N/search', 'N/query', '../lib/MovimientoInventarioConstants
     }
 
     function listarCuentasAjuste() {
-        const tipos = CONSTANTES.TIPOS_CUENTA_AJUSTE;
-
         const filas = query.runSuiteQL({
             query: [
-                'SELECT a.id AS id,',
-                '       a.accountsearchdisplayname AS nombre,',
-                '       a.subsidiary AS subsidiarias',
-                'FROM account a',
-                'WHERE a.isinactive = ?',
-                '  AND a.accttype IN (' + tipos.map(() => '?').join(', ') + ')',
-                'ORDER BY a.accountsearchdisplayname',
+                'SELECT DISTINCT c.custrecord_as_cuenta_merma_subsidiaria AS subsidiaria,',
+                '       c.custrecord_as_cuenta_merma_cuenta AS id,',
+                '       BUILTIN.DF(c.custrecord_as_cuenta_merma_cuenta) AS nombre',
+                'FROM customrecord_as_cuenta_merma_subsidiaria c',
+                'WHERE c.isinactive = ?',
+                'ORDER BY BUILTIN.DF(c.custrecord_as_cuenta_merma_cuenta)',
             ].join(' '),
-            params: ['F'].concat(tipos),
+            params: ['F'],
         }).asMappedResults();
 
         return filas.map((fila) => ({
-            id          : String(fila.id),
-            nombre      : fila.nombre,
-            subsidiarias: String(fila.subsidiarias).split(',').map((subsidiaria) => subsidiaria.trim()),
+            subsidiaria: String(fila.subsidiaria),
+            id         : String(fila.id),
+            nombre     : fila.nombre,
         }));
     }
 

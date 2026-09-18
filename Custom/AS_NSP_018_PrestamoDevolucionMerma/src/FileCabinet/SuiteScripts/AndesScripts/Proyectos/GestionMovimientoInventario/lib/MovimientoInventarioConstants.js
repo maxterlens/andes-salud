@@ -76,6 +76,7 @@ define([], () => {
     const PLANTILLAS = {
         PRESTAMO  : '/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/templates/AS.FTL.PrestamoPDF.ftl',
         DEVOLUCION: '/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/templates/AS.FTL.DevolucionPDF.ftl',
+        MERMA     : '/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/templates/AS.FTL.MermaPDF.ftl',
     };
 
     const OPERACIONES = {
@@ -98,8 +99,6 @@ define([], () => {
     
     const ROLES_AUTORIZADOS = [3, 1371];
 
-    const TIPOS_CUENTA_AJUSTE = ['Expense', 'COGS', 'OthExpense'];
-
     return {
         TIPOS      : TIPOS,
         ORDEN_TIPOS: ORDEN_TIPOS,
@@ -120,8 +119,7 @@ define([], () => {
         CLIENT_SCRIPT: CLIENT_SCRIPT,
         PLANTILLAS   : PLANTILLAS,
 
-        LOGS               : LOGS,
-        ROLES_AUTORIZADOS  : ROLES_AUTORIZADOS,
-        TIPOS_CUENTA_AJUSTE: TIPOS_CUENTA_AJUSTE,
+        LOGS             : LOGS,
+        ROLES_AUTORIZADOS: ROLES_AUTORIZADOS,
     };
 });

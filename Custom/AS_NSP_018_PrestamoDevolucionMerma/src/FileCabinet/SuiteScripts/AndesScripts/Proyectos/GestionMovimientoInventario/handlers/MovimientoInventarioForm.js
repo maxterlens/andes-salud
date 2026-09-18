@@ -23,6 +23,14 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
         };
     }
 
+    function agregarCampo(form, opciones, contenedor) {
+        if (contenedor) {
+            opciones.container = contenedor;
+        }
+
+        return form.addField(opciones);
+    }
+
     function renderizarFormulario(context) {
         const parametros = obtenerParametrosFormulario(context.request);
 
@@ -42,18 +50,43 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
 
         const tipoElegido = tipos.filter((opcion) => opcion.id === idTipo)[0];
         const nombreTipo  = tipoElegido ? tipoElegido.nombre : '';
+        const esPrestamo   = nombreTipo === CONSTANTES.TIPOS.PRESTAMO;
+        const esDevolucion = nombreTipo === CONSTANTES.TIPOS.DEVOLUCION;
+        const esMerma      = nombreTipo === CONSTANTES.TIPOS.MERMA;
 
         const titulo          = movimiento ? 'Edicion de Movimiento de Inventario' : 'Registro de Movimiento de Inventario';
         const etiquetaGuardar = movimiento ? 'Actualizar Movimiento' : 'Guardar Movimiento';
 
         const form = serverWidget.createForm({ title: titulo });
 
+        const grupoTipo       = 'custpage_grupo_tipo_movimiento';
+        const grupoMovimiento = 'custpage_grupo_datos_movimiento';
+        let grupoEspecifico   = '';
+        let etiquetaGrupoMovimiento = '2. Datos del Movimiento';
+
+        if (esPrestamo) etiquetaGrupoMovimiento = '2. Origen y Destino';
+        if (esDevolucion) etiquetaGrupoMovimiento = '2. Prestamo a Devolver';
+
+        form.addFieldGroup({ id: grupoTipo, label: '1. Tipo de Movimiento' });
+        form.addFieldGroup({ id: grupoMovimiento, label: etiquetaGrupoMovimiento });
+
+        if (esPrestamo) {
+            grupoEspecifico = 'custpage_grupo_datos_prestamo';
+            form.addFieldGroup({ id: grupoEspecifico, label: '3. Datos del Prestamo' });
+        } else if (esMerma) {
+            grupoEspecifico = 'custpage_grupo_datos_baja';
+            form.addFieldGroup({ id: grupoEspecifico, label: '3. Datos de la Baja' });
+        } else if (esDevolucion) {
+            grupoEspecifico = 'custpage_grupo_datos_devolucion';
+            form.addFieldGroup({ id: grupoEspecifico, label: '3. Datos de la Devolucion' });
+        }
+
         form.clientScriptModulePath = CONSTANTES.CLIENT_SCRIPT;
-        const campoTipo = form.addField({
+        const campoTipo = agregarCampo(form, {
             id   : 'custpage_tipo',
             type : serverWidget.FieldType.SELECT,
             label: 'Tipo de Movimiento',
-        });
+        }, grupoTipo);
         campoTipo.isMandatory  = true;
         campoTipo.defaultValue = idTipo;
         campoTipo.addSelectOption({ value: '', text: '' });
@@ -63,20 +96,24 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
             campoTipo.addSelectOption({ value: opcion.id, text: opcion.nombre });
         });
 
-        const campoFecha = form.addField({
+        let grupoFecha = grupoMovimiento;
+
+        if (esPrestamo || esDevolucion) grupoFecha = grupoEspecifico;
+
+        const campoFecha = agregarCampo(form, {
             id   : 'custpage_fecha',
             type : serverWidget.FieldType.DATE,
             label: CONSTANTES.ETIQUETAS_FECHA[nombreTipo] || 'Fecha',
-        });
+        }, grupoFecha);
         campoFecha.isMandatory = true;
         campoFecha.defaultValue = parametros.fecha;
 
-        if (nombreTipo === CONSTANTES.TIPOS.MERMA) {
-            const campoMotivo = form.addField({
+        if (esMerma) {
+            const campoMotivo = agregarCampo(form, {
                 id   : 'custpage_motivo',
                 type : serverWidget.FieldType.SELECT,
                 label: 'Motivo de la Baja',
-            });
+            }, grupoEspecifico);
             campoMotivo.isMandatory = true;
             campoMotivo.addSelectOption({ value: '', text: '' });
 
@@ -85,24 +122,24 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
             });
         }
 
-        const campoSubsidiaria = form.addField({
+        const campoSubsidiaria = agregarCampo(form, {
             id    : 'custpage_subsidiaria',
             type  : serverWidget.FieldType.SELECT,
             label : 'Subsidiaria',
             source: 'subsidiary',
-        });
+        }, grupoMovimiento);
         campoSubsidiaria.isMandatory = true;
 
         let cuentasAjuste = [];
 
-        if (nombreTipo === CONSTANTES.TIPOS.MERMA) {
+        if (esMerma) {
             cuentasAjuste = movimientoRepository.listarCuentasAjuste();
 
-            const campoCuentaAjuste = form.addField({
+            const campoCuentaAjuste = agregarCampo(form, {
                 id   : 'custpage_cuenta_ajuste',
                 type : serverWidget.FieldType.SELECT,
                 label: 'Cuenta de Ajuste',
-            });
+            }, grupoEspecifico);
             campoCuentaAjuste.isMandatory = true;
             campoCuentaAjuste.addSelectOption({ value: '', text: '' });
 
@@ -110,7 +147,7 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
                 const subsidiariaGuardada = String(movimiento.getValue({ fieldId: 'custrecord_as_mov_subsidiaria' }));
 
                 cuentasAjuste.forEach((cuenta) => {
-                    if (cuenta.subsidiarias.indexOf(subsidiariaGuardada) === -1) {
+                    if (cuenta.subsidiaria !== subsidiariaGuardada) {
                         return;
                     }
 
@@ -120,14 +157,14 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
         }
         let prestamosPendientes = [];
 
-        if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION) {
+        if (esDevolucion) {
             prestamosPendientes = movimientoRepository.listarPrestamosPendientes();
 
-            const campoPrestamo = form.addField({
+            const campoPrestamo = agregarCampo(form, {
                 id   : 'custpage_prestamo_ref',
                 type : serverWidget.FieldType.SELECT,
                 label: 'Prestamo Relacionado',
-            });
+            }, grupoMovimiento);
             campoPrestamo.isMandatory = true;
             campoPrestamo.addSelectOption({ value: '', text: '' });
             const prestamoElegido = prestamosPendientes.filter((prestamo) => prestamo.id === idPrestamo)[0];
@@ -143,51 +180,56 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
             campoPrestamo.defaultValue = idPrestamo;
         }
 
-        const campoServicio = form.addField({
+        const campoServicio = agregarCampo(form, {
             id    : 'custpage_servicio',
             type  : serverWidget.FieldType.SELECT,
             label : 'Servicio',
             source: 'department',
-        });
+        }, grupoMovimiento);
         campoServicio.isMandatory = true;
-        const campoEntidad = form.addField({
+
+        let etiquetaEntidad = 'Entidad Receptora';
+
+        if (esPrestamo) etiquetaEntidad = 'Entidad Receptora del Prestamo';
+
+        const campoEntidad = agregarCampo(form, {
             id   : 'custpage_entidad_receptora',
             type : serverWidget.FieldType.SELECT,
-            label: 'Entidad Receptora',
-        });
+            label: etiquetaEntidad,
+        }, grupoMovimiento);
         campoEntidad.addSelectOption({ value: '', text: '' });
-        const campoFrom = form.addField({
+        const campoFrom = agregarCampo(form, {
             id   : 'custpage_ubicacion',
             type : serverWidget.FieldType.SELECT,
             label: CONSTANTES.ETIQUETAS_UBICACION[nombreTipo] || 'Ubicacion Origen',
-        });
+        }, grupoMovimiento);
         campoFrom.isMandatory = true;
         campoFrom.addSelectOption({ value: '', text: '' });
         campoFrom.updateBreakType({ breakType: serverWidget.FieldBreakType.STARTCOL });
 
-        const campoTo = form.addField({
+        const campoTo = agregarCampo(form, {
             id   : 'custpage_ubicacion_dest',
             type : serverWidget.FieldType.SELECT,
             label: 'Ubicacion Destino',
-        });
+        }, grupoMovimiento);
         campoTo.isMandatory = true;
         campoTo.addSelectOption({ value: '', text: '' });
 
-        const campoUsuario = form.addField({
+        const campoUsuario = agregarCampo(form, {
             id    : 'custpage_usuario_resp',
             type  : serverWidget.FieldType.SELECT,
             label : CONSTANTES.ETIQUETAS_RESPONSABLE[nombreTipo] || 'Usuario Responsable',
             source: 'employee',
-        });
+        }, grupoEspecifico || grupoMovimiento);
         campoUsuario.isMandatory = true;
         campoUsuario.updateBreakType({ breakType: serverWidget.FieldBreakType.STARTCOL });
         campoUsuario.defaultValue = parametros.responsable;
 
-        const campoComentarios = form.addField({
+        const campoComentarios = agregarCampo(form, {
             id   : 'custpage_comentarios',
             type : serverWidget.FieldType.TEXTAREA,
             label: 'Comentarios',
-        });
+        }, grupoEspecifico || grupoMovimiento);
         campoComentarios.defaultValue = parametros.comentarios;
         const ubicaciones = movimientoRepository.listarUbicacionesPorSubsidiaria();
 
@@ -206,11 +248,15 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
             cuentas    : cuentasAjuste,
         });
 
-        if (nombreTipo === CONSTANTES.TIPOS.MERMA) {
+        if (esMerma) {
             campoEntidad.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
 
             campoTo.isMandatory = false;
             campoTo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+
+            form.insertField({ field: campoSubsidiaria, nextfield: 'custpage_fecha' });
+            form.insertField({ field: campoServicio, nextfield: 'custpage_fecha' });
+            form.insertField({ field: campoFrom, nextfield: 'custpage_fecha' });
         }
 
         if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION && !idPrestamo) {
@@ -252,7 +298,7 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
         const sublista = form.addSublist({
             id   : 'custpage_sl_detalle',
             type : serverWidget.SublistType.INLINEEDITOR,
-            label: CONSTANTES.ETIQUETAS_DETALLE.TITULO,
+            label: obtenerEtiquetaDetalle(nombreTipo),
         });
 
         sublista.addField({
@@ -280,13 +326,20 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
             label: CONSTANTES.ETIQUETAS_DETALLE.LOTE,
         }).addSelectOption({ value: '', text: '' });
 
-        const etiquetaCantidad = (nombreTipo === CONSTANTES.TIPOS.MERMA) ? CONSTANTES.ETIQUETAS_DETALLE.CANTIDAD : 'Cantidad Prestada';
+        const etiquetaCantidad = (nombreTipo === CONSTANTES.TIPOS.MERMA) ? 'Cantidad a Dar de Baja' : 'Cantidad Prestada';
 
         sublista.addField({
             id   : 'custpage_col_cantidad',
             type : serverWidget.FieldType.FLOAT,
             label: etiquetaCantidad,
         }).isMandatory = true;
+    }
+
+    function obtenerEtiquetaDetalle(nombreTipo) {
+        if (nombreTipo === CONSTANTES.TIPOS.PRESTAMO) return '4. Productos a Prestar';
+        if (nombreTipo === CONSTANTES.TIPOS.MERMA) return '4. Productos que se Daran de Baja';
+        if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION) return '4. Productos a Devolver';
+        return '3. ' + CONSTANTES.ETIQUETAS_DETALLE.TITULO;
     }
 
     function armarDetalleDevolucion(form, datos) {
@@ -297,7 +350,7 @@ define(['N/ui/serverWidget', '../lib/MovimientoInventarioConstants', '../reposit
         const sublista = form.addSublist({
             id   : 'custpage_sl_detalle',
             type : serverWidget.SublistType.INLINEEDITOR,
-            label: CONSTANTES.ETIQUETAS_DETALLE.TITULO,
+            label: '4. Productos a Devolver',
         });
 
         sublista.addField({

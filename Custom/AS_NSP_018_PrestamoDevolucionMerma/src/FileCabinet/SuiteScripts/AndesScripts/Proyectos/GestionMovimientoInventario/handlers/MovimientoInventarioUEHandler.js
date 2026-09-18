@@ -226,7 +226,9 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
             });
         }
 
-        if ((tipo === CONSTANTES.TIPOS.PRESTAMO || tipo === CONSTANTES.TIPOS.DEVOLUCION) && !devolucionSinPendiente) {
+        if ((tipo === CONSTANTES.TIPOS.PRESTAMO
+            || tipo === CONSTANTES.TIPOS.DEVOLUCION
+            || tipo === CONSTANTES.TIPOS.MERMA) && !devolucionSinPendiente) {
             context.form.addButton({
                 id          : 'custpage_btn_imprimir',
                 label       : 'Imprimir Comprobante',

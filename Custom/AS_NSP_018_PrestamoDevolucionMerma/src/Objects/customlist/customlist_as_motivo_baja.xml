@@ -1,5 +1,5 @@
 <customlist scriptid="customlist_as_motivo_baja">
-  <description>Motivo de la baja cuando el tipo de movimiento es Merma: Vencimiento, Deterioro, Otro</description>
+  <description>Motivo de la baja cuando el tipo de movimiento es Merma: Vencimiento, Deterioro, Cuarentena, Otro</description>
   <isinactive>F</isinactive>
   <ismatrixoption>F</ismatrixoption>
   <isordered>T</isordered>
@@ -14,6 +14,11 @@
       <abbreviation>D</abbreviation>
       <isinactive>F</isinactive>
       <value>Deterioro</value>
+    </customvalue>
+    <customvalue scriptid="val_cuarentena">
+      <abbreviation>C</abbreviation>
+      <isinactive>F</isinactive>
+      <value>Cuarentena</value>
     </customvalue>
     <customvalue scriptid="val_otro">
       <abbreviation>O</abbreviation>

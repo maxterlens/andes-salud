@@ -41,11 +41,14 @@ define(['N/render', 'N/file', '../lib/MovimientoInventarioConstants', '../reposi
                 estado     : movimiento.getText({ fieldId: 'custrecord_as_mov_estado' }),
                 traslado   : movimiento.getText({ fieldId: 'custrecord_as_mov_transfer' }) || '',
                 prestamo   : movimiento.getText({ fieldId: 'custrecord_as_mov_prestamo_ref' }) || '',
+                motivo     : movimiento.getText({ fieldId: 'custrecord_as_mov_motivo' }) || '',
+                cuenta     : movimiento.getText({ fieldId: 'custrecord_as_mov_cuenta_ajuste' }) || '',
                 comentarios: movimiento.getValue({ fieldId: 'custrecord_as_mov_comentarios' }) || '',
             },
             lineas: lineas.map((linea) => ({
                 articulo : linea.articuloTexto,
                 unidad   : linea.unidadTexto || '',
+                lote     : linea.lote || '',
                 cantidad : String(linea.cantidad),
                 devuelta : String(linea.devuelta),
                 pendiente: String(linea.pendiente),
@@ -59,9 +62,13 @@ define(['N/render', 'N/file', '../lib/MovimientoInventarioConstants', '../reposi
             },
         };
 
-        const plantilla = (tipo === CONSTANTES.TIPOS.PRESTAMO)
-                        ? CONSTANTES.PLANTILLAS.PRESTAMO
-                        : CONSTANTES.PLANTILLAS.DEVOLUCION;
+        let plantilla = CONSTANTES.PLANTILLAS.MERMA;
+
+        if (tipo === CONSTANTES.TIPOS.PRESTAMO) {
+            plantilla = CONSTANTES.PLANTILLAS.PRESTAMO;
+        } else if (tipo === CONSTANTES.TIPOS.DEVOLUCION) {
+            plantilla = CONSTANTES.PLANTILLAS.DEVOLUCION;
+        }
                         
         const renderizador = render.create();
 
