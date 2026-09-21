@@ -32,7 +32,7 @@ define([], () => {
     };
 
     const CLIENT_SCRIPT = '/SuiteScripts/AndesScripts/Transacciones/AS_FacturaFactoring_CS_2.1.js';
-    const ROLES_AUTORIZADOS = [3, 1484, 1520, 1461];
+    const ROLES_AUTORIZADOS = [3, 1484, 1520, 1461,1552,1577,1456,1593,1463,1524,1551,1570,1548];
 
     const MAPREDUCE = {
         SCRIPT    : 'customscript_as_mr_reclasif_factoring',
