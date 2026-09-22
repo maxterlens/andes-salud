@@ -1,0 +1,52 @@
+<mapreducescript scriptid="customscript_as_factura_creacion">
+  <description>Crea facturas de venta a partir del JSON de filas del parametro. No informa Location.</description>
+  <isinactive>F</isinactive>
+  <name>AS Factura Creacion</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/AndesScripts/Proyectos/FacturaCreacion/AS_FacturaCreacion_MPRD_2.1.js]</scriptfile>
+  <scriptcustomfields>
+    <scriptcustomfield scriptid="custscript_as_fc_archivo_json">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Ruta en el File Cabinet del archivo .json con el arreglo de filas a crear. El parametro no puede llevar el JSON entero: topa en 4.000 caracteres.</description>
+      <displayheight></displayheight>
+      <displaytype>NORMAL</displaytype>
+      <displaywidth></displaywidth>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>TEXT</fieldtype>
+      <help></help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Ruta Archivo JSON</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete>NO_ACTION</onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+  </scriptcustomfields>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_factura_creacion">
+      <buffersize>1</buffersize>
+      <concurrencylimit>1</concurrencylimit>
+      <custscript_as_fc_archivo_json></custscript_as_fc_archivo_json>
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <queueallstagesatonce>F</queueallstagesatonce>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>NOTSCHEDULED</status>
+      <title>AS Factura Creacion</title>
+      <yieldaftermins>60</yieldaftermins>
+    </scriptdeployment>
+  </scriptdeployments>
+</mapreducescript>
