@@ -12,9 +12,16 @@
  *                GET  view=landing (default) → pantalla inicial, botón "Buscar"
  *                POST accion=buscar          → redirige a GET view=resolucion (PRG)
  *                GET  view=resolucion        → calcula conflictos en vivo y arma la grilla
- *                POST accion=confirmar       → valida contra stock fresco, crea las OT
- *                                               correspondientes y redirige a resultados
- *                GET  view=resultados        → lee del log (por ID) lo que se acaba de crear
+ *                POST accion=confirmar       → valida contra stock fresco, guarda la resolución
+ *                                               como "Pendiente de Creación de OT" y dispara de
+ *                                               inmediato el Map/Reduce que crea las OT en
+ *                                               segundo plano (ver AS_ProcesarResolucionManual_
+ *                                               MPRD_2.1.js) — no crea la OT en esta misma request
+ *                                               para no dejar a la persona esperando en pantalla
+ *                                               si la resolución involucra muchos destinos.
+ *                GET  view=resultados        → historial completo de resoluciones manuales
+ *                                               (todo log con detalle de resolución, cualquier
+ *                                               estado, no solo lo de la última confirmación)
  *
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
@@ -22,16 +29,24 @@
 define([
     '../../repositories/ASConfigReposicionAutomaticaInventarioRepository',
     '../../repositories/ASLogReposicionAutomaticaInventarioRepository',
+    '../../repositories/InventarioRepository',
     '../../services/ReposicionService',
     '../../services/TransferOrderService',
     '../forms/ResolucionStockLimitadoForm',
     'N/search',
     'N/redirect',
+    'N/task',
     'N/log'
-], (ConfigRepository, LogRepository, ReposicionService, TransferOrderService, Form, search, redirect, log) => {
+], (ConfigRepository, LogRepository, InventarioRepository, ReposicionService, TransferOrderService, Form, search, redirect, task, log) => {
 
     const SCRIPT_ID     = 'customscript_as_res_stock_limit_sl';
     const DEPLOYMENT_ID = 'customdeploy_as_res_stock_limit_sl';
+
+    // Map/Reduce que crea, en segundo plano, las OT de las resoluciones manuales
+    // ya confirmadas (ver _procesarConfirmacion). Se dispara con task.create apenas
+    // se confirma — no espera ninguna programación.
+    const MR_SCRIPT_ID     = 'customscript_as_proc_resol_manual_mr';
+    const MR_DEPLOYMENT_ID = 'customdeploy_as_proc_resol_manual_mr';
 
     const VIEWS = {
         LANDING   : 'landing',
@@ -144,12 +159,18 @@ define([
     };
 
     /* ═══════════════════════════════════════════════════════════════════
-     * Vista: Resultados
+     * Vista: Resultados — historial COMPLETO de resoluciones manuales
+     *
+     * Ya no se filtra por los IDs de la última confirmación: como la OT se
+     * crea en segundo plano (Map/Reduce), al momento de confirmar todavía
+     * no existe un resultado final que mostrar. En su lugar, esta pantalla
+     * lista TODOS los logs que alguna vez pasaron por una resolución manual
+     * (campo RESOLUCION_DETALLE no vacío), cualquiera sea su estado actual
+     * — "Pendiente de Creación de OT", "Éxito", "Éxito parcial" o "Error" —
+     * ordenados por fecha descendente.
      * ═══════════════════════════════════════════════════════════════════ */
     const _renderResultados = (context) => {
-        const logIdsRaw = context.request.parameters.logIds || '';
-        const logIds    = logIdsRaw.split(',').filter(Boolean);
-        const resultados = LogRepository.getByIds(logIds);
+        const resultados = LogRepository.getConResolucion();
 
         const form = Form.buildResultadosForm({ resultados });
         context.response.writePage(form);
@@ -158,6 +179,16 @@ define([
     /* ═══════════════════════════════════════════════════════════════════
      * Cálculo en vivo de conflictos activos (fuente única de verdad,
      * compartida con AS_ReposicionAutomaticaInventario_MPRD_2.1.js)
+     *
+     * Consultas en BULK (una para todos los destinos + una para todos los
+     * orígenes, en vez de una por cada ubicación): con subsidiarias que
+     * llegan a tener ~130 ubicaciones configuradas, evaluar de a una
+     * ubicación dispararía cientos de consultas dentro de una sola
+     * ejecución del Suitelet, arriesgando superar el límite de unidades
+     * de gobernancia o el tiempo máximo de ejecución. Acá se resuelven
+     * todos los datos necesarios en un puñado fijo de consultas (bulk),
+     * y el resto del cálculo (por destino, por origen, por ítem) ocurre
+     * en memoria sin generar más tráfico contra NetSuite.
      *
      * @param {string|number} [subsidiaryId]  Si se indica, filtra las configs a solo
      *                                          esa subsidiaria (usado por la pantalla
@@ -187,24 +218,64 @@ define([
             gruposPorOrigen[key].destinos.push({ locationTo: cfg.locationTo, orden: cfg.orden });
         });
 
+        if (!Object.keys(gruposPorOrigen).length) return [];
+
+        // ── Paso 1: bulk de configuración/stock/tránsito para TODAS las ubicaciones destino ──
+        const locationsTo = Array.from(new Set(configs.map(cfg => String(cfg.locationTo))));
+
+        const itemConfigsByDestino = InventarioRepository.getItemLocationConfigBulk(locationsTo);
+
+        const itemIdsDestinoSet = new Set();
+        Object.keys(itemConfigsByDestino).forEach(locId =>
+            itemConfigsByDestino[locId].forEach(ic => itemIdsDestinoSet.add(String(ic.item_internal_id)))
+        );
+        const itemIdsDestino = Array.from(itemIdsDestinoSet).join(',');
+
+        const stockByDestino      = InventarioRepository.getAvailableStockBulk(locationsTo, itemIdsDestino);
+        const inTransitByDestino  = InventarioRepository.getPendingInTransitQtyBulk(locationsTo, itemIdsDestino);
+
+        // ── Paso 2: resolver, EN MEMORIA, qué necesita cada destino (sin más consultas) ──
+        Object.keys(gruposPorOrigen).forEach(key => {
+            gruposPorOrigen[key].destinos.forEach(d => {
+                const locId = String(d.locationTo);
+                d.items = ReposicionService.getItemsToReplenish(d.locationTo, {
+                    itemConfigs : itemConfigsByDestino[locId] || [],
+                    stockMap    : stockByDestino[locId]       || {},
+                    inTransitMap: inTransitByDestino[locId]   || {}
+                });
+            });
+        });
+
+        // ── Paso 3: bulk de stock/mínimo/comprometido para TODAS las ubicaciones origen ──
+        // (recién acá se sabe qué ítems importan de verdad — los que algún destino necesita)
+        const locationsFrom = Array.from(new Set(configs.map(cfg => String(cfg.locationFrom))));
+
+        const itemIdsOrigenSet = new Set();
+        Object.values(gruposPorOrigen).forEach(grupo =>
+            grupo.destinos.forEach(d => d.items.forEach(it => itemIdsOrigenSet.add(String(it.itemInternalId))))
+        );
+        const itemIdsOrigen = Array.from(itemIdsOrigenSet).join(',');
+
+        const stockByOrigen        = InventarioRepository.getAvailableStockBulk(locationsFrom, itemIdsOrigen);
+        const minimoByOrigen       = InventarioRepository.getSafetyStockByLocationBulk(locationsFrom, itemIdsOrigen);
+        const comprometidoByOrigen = InventarioRepository.getCommittedInTransitFromLocationBulk(locationsFrom, itemIdsOrigen);
+
+        // ── Paso 4: evaluar cada origen en memoria, usando los mapas ya cargados ──
         const origenesConConflicto = [];
 
         Object.keys(gruposPorOrigen).forEach(key => {
             const grupo = gruposPorOrigen[key];
-
-            const destinosConItems = grupo.destinos
-                .map(d => ({
-                    locationTo: d.locationTo,
-                    orden     : d.orden,
-                    items     : ReposicionService.getItemsToReplenish(d.locationTo)
-                }))
-                .filter(d => d.items.length);
+            const destinosConItems = grupo.destinos.filter(d => d.items.length);
 
             if (!destinosConItems.length) return;
 
+            const locId = String(grupo.locationFrom);
             const { conflictos } = ReposicionService.evaluarReposicionPorOrigen({
-                locationFrom: grupo.locationFrom,
-                destinos    : destinosConItems
+                locationFrom   : grupo.locationFrom,
+                destinos       : destinosConItems,
+                stockOrigenMap : stockByOrigen[locId]        || {},
+                minimoOrigenMap: minimoByOrigen[locId]        || {},
+                comprometidoMap: comprometidoByOrigen[locId]  || {}
             });
 
             if (conflictos.length) {
@@ -273,7 +344,11 @@ define([
     };
 
     /* ═══════════════════════════════════════════════════════════════════
-     * Confirmación: crea las OT según lo que decidió la persona en la grilla
+     * Confirmación: NO crea la OT en esta request — registra la resolución
+     * como "Pendiente de Creación de OT" (ver TransferOrderService.
+     * registrarResolucionPendiente) y dispara de inmediato el Map/Reduce
+     * AS_ProcesarResolucionManual_MPRD_2.1, que es quien efectivamente la
+     * crea en segundo plano.
      * ═══════════════════════════════════════════════════════════════════ */
     const _procesarConfirmacion = (context, params) => {
         const lineas = _parseLineasFromParams(params);
@@ -290,7 +365,7 @@ define([
         // Suitelet y el momento en que la persona confirma.
         const origenesFrescos = _evaluarConflictosActivos();
 
-        const logIds = [];
+        let seRegistroAlgunaResolucion = false;
 
         const lineasPorOrigen = {};
         lineas.forEach(l => {
@@ -347,20 +422,42 @@ define([
             });
 
             Object.keys(itemsPorDestino).forEach(locationTo => {
-                const resultado = TransferOrderService.processReplenishment({
+                const logId = TransferOrderService.registrarResolucionPendiente({
                     subsidiaryId,
                     locationFrom,
                     locationTo,
                     items: itemsPorDestino[locationTo]
                 });
-                if (resultado.logId) logIds.push(resultado.logId);
+                if (logId) seRegistroAlgunaResolucion = true;
             });
         });
+
+        // Disparo inmediato del Map/Reduce que crea las OT en segundo plano. Si en este
+        // momento ya hay una ejecución en curso (por ejemplo, otra persona confirmó una
+        // resolución hace unos segundos), este submit() puede fallar — no es un error
+        // fatal: esa ejecución en curso, en su propio summarize(), va a encontrar este
+        // registro recién guardado y se va a autodisparar de nuevo para procesarlo.
+        if (seRegistroAlgunaResolucion) {
+            try {
+                task.create({
+                    taskType    : task.TaskType.MAP_REDUCE,
+                    scriptId    : MR_SCRIPT_ID,
+                    deploymentId: MR_DEPLOYMENT_ID
+                }).submit();
+            } catch (e) {
+                log.error('ResolucionStockLimitadoHandler._procesarConfirmacion',
+                    `No se pudo disparar de inmediato el Map/Reduce de creación de OT ` +
+                    `(${e.name}: ${e.message}). Las resoluciones quedaron guardadas como ` +
+                    `"Pendiente de Creación de OT" y se procesarán en cuanto termine la ` +
+                    `ejecución en curso de ese mismo proceso.`
+                );
+            }
+        }
 
         return redirect.toSuitelet({
             scriptId: SCRIPT_ID,
             deploymentId: DEPLOYMENT_ID,
-            parameters: { view: VIEWS.RESULTADOS, logIds: logIds.join(',') }
+            parameters: { view: VIEWS.RESULTADOS }
         });
     };
 

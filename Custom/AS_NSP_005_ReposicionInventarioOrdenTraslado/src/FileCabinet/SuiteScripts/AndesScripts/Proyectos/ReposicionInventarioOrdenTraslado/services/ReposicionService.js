@@ -30,6 +30,20 @@ define(['../repositories/InventarioRepository', 'N/log'],
      * cuyo destino es la ubicación evaluada, evitando reponer artículos que ya vienen en camino.
      *
      * @param   {string|number} locationTo  Internal ID de la ubicación destino
+     * @param   {Object}        [preloaded] Datos ya consultados en bulk para VARIAS
+     *                                       ubicaciones a la vez (ver InventarioRepository
+     *                                       "variantes bulk"), para evitar que esta función
+     *                                       dispare sus propias 3 consultas cuando se llama
+     *                                       muchas veces seguidas (una por cada ubicación
+     *                                       destino) dentro de una misma ejecución — caso del
+     *                                       Suitelet de Resolución de Stock Limitado. Si se omite,
+     *                                       el comportamiento es idéntico al original: consulta
+     *                                       los 3 datos para ESTA ubicación únicamente (caso del
+     *                                       proceso automático, donde cada origen ya tiene su
+     *                                       propia asignación de gobernancia y no hay este riesgo).
+     * @param   {Array<Object>} [preloaded.itemConfigs]  Salida de getItemLocationConfig(Bulk) para esta ubicación
+     * @param   {Object}        [preloaded.stockMap]     Salida de getAvailableStock(Bulk) para esta ubicación
+     * @param   {Object}        [preloaded.inTransitMap] Salida de getPendingInTransitQty(Bulk) para esta ubicación
      * @returns {Array<{
      *   itemInternalId: string,
      *   itemCode: string,
@@ -43,12 +57,14 @@ define(['../repositories/InventarioRepository', 'N/log'],
      *   effectiveQty: number
      * }>}
      */
-    const getItemsToReplenish = (locationTo) => {
+    const getItemsToReplenish = (locationTo, preloaded) => {
         log.error('ReposicionService.getItemsToReplenish - INICIO',
             `Evaluando artículos para locationTo: ${locationTo}`
         );
 
-        const itemConfigs = InventarioRepository.getItemLocationConfig(locationTo);
+        const itemConfigs = (preloaded && preloaded.itemConfigs)
+            ? preloaded.itemConfigs
+            : InventarioRepository.getItemLocationConfig(locationTo);
 
         log.error('ReposicionService.getItemsToReplenish - itemConfigs',
             `locationTo ${locationTo}: ${itemConfigs.length} artículo(s) con reorderpoint > 0 encontrados.`
@@ -63,8 +79,12 @@ define(['../repositories/InventarioRepository', 'N/log'],
 
         const itemIds = itemConfigs.map(ic => ic.item_internal_id).join(',');
 
-        const stockMap     = InventarioRepository.getAvailableStock(locationTo, itemIds);
-        const inTransitMap = InventarioRepository.getPendingInTransitQty(locationTo, itemIds);
+        const stockMap     = (preloaded && preloaded.stockMap)
+            ? preloaded.stockMap
+            : InventarioRepository.getAvailableStock(locationTo, itemIds);
+        const inTransitMap = (preloaded && preloaded.inTransitMap)
+            ? preloaded.inTransitMap
+            : InventarioRepository.getPendingInTransitQty(locationTo, itemIds);
 
         log.error('ReposicionService.getItemsToReplenish - stockMap',    JSON.stringify(stockMap));
         log.error('ReposicionService.getItemsToReplenish - inTransitMap', JSON.stringify(inTransitMap));
@@ -176,7 +196,14 @@ define(['../repositories/InventarioRepository', 'N/log'],
      *                    solo a modo de propuesta inicial editable.
      *
      * Regla de negocio para la disponibilidad de origen:
-     *   disponibleOrigen[item] = max(0, stockOrigen[item] - minimoOrigen[item])
+     *   disponibleOrigen[item] = max(0, stockOrigen[item] - minimoOrigen[item] - comprometidoOrigen[item])
+     *
+     * comprometidoOrigen es lo que ya está comprometido en Órdenes de Traslado pendientes de
+     * despacho desde ese mismo origen (ver InventarioRepository.getCommittedInTransitFromLocation).
+     * Es necesario restarlo explícitamente porque NetSuite no reduce el "Quantity Available"
+     * del origen por una OT recién creada — solo lo hace cuando la OT se despacha — así que sin
+     * este descuento, dos evaluaciones sucesivas (dos búsquedas del Suitelet, o dos corridas del
+     * proceso automático) verían el mismo stock "disponible" y podrían comprometerlo dos veces.
      *
      * @param   {Object}   params
      * @param   {string|number} params.locationFrom  Internal ID de la ubicación origen
@@ -185,6 +212,15 @@ define(['../repositories/InventarioRepository', 'N/log'],
      *   orden: number|null,
      *   items: Array<Object>   // salida de getItemsToReplenish para ese destino
      * }>}        params.destinos  Necesidades por destino que comparten este origen
+     * @param   {Object}   [params.stockOrigenMap]   Salida ya calculada de getAvailableStock(Bulk)
+     *                                                 para este origen. Si se omite, se consulta acá
+     *                                                 mismo (comportamiento original, usado por el
+     *                                                 proceso automático). Ver nota de gobernancia en
+     *                                                 getItemsToReplenish — misma lógica acá para
+     *                                                 evitar 3 consultas por cada origen cuando el
+     *                                                 Suitelet evalúa muchos orígenes en una sola ejecución.
+     * @param   {Object}   [params.minimoOrigenMap]  Salida ya calculada de getSafetyStockByLocation(Bulk)
+     * @param   {Object}   [params.comprometidoMap]  Salida ya calculada de getCommittedInTransitFromLocation(Bulk)
      *
      * @returns {{
      *   resueltos: Array<{ locationTo: string|number, items: Array<Object> }>,
@@ -194,31 +230,44 @@ define(['../repositories/InventarioRepository', 'N/log'],
      *     itemDisplayName: string,
      *     stockOrigen: number,
      *     minimoOrigen: number,
-     *     disponibleOrigen: number,
+     *     comprometidoOrigen: number,          // comprometido en OTs pendientes de despacho desde origen
+     *     disponibleSinComprometido: number,   // stock - mínimo, SIN restar comprometido (uso: mostrar en UI)
+     *     disponibleOrigen: number,            // disponibleSinComprometido - comprometido (uso: validación/tope)
      *     necesidadTotal: number,
      *     destinos: Array<{ locationTo: string|number, orden: number|null, necesidad: number, sugerido: number, item: Object }>
      *   }>
      * }}
      */
-    const evaluarReposicionPorOrigen = ({ locationFrom, destinos }) => {
+    const evaluarReposicionPorOrigen = ({ locationFrom, destinos, stockOrigenMap, minimoOrigenMap, comprometidoMap }) => {
         const itemIdsSet = new Set();
         destinos.forEach(d => d.items.forEach(it => itemIdsSet.add(String(it.itemInternalId))));
         const itemIds = Array.from(itemIdsSet).join(',');
 
         if (!itemIds) return { resueltos: [], conflictos: [] };
 
-        const stockOrigenMap  = InventarioRepository.getAvailableStock(locationFrom, itemIds);
-        const minimoOrigenMap = InventarioRepository.getSafetyStockByLocation(locationFrom, itemIds);
+        if (!stockOrigenMap)  stockOrigenMap  = InventarioRepository.getAvailableStock(locationFrom, itemIds);
+        if (!minimoOrigenMap) minimoOrigenMap = InventarioRepository.getSafetyStockByLocation(locationFrom, itemIds);
+        if (!comprometidoMap) comprometidoMap = InventarioRepository.getCommittedInTransitFromLocation(locationFrom, itemIds);
 
-        const disponible = {};
+        // disponibleBruto: stock - mínimo protegido, SIN restar lo comprometido en OTs
+        // pendientes de despacho — es el valor que se muestra en la interfaz como
+        // "Stock disponible en origen".
+        // disponible: disponibleBruto - comprometido — es el valor EFECTIVO que sigue
+        // gobernando toda la validación (tope de los inputs, comparación contra la
+        // necesidad total para decidir si hay conflicto, y el reparto sugerido).
+        const disponibleBruto = {};
+        const disponible      = {};
         itemIdsSet.forEach(itemId => {
-            const stock  = stockOrigenMap[itemId]  || 0;
-            const minimo = minimoOrigenMap[itemId] || 0;
-            disponible[itemId] = Math.max(0, stock - minimo);
+            const stock        = stockOrigenMap[itemId]  || 0;
+            const minimo       = minimoOrigenMap[itemId] || 0;
+            const comprometido = comprometidoMap[itemId] || 0;
+            const bruto        = Math.max(0, stock - minimo);
+            disponibleBruto[itemId] = bruto;
+            disponible[itemId]      = Math.max(0, bruto - comprometido);
         });
 
         log.error('ReposicionService.evaluarReposicionPorOrigen - disponible',
-            JSON.stringify({ locationFrom, disponible })
+            JSON.stringify({ locationFrom, disponibleBruto, disponible, comprometidoMap })
         );
 
         // Agrupar, por ítem, todos los destinos que lo solicitan.
@@ -296,6 +345,8 @@ define(['../repositories/InventarioRepository', 'N/log'],
                     itemDisplayName : entradas[0].item.itemDisplayName,
                     stockOrigen,
                     minimoOrigen,
+                    comprometidoOrigen        : comprometidoMap[itemId] || 0,
+                    disponibleSinComprometido : disponibleBruto[itemId] || 0,
                     disponibleOrigen: disponibleItem,
                     necesidadTotal,
                     destinos: entradas.map(({ destino, item }) => ({

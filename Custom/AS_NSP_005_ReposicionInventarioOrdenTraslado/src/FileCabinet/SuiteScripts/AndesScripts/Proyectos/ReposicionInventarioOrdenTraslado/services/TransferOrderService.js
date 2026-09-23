@@ -88,6 +88,117 @@ define([
     };
 
     /**
+     * Registra que una persona ya CONFIRMÓ, desde el Suitelet de Resolución de Stock
+     * Limitado, cuánto enviar a un destino — pero NO crea la Orden de Traslado en este
+     * momento. En su lugar, guarda un log en estado 'Pendiente de Creación de OT' con
+     * el detalle (JSON) de artículos/cantidades, para que el Map/Reduce
+     * AS_ProcesarResolucionManual_MPRD_2.1 la cree en segundo plano (ese Map/Reduce se
+     * dispara de inmediato desde el Handler justo después de llamar a esta función).
+     *
+     * Se separa la confirmación de la creación real porque, cuando la resolución
+     * involucra muchos destinos a la vez, crear todas las OT una por una dentro de la
+     * misma request del Suitelet puede tardar demasiado o superar el límite de
+     * unidades de gobernancia — la persona no debería quedar esperando esa creación
+     * en pantalla.
+     *
+     * @param {Object}        params
+     * @param {string}        params.subsidiaryId  Internal ID de la subsidiaria
+     * @param {string}        params.locationFrom  Internal ID de la ubicación origen
+     * @param {string}        params.locationTo    Internal ID de la ubicación destino
+     * @param {Array<Object>} params.items         Artículos ya resueltos (misma forma que
+     *                                              recibe processReplenishment)
+     *
+     * @returns {number|null}  Internal ID del log creado, o null si falló el guardado
+     */
+    const registrarResolucionPendiente = ({ subsidiaryId, locationFrom, locationTo, items }) => {
+        const now  = new Date();
+        const name = `REP_${now.toISOString().substring(0, 10)}_RESOLMANUAL_LOC${locationTo}`;
+
+        let logId = null;
+        try {
+            logId = LogRepository.save({
+                name,
+                date        : now,
+                subsidiaryId,
+                locationFrom,
+                locationTo,
+                toId        : null,
+                status      : LogRepository.ESTADO_PENDIENTE_CREACION_OT,
+                message     : `Resolución manual confirmada para ${items.length} artículo(s). ` +
+                    `Orden de Traslado pendiente de creación en segundo plano.`,
+                linesDetail : buildLinesDetail(items),
+                resolucionDetalle: JSON.stringify(items)
+            });
+
+            log.error('TransferOrderService.registrarResolucionPendiente',
+                `[${subsidiaryId}:${locationFrom}→${locationTo}] Log ${logId} guardado en estado "${LogRepository.ESTADO_PENDIENTE_CREACION_OT}".`
+            );
+        } catch (e) {
+            log.error('TransferOrderService.registrarResolucionPendiente',
+                `[${subsidiaryId}:${locationFrom}→${locationTo}] ${e.name}: ${e.message}`
+            );
+        }
+
+        return logId;
+    };
+
+    /**
+     * Crea la Orden de Traslado correspondiente a una resolución manual YA CONFIRMADA
+     * (ver registrarResolucionPendiente) y actualiza ESE MISMO log con el resultado real.
+     * A diferencia de processReplenishment, no crea un log nuevo — el log ya existe desde
+     * que la persona confirmó en el Suitelet, en estado 'Pendiente de Creación de OT'.
+     *
+     * Llamada exclusivamente por AS_ProcesarResolucionManual_MPRD_2.1 (map), nunca
+     * directamente desde el Suitelet.
+     *
+     * @param {Object}        params
+     * @param {string|number} params.logId         Internal ID del log 'Pendiente de Creación de OT' a actualizar
+     * @param {string}        params.subsidiaryId  Internal ID de la subsidiaria
+     * @param {string}        params.locationFrom  Internal ID de la ubicación origen
+     * @param {string}        params.locationTo    Internal ID de la ubicación destino
+     * @param {Array<Object>} params.items         Artículos ya resueltos (salida de JSON.parse
+     *                                              sobre el campo RESOLUCION_DETALLE del log)
+     *
+     * @returns {{ logId: string|number, toId: number|null, status: string, message: string }}
+     */
+    const procesarResolucionPendiente = ({ logId, subsidiaryId, locationFrom, locationTo, items }) => {
+        let toId        = null;
+        let status      = 'Éxito';
+        let message     = '';
+        let linesDetail = '';
+
+        const hayParciales = items.some(item => item.esParcial);
+
+        try {
+            toId        = TransferOrderRepository.create({ subsidiaryId, locationFrom, locationTo, items });
+            linesDetail = buildLinesDetail(items);
+            status      = hayParciales ? 'Éxito parcial' : 'Éxito';
+            message     = `Orden de Traslado ID ${toId} creada con ${items.length} línea(s) (resolución manual).` +
+                (hayParciales ? ' Una o más líneas quedaron limitadas por el stock disponible en origen.' : '');
+
+            log.error('TransferOrderService.procesarResolucionPendiente',
+                `[log ${logId}] [${subsidiaryId}:${locationFrom}→${locationTo}] ${message}`
+            );
+        } catch (e) {
+            status  = 'Error';
+            message = `${e.name}: ${e.message}`;
+            log.error('TransferOrderService.procesarResolucionPendiente',
+                `[log ${logId}] [${subsidiaryId}:${locationFrom}→${locationTo}] ${message}`
+            );
+        }
+
+        try {
+            LogRepository.updateResultado({ logId, toId, status, message, linesDetail });
+        } catch (e) {
+            log.error('TransferOrderService.procesarResolucionPendiente - updateResultado',
+                `[log ${logId}] ${e.name}: ${e.message}`
+            );
+        }
+
+        return { logId, toId, status, message };
+    };
+
+    /**
      * Registra en el log un ítem que quedó en CONFLICTO: 2 o más destinos compiten por él
      * y el origen no tiene disponibilidad suficiente para cubrir la necesidad total.
      * No crea Orden de Traslado — solo deja constancia de que requiere resolución manual
@@ -112,12 +223,16 @@ define([
         const message =
             `Stock insuficiente en origen para cubrir a ${conflicto.destinos.length} destino(s) que compiten por ` +
             `[${conflicto.itemCode}] ${conflicto.itemDisplayName}. ` +
-            `Disponible en origen: ${conflicto.disponibleOrigen} | Necesidad total: ${conflicto.necesidadTotal}. ` +
+            `Disponible en origen: ${conflicto.disponibleSinComprometido} | ` +
+            `Comprometido en OT pendientes: ${conflicto.comprometidoOrigen} | ` +
+            `Disponible neto: ${conflicto.disponibleOrigen} | Necesidad total: ${conflicto.necesidadTotal}. ` +
             `Requiere resolución manual en el Suitelet "Resolución de Stock Limitado".`;
 
         const linesDetail =
             `[${conflicto.itemCode}] ${conflicto.itemDisplayName}\n` +
-            `Stock origen: ${conflicto.stockOrigen} | Mínimo protegido origen: ${conflicto.minimoOrigen} | Disponible: ${conflicto.disponibleOrigen}\n` +
+            `Stock origen: ${conflicto.stockOrigen} | Mínimo protegido origen: ${conflicto.minimoOrigen} | ` +
+            `Comprometido en OT pendientes: ${conflicto.comprometidoOrigen} | ` +
+            `Disponible en origen: ${conflicto.disponibleSinComprometido} | Disponible neto: ${conflicto.disponibleOrigen}\n` +
             destinosDetalle;
 
         let logId = null;
@@ -167,5 +282,10 @@ define([
             ` | Punto reorden destino: ${item.safetyStockLevel}`
         ).join('\n');
 
-    return { processReplenishment, logStockLimitado };
+    return {
+        processReplenishment,
+        registrarResolucionPendiente,
+        procesarResolucionPendiente,
+        logStockLimitado
+    };
 });

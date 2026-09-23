@@ -62,7 +62,7 @@ define(['N/ui/serverWidget'], (serverWidget) => {
           .asrsl-errorbanner{background:var(--asrsl-warn-bg);border:1px solid #f0b4ac;color:var(--asrsl-warn);font-size:13px;padding:10px 14px;border-radius:3px;margin-bottom:18px;}
           .asrsl-context{font-size:13px;color:var(--asrsl-text-secondary);margin-bottom:14px;}
           .asrsl-context b{color:#111;}
-          .asrsl-landing{border:1px solid var(--asrsl-border-light);background:#fff;border-radius:6px;padding:24px 24px 30px 24px;text-align:center;margin-bottom:12px;}
+          .asrsl-landing{border:1px solid var(--asrsl-border-light);background:#fff;border-radius:6px;padding:32px 24px;text-align:center;margin-bottom:12px;}
           .asrsl-landing .asrsl-ico{font-size:30px;margin-bottom:8px;}
           .asrsl-landing h2{font-size:15px;font-weight:600;margin:0 0 8px;}
           .asrsl-landing p{font-size:13px;color:var(--asrsl-text-secondary);max-width:560px;margin:0 auto;line-height:1.5;}
@@ -97,6 +97,12 @@ define(['N/ui/serverWidget'], (serverWidget) => {
           .asrsl-results-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;display:inline-block;}
           .asrsl-results-badge.exito{color:var(--asrsl-ok);background:var(--asrsl-ok-bg);}
           .asrsl-results-badge.error{color:var(--asrsl-warn);background:var(--asrsl-warn-bg);}
+          .asrsl-filterbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+          .asrsl-filterbar .asrsl-filter-field{display:flex;flex-direction:column;gap:3px;}
+          .asrsl-filterbar label{font-size:11px;color:var(--asrsl-field-label);}
+          .asrsl-filter-input{width:220px;height:26px;border:1px solid var(--asrsl-field-border);background:#fff;border-radius:2px;padding:0 8px;font-size:12.5px;}
+          .asrsl-filter-input:focus{outline:none;border-color:var(--asrsl-table-active-border);box-shadow:0 0 0 1px var(--asrsl-table-active-border);}
+          .asrsl-nomatch{padding:14px;text-align:center;font-size:12.5px;color:var(--asrsl-text-secondary);}
         </style>
     `;
 
@@ -164,6 +170,11 @@ define(['N/ui/serverWidget'], (serverWidget) => {
         _addInlineHtml(form, 'custpage_html_landing', (bannerHtml ? '' : _CSS_BASE) + landingHtml);
 
         form.addSubmitButton({ label: 'Buscar' });
+        form.addButton({
+            id: 'custpage_btn_ver_resultados',
+            label: 'Ver Historial de Resoluciones',
+            functionName: 'verResultados'
+        });
 
         return form;
     };
@@ -201,7 +212,26 @@ define(['N/ui/serverWidget'], (serverWidget) => {
             </div>
         `;
 
+        const filterBar = `
+            <div class="asrsl-filterbar">
+              <div class="asrsl-filter-field">
+                <label for="asrsl-filter-origen">Filtrar por ubicación origen</label>
+                <input type="text" id="asrsl-filter-origen" class="asrsl-filter-input" placeholder="Ej: Bodega Central" autocomplete="off">
+              </div>
+              <div class="asrsl-filter-field">
+                <label for="asrsl-filter-destino">Filtrar por ubicación destino</label>
+                <input type="text" id="asrsl-filter-destino" class="asrsl-filter-input" placeholder="Ej: Clínica Norte" autocomplete="off">
+              </div>
+              <div class="asrsl-filter-field">
+                <label for="asrsl-filter-item">Filtrar por artículo</label>
+                <input type="text" id="asrsl-filter-item" class="asrsl-filter-input" placeholder="Código o nombre" autocomplete="off">
+              </div>
+            </div>
+        `;
+
         const seccionesHtml = origenes.map(origen => _origenSectionHtml(origen)).join('');
+
+        const noMatchMsg = `<div class="asrsl-nomatch" id="asrsl-nomatch-msg" style="display:none;">Ningún resultado coincide con los filtros aplicados.</div>`;
 
         const helptext = `
             <div class="asrsl-helptext">
@@ -230,18 +260,79 @@ define(['N/ui/serverWidget'], (serverWidget) => {
                   inputs.forEach(function(inp){ inp.classList.remove('over'); });
                 }
               }
+
+              // Se expone en window (no solo en el closure) porque el Client Script
+              // (AS_ResolucionStockLimitado_CS_2.1.js) la necesita para refrescar los
+              // saldos "Asignado" después de que sus botones "Poner todo en 0" / "Usar
+              // Cantidad Sugerida" cambian los valores de los inputs.
+              window.asrslRecalcTodos = function(){
+                document.querySelectorAll('[id^="asrsl-bal-"]').forEach(function(balEl){
+                  asrslRecalc(balEl.id.replace('asrsl-bal-', ''));
+                });
+              };
+
               document.querySelectorAll('.asrsl-qty-input').forEach(function(inp){
                 inp.addEventListener('input', function(){ asrslRecalc(inp.getAttribute('data-asrsl-key')); });
+              });
+
+              // ── Buscador por ubicación origen / ubicación destino / artículo ─────
+              // Filtra en el cliente lo que ya está renderizado (no dispara consultas
+              // nuevas al servidor): oculta secciones/ítems/filas que no coincidan.
+              function asrslAplicarFiltros(){
+                var fOrigen  = (document.getElementById('asrsl-filter-origen')  || {}).value || '';
+                var fDestino = (document.getElementById('asrsl-filter-destino') || {}).value || '';
+                var fItem    = (document.getElementById('asrsl-filter-item')    || {}).value || '';
+                fOrigen  = fOrigen.toLowerCase().trim();
+                fDestino = fDestino.toLowerCase().trim();
+                fItem    = fItem.toLowerCase().trim();
+
+                var totalVisible = 0;
+
+                document.querySelectorAll('.asrsl-section').forEach(function(section){
+                  var origenTxt   = section.getAttribute('data-origen') || '';
+                  var origenMatch = !fOrigen || origenTxt.indexOf(fOrigen) !== -1;
+                  var seccionTieneVisible = false;
+
+                  section.querySelectorAll('.asrsl-item-block').forEach(function(block){
+                    var itemTxt   = block.getAttribute('data-item') || '';
+                    var itemMatch = !fItem || itemTxt.indexOf(fItem) !== -1;
+                    var bloqueTieneVisible = false;
+
+                    block.querySelectorAll('tr.asrsl-editrow').forEach(function(row){
+                      var destinoTxt   = row.getAttribute('data-destino') || '';
+                      var destinoMatch = !fDestino || destinoTxt.indexOf(fDestino) !== -1;
+                      var visible = origenMatch && itemMatch && destinoMatch;
+                      row.style.display = visible ? '' : 'none';
+                      if (visible) bloqueTieneVisible = true;
+                    });
+
+                    var blockVisible = origenMatch && itemMatch && bloqueTieneVisible;
+                    block.style.display = blockVisible ? '' : 'none';
+                    if (blockVisible) { seccionTieneVisible = true; totalVisible++; }
+                  });
+
+                  section.style.display = (origenMatch && seccionTieneVisible) ? '' : 'none';
+                });
+
+                var msgEl = document.getElementById('asrsl-nomatch-msg');
+                if (msgEl) msgEl.style.display = totalVisible === 0 ? '' : 'none';
+              }
+
+              ['asrsl-filter-origen', 'asrsl-filter-destino', 'asrsl-filter-item'].forEach(function(id){
+                var el = document.getElementById(id);
+                if (el) el.addEventListener('input', asrslAplicarFiltros);
               });
             })();
             </script>
         `;
 
-        const fullHtml = `<div class="asrsl-root">${contextBar}${infoBanner}${summaryCard}${seccionesHtml}${helptext}</div>${script}`;
+        const fullHtml = `<div class="asrsl-root">${contextBar}${infoBanner}${summaryCard}${filterBar}${seccionesHtml}${noMatchMsg}${helptext}</div>${script}`;
 
         _addInlineHtml(form, 'custpage_html_resolucion', _CSS_BASE + fullHtml);
 
         form.addSubmitButton({ label: 'Confirmar y Crear Órdenes de Traslado' });
+        form.addButton({ id: 'custpage_btn_todo_cero', label: 'Poner todo en 0', functionName: 'ponerTodoEnCero' });
+        form.addButton({ id: 'custpage_btn_cant_sugerida', label: 'Usar Cantidad Sugerida', functionName: 'ponerCantidadSugerida' });
         form.addButton({ id: 'custpage_btn_cancelar', label: 'Cancelar', functionName: 'cancelar' });
 
         return form;
@@ -258,6 +349,7 @@ define(['N/ui/serverWidget'], (serverWidget) => {
             const key = `${origen.locationFrom}__${conflicto.itemInternalId}`;
             const nombreItem = _esc(conflicto.itemDisplayName || '');
             const codigoItem = _esc(conflicto.itemCode || '');
+            const dataItem   = _esc((codigoItem + ' ' + nombreItem).toLowerCase());
 
             const filas = conflicto.destinos.map(destino => {
                 const nombreDestino = _esc(destino.locationToName || `Ubicación ${destino.locationTo}`);
@@ -265,7 +357,7 @@ define(['N/ui/serverWidget'], (serverWidget) => {
                 const inputName = `custpage_cant__${origen.subsidiaryId}__${origen.locationFrom}__${conflicto.itemInternalId}__${destino.locationTo}`;
 
                 return `
-                    <tr class="asrsl-editrow">
+                    <tr class="asrsl-editrow" data-destino="${nombreDestino.toLowerCase()}">
                       <td>${nombreDestino}</td>
                       <td><span class="asrsl-orden-chip">${ordenTexto}</span></td>
                       <td>${destino.necesidad}</td>
@@ -280,6 +372,7 @@ define(['N/ui/serverWidget'], (serverWidget) => {
                           max="${conflicto.disponibleOrigen}"
                           data-asrsl-key="${key}"
                           data-max="${conflicto.disponibleOrigen}"
+                          data-sugerido="${destino.sugerido}"
                         >
                       </td>
                     </tr>
@@ -287,10 +380,11 @@ define(['N/ui/serverWidget'], (serverWidget) => {
             }).join('');
 
             return `
-                <div class="asrsl-item-block">
+                <div class="asrsl-item-block" data-item="${dataItem}">
                   <div class="asrsl-item-hdr">
                     <div class="asrsl-item-name">[${codigoItem}] <span class="asrsl-item-code">${nombreItem}</span></div>
-                    <div class="asrsl-kv">Stock disponible en origen: <b>${conflicto.disponibleOrigen}</b></div>
+                    <div class="asrsl-kv">Stock disponible en origen: <b>${conflicto.disponibleSinComprometido}</b></div>
+                    <div class="asrsl-kv">Comprometido en OT pendientes: <b>${conflicto.comprometidoOrigen}</b></div>
                     <div class="asrsl-kv">Necesidad total: <b>${conflicto.necesidadTotal}</b></div>
                     <div class="asrsl-balance ok" id="asrsl-bal-${key}">Asignado: ${conflicto.disponibleOrigen} / ${conflicto.disponibleOrigen}</div>
                   </div>
@@ -307,7 +401,7 @@ define(['N/ui/serverWidget'], (serverWidget) => {
         }).join('');
 
         return `
-            <div class="asrsl-section">
+            <div class="asrsl-section" data-origen="${nombreOrigen.toLowerCase()}">
               <div class="asrsl-section-hdr">Origen: ${nombreOrigen}</div>
               ${itemsHtml}
             </div>
@@ -315,15 +409,24 @@ define(['N/ui/serverWidget'], (serverWidget) => {
     };
 
     /* ═══════════════════════════════════════════════════════════════════
-     * Pantalla 3: RESULTADOS
+     * Pantalla 3: RESULTADOS — historial completo de resoluciones manuales
+     *
+     * Ya no es "el resultado de lo que acabo de confirmar": como la Orden de
+     * Traslado se crea en segundo plano (ver AS_ProcesarResolucionManual_
+     * MPRD_2.1.js), al momento de confirmar todavía no hay un resultado final
+     * que mostrar. Esta pantalla lista TODO registro que alguna vez tuvo una
+     * resolución manual — incluye los recién confirmados (en estado "Pendiente
+     * de Creación de OT") junto con los ya procesados, más recientes primero.
      * ═══════════════════════════════════════════════════════════════════ */
     const buildResultadosForm = ({ resultados }) => {
         const form = serverWidget.createForm({ title: FORM_TITLE });
         form.clientScriptModulePath = CLIENT_SCRIPT_PATH;
 
         const mensaje = resultados.length
-            ? 'Se procesó la resolución. Se detallan los resultados por destino a continuación.'
-            : 'La resolución se procesó, pero ninguna línea quedó con cantidad mayor a cero: no se creó ninguna Orden de Traslado.';
+            ? 'Historial de resoluciones manuales de stock limitado. Las que están "Pendiente de Creación de OT" ' +
+              'se están procesando en segundo plano — el número de Orden de Traslado y el estado final aparecen ' +
+              'acá apenas el proceso las crea, sin necesidad de volver a confirmar nada.'
+            : 'Todavía no hay resoluciones manuales registradas.';
 
         _addInlineHtml(form, 'custpage_html_resultados_banner',
             _CSS_BASE + `<div class="asrsl-root"><div class="asrsl-okbanner">&#10003; ${_esc(mensaje)}</div></div>`
@@ -332,7 +435,7 @@ define(['N/ui/serverWidget'], (serverWidget) => {
         const sublist = form.addSublist({
             id: 'custpage_sub_resultados',
             type: serverWidget.SublistType.LIST,
-            label: 'Resultados de la Última Resolución'
+            label: 'Historial de Resoluciones Manuales'
         });
 
         sublist.addField({ id: 'custpage_res_fecha',    type: serverWidget.FieldType.TEXT, label: 'Fecha' });
@@ -347,7 +450,7 @@ define(['N/ui/serverWidget'], (serverWidget) => {
             sublist.setSublistValue({ id: 'custpage_res_origen',  line: idx, value: r.locationFrom || '' });
             sublist.setSublistValue({ id: 'custpage_res_destino', line: idx, value: r.locationTo || '' });
             sublist.setSublistValue({ id: 'custpage_res_estado',  line: idx, value: r.status || '' });
-            sublist.setSublistValue({ id: 'custpage_res_to',      line: idx, value: r.toId ? `OT-${r.toId}` : '—' });
+            sublist.setSublistValue({ id: 'custpage_res_to',      line: idx, value: r.toId ? r.tranid : '—' });
             sublist.setSublistValue({ id: 'custpage_res_mensaje', line: idx, value: r.message || '' });
         });
 
