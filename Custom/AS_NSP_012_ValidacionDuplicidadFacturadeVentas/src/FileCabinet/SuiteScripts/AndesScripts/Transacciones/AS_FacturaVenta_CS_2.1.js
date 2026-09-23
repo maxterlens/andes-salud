@@ -7,8 +7,24 @@ define([
     './handlers/AS_FacturaVentaHandler'
 ], (dialog, FacturaVentaHandler) => {
 
+    const validateLine = (context) => {
+        const customForm = Number(
+            context.currentRecord.getValue({ fieldId: 'customform' })
+        );
+
+        if (customForm !== 118) return true;
+
+        return FacturaVentaHandler.validarDescripcionLinea(context, dialog);
+    };
+
     const saveRecord = (context) => {
         const currentRecord = context.currentRecord;
+
+        const customForm = Number(currentRecord.getValue({ fieldId: 'customform' }));
+        if (customForm === 118 && !FacturaVentaHandler.validarTodasLasLineasItem(currentRecord, dialog)) {
+            return false;
+        }
+
         const duplicado = FacturaVentaHandler.buscarFacturaDuplicada(currentRecord);
         if (duplicado) {
             dialog.alert({
@@ -25,6 +41,7 @@ define([
     };
 
     return {
+        validateLine,
         saveRecord
     };
 

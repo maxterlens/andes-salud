@@ -15,7 +15,7 @@
       <allroles>T</allroles>
       <audslctrole></audslctrole>
       <eventtype></eventtype>
-      <executioncontext>CSVIMPORT|USERINTERFACE</executioncontext>
+      <executioncontext>CSVIMPORT</executioncontext>
       <isdeployed>T</isdeployed>
       <loglevel>DEBUG</loglevel>
       <recordtype>ADVINTERCOMPANYJOURNALENTRY</recordtype>
@@ -29,7 +29,7 @@
       <allroles>T</allroles>
       <audslctrole></audslctrole>
       <eventtype></eventtype>
-      <executioncontext>CSVIMPORT|USERINTERFACE</executioncontext>
+      <executioncontext>CSVIMPORT</executioncontext>
       <isdeployed>T</isdeployed>
       <loglevel>DEBUG</loglevel>
       <recordtype>JOURNALENTRY</recordtype>

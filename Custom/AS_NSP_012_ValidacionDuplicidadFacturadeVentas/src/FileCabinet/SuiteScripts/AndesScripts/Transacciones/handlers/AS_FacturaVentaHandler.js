@@ -72,8 +72,59 @@ define(['N/search'], (search) => {
         };
     };
 
+    const validarDescripcionLinea = (context, dialog) => {
+        const { currentRecord, sublistId } = context;
+        if (sublistId !== 'item') return true;
+
+        const descripcion = currentRecord.getCurrentSublistValue({
+            sublistId: 'item',
+            fieldId: 'description'
+        });
+
+        if (!descripcion) {
+            dialog.alert({
+                title: 'Campo requerido',
+                message: 'La Descripción es obligatoria en todas las líneas, independientemente del artículo.'
+            });
+            return false;
+        }
+
+        return true;
+    };
+
+    /**
+     * Resguardo para saveRecord: recorre todas las líneas del sublist 'item'
+     * ya confirmadas (no solo la que se está editando) y exige Descripción en
+     * cada una. Cubre casos que no disparan validateLine.
+     *
+     * @param {Object} currentRecord
+     * @param {Object} dialog - Módulo N/ui/dialog, inyectado por el CS
+     * @returns {boolean} false si a alguna línea le falta la descripción, true si no
+     */
+    const validarTodasLasLineasItem = (currentRecord, dialog) => {
+        const cantidad = currentRecord.getLineCount({ sublistId: 'item' });
+        const lineasFaltantes = [];
+
+        for (let i = 0; i < cantidad; i++) {
+            const descripcion = currentRecord.getSublistValue({ sublistId: 'item', fieldId: 'description', line: i });
+            if (!descripcion) lineasFaltantes.push(i + 1);
+        }
+
+        if (lineasFaltantes.length) {
+            dialog.alert({
+                title: 'Campo requerido',
+                message: 'La Descripción es obligatoria en todas las líneas. Falta en la línea ' + lineasFaltantes.join(', ') + '.'
+            });
+            return false;
+        }
+
+        return true;
+    };
+
     return {
-        buscarFacturaDuplicada
+        buscarFacturaDuplicada,
+        validarDescripcionLinea,
+        validarTodasLasLineasItem
     };
 
 });

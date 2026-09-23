@@ -3,7 +3,7 @@
  * @NApiVersion 2.1
  * @NScriptType ClientScript
  */
-define(['N/search', 'N/ui/dialog'], (search, dialog) => {
+define(['N/search', 'N/ui/dialog', './handlers/FacturaCompraHandler'], (search, dialog, FacturaCompraHandler) => {
 
     const pageInit = (context) => {
         const currentRecord = context.currentRecord;
@@ -21,6 +21,16 @@ define(['N/search', 'N/ui/dialog'], (search, dialog) => {
         });
     };
         
+
+    const validateLine = (context) => {
+        const esHonorario = context.currentRecord.getValue({
+            fieldId: 'custbody_as_es_honorario_sin_dte'
+        });
+
+        if (!esHonorario) return true;
+
+        return FacturaCompraHandler.validarLineaGastos(context, dialog);
+    };
 
     const saveRecord = (context) => {
         const currentRecord = context.currentRecord;
@@ -61,6 +71,10 @@ define(['N/search', 'N/ui/dialog'], (search, dialog) => {
                 title: 'Campo requerido',
                 message: 'Debe seleccionar el Tipo DTE SII.'
             });
+            return false;
+        }
+
+        if (esHonorario && !FacturaCompraHandler.validarTodasLasLineasGastos(currentRecord, dialog)) {
             return false;
         }
 
@@ -135,6 +149,7 @@ define(['N/search', 'N/ui/dialog'], (search, dialog) => {
 
     return {
         pageInit,
+        validateLine,
         saveRecord
     };
 });

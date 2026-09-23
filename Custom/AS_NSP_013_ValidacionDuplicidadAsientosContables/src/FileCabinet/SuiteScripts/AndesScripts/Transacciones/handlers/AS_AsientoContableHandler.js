@@ -8,12 +8,12 @@ define(['N/search', 'N/log'], (search, log) => {
 
     const validar = (journal) => {
         const lineas = obtenerLineasControl(journal);
-        if (!lineas.length) return [];
+        if (!lineas.length) return { internos: [], externos: [] };
 
-        return [
-            ...duplicidadInterna(lineas),
-            ...duplicidadExterna(lineas, journal.id)
-        ];
+        return {
+            internos: duplicidadInterna(lineas),
+            externos: duplicidadExterna(lineas, journal.id)
+        };
     };
 
     const obtenerCuentasExentas = () => {
@@ -183,5 +183,116 @@ define(['N/search', 'N/log'], (search, log) => {
         return expresion;
     };
 
-    return { validar };
+    // ─── Campos obligatorios por tipo de cuenta (form 115) ─────────────────────
+    // Regla independiente del control de duplicidad de más arriba. Ver
+    // ARQUITECTURA.md, sección "Campos obligatorios por tipo de cuenta", para el
+    // detalle de por qué no se cruza con la exención de cuenta ni con el UE.
+
+    const TIPOS_CUENTA_OBLIGAN_CAMPOS = ['Bank', 'AcctRec', 'AcctPay', 'OthCurrAsset'];
+
+    /**
+     * Determina, para una línea del Diario, qué campos obligatorios faltan
+     * según el tipo de cuenta. Devuelve null si no aplica o si está todo
+     * completo, o un array con los nombres de los campos faltantes.
+     */
+    const camposFaltantesAsiento = (cuenta, valores) => {
+        if (!cuenta) return null;
+
+        const resultado = search.lookupFields({
+            type: 'account',
+            id: cuenta,
+            columns: ['type']
+        });
+        const tipoCuenta = resultado.type && resultado.type[0] && resultado.type[0].value;
+
+        if (!TIPOS_CUENTA_OBLIGAN_CAMPOS.includes(tipoCuenta)) return null;
+
+        const faltantes = Object.keys(valores).filter((campo) => !valores[campo]);
+        return faltantes.length ? faltantes : null;
+    };
+
+    /**
+     * Exige Folio, Fecha de Documento, Fecha de Vencimiento, Nombre, Departamento
+     * y Nota en la línea del Diario Contable (sublist 'line') cuando la cuenta
+     * seleccionada es de tipo Banco, CxC, CxP u Otros Activos Corrientes. Aplica
+     * solo al formulario Andes - Diario Contable (customform 115); el CS es quien
+     * filtra por formulario antes de llamar a esta función.
+     *
+     * @param {Object} context - Contexto validateLine del Client Script
+     * @param {Object} dialog - Módulo N/ui/dialog, inyectado por el CS (este
+     *                          handler no lo importa directamente porque no está
+     *                          soportado server-side)
+     * @returns {boolean} false si falta algún campo obligatorio, true en caso contrario
+     */
+    const validarCamposObligatoriosLinea = (context, dialog) => {
+        const { currentRecord, sublistId } = context;
+        if (sublistId !== 'line') return true;
+
+        const cuenta = currentRecord.getCurrentSublistValue({ sublistId: 'line', fieldId: 'account' });
+
+        const valores = {
+            Folio: currentRecord.getCurrentSublistValue({ sublistId: 'line', fieldId: 'custcol_2w_folio' }),
+            'Fecha de Documento': currentRecord.getCurrentSublistValue({ sublistId: 'line', fieldId: 'custcol8' }),
+            'Fecha de Vencimiento': currentRecord.getCurrentSublistValue({ sublistId: 'line', fieldId: 'custcol2' }),
+            Nombre: currentRecord.getCurrentSublistValue({ sublistId: 'line', fieldId: 'entity' }),
+            Departamento: currentRecord.getCurrentSublistValue({ sublistId: 'line', fieldId: 'department' }),
+            Nota: currentRecord.getCurrentSublistValue({ sublistId: 'line', fieldId: 'memo' })
+        };
+
+        const faltantes = camposFaltantesAsiento(cuenta, valores);
+        if (!faltantes) return true;
+
+        dialog.alert({
+            title: 'Campos requeridos',
+            message: 'Para el tipo de cuenta seleccionado, son obligatorios en la línea: ' + faltantes.join(', ') + '.'
+        });
+        return false;
+    };
+
+    /**
+     * Resguardo para saveRecord: recorre todas las líneas del Diario ya
+     * confirmadas (no solo la que se está editando) y valida lo mismo que
+     * validarCamposObligatoriosLinea. Cubre casos que no disparan validateLine.
+     *
+     * @param {Object} currentRecord
+     * @param {Object} dialog - Módulo N/ui/dialog, inyectado por el CS
+     * @returns {boolean} false si alguna línea tiene campos faltantes, true si no
+     */
+    const validarTodasLasLineasCamposObligatorios = (currentRecord, dialog) => {
+        const cantidad = currentRecord.getLineCount({ sublistId: 'line' });
+        const mensajes = [];
+
+        for (let i = 0; i < cantidad; i++) {
+            const cuenta = currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'account', line: i });
+            const valores = {
+                Folio: currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'custcol_2w_folio', line: i }),
+                'Fecha de Documento': currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'custcol8', line: i }),
+                'Fecha de Vencimiento': currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'custcol2', line: i }),
+                Nombre: currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'entity', line: i }),
+                Departamento: currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'department', line: i }),
+                Nota: currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'memo', line: i })
+            };
+
+            const faltantes = camposFaltantesAsiento(cuenta, valores);
+            if (faltantes) {
+                mensajes.push(`Línea ${i + 1}: Seleccione un valor para los campos de ${faltantes.join(', ')}.`);
+            }
+        }
+
+        if (mensajes.length) {
+            dialog.alert({
+                title: 'Campos requeridos',
+                message: mensajes.join('<br>')
+            });
+            return false;
+        }
+
+        return true;
+    };
+
+    return {
+        validar,
+        validarCamposObligatoriosLinea,
+        validarTodasLasLineasCamposObligatorios
+    };
 });
