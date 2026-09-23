@@ -3,10 +3,11 @@
  * @NModuleScope SameAccount
  *
  * @name        ASLogReposicionAutomaticaInventarioRepository.js
- * @description Repositorio de escritura del log de reposición.
- *              Responsabilidad exclusiva: crear el record customrecord_as_log_repo_auto_inventario.
+ * @description Repositorio de lectura/escritura del log de reposición.
+ *              Responsabilidad exclusiva: crear y consultar el record
+ *              customrecord_as_log_repo_auto_inventario. No contiene lógica de negocio.
  */
-define(['N/record', 'N/log'], (record, log) => {
+define(['N/record', 'N/search', 'N/log'], (record, search, log) => {
 
     const RECORD_TYPE = 'customrecord_as_log_repo_auto_inventario';
 
@@ -22,20 +23,26 @@ define(['N/record', 'N/log'], (record, log) => {
     };
 
     /**
-     * Guarda un registro de log de reposición automática.
+     * Guarda un registro de log de reposición automática y retorna su Internal ID,
+     * de forma que el llamador (TransferOrderService) pueda referenciarlo — por ejemplo,
+     * para mostrarlo en el listado de resultados del Suitelet de Resolución de Stock Limitado.
      *
-     * @param {Object}         params
-     * @param {string}         params.name          Nombre del registro
-     * @param {Date}           params.date          Fecha y hora de la ejecución
-     * @param {string|number}  params.subsidiaryId  Internal ID de la subsidiaria
-     * @param {string|number}  params.locationFrom  Internal ID de la ubicación origen
-     * @param {string|number}  params.locationTo    Internal ID de la ubicación destino
-     * @param {number|null}    params.toId          Internal ID de la OT creada (null si hubo error)
-     * @param {number}         params.itemsCount    Número de artículos procesados
-     * @param {string}         params.status        'Éxito' | 'Error'
-     * @param {string}         params.message       Mensaje descriptivo del resultado
-     * @param {string}         params.executionId   ID del deployment del script MR
-     * @param {string}         params.linesDetail   Detalle de artículos y cantidades de la OT
+     * El campo LOC_TO (ubicación destino) es opcional: los logs de "conflicto" (ítem
+     * disputado por 2+ destinos, pendiente de resolución manual) no tienen un único
+     * destino definitivo hasta que una persona lo resuelve, por lo que se guardan sin él.
+     *
+     * @param   {Object}         params
+     * @param   {string}         params.name          Nombre del registro
+     * @param   {Date}           params.date          Fecha y hora de la ejecución
+     * @param   {string|number}  params.subsidiaryId  Internal ID de la subsidiaria
+     * @param   {string|number}  params.locationFrom  Internal ID de la ubicación origen
+     * @param   {string|number|null} params.locationTo Internal ID de la ubicación destino (opcional)
+     * @param   {number|null}    params.toId          Internal ID de la OT creada (null si no aplica)
+     * @param   {string}         params.status        'Éxito' | 'Éxito parcial' | 'Error' | 'Pendiente de Resolución Manual'
+     * @param   {string}         params.message       Mensaje descriptivo del resultado
+     * @param   {string}         params.linesDetail   Detalle de artículos y cantidades
+     *
+     * @returns {number}  Internal ID del registro de log creado
      */
     const save = ({
         name, date, subsidiaryId, locationFrom, locationTo,
@@ -47,18 +54,77 @@ define(['N/record', 'N/log'], (record, log) => {
         logRec.setValue({ fieldId: FIELDS.DATE,          value: date });
         logRec.setValue({ fieldId: FIELDS.SUBSIDIARY,    value: parseInt(subsidiaryId, 10) });
         logRec.setValue({ fieldId: FIELDS.LOC_FROM,      value: parseInt(locationFrom, 10) });
-        logRec.setValue({ fieldId: FIELDS.LOC_TO,        value: parseInt(locationTo,   10) });
         logRec.setValue({ fieldId: FIELDS.STATUS,        value: status });
         logRec.setValue({ fieldId: FIELDS.MESSAGE,       value: message });
         logRec.setValue({ fieldId: FIELDS.LINES_DETAIL,  value: linesDetail });
+
+        if (locationTo !== null && locationTo !== undefined && locationTo !== '') {
+            logRec.setValue({ fieldId: FIELDS.LOC_TO, value: parseInt(locationTo, 10) });
+        }
 
         if (toId) {
             logRec.setValue({ fieldId: FIELDS.TO, value: toId });
         }
 
-        logRec.save();
-        log.error('LogReposicionRepository.save', `Log guardado: ${name}`);
+        const logId = logRec.save();
+        log.error('LogReposicionRepository.save', `Log guardado: ${name} (ID ${logId})`);
+
+        return logId;
     };
 
-    return { save };
+    /**
+     * Recupera un conjunto de logs de reposición por sus Internal IDs, en el orden
+     * necesario para el listado de resultados del Suitelet de Resolución de Stock Limitado
+     * (se muestra un resumen de qué se creó / registró tras confirmar una resolución).
+     *
+     * @param   {Array<string|number>} ids
+     * @returns {Array<{
+     *   id: string,
+     *   date: string,
+     *   locationFrom: string,
+     *   locationTo: string,
+     *   toId: string,
+     *   status: string,
+     *   message: string,
+     *   linesDetail: string
+     * }>}
+     */
+    const getByIds = (ids) => {
+        if (!ids || !ids.length) return [];
+
+        const results = [];
+
+        search.create({
+            type: RECORD_TYPE,
+            filters: [['internalid', 'anyof', ids]],
+            columns: [
+                'internalid',
+                FIELDS.DATE,
+                FIELDS.LOC_FROM,
+                FIELDS.LOC_TO,
+                FIELDS.TO,
+                FIELDS.STATUS,
+                FIELDS.MESSAGE,
+                FIELDS.LINES_DETAIL
+            ]
+        }).run().each((r) => {
+            results.push({
+                id           : r.getValue({ name: 'internalid' }),
+                date         : r.getValue({ name: FIELDS.DATE }),
+                locationFrom : r.getText({ name: FIELDS.LOC_FROM }) || r.getValue({ name: FIELDS.LOC_FROM }),
+                locationTo   : r.getText({ name: FIELDS.LOC_TO })   || r.getValue({ name: FIELDS.LOC_TO }),
+                toId         : r.getValue({ name: FIELDS.TO }),
+                status       : r.getValue({ name: FIELDS.STATUS }),
+                message      : r.getValue({ name: FIELDS.MESSAGE }),
+                linesDetail  : r.getValue({ name: FIELDS.LINES_DETAIL })
+            });
+            return true;
+        });
+
+        log.error('LogReposicionRepository.getByIds', `Solicitados: ${ids.length} | Encontrados: ${results.length}`);
+
+        return results;
+    };
+
+    return { save, getByIds, FIELDS, RECORD_TYPE };
 });

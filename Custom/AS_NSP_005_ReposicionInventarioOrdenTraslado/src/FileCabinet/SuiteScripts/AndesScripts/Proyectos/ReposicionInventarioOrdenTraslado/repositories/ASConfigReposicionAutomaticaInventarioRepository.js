@@ -14,13 +14,20 @@ define(['N/search', 'N/log'], (search, log) => {
         SUBSIDIARY : 'custrecord_as_conf_rep_aut_inv_subsidiar',
         LOC_FROM   : 'custrecord_as_conf_rep_aut_inv_ubi_desde',
         LOC_TO     : 'custrecord_as_conf_rep_aut_inv_ubi_hasta',
+        ORDEN      : 'custrecord_as_conf_rep_aut_inv_orden',
     };
 
     /**
      * Retorna todos los registros de configuración activos.
-     * Cada elemento representa un par (subsidiaria / origen / destino) habilitado.
+     * Cada elemento representa un par (subsidiaria / origen / destino) habilitado,
+     * junto con su orden de prioridad para el reparto de stock en origen.
      *
-     * @returns {Array<{subsidiaryId: string, locationFrom: string, locationTo: string}>}
+     * @returns {Array<{
+     *   subsidiaryId: string,
+     *   locationFrom: string,
+     *   locationTo: string,
+     *   orden: number|null
+     * }>}
      */
     const getActiveConfigs = () => {
         const configSearch = search.create({
@@ -29,7 +36,8 @@ define(['N/search', 'N/log'], (search, log) => {
             columns : [
                 search.createColumn({ name: FIELDS.SUBSIDIARY }),
                 search.createColumn({ name: FIELDS.LOC_FROM }),
-                search.createColumn({ name: FIELDS.LOC_TO })
+                search.createColumn({ name: FIELDS.LOC_TO }),
+                search.createColumn({ name: FIELDS.ORDEN })
             ]
         });
 
@@ -38,9 +46,13 @@ define(['N/search', 'N/log'], (search, log) => {
             const subsidiaryId = result.getValue({ name: FIELDS.SUBSIDIARY });
             const locationFrom  = result.getValue({ name: FIELDS.LOC_FROM });
             const locationTo    = result.getValue({ name: FIELDS.LOC_TO });
+            const ordenRaw       = result.getValue({ name: FIELDS.ORDEN });
+            const orden          = (ordenRaw === '' || ordenRaw === null || ordenRaw === undefined)
+                ? null
+                : Number(ordenRaw);
 
             if (subsidiaryId && locationFrom && locationTo) {
-                configs.push({ subsidiaryId, locationFrom, locationTo });
+                configs.push({ subsidiaryId, locationFrom, locationTo, orden });
             }
             return true;
         });

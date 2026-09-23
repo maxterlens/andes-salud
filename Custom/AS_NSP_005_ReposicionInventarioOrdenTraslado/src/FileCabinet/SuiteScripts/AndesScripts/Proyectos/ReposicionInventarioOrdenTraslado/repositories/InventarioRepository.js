@@ -7,7 +7,7 @@
  *              Responsabilidad exclusiva: consultas SuiteQL sobre
  *              itemlocationconfiguration, inventorybalance y transfer orders pendientes.
  */
-define(['N/query', 'N/search'], (query, search) => {
+define(['N/query', 'N/search', 'N/log'], (query, search, log) => {
 
     /**
      * Obtiene la configuración de ubicación de artículo para una ubicación destino.
@@ -19,7 +19,6 @@ define(['N/query', 'N/search'], (query, search) => {
      *   item_code: string,
      *   item_display_name: string,
      *   preferredstocklevel: string,
-     *   safetystocklevel: string,
      *   safetystocklevel: string
      * }>}
      */
@@ -31,7 +30,6 @@ define(['N/query', 'N/search'], (query, search) => {
                     i.itemid              AS item_code,
                     i.displayname         AS item_display_name,
                     ilc.preferredstocklevel,
-                    ilc.safetystocklevel,
                     ilc.safetystocklevel
                 FROM itemlocationconfiguration ilc
                 INNER JOIN item i ON i.id = ilc.item
@@ -45,14 +43,16 @@ define(['N/query', 'N/search'], (query, search) => {
 
     /**
      * Obtiene el stock disponible por artículo en una ubicación.
+     * Sirve tanto para destino (stock actual) como para origen (stock a repartir).
      * Si la consulta falla (ubicación sin movimientos), retorna map vacío (asume qty = 0).
      *
-     * @param   {string|number} locationTo  Internal ID de la ubicación
-     * @param   {string}        itemIds     IDs de artículo separados por coma
+     * @param   {string|number} location  Internal ID de la ubicación
+     * @param   {string}        itemIds   IDs de artículo separados por coma
      * @returns {Object} Map { [itemInternalId]: quantityAvailable }
      */
-    const getAvailableStock = (locationTo, itemIds) => {
+    const getAvailableStock = (location, itemIds) => {
         const stockMap = {};
+        if (!itemIds) return stockMap;
         try {
             query.runSuiteQL({
                 query: `
@@ -60,7 +60,7 @@ define(['N/query', 'N/search'], (query, search) => {
                         item,
                         SUM(COALESCE(quantityavailable, 0)) AS qty_available
                     FROM inventorybalance
-                    WHERE location = ${locationTo}
+                    WHERE location = ${location}
                       AND item     IN (${itemIds})
                     GROUP BY item
                 `
@@ -69,10 +69,47 @@ define(['N/query', 'N/search'], (query, search) => {
             });
         } catch (e) {
             log.error('InventarioRepository.getAvailableStock',
-                `locationTo ${locationTo}: ${e.message}. Se asume stock 0 para todos.`
+                `location ${location}: ${e.message}. Se asume stock 0 para todos.`
             );
         }
         return stockMap;
+    };
+
+    /**
+     * Obtiene el stock mínimo (safety stock) configurado por artículo en una ubicación.
+     * Pensado para leer el mínimo a proteger en la ubicación ORIGEN antes de despachar
+     * una reposición hacia otra ubicación.
+     *
+     * A diferencia de getItemLocationConfig, NO filtra por safetystocklevel > 0:
+     * un mínimo de 0 (o sin configuración) es válido en origen y significa
+     * "sin piso protegido para este artículo en esta ubicación".
+     *
+     * @param   {string|number} location  Internal ID de la ubicación
+     * @param   {string}        itemIds   IDs de artículo separados por coma
+     * @returns {Object} Map { [itemInternalId]: safetyStockLevel }  (0 si no hay configuración)
+     */
+    const getSafetyStockByLocation = (location, itemIds) => {
+        const safetyMap = {};
+        if (!itemIds) return safetyMap;
+        try {
+            query.runSuiteQL({
+                query: `
+                    SELECT
+                        item,
+                        safetystocklevel
+                    FROM itemlocationconfiguration
+                    WHERE location = ${location}
+                      AND item     IN (${itemIds})
+                `
+            }).asMappedResults().forEach(r => {
+                safetyMap[r.item] = parseFloat(r.safetystocklevel) || 0;
+            });
+        } catch (e) {
+            log.error('InventarioRepository.getSafetyStockByLocation',
+                `location ${location}: ${e.message}. Se asume mínimo 0 para todos.`
+            );
+        }
+        return safetyMap;
     };
 
     /**
@@ -96,16 +133,16 @@ define(['N/query', 'N/search'], (query, search) => {
                 type: "transferorder",
                 settings:[{"name":"consolidationtype","value":"NONE"},{"name":"includeperiodendtransactions","value":"F"}],
                 filters:[
-                    ["type","anyof","TrnfrOrd"], 
+                    ["type","anyof","TrnfrOrd"],
                     "AND",
                     ["mainline","is","F"],
                     "AND",
                     ["voided","is","F"],
-                    "AND", 
-                    ["item","anyof", itemIds.split(',')], 
-                    "AND", 
+                    "AND",
+                    ["item","anyof", itemIds.split(',')],
+                    "AND",
                     ["location","anyof", locationTo],
-                    "AND",      
+                    "AND",
                     ["closed","is","F"],
                     "AND",
                     ["transactionlinetype","anyof","RECEIVING"],
@@ -119,9 +156,6 @@ define(['N/query', 'N/search'], (query, search) => {
                     search.createColumn({ name: "formulanumeric", summary: "SUM", formula: "NVL({quantity},0) - NVL({quantityshiprecv},0)" })
                 ]
             });
-            newSearch.title = 'search testsss';
-            let id = newSearch.save();
-            log.error('id', id);
             let pageData = newSearch.runPaged({ pageSize: 1000 });
             pageData.pageRanges.forEach(function (pageRange) {
                 let page = pageData.fetch({ index: pageRange.index });
@@ -142,5 +176,5 @@ define(['N/query', 'N/search'], (query, search) => {
         return inTransitMap;
     };
 
-    return { getItemLocationConfig, getAvailableStock, getPendingInTransitQty };
+    return { getItemLocationConfig, getAvailableStock, getSafetyStockByLocation, getPendingInTransitQty };
 });
