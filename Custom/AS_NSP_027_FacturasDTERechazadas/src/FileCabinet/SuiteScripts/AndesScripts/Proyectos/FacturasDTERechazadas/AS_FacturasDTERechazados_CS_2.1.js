@@ -32,7 +32,7 @@ define(['N/format', 'N/ui/message'],
 
     const ESPERA_MS = 800;
     const FILTROS_TEXTO = ['custpage_folio', 'custpage_rut_emisor', 'custpage_codigo_error'];
-    const FILTROS_CAMBIO = ['custpage_seguimiento', 'custpage_subsidiaria', 'custpage_fecha_desde', 'custpage_fecha_hasta'];
+    const FILTROS_CAMBIO = ['custpage_seguimiento', 'custpage_subsidiaria', 'custpage_tipo_documento', 'custpage_fecha_desde', 'custpage_fecha_hasta'];
 
     let temporizadorFiltro = null;
     let avisoRangoFechas = null;
@@ -125,6 +125,7 @@ define(['N/format', 'N/ui/message'],
              + '&custpage_folio=' + encodeURIComponent(leerValorCampo('custpage_folio'))
              + '&custpage_rut_emisor=' + encodeURIComponent(leerValorCampo('custpage_rut_emisor'))
              + '&custpage_subsidiaria=' + encodeURIComponent(leerValorCampo('custpage_subsidiaria'))
+             + '&custpage_tipo_documento=' + encodeURIComponent(leerValorCampo('custpage_tipo_documento'))
              + '&custpage_codigo_error=' + encodeURIComponent(leerValorCampo('custpage_codigo_error'))
              + '&custpage_seguimiento=' + encodeURIComponent(leerValorCampo('custpage_seguimiento'))
              + '&custpage_pagina=0';

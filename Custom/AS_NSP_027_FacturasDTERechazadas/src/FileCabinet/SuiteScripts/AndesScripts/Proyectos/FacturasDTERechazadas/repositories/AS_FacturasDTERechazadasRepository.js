@@ -81,6 +81,11 @@ define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
             parametros.push(filtros.subsidiaria);
         }
 
+        if (filtros.tipoDocumento) {
+            condiciones.push('c.custrecord_as_dterc_codigo_dte = ?');
+            parametros.push(filtros.tipoDocumento);
+        }
+
         if (filtros.seguimiento === CONSTANTES.SEGUIMIENTO.PENDIENTE) {
             condiciones.push('c.custrecord_as_dterc_avisado = \'F\'');
         } else if (filtros.seguimiento === CONSTANTES.SEGUIMIENTO.AVISADO) {
@@ -93,6 +98,7 @@ define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
             '    TO_CHAR(c.custrecord_as_dterc_fecha, \'DD/MM/YYYY\') AS fecha,',
             '    c.custrecord_as_dterc_folio AS folio,',
             '    c.custrecord_as_dterc_tipo AS tipodte,',
+            '    c.custrecord_as_dterc_codigo_dte AS tipodocumento,',
             '    c.custrecord_as_dterc_rut_emisor AS rutemisor,',
             '    BUILTIN.DF(c.custrecord_as_dterc_proveedor) AS proveedor,',
             '    BUILTIN.DF(c.custrecord_as_dterc_subsidiaria) AS subsidiaria,',
@@ -110,7 +116,7 @@ define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
         return { texto: texto, parametros: parametros };
     }
 
-    function marcarProveedorAvisado(id, idEmpleado, observacion) {
+    function marcarProveedorAvisado(id, idEmpleado) {
         const filas = query.runSuiteQL({
             query : 'SELECT id, custrecord_as_dterc_avisado AS avisado FROM ' + CONSTANTES.RECORD.DTE_RECHAZADO
                   + ' WHERE id = ? AND isinactive = \'F\'',
@@ -128,7 +134,6 @@ define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
                 custrecord_as_dterc_avisado      : true,
                 custrecord_as_dterc_fecha_aviso  : new Date(),
                 custrecord_as_dterc_usuario_aviso: idEmpleado,
-                custrecord_as_dterc_nota_aviso   : observacion,
             },
         });
         return true;

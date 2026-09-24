@@ -11,6 +11,9 @@
  *              vendor.custentity_2wrut = rut emisor, Subsidiaria via
  *              subsidiary.custrecord_2winrutsubsiudiaria = rut receptor-.
  *
+ *              El codigo DTE (33, 61...) se guarda traducido con CONSTANTES.TIPOS_DTE;
+ *              si 2WIN manda un codigo que no esta en esa tabla, se guarda el numero.
+ *
  *              guardarDteRechazado actualiza si ya existe una fila para ese id original
  *              y crea si no -nunca duplica-, buscando por
  *              custrecord_as_dterc_id_original. Devuelve el id de la fila, para el log
@@ -37,6 +40,7 @@ define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
             '    TO_CHAR(r.created, \'YYYY-MM-DD\') AS fecha,',
             '    r.custrecord_2win_dterech_folio AS folio,',
             '    r.custrecord_2win_dterech_tipo AS tipo,',
+            '    r.custrecord_2win_dterech_codigo_dte AS codigodte,',
             '    r.custrecord_2win_dterech_rut_emisor AS rutemisor,',
             '    v.id AS idvendor,',
             '    r.custrecord_2win_dterech_rut_receptor AS rutreceptor,',
@@ -59,6 +63,7 @@ define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
             custrecord_as_dterc_fecha       : fila.fecha ? new Date(fila.fecha + 'T00:00:00') : null,
             custrecord_as_dterc_folio       : fila.folio,
             custrecord_as_dterc_tipo        : fila.tipo,
+            custrecord_as_dterc_codigo_dte  : CONSTANTES.TIPOS_DTE[fila.codigodte] || fila.codigodte,
             custrecord_as_dterc_rut_emisor  : fila.rutemisor,
             custrecord_as_dterc_proveedor   : fila.idvendor,
             custrecord_as_dterc_rut_receptor: fila.rutreceptor,

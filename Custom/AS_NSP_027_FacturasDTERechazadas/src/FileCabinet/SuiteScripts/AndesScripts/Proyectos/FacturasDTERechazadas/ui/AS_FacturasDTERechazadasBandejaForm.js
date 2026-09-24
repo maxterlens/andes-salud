@@ -1,7 +1,7 @@
 /**
  * AS_NSP_027 — Facturas DTE Rechazadas
  * @description Arma la pantalla de la bandeja con N/ui/serverWidget: filtros, aviso de
- *              sin resultados, registro del contacto con el proveedor, las sublistas de
+ *              sin resultados, el boton para registrar el aviso al proveedor, las sublistas de
  *              pendientes y avisados, y la paginacion. Recibe los datos ya consultados
  *              por el handler; no consulta ni escribe registros.
  *
@@ -58,6 +58,7 @@ define(['N/ui/serverWidget', '../lib/AS_FacturasDTERechazadasConstants'],
         const campoSubsidiaria = agregarCampoSubsidiaria(form, filtros.subsidiaria);
         campoSubsidiaria.updateBreakType({ breakType: serverWidget.FieldBreakType.STARTCOL });
 
+        agregarCampoTipoDocumento(form, filtros.tipoDocumento);
         agregarCampoTexto(form, 'custpage_fecha_desde', serverWidget.FieldType.DATE, 'Rechazo desde', filtros.fechaDesde);
         agregarCampoTexto(form, 'custpage_fecha_hasta', serverWidget.FieldType.DATE, 'Rechazo hasta', filtros.fechaHasta);
 
@@ -98,6 +99,21 @@ define(['N/ui/serverWidget', '../lib/AS_FacturasDTERechazadasConstants'],
         return campo;
     }
 
+    /**
+     * El valor y el texto de cada opcion son el nombre, porque eso es lo que el sync
+     * guarda en custrecord_as_dterc_codigo_dte. Las opciones salen en el orden del
+     * codigo del SII (33, 34, 39...).
+     */
+    function agregarCampoTipoDocumento(form, valorElegido) {
+        const campo = form.addField({ id: 'custpage_tipo_documento', type: serverWidget.FieldType.SELECT, label: CONSTANTES.ETIQUETAS_COLUMNA.TIPO_DOCUMENTO, container: 'custpage_grp_filtros' });
+        campo.addSelectOption({ value: '', text: '' });
+        Object.keys(CONSTANTES.TIPOS_DTE).forEach((codigo) => {
+            campo.addSelectOption({ value: CONSTANTES.TIPOS_DTE[codigo], text: CONSTANTES.TIPOS_DTE[codigo] });
+        });
+        campo.defaultValue = valorElegido;
+        return campo;
+    }
+
     function agregarAvisoSinResultados(form, totalRegistros, filtros) {
         if (totalRegistros !== 0) {
             return;
@@ -106,7 +122,7 @@ define(['N/ui/serverWidget', '../lib/AS_FacturasDTERechazadasConstants'],
         const campo = form.addField({ id: 'custpage_sin_resultados', type: serverWidget.FieldType.INLINEHTML, label: 'Sin resultados' });
         campo.updateBreakType({ breakType: serverWidget.FieldBreakType.STARTROW });
         const hayFiltros = filtros.fechaDesde || filtros.fechaHasta || filtros.folio || filtros.rutEmisor
-                        || filtros.subsidiaria || filtros.codigoError || filtros.seguimiento;
+                        || filtros.subsidiaria || filtros.tipoDocumento || filtros.codigoError || filtros.seguimiento;
         campo.defaultValue = '<p style="color:#8a4b00;font-weight:bold;">'
             + (hayFiltros ? 'No hay rechazos con estos filtros. Revisa las fechas o usa Limpiar filtros.'
                           : 'No hay rechazos para mostrar.')
@@ -118,9 +134,6 @@ define(['N/ui/serverWidget', '../lib/AS_FacturasDTERechazadasConstants'],
             return;
         }
 
-        form.addFieldGroup({ id: 'custpage_grp_aviso', label: 'Registrar contacto con el proveedor' });
-        const campoNota = form.addField({ id: 'custpage_nota_aviso', type: serverWidget.FieldType.TEXT, label: 'Nota del contacto (opcional)', container: 'custpage_grp_aviso' });
-        campoNota.helpText = 'Selecciona filas pendientes. El boton registra un aviso ya realizado; no envia un correo.';
         form.addSubmitButton({ label: 'Registrar aviso en seleccionados' });
     }
 
@@ -157,7 +170,8 @@ define(['N/ui/serverWidget', '../lib/AS_FacturasDTERechazadasConstants'],
 
         agregarColumna(sublist, prefijo + 'fecha', CONSTANTES.ETIQUETAS_COLUMNA.FECHA, 80);
         agregarColumna(sublist, prefijo + 'folio', CONSTANTES.ETIQUETAS_COLUMNA.FOLIO, 80);
-        agregarColumna(sublist, prefijo + 'tipo', CONSTANTES.ETIQUETAS_COLUMNA.TIPO_DTE, 90);
+        agregarColumna(sublist, prefijo + 'tipo', CONSTANTES.ETIQUETAS_COLUMNA.TIPO, 90);
+        agregarColumna(sublist, prefijo + 'tipo_documento', CONSTANTES.ETIQUETAS_COLUMNA.TIPO_DOCUMENTO, 200);
         agregarColumna(sublist, prefijo + 'rut', CONSTANTES.ETIQUETAS_COLUMNA.RUT_EMISOR, 100);
         agregarColumna(sublist, prefijo + 'proveedor', CONSTANTES.ETIQUETAS_COLUMNA.PROVEEDOR, 220);
         agregarColumna(sublist, prefijo + 'subsidiaria', CONSTANTES.ETIQUETAS_COLUMNA.SUBSIDIARIA, 220);
@@ -176,6 +190,7 @@ define(['N/ui/serverWidget', '../lib/AS_FacturasDTERechazadasConstants'],
             sublist.setSublistValue({ id: prefijo + 'fecha', line: indice, value: fila.fecha || ' ' });
             sublist.setSublistValue({ id: prefijo + 'folio', line: indice, value: fila.folio || ' ' });
             sublist.setSublistValue({ id: prefijo + 'tipo', line: indice, value: fila.tipodte || ' ' });
+            sublist.setSublistValue({ id: prefijo + 'tipo_documento', line: indice, value: fila.tipodocumento || ' ' });
             sublist.setSublistValue({ id: prefijo + 'rut', line: indice, value: fila.rutemisor || ' ' });
             sublist.setSublistValue({ id: prefijo + 'proveedor', line: indice, value: fila.proveedor || ' ' });
             sublist.setSublistValue({ id: prefijo + 'subsidiaria', line: indice, value: fila.subsidiaria || ' ' });
@@ -223,6 +238,7 @@ define(['N/ui/serverWidget', '../lib/AS_FacturasDTERechazadasConstants'],
             + '&custpage_folio=' + encodeURIComponent(filtros.folio)
             + '&custpage_rut_emisor=' + encodeURIComponent(filtros.rutEmisor)
             + '&custpage_subsidiaria=' + encodeURIComponent(filtros.subsidiaria)
+            + '&custpage_tipo_documento=' + encodeURIComponent(filtros.tipoDocumento)
             + '&custpage_codigo_error=' + encodeURIComponent(filtros.codigoError)
             + '&custpage_seguimiento=' + encodeURIComponent(filtros.seguimiento);
     }

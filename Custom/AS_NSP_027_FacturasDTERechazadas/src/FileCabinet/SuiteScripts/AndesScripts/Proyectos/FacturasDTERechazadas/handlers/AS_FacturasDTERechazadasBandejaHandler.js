@@ -44,14 +44,15 @@ define(['N/url', 'N/redirect', 'N/runtime', '../lib/AS_FacturasDTERechazadasCons
                          || seguimiento === CONSTANTES.SEGUIMIENTO.AVISADO;
 
         return {
-            fechaDesde : parametros.custpage_fecha_desde || '',
-            fechaHasta : parametros.custpage_fecha_hasta || '',
-            folio      : parametros.custpage_folio || '',
-            rutEmisor  : parametros.custpage_rut_emisor || '',
-            subsidiaria: parametros.custpage_subsidiaria || '',
-            codigoError: parametros.custpage_codigo_error || '',
-            seguimiento: esValido ? seguimiento : '',
-            pagina     : Number(parametros.custpage_pagina) || 0,
+            fechaDesde   : parametros.custpage_fecha_desde || '',
+            fechaHasta   : parametros.custpage_fecha_hasta || '',
+            folio        : parametros.custpage_folio || '',
+            rutEmisor    : parametros.custpage_rut_emisor || '',
+            subsidiaria  : parametros.custpage_subsidiaria || '',
+            tipoDocumento: parametros.custpage_tipo_documento || '',
+            codigoError  : parametros.custpage_codigo_error || '',
+            seguimiento  : esValido ? seguimiento : '',
+            pagina       : Number(parametros.custpage_pagina) || 0,
         };
     }
 
@@ -60,7 +61,6 @@ define(['N/url', 'N/redirect', 'N/runtime', '../lib/AS_FacturasDTERechazadasCons
         const filtros     = obtenerParametrosFiltro(request);
         const totalLineas = request.getLineCount({ group: 'custpage_sl_rechazos' });
         const idEmpleado  = runtime.getCurrentUser().id;
-        const observacion = request.parameters.custpage_nota_aviso || '';
         let totalAvisados = 0;
 
         for (let linea = 0; linea < totalLineas; linea++) {
@@ -70,7 +70,7 @@ define(['N/url', 'N/redirect', 'N/runtime', '../lib/AS_FacturasDTERechazadasCons
             }
 
             const id = request.getSublistValue({ group: 'custpage_sl_rechazos', name: 'custpage_col_id', line: linea });
-            if (repository.marcarProveedorAvisado(id, idEmpleado, observacion)) {
+            if (repository.marcarProveedorAvisado(id, idEmpleado)) {
                 totalAvisados++;
             }
         }
@@ -81,14 +81,15 @@ define(['N/url', 'N/redirect', 'N/runtime', '../lib/AS_FacturasDTERechazadasCons
             scriptId    : CONSTANTES.SUITELET.SCRIPT,
             deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
             parameters  : {
-                custpage_fecha_desde : filtros.fechaDesde,
-                custpage_fecha_hasta : filtros.fechaHasta,
-                custpage_folio       : filtros.folio,
-                custpage_rut_emisor  : filtros.rutEmisor,
-                custpage_subsidiaria : filtros.subsidiaria,
-                custpage_codigo_error: filtros.codigoError,
-                custpage_seguimiento : filtros.seguimiento,
-                custpage_pagina      : filtros.pagina,
+                custpage_fecha_desde   : filtros.fechaDesde,
+                custpage_fecha_hasta   : filtros.fechaHasta,
+                custpage_folio         : filtros.folio,
+                custpage_rut_emisor    : filtros.rutEmisor,
+                custpage_subsidiaria   : filtros.subsidiaria,
+                custpage_tipo_documento: filtros.tipoDocumento,
+                custpage_codigo_error  : filtros.codigoError,
+                custpage_seguimiento   : filtros.seguimiento,
+                custpage_pagina        : filtros.pagina,
             },
         });
     }
