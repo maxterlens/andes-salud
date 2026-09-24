@@ -1,0 +1,94 @@
+/**
+ * AS_NSP_025 — Facturas DTE Rechazadas
+ * @description Unico punto que escribe customrecord_as_dte_rechazado. Lo usa
+ *              el SyncHandler, que sincroniza una sola fila apenas 2WIN la crea o la
+ *              edita en customrecord_2win_recepcion_dte_rechaza -disparado hoy por un
+ *              UE, ver AS_FacturasDTERechazadas_UE_2.1.js-. La bandeja nunca escribe,
+ *              solo lee (ver AS_FacturasDTERechazadasRepository.js).
+ *
+ *              obtenerFilaOrigenPorId trae esa fila YA resuelta -Vendor via
+ *              vendor.custentity_2wrut = rut emisor, Subsidiaria via
+ *              subsidiary.custrecord_2winrutsubsiudiaria = rut receptor-.
+ *
+ *              guardarEnCache actualiza si ya existe una fila para ese id original
+ *              y crea si no -nunca duplica-, buscando por
+ *              custrecord_as_dterc_id_original. Devuelve el id de la fila del cache,
+ *              para el log del que la llama.
+ *
+ * @NApiVersion 2.1
+ * @NModuleScope Public
+ */
+define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
+    (query, record, CONSTANTES) => {
+
+    function obtenerFilaOrigenPorId(id) {
+        const filas = query.runSuiteQL({
+            query : construirConsultaOrigen() + ' AND r.id = ?',
+            params: [id],
+        }).asMappedResults();
+
+        return filas.length ? filas[0] : null;
+    }
+
+    function guardarEnCache(fila) {
+        const idCache = buscarIdCache(fila.idoriginal);
+
+        const valores = {
+            custrecord_as_dterc_id_original : fila.idoriginal,
+            custrecord_as_dterc_fecha       : fila.fecha ? new Date(fila.fecha + 'T00:00:00') : null,
+            custrecord_as_dterc_folio       : fila.folio,
+            custrecord_as_dterc_tipo        : fila.tipo,
+            custrecord_as_dterc_rut_emisor  : fila.rutemisor,
+            custrecord_as_dterc_proveedor   : fila.idvendor,
+            custrecord_as_dterc_rut_receptor: fila.rutreceptor,
+            custrecord_as_dterc_subsidiaria : fila.idsubsidiaria,
+            custrecord_as_dterc_estado      : fila.estado,
+            custrecord_as_dterc_cod_error   : fila.codigoerror,
+            custrecord_as_dterc_desc_error  : fila.descripcionerror,
+        };
+
+        if (idCache) {
+            record.submitFields({ type: CONSTANTES.RECORD.CACHE, id: idCache, values: valores });
+            return idCache;
+        }
+
+        const registro = record.create({ type: CONSTANTES.RECORD.CACHE, isDynamic: false });
+        Object.keys(valores).forEach((campo) => registro.setValue({ fieldId: campo, value: valores[campo] }));
+        return registro.save();
+    }
+
+    function buscarIdCache(idOriginal) {
+        const filas = query.runSuiteQL({
+            query : 'SELECT id FROM ' + CONSTANTES.RECORD.CACHE + ' WHERE custrecord_as_dterc_id_original = ?',
+            params: [idOriginal],
+        }).asMappedResults();
+
+        return filas.length ? filas[0].id : null;
+    }
+
+    function construirConsultaOrigen() {
+        return [
+            'SELECT',
+            '    r.id AS idoriginal,',
+            '    TO_CHAR(r.created, \'YYYY-MM-DD\') AS fecha,',
+            '    r.custrecord_2win_dterech_folio AS folio,',
+            '    r.custrecord_2win_dterech_tipo AS tipo,',
+            '    r.custrecord_2win_dterech_rut_emisor AS rutemisor,',
+            '    v.id AS idvendor,',
+            '    r.custrecord_2win_dterech_rut_receptor AS rutreceptor,',
+            '    s.id AS idsubsidiaria,',
+            '    r.custrecord_2win_dterech_estado AS estado,',
+            '    r.custrecord_2win_dterech_codigo_error AS codigoerror,',
+            '    r.custrecord_2win_dterech_desc_error AS descripcionerror',
+            'FROM customrecord_2win_recepcion_dte_rechaza r',
+            'LEFT JOIN vendor v ON v.custentity_2wrut = r.custrecord_2win_dterech_rut_emisor',
+            'LEFT JOIN subsidiary s ON s.custrecord_2winrutsubsiudiaria LIKE r.custrecord_2win_dterech_rut_receptor || \'%\'',
+            'WHERE r.isinactive = \'F\'',
+        ].join(' ');
+    }
+
+    return {
+        obtenerFilaOrigenPorId: obtenerFilaOrigenPorId,
+        guardarEnCache        : guardarEnCache,
+    };
+});

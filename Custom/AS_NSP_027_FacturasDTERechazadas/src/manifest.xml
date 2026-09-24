@@ -1,0 +1,20 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>AS_NSP_025_FacturasDTERechazadas</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="true">SERVERSIDESCRIPTING</feature>
+      <feature required="true">CUSTOMRECORDS</feature>
+      <feature required="false">CRM</feature>
+      <feature required="false">MULTILANGUAGE</feature>
+      <feature required="true">ACCOUNTING</feature>
+      <feature required="false">CUSTOMSEGMENTS</feature>
+      <feature required="false">EXTREMELIST</feature>
+      <feature required="false">MAILMERGE</feature>
+      <feature required="true">SUBSIDIARIES</feature>
+    </features>
+    <objects>
+      <object>customrecord_2win_recepcion_dte_rechaza</object>
+    </objects>
+  </dependencies>
+</manifest>
