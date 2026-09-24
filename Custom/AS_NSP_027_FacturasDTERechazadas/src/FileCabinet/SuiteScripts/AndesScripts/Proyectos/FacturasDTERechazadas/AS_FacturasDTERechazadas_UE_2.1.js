@@ -1,5 +1,10 @@
 /**
- * AS_NSP_025 — Facturas DTE Rechazadas
+ * AS_NSP_027 — Facturas DTE Rechazadas
+ * @description Trigger de la sincronizacion: apenas 2WIN crea o edita una fila en
+ *              customrecord_2win_recepcion_dte_rechaza, pasa su id al SyncHandler.
+ *              Es un UE hasta que la cuenta reconozca Event Subscriber; el handler
+ *              no sabe quien lo llama, asi que cambiar el trigger es cambiar solo
+ *              este archivo.
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
  * @NModuleScope Public
@@ -16,19 +21,17 @@ define(['./lib/AS_FacturasDTERechazadasConstants', './handlers/AS_FacturasDTERec
 
         const recordId = context.newRecord.id;
 
-        log.debug({ title: CONSTANTES.LOGS.SYNC_START, details: 'recordId: ' + recordId });
-
         try {
             const resultado = syncHandler.sincronizarFila(recordId);
 
             log.debug({
-                title  : CONSTANTES.LOGS.SYNC_END,
+                title  : CONSTANTES.LOGS.SYNC,
                 details: 'recordId: ' + recordId
                        + ' | rutEmisor: ' + (resultado ? resultado.rutEmisor : '')
                        + ' | vendorId: ' + (resultado ? resultado.idVendor : '')
                        + ' | rutReceptor: ' + (resultado ? resultado.rutReceptor : '')
                        + ' | subsidiaryId: ' + (resultado ? resultado.idSubsidiaria : '')
-                       + ' | cacheId: ' + (resultado ? resultado.idCache : ''),
+                       + ' | idDteRechazado: ' + (resultado ? resultado.idDteRechazado : ''),
             });
         } catch (fallo) {
             log.error({

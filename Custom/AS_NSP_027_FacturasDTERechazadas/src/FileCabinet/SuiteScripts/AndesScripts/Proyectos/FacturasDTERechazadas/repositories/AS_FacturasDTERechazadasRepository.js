@@ -1,5 +1,5 @@
 /**
- * AS_NSP_025 — Facturas DTE Rechazadas
+ * AS_NSP_027 — Facturas DTE Rechazadas
  * @description Consulta customrecord_as_dte_rechazado y registra avisos manuales.
  *              La bandeja no consulta el record de 2WIN en vivo. Un nuevo registro
  *              de 2WIN se muestra como una fila independiente.
@@ -14,7 +14,7 @@ define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
         const filas = query.runSuiteQL({
             query: [
                 'SELECT COUNT(*) AS total',
-                'FROM ' + CONSTANTES.RECORD.CACHE + ' c',
+                'FROM ' + CONSTANTES.RECORD.DTE_RECHAZADO + ' c',
                 'WHERE c.isinactive = \'F\'',
                 '  AND c.custrecord_as_dterc_avisado = \'F\'',
             ].join(' '),
@@ -45,44 +45,6 @@ define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
             totalPaginas  : totalPaginas,
             totalRegistros: paginado.count,
         };
-    }
-
-    function listarSubsidiarias() {
-        const filas = query.runSuiteQL({
-            query: [
-                'SELECT id, name AS nombre',
-                'FROM subsidiary',
-                'WHERE isinactive = \'F\'',
-                '  AND UPPER(name) NOT LIKE \'XX%\'',
-                'ORDER BY name',
-            ].join(' '),
-        }).asMappedResults();
-
-        return filas.map((fila) => ({ id: String(fila.id), nombre: fila.nombre }));
-    }
-
-    function marcarProveedorAvisado(id, idEmpleado, observacion) {
-        const filas = query.runSuiteQL({
-            query : 'SELECT id, custrecord_as_dterc_avisado AS avisado FROM ' + CONSTANTES.RECORD.CACHE
-                  + ' WHERE id = ? AND isinactive = \'F\'',
-            params: [id],
-        }).asMappedResults();
-
-        if (!filas.length || filas[0].avisado === 'T') {
-            return false;
-        }
-
-        record.submitFields({
-            type  : CONSTANTES.RECORD.CACHE,
-            id    : id,
-            values: {
-                custrecord_as_dterc_avisado      : true,
-                custrecord_as_dterc_fecha_aviso  : new Date(),
-                custrecord_as_dterc_usuario_aviso: idEmpleado,
-                custrecord_as_dterc_nota_aviso   : observacion,
-            },
-        });
-        return true;
     }
 
     function construirConsultaListado(filtros) {
@@ -119,9 +81,9 @@ define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
             parametros.push(filtros.subsidiaria);
         }
 
-        if (filtros.seguimiento === 'pendiente') {
+        if (filtros.seguimiento === CONSTANTES.SEGUIMIENTO.PENDIENTE) {
             condiciones.push('c.custrecord_as_dterc_avisado = \'F\'');
-        } else if (filtros.seguimiento === 'avisado') {
+        } else if (filtros.seguimiento === CONSTANTES.SEGUIMIENTO.AVISADO) {
             condiciones.push('c.custrecord_as_dterc_avisado = \'T\'');
         }
 
@@ -139,8 +101,8 @@ define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
             '    c.custrecord_as_dterc_desc_error AS descripcionerror,',
             '    c.custrecord_as_dterc_avisado AS avisado,',
             '    TO_CHAR(c.custrecord_as_dterc_fecha_aviso, \'DD/MM/YYYY HH24:MI\') AS fechaaviso,',
-            '    BUILTIN.DF(c.custrecord_as_dterc_usuario_aviso) AS usuarioaviso,',
-            'FROM ' + CONSTANTES.RECORD.CACHE + ' c',
+            '    BUILTIN.DF(c.custrecord_as_dterc_usuario_aviso) AS usuarioaviso',
+            'FROM ' + CONSTANTES.RECORD.DTE_RECHAZADO + ' c',
             'WHERE ' + condiciones.join(' AND '),
             'ORDER BY c.custrecord_as_dterc_avisado ASC, c.custrecord_as_dterc_fecha DESC, c.id DESC',
         ].join(' ');
@@ -148,10 +110,33 @@ define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
         return { texto: texto, parametros: parametros };
     }
 
+    function marcarProveedorAvisado(id, idEmpleado, observacion) {
+        const filas = query.runSuiteQL({
+            query : 'SELECT id, custrecord_as_dterc_avisado AS avisado FROM ' + CONSTANTES.RECORD.DTE_RECHAZADO
+                  + ' WHERE id = ? AND isinactive = \'F\'',
+            params: [id],
+        }).asMappedResults();
+
+        if (!filas.length || filas[0].avisado === 'T') {
+            return false;
+        }
+
+        record.submitFields({
+            type  : CONSTANTES.RECORD.DTE_RECHAZADO,
+            id    : id,
+            values: {
+                custrecord_as_dterc_avisado      : true,
+                custrecord_as_dterc_fecha_aviso  : new Date(),
+                custrecord_as_dterc_usuario_aviso: idEmpleado,
+                custrecord_as_dterc_nota_aviso   : observacion,
+            },
+        });
+        return true;
+    }
+
     return {
-        contarPendientes     : contarPendientes,
-        listarRechazados     : listarRechazados,
-        listarSubsidiarias   : listarSubsidiarias,
+        contarPendientes      : contarPendientes,
+        listarRechazados      : listarRechazados,
         marcarProveedorAvisado: marcarProveedorAvisado,
     };
 });

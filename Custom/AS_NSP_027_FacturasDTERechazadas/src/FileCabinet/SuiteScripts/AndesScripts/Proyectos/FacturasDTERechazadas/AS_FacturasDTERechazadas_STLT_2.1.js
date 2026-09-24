@@ -1,5 +1,5 @@
 /**
- * AS_NSP_025 — Facturas DTE Rechazadas
+ * AS_NSP_027 — Facturas DTE Rechazadas
  * @description Bandeja de consulta y seguimiento manual de los rechazos copiados
  *              a customrecord_as_dte_rechazado. POST registra avisos al proveedor.
  *

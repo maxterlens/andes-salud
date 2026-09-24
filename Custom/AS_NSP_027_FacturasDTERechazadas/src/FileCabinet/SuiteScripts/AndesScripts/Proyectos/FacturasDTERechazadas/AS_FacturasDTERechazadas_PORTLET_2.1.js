@@ -1,5 +1,5 @@
 /**
- * AS_NSP_025 — Facturas DTE Rechazadas
+ * AS_NSP_027 — Facturas DTE Rechazadas
  * @description Entry point del portlet. Llama al handler y registra el error; el
  *              armado del portlet vive en AS_FacturasDTERechazadasPortletHandler.
  *

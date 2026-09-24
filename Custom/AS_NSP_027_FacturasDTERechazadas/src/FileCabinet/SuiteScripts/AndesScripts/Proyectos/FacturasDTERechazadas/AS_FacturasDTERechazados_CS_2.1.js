@@ -1,5 +1,5 @@
 /**
- * AS_NSP_025 — Facturas DTE Rechazadas
+ * AS_NSP_027 — Facturas DTE Rechazadas
  * @description Los filtros se aplican al cambiar desplegables o fechas y luego
  *              de una pausa al escribir texto. Buscar permite aplicar al instante;
  *              Limpiar filtros vuelve a la bandeja completa.
@@ -20,9 +20,9 @@
  *              document.getElementById(...).value queda solo de respaldo por si esa
  *              funcion global no estuviera cargada en la pagina.
  *
- *              Solo se adjunta a este Suitelet via form.clientScriptModulePath: no
- *              tiene scriptdeployment propio ni aparece en Objects/.
- *
+ *              Solo se adjunta a este Suitelet via form.clientScriptModulePath
+ *              (ui/AS_FacturasDTERechazadasBandejaForm.js): no tiene scriptdeployment
+ *              propio ni aparece en Objects/.
  * @NApiVersion 2.1
  * @NScriptType ClientScript
  * @NModuleScope Public
@@ -44,6 +44,90 @@ define(['N/format', 'N/ui/message'],
                 campo.addEventListener('input', programarBusqueda);
             }
         });
+    }
+
+    function programarBusqueda() {
+        if (temporizadorFiltro) {
+            clearTimeout(temporizadorFiltro);
+        }
+
+        temporizadorFiltro = setTimeout(aplicarBusqueda, ESPERA_MS);
+    }
+
+    function aplicarBusqueda() {
+        if (temporizadorFiltro) {
+            clearTimeout(temporizadorFiltro);
+            temporizadorFiltro = null;
+        }
+
+        if (!validarRangoFechas()) {
+            mostrarAvisoRangoFechas();
+            return;
+        }
+
+        navegarSinAlerta(construirUrlBusqueda());
+    }
+
+    function validarRangoFechas() {
+        const valorDesde = leerValorCampo('custpage_fecha_desde');
+        const valorHasta = leerValorCampo('custpage_fecha_hasta');
+        if (!valorDesde || !valorHasta) {
+            return true;
+        }
+
+        const fechaDesde = format.parse({ value: valorDesde, type: format.Type.DATE });
+        const fechaHasta = format.parse({ value: valorHasta, type: format.Type.DATE });
+        return !(fechaDesde instanceof Date && fechaHasta instanceof Date && fechaDesde > fechaHasta);
+    }
+
+    function leerValorCampo(id) {
+        const campo = document.getElementById(id);
+        if (campo && FILTROS_TEXTO.includes(id)) {
+            return campo.value || '';
+        }
+
+        if (typeof nlapiGetFieldValue === 'function') {
+            return nlapiGetFieldValue(id) || '';
+        }
+
+        return campo ? campo.value : '';
+    }
+
+    function mostrarAvisoRangoFechas() {
+        if (avisoRangoFechas) {
+            return;
+        }
+
+        avisoRangoFechas = message.create({
+            title  : 'Rango de fechas',
+            message: 'Rechazo desde debe ser igual o anterior a Rechazo hasta. Corrige las fechas para buscar.',
+            type   : message.Type.WARNING,
+        });
+        avisoRangoFechas.show({ duration: 5000 });
+        setTimeout(() => {
+            avisoRangoFechas = null;
+        }, 5000);
+    }
+
+    function navegarSinAlerta(destino) {
+        window.onbeforeunload = null;
+        window.location.href = destino;
+    }
+
+    function construirUrlBusqueda() {
+        const parametrosActuales = new URLSearchParams(window.location.search);
+
+        return window.location.pathname
+             + '?script=' + encodeURIComponent(parametrosActuales.get('script'))
+             + '&deploy=' + encodeURIComponent(parametrosActuales.get('deploy'))
+             + '&custpage_fecha_desde=' + encodeURIComponent(leerValorCampo('custpage_fecha_desde'))
+             + '&custpage_fecha_hasta=' + encodeURIComponent(leerValorCampo('custpage_fecha_hasta'))
+             + '&custpage_folio=' + encodeURIComponent(leerValorCampo('custpage_folio'))
+             + '&custpage_rut_emisor=' + encodeURIComponent(leerValorCampo('custpage_rut_emisor'))
+             + '&custpage_subsidiaria=' + encodeURIComponent(leerValorCampo('custpage_subsidiaria'))
+             + '&custpage_codigo_error=' + encodeURIComponent(leerValorCampo('custpage_codigo_error'))
+             + '&custpage_seguimiento=' + encodeURIComponent(leerValorCampo('custpage_seguimiento'))
+             + '&custpage_pagina=0';
     }
 
     function fieldChanged(context) {
@@ -106,90 +190,6 @@ define(['N/format', 'N/ui/message'],
             + '?script=' + encodeURIComponent(parametrosActuales.get('script'))
             + '&deploy=' + encodeURIComponent(parametrosActuales.get('deploy'));
         navegarSinAlerta(destino);
-    }
-
-    function programarBusqueda() {
-        if (temporizadorFiltro) {
-            clearTimeout(temporizadorFiltro);
-        }
-
-        temporizadorFiltro = setTimeout(aplicarBusqueda, ESPERA_MS);
-    }
-
-    function aplicarBusqueda() {
-        if (temporizadorFiltro) {
-            clearTimeout(temporizadorFiltro);
-            temporizadorFiltro = null;
-        }
-
-        if (!validarRangoFechas()) {
-            mostrarAvisoRangoFechas();
-            return;
-        }
-
-        navegarSinAlerta(construirUrlBusqueda());
-    }
-
-    function validarRangoFechas() {
-        const valorDesde = leerValorCampo('custpage_fecha_desde');
-        const valorHasta = leerValorCampo('custpage_fecha_hasta');
-        if (!valorDesde || !valorHasta) {
-            return true;
-        }
-
-        const fechaDesde = format.parse({ value: valorDesde, type: format.Type.DATE });
-        const fechaHasta = format.parse({ value: valorHasta, type: format.Type.DATE });
-        return !(fechaDesde instanceof Date && fechaHasta instanceof Date && fechaDesde > fechaHasta);
-    }
-
-    function mostrarAvisoRangoFechas() {
-        if (avisoRangoFechas) {
-            return;
-        }
-
-        avisoRangoFechas = message.create({
-            title  : 'Rango de fechas',
-            message: 'Rechazo desde debe ser igual o anterior a Rechazo hasta. Corrige las fechas para buscar.',
-            type   : message.Type.WARNING,
-        });
-        avisoRangoFechas.show({ duration: 5000 });
-        setTimeout(() => {
-            avisoRangoFechas = null;
-        }, 5000);
-    }
-
-    function navegarSinAlerta(destino) {
-        window.onbeforeunload = null;
-        window.location.href = destino;
-    }
-
-    function leerValorCampo(id) {
-        const campo = document.getElementById(id);
-        if (campo && FILTROS_TEXTO.includes(id)) {
-            return campo.value || '';
-        }
-
-        if (typeof nlapiGetFieldValue === 'function') {
-            return nlapiGetFieldValue(id) || '';
-        }
-
-        return campo ? campo.value : '';
-    }
-
-    function construirUrlBusqueda() {
-        const parametrosActuales = new URLSearchParams(window.location.search);
-
-        return window.location.pathname
-             + '?script=' + encodeURIComponent(parametrosActuales.get('script'))
-             + '&deploy=' + encodeURIComponent(parametrosActuales.get('deploy'))
-             + '&custpage_fecha_desde=' + encodeURIComponent(leerValorCampo('custpage_fecha_desde'))
-             + '&custpage_fecha_hasta=' + encodeURIComponent(leerValorCampo('custpage_fecha_hasta'))
-             + '&custpage_folio=' + encodeURIComponent(leerValorCampo('custpage_folio'))
-             + '&custpage_rut_emisor=' + encodeURIComponent(leerValorCampo('custpage_rut_emisor'))
-             + '&custpage_subsidiaria=' + encodeURIComponent(leerValorCampo('custpage_subsidiaria'))
-             + '&custpage_codigo_error=' + encodeURIComponent(leerValorCampo('custpage_codigo_error'))
-             + '&custpage_seguimiento=' + encodeURIComponent(leerValorCampo('custpage_seguimiento'))
-             + '&custpage_pagina=0';
     }
 
     return {

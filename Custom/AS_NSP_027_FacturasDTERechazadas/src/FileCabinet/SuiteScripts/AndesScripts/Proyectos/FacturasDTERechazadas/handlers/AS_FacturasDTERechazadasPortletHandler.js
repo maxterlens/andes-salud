@@ -1,8 +1,7 @@
 /**
- * AS_NSP_025 — Facturas DTE Rechazadas
+ * AS_NSP_027 — Facturas DTE Rechazadas
  * @description Muestra los rechazos pendientes de aviso en una tarjeta con acceso
  *              directo a la bandeja filtrada.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -34,7 +33,7 @@ define(['N/url', '../lib/AS_FacturasDTERechazadasConstants', '../repositories/AS
         return url.resolveScript({
             scriptId         : CONSTANTES.SUITELET.SCRIPT,
             deploymentId     : CONSTANTES.SUITELET.DEPLOYMENT,
-            params           : { custpage_seguimiento: 'pendiente' },
+            params           : { custpage_seguimiento: CONSTANTES.SEGUIMIENTO.PENDIENTE },
             returnExternalUrl: false,
         });
     }

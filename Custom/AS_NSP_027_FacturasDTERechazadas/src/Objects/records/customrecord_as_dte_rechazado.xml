@@ -10,7 +10,6 @@
   <allowquicksearch>F</allowquicksearch>
   <allowuiaccess>T</allowuiaccess>
   <customsegment></customsegment>
-  <description>Copia liviana y ya resuelta de customrecord_2win_recepcion_dte_rechaza, que la refresca el UE AS_NSP_025 (AS_FacturasDTERechazadas_UE_2.1.js). Vendor y Subsidiaria ya vienen calculados: la bandeja consulta esta tabla, nunca el customrecord de 2WIN directo.</description>
   <enabledle>F</enabledle>
   <enablekeywords>F</enablekeywords>
   <enablemailmerge>F</enablemailmerge>
@@ -323,7 +322,7 @@
       <defaultchecked>F</defaultchecked>
       <defaultselection></defaultselection>
       <defaultvalue></defaultvalue>
-      <description>Subsidiaria de Andes Salud involucrada en el rechazo (emisora o receptora del DTE, segun el Tipo). Se resuelve cruzando el vendor-gemelo de la subsidiaria contra el Rut Emisor o Rut Receptor del rechazo original. Al ser Lista/Registro real -no texto- el filtro de la bandeja es una igualdad simple, no un LIKE.</description>
+      <description>Subsidiaria de Andes Salud receptora del DTE. Se resuelve cruzando subsidiary.custrecord_2winrutsubsiudiaria contra el Rut Receptor del rechazo original; si el receptor no es una subsidiaria (un Evento sobre un DTE que emitio Andes) queda vacia. Al ser Lista/Registro real -no texto- el filtro de la bandeja es una igualdad simple, no un LIKE.</description>
       <displayheight></displayheight>
       <displaytype>NORMAL</displaytype>
       <displaywidth></displaywidth>

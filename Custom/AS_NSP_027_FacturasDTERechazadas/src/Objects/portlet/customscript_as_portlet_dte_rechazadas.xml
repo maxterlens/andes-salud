@@ -1,5 +1,5 @@
 <portlet scriptid="customscript_as_portlet_dte_rechazadas">
-  <description>Portlet de dashboard con el total de DTE rechazados pendientes de aviso en el registro AS y acceso directo a la bandeja filtrada (AS_NSP_025).</description>
+  <description>Portlet de dashboard con el total de DTE rechazados pendientes de aviso en el registro AS y acceso directo a la bandeja filtrada (AS_NSP_027).</description>
   <isinactive>F</isinactive>
   <name>AS Facturas DTE Rechazadas PORTLET</name>
   <notifyadmins>F</notifyadmins>

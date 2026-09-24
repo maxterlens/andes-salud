@@ -1,5 +1,5 @@
 <manifest projecttype="ACCOUNTCUSTOMIZATION">
-  <projectname>AS_NSP_025_FacturasDTERechazadas</projectname>
+  <projectname>AS_NSP_027_FacturasDTERechazadas</projectname>
   <frameworkversion>1.0</frameworkversion>
   <dependencies>
     <features>
