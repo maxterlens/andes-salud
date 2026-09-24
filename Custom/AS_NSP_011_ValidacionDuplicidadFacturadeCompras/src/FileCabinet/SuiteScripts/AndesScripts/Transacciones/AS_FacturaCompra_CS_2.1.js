@@ -61,7 +61,7 @@ define(['N/search', 'N/ui/dialog', './handlers/FacturaCompraHandler'], (search, 
         if (!folio) {
             dialog.alert({
                 title: 'Campo requerido',
-                message: 'Debe ingresar el Reference No.'
+                message: 'Debe ingresar el folio.'
             });
             return false;
         }

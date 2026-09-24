@@ -9,6 +9,7 @@ define(['N/record', '../lib/AS_FactoringConstants'],
     const crearAsiento = (datos) => {
         const asiento = record.create({ type: record.Type.JOURNAL_ENTRY });
 
+        asiento.setValue({ fieldId: 'trandate',     value: datos.fecha });
         asiento.setValue({ fieldId: 'subsidiary',   value: datos.subsidiaria });
         asiento.setValue({ fieldId: 'currency',     value: datos.moneda });
         asiento.setValue({ fieldId: 'exchangerate', value: datos.tipoCambio });

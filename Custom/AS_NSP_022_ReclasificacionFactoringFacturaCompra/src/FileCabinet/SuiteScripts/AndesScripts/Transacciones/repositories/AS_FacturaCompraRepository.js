@@ -24,6 +24,7 @@ define(['N/record', '../lib/AS_FactoringConstants'],
         return {
             factura    : idFactura,
             diario     : factura.getValue({ fieldId: CONSTANTES.CAMPOS.DIARIO }),
+            fecha      : factura.getValue({ fieldId: 'trandate' }),
             folio      : factura.getValue({ fieldId: 'tranid' }),
             subsidiaria: factura.getValue({ fieldId: 'subsidiary' }),
             proveedor  : factura.getValue({ fieldId: 'entity' }),
