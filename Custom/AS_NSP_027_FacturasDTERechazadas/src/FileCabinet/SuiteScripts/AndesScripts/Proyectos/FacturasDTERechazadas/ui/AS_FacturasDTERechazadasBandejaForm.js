@@ -165,8 +165,9 @@ define(['N/ui/serverWidget', '../lib/AS_FacturasDTERechazadasConstants'],
             campoSeleccionar.updateDisplayType({ displayType: serverWidget.FieldDisplayType.ENTRY });
         }
 
+        // Oculto pero necesario: el POST de registrarAvisos lee custpage_col_id para saber que fila marcar.
         const campoId = sublist.addField({ id: prefijo + 'id', type: serverWidget.FieldType.TEXT, label: 'ID' });
-        campoId.updateDisplaySize({ height: 10, width: 60 });
+        campoId.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
 
         agregarColumna(sublist, prefijo + 'fecha', CONSTANTES.ETIQUETAS_COLUMNA.FECHA, 80);
         agregarColumna(sublist, prefijo + 'folio', CONSTANTES.ETIQUETAS_COLUMNA.FOLIO, 80);

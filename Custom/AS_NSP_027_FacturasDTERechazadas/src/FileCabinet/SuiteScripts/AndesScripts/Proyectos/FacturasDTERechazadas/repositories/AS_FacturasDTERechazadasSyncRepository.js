@@ -11,6 +11,12 @@
  *              vendor.custentity_2wrut = rut emisor, Subsidiaria via
  *              subsidiary.custrecord_2winrutsubsiudiaria = rut receptor-.
  *
+ *              Solo se copian las filas de tipo Documento: un Evento es un aviso sobre
+ *              un DTE ya existente, no una factura que falte cargar, y la bandeja no lo
+ *              trabaja. Para un Evento la consulta no devuelve fila, el SyncHandler
+ *              devuelve null y no se crea nada. Los Evento siguen completos en el
+ *              record de 2WIN.
+ *
  *              El codigo DTE (33, 61...) se guarda traducido con CONSTANTES.TIPOS_DTE;
  *              si 2WIN manda un codigo que no esta en esa tabla, se guarda el numero.
  *
@@ -52,6 +58,7 @@ define(['N/query', 'N/record', '../lib/AS_FacturasDTERechazadasConstants'],
             'LEFT JOIN vendor v ON v.custentity_2wrut = r.custrecord_2win_dterech_rut_emisor',
             'LEFT JOIN subsidiary s ON s.custrecord_2winrutsubsiudiaria LIKE r.custrecord_2win_dterech_rut_receptor || \'%\'',
             'WHERE r.isinactive = \'F\'',
+            '  AND r.custrecord_2win_dterech_tipo = \'Documento\'',
         ].join(' ');
     }
 
