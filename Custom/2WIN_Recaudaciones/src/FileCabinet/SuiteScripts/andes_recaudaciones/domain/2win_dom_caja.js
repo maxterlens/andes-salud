@@ -2,6 +2,8 @@
  * @NApiVersion 2.1
  */
 define([
+    "N/runtime",
+    "../dao/2win_dao_file",
     "../dao/CustomerDAO",
     "../dao/SalesOrderDAO",
     "../dao/InvoiceDAO",
@@ -14,8 +16,11 @@ define([
     "../libs/utils",
     "../constants/2win_constants",
     "N/log",
-    "../dao/2win_dao_draft"
+    "../dao/2win_dao_draft",
+    "../libs/2win_lib_auditoria"
 ], function (
+    runtime,
+    daoFile,
     CustomerDAO,
     SalesOrderDAO,
     InvoiceDAO,
@@ -28,7 +33,8 @@ define([
     utils,
     { getFlow },
     nLog,
-    { searchAllTransactionsByCaja, searchTransactionByMovementNumber, deleteTransactionById, searchCierreCaja, searchAllCierresCaja, reverseTransaction, filterOutInvoices, deleteTransaction }
+    { searchAllTransactionsByCaja, searchTransactionByMovementNumber, deleteTransactionById, searchCierreCaja, searchAllCierresCaja, reverseTransaction, filterOutInvoices, deleteTransaction },
+    libAuditoria
 ) {
     function procesarCajaRecaudacion(jsonInput) {
         nLog.audit("INICIO procesarCajaRecaudacion", "Iniciando procesamiento de caja de recaudación");

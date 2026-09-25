@@ -80,94 +80,12 @@ define([
         libAuditoria.actualizarCamposRegistro(parametroActualizacionRegistroAuditoria);
         return resultado;
     };
-    // Unidades minimas requeridas para intentar procesar un documento completo
-    // (Invoice/CreditMemo + JE + Payment + busquedas de cliente/subsidiaria/OV + auditoria ≈ 150 unidades, con margen)
-    const UNIDADES_MINIMAS_POR_DOCUMENTO = 300;
-
-    /**
-     * Recolecta todos los folios que requieren validacion de asiento, con las MISMAS condiciones
-     * que usa cada seccion (facturas, NC, ND) al validar linea a linea.
-     * @param {Object} documentos - Contenido del archivo
-     * @returns {Array<string>} - Folios (con duplicados; el DAO los deduplica)
-     */
-    const recolectarFoliosAValidar = (documentos) => {
-        const folios = [];
-        const agregarCopagoExcedente = (detalle) => {
-            if (Number(detalle.montoCopago) > 0) folios.push(detalle.folioCopago);
-            if (Number(detalle.montoExcedente) > 0) folios.push(detalle.folioExcedente);
-        };
-
-        (documentos.facturasEmitidas || []).forEach(({ detalleFacturas }) => {
-            (Array.isArray(detalleFacturas) ? detalleFacturas : []).forEach((detalle) => {
-                if (detalle.tipoDocumento === "BONO ELECTRONICO") {
-                    folios.push(detalle.folio);
-                    agregarCopagoExcedente(detalle);
-                }
-            });
-        });
-        (documentos.ncEmitidas || []).forEach(({ detalleNC }) => {
-            (Array.isArray(detalleNC) ? detalleNC : []).forEach((detalle) => {
-                if (detalle.tipoDocumento === "BONO ELECTRONICO" && Number(detalle.montoTotalDescuento) === 0 && Number(detalle.folioBono)) {
-                    folios.push(detalle.folioBono);
-                    agregarCopagoExcedente(detalle);
-                }
-            });
-        });
-        (documentos.ndEmitidas || []).forEach(({ detalleND }) => {
-            (Array.isArray(detalleND) ? detalleND : []).forEach((detalle) => {
-                if (detalle.tipoDocumento === "BONO ELECTRONICO" && Number(detalle.MontoTotalDescuento) === 0 && Number(detalle.folioBono)) {
-                    folios.push(detalle.folioBono);
-                    agregarCopagoExcedente(detalle);
-                }
-            });
-        });
-        return folios;
-    };
-
-    /**
-     * Verifica que queden unidades suficientes antes de procesar un documento.
-     * Si no alcanzan, registra un error controlado en lugar de dejar que el reduce se caiga con SSS_USAGE_LIMIT_EXCEEDED.
-     * @returns {boolean} - true si se puede procesar
-     */
-    const hayUnidadesSuficientes = ({ tipo, folioDoc, razonSocial, tipoDocumento, resultado }) => {
-        const restantes = runtime.getCurrentScript().getRemainingUsage();
-        if (restantes >= UNIDADES_MINIMAS_POR_DOCUMENTO) return true;
-        nLog.error("procesarDocumentos - unidades insuficientes", `${tipo} ${folioDoc}: quedan ${restantes} unidades`);
-        resultado.errores.push({
-            tipo,
-            folio: folioDoc,
-            razonSocial,
-            tipoDocumento,
-            error: `Documento no procesado: unidades de ejecucion insuficientes (quedan ${restantes}, se requieren ${UNIDADES_MINIMAS_POR_DOCUMENTO})`
-        });
-        return false;
-    };
-
     const procesarDocumentos = ({ documentos, resultado }) => {
-        // Validacion de asientos en bloque: 1 consulta SuiteQL cada 500 folios (antes: 1 consulta por linea)
-        let indiceAsientos;
-        try {
-            indiceAsientos = JournalEntryDAO.getJournalEntriesIndexByFolios({ folios: recolectarFoliosAValidar(documentos) });
-            nLog.audit("procesarDocumentos - unidades restantes tras validar asientos", runtime.getCurrentScript().getRemainingUsage());
-        } catch (error) {
-            nLog.error("procesarDocumentos - error al consultar asientos", error);
-            resultado.errores.push({
-                tipo: "GENERAL",
-                folio: "",
-                razonSocial: "",
-                tipoDocumento: "",
-                error: `No se pudieron consultar los asientos de los folios: ${error.message}`
-            });
-            return;
-        }
-
         //facturas
         documentos.facturasEmitidas.forEach((factura) => {
             const { folioDoc, tipoDocumento, razonSocial, FechaDocumento, FechaVencimiento, RutCliente, CondicionPago, TipoFacturacion, tipoDocRef, folioRef, codRef, detalleFacturas } = factura;
 
             try {
-                if (!hayUnidadesSuficientes({ tipo: "FACTURA", folioDoc, razonSocial, tipoDocumento, resultado })) return;
-
                 // Validar que existan detalles
                 if (!detalleFacturas || !Array.isArray(detalleFacturas) || detalleFacturas.length === 0) {
                     resultado.errores.push({
@@ -211,9 +129,10 @@ define([
                         folios.push(folio);
                         if (Number(montoCopago) > 0) folios.push(folioCopago);
                         if (Number(montoExcedente) > 0) folios.push(folioExcedente);
+                        nLog.debug("folios", folios);
                         if (folios.length === 0) throw new Error(`No hay folios: ${folios.join(", ")}`);
-                        // Sin consulta por linea: se lee del indice precargado (0 unidades)
-                        asientos = JournalEntryDAO.getJournalEntriesFromIndex(indiceAsientos, folios);
+                        asientos = JournalEntryDAO.getJournalEntriesByFolio({ folios: folios, tipoDocumento });
+                        nLog.debug("asientos", asientos);
                         const foliosFaltantes = folios.filter((folio) => !asientos.some((asiento) => Number(asiento.custcol_2w_folio) === Number(folio)));
                         if (foliosFaltantes.length > 0) {
                             nLog.error("procesarDocumentos - asientos", `No se encontraron asientos para los folios: ${foliosFaltantes.join(", ")}`);
@@ -399,8 +318,6 @@ define([
             const { folioDoc, tipoDocumento, razonSocial, FechaDocumento, FechaVencimiento, RutCliente, CondicionPago, TipoFacturacion, tipoDocRef, folioRef, codRef, detalleNC } = ncredito;
 
             try {
-                if (!hayUnidadesSuficientes({ tipo: "NOTA_CREDITO", folioDoc, razonSocial, tipoDocumento, resultado })) return;
-
                 // Validar que existan detalles
                 if (!detalleNC || !Array.isArray(detalleNC) || detalleNC.length === 0) {
                     resultado.errores.push({
@@ -452,9 +369,9 @@ define([
                         folios.push(folioBono);
                         if (Number(montoCopago) > 0) folios.push(folioCopago);
                         if (Number(montoExcedente) > 0) folios.push(folioExcedente);
+                        nLog.debug("folios", folios);
                         if (folios.length === 0) throw new Error(`No hay folios: ${folios.join(", ")}`);
-                        // Sin consulta por linea: se lee del indice precargado (0 unidades)
-                        asientos = JournalEntryDAO.getJournalEntriesFromIndex(indiceAsientos, folios);
+                        asientos = JournalEntryDAO.getJournalEntriesByFolio({ folios: folios, tipoDocumento });
                         const foliosFaltantes = folios.filter((folio) => !asientos.some((asiento) => Number(asiento.custcol_2w_folio) === Number(folio)));
                         if (foliosFaltantes.length > 0) {
                             nLog.error("procesarDocumentos - asientos", `No se encontraron asientos para los folios: ${foliosFaltantes.join(", ")}`);
@@ -655,8 +572,6 @@ define([
             const { folioDoc, tipoDocumento, razonSocial, FechaDocumento, FechaVencimiento, RutCliente, tipoDocRef, folioRef, codRef, tipoND, detalleND } = ndebito;
 
             try {
-                if (!hayUnidadesSuficientes({ tipo: "NOTA_DEBITO", folioDoc, razonSocial, tipoDocumento, resultado })) return;
-
                 // Validar que existan detalles
                 if (!detalleND || !Array.isArray(detalleND) || detalleND.length === 0) {
                     resultado.errores.push({
@@ -707,9 +622,9 @@ define([
                         folios.push(folioBono);
                         if (Number(montoCopago) > 0) folios.push(folioCopago);
                         if (Number(montoExcedente) > 0) folios.push(folioExcedente);
+                        nLog.debug("folios", folios);
                         if (folios.length === 0) throw new Error(`No hay folios: ${folios.join(", ")}`);
-                        // Sin consulta por linea: se lee del indice precargado (0 unidades)
-                        asientos = JournalEntryDAO.getJournalEntriesFromIndex(indiceAsientos, folios);
+                        asientos = JournalEntryDAO.getJournalEntriesByFolio({ folios: folios, tipoDocumento });
                         const foliosFaltantes = folios.filter((folio) => !asientos.some((asiento) => Number(asiento.custcol_2w_folio) === Number(folio)));
                         if (foliosFaltantes.length > 0) {
                             nLog.error("procesarDocumentos - asientos", `No se encontraron asientos para los folios: ${foliosFaltantes.join(", ")}`);

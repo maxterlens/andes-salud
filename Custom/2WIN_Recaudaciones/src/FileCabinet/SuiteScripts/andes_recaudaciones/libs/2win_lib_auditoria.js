@@ -173,7 +173,7 @@ define(["N/search", "N/record", "N/log"], function (search, record, nLog) {
             return result;
         } catch (error) {
             nLog.error("busquedaDatosAuditoria - error", error);
-            // throw error;
+            throw error;
         }
     }
 
@@ -206,7 +206,7 @@ define(["N/search", "N/record", "N/log"], function (search, record, nLog) {
             return internalidRegistroActualizado;
         } catch (error) {
             nLog.error("actualizarCamposRegistro - error", error);
-            // throw error;
+            throw error;
         }
     }
 
