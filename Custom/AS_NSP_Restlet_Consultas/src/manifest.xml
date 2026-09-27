@@ -1,0 +1,11 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>AS_NSP_025_Restlet</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="true">SERVERSIDESCRIPTING</feature>
+      <feature required="true">WEBSERVICES</feature>
+      <feature required="true">SUBSIDIARIES</feature>
+    </features>
+  </dependencies>
+</manifest>

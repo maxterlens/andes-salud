@@ -1,0 +1,18 @@
+<restlet scriptid="customscript_as_consulta_mcp">
+  <description>Consulta tecnica desde el servidor MCP local. Solo puede crear Saved Searches y Datasets nuevos de consulta; no modifica registros, codigo ni archivos.</description>
+  <isinactive>F</isinactive>
+  <name>AS Consulta MCP</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/AndesScripts/Proyectos/ConsultaMCP/AS_ConsultaMCP_RL_2.1.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_consulta_mcp">
+      <allroles>F</allroles>
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <status>RELEASED</status>
+      <title>AS Consulta MCP</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</restlet>

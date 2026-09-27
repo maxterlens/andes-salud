@@ -6,3 +6,28 @@ SuiteScript/ingresos_ambulatorios_hospitalizados
 SuiteScript/resultados_proceso_prefactura
 SuiteScript/2win_andes_salud_interfases/Masivo
 SuiteScript/2win_andes_salud_interfases
+
+# Secretos: credenciales y tokens nunca se versionan, en ninguna carpeta
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencias de Node (servidor MCP y herramientas locales)
+node_modules/
+
+# Metadatos locales que genera la extension de SuiteCloud
+.attributes/
+
+# Configuracion personal de Claude Code (permisos de cada maquina)
+.claude/settings.local.json
+
+# Secretos de Cloudflare Workers (wrangler) y su cache local
+.dev.vars*
+.wrangler/
+
+# Respaldo local del MCP previo a Cloudflare (repite el RESTlet de AS_NSP_025)
+Custom/AS_NSP_025_Restlet_0255/

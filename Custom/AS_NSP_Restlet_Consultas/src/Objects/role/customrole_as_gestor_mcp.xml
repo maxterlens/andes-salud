@@ -1,0 +1,17 @@
+<role scriptid="customrole_as_gestor_mcp">
+  <centertype>BASIC</centertype>
+  <employeerestriction>NONE</employeerestriction>
+  <isinactive>F</isinactive>
+  <issalesrole>F</issalesrole>
+  <issupportrole>F</issupportrole>
+  <iswebserviceonlyrole>T</iswebserviceonlyrole>
+  <name>AS Gestor MCP</name>
+  <restrictbydevice>F</restrictbydevice>
+  <subsidiaryoption>ALL</subsidiaryoption>
+  <permissions>
+    <permission>
+      <permkey>ADMI_RESTWEBSERVICES</permkey>
+      <permlevel>FULL</permlevel>
+    </permission>
+  </permissions>
+</role>

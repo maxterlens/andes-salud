@@ -1,0 +1,10 @@
+# Dependencias: se regeneran con `npm install` antes de desplegar
+node_modules/
+package-lock.json
+
+# Cache de wrangler (pruebas locales con `wrangler dev`)
+.wrangler/
+
+# Claves de los desarrolladores y tokens de NetSuite. NUNCA a git.
+.dev.vars
+.dev.vars.*

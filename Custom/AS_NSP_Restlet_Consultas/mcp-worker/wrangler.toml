@@ -1,0 +1,13 @@
+# AS_NSP_025 — MCP remoto de consulta a NetSuite
+# URL: https://as-mcp.andessalud.workers.dev/qa/mcp  (y /prod/mcp, bloqueado)
+# Los secrets no van aqui: se cargan con `npx wrangler secret put <NOMBRE>`.
+name = "as-mcp"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Logs activos para la linea "MCP CONSULTA", pero sin invocation logs: esos
+# guardan la URL completa, y en la web la clave viaja en la URL.
+[observability.logs]
+enabled = true
+invocation_logs = false
