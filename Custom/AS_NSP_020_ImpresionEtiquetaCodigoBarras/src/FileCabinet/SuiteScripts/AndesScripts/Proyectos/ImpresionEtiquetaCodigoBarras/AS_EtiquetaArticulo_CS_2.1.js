@@ -1,16 +1,25 @@
 /**
  * AS_NSP_020 — Impresion de Etiqueta con Codigo de Barras
+ *
+ * CHANGELOG v1.1.0 (2026-10-02):
+ * - [FIX] La libreria Zebra sale del define y se carga al pulsar el boton.
+ *         En el define, NetSuite la evaluaba en el servidor al validar el CS
+ *         desde clientScriptModulePath y caia con "navigator is not defined"
+ *         (produccion, 2026-10-02).
+ * - [FIX] pageInit vacio: sin un hook estandar NetSuite rechaza el archivo al
+ *         guardarlo ("deben implantar una funcion de tipo de script").
+ *
  * @NApiVersion 2.1
  * @NScriptType ClientScript
  * @NModuleScope Public
  */
-define(['N/currentRecord',
-        './lib/LibreriaZebra/BrowserPrint-3.1.250.min.js',
-        './lib/LibreriaZebra/BrowserPrint-Zebra-1.1.250.min.js',
+define(['require', 'N/currentRecord',
         './lib/AS_EtiquetaArticuloConstants', './lib/AS_EtiquetaZpl',
         './lib/AS_EtiquetaSelector', './lib/AS_EtiquetaImpresora'],
-    (currentRecord, _browserPrint, _browserPrintZebra,
-     CONSTANTES, etiquetaZpl, etiquetaSelector, etiquetaImpresora) => {
+    (require, currentRecord, CONSTANTES, etiquetaZpl, etiquetaSelector, etiquetaImpresora) => {
+
+    // NetSuite exige al menos un hook estandar en un ClientScript 2.1; no hace nada
+    const pageInit = () => {};
 
     const imprimirEtiquetaArticulo = async () => {
         const datos = obtenerDatosArticulo();
@@ -45,9 +54,28 @@ define(['N/currentRecord',
 
         log.debug({ title: 'ETIQUETA ZPL', details: zpl });
 
+        const libreriaCargada = await cargarLibreriaZebra();
+
+        if (!libreriaCargada) {
+            alert(CONSTANTES.MENSAJES.SIN_LIBRERIA);
+
+            return;
+        }
+
         etiquetaImpresora.imprimir(zpl)
             .then(mostrarResultado)
             .catch((fallo) => alert(fallo.message || fallo));
+    };
+
+    // BrowserPrint-Zebra extiende el global BrowserPrint: se cargan en orden, una despues de la otra
+    const cargarLibreriaZebra = () => {
+        return new Promise((resolver) => {
+            require(['./lib/LibreriaZebra/BrowserPrint-3.1.250.min.js'], () => {
+                require(['./lib/LibreriaZebra/BrowserPrint-Zebra-1.1.250.min.js'],
+                    () => resolver(true),
+                    () => resolver(false));
+            }, () => resolver(false));
+        });
     };
 
     const obtenerDatosArticulo = () => {
@@ -80,6 +108,7 @@ define(['N/currentRecord',
     };
 
     return {
+        pageInit                : pageInit,
         imprimirEtiquetaArticulo: imprimirEtiquetaArticulo,
     };
 });
