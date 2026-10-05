@@ -1,5 +1,6 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
+ *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -22,7 +23,7 @@ define([], () => {
         ANULADO             : 'Anulado',
     };
 
-    const ESTADOS_EDITABLES = [ESTADOS.PENDIENTE_PROCESAR, ESTADOS.PENDIENTE_DEVOLUCION];
+    const ESTADOS_EDITABLES = [ESTADOS.PENDIENTE_PROCESAR];
 
     const ETIQUETAS_FECHA = {
         Prestamo  : 'Fecha de Prestamo',

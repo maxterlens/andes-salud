@@ -1,5 +1,6 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
+ *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -34,8 +35,8 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         const esDevolucion = nombreTipo === CONSTANTES.TIPOS.DEVOLUCION;
         const esMerma      = nombreTipo === CONSTANTES.TIPOS.MERMA;
 
-        const titulo          = movimiento ? 'Edicion de Movimiento de Inventario' : 'Registro de Movimiento de Inventario';
-        const etiquetaGuardar = movimiento ? 'Actualizar Movimiento' : 'Guardar Movimiento';
+        const titulo          = movimiento ? 'Edicion de Solicitud de Inventario' : 'Registro de Solicitud de Inventario';
+        const etiquetaGuardar = movimiento ? 'Actualizar Solicitud' : 'Guardar Solicitud';
 
         const form = serverWidget.createForm({ title: titulo });
 
@@ -522,10 +523,9 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         }
 
         const entidadGuardada = movimiento.getValue({ fieldId: 'custrecord_as_mov_entidad_receptora' });
+        const campoEntidad    = form.getField({ id: 'custpage_entidad_receptora' });
 
         if (entidadGuardada) {
-            const campoEntidad = form.getField({ id: 'custpage_entidad_receptora' });
-
             campoEntidad.addSelectOption({
                 value: entidadGuardada,
                 text : movimiento.getText({ fieldId: 'custrecord_as_mov_entidad_receptora' }),
@@ -550,14 +550,15 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         campoFrom.defaultValue        = ubicacionOrigen;
         campoTo.defaultValue          = ubicacionDestino;
 
-        const displayDestino = (nombreTipo === CONSTANTES.TIPOS.MERMA)
-                             ? serverWidget.FieldDisplayType.HIDDEN
-                             : serverWidget.FieldDisplayType.DISABLED;
+        const displaySoloPrestamo = (nombreTipo === CONSTANTES.TIPOS.MERMA)
+                                  ? serverWidget.FieldDisplayType.HIDDEN
+                                  : serverWidget.FieldDisplayType.DISABLED;
 
         campoSubsidiaria.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
         campoServicio.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
         campoFrom.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-        campoTo.updateDisplayType({ displayType: displayDestino });
+        campoTo.updateDisplayType({ displayType: displaySoloPrestamo });
+        campoEntidad.updateDisplayType({ displayType: displaySoloPrestamo });
 
         precargarDetalleSalida(form, movimiento.id, ubicacionOrigen);
 

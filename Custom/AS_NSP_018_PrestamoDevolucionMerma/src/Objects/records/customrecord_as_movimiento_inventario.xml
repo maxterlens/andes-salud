@@ -30,7 +30,7 @@
   <numberingmindigits>6</numberingmindigits>
   <numberingprefix>MOV#</numberingprefix>
   <numberingsuffix></numberingsuffix>
-  <recordname>AS Movimiento de Inventario</recordname>
+  <recordname>AS Solicitud de Inventario</recordname>
   <showcreationdate>F</showcreationdate>
   <showcreationdateonlist>F</showcreationdateonlist>
   <showid>T</showid>

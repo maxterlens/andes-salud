@@ -6,7 +6,7 @@
     <link>
       <linkobject>[scriptid=customrecord_as_movimiento_inventario]</linkobject>
       <linktasktype>LIST</linktasktype>
-      <linklabel>Movimientos de Inventario</linklabel>
+      <linklabel>Solicitudes de Inventario</linklabel>
       <shortlist>F</shortlist>
     </link>
     <link>

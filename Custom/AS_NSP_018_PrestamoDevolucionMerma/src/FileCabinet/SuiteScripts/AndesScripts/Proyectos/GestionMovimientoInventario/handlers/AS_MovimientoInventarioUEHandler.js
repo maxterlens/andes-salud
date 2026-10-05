@@ -15,6 +15,11 @@
  *              autorizados; un rol de solo lectura ve el movimiento y su
  *              comprobante, y nada mas.
  *
+ *              Editar solo abre el formulario en Pendiente de Procesar. En
+ *              cualquier otro estado ya hay una transaccion generada: el Editar
+ *              de la lista nativa devuelve al registro en modo ver con un aviso,
+ *              en vez de abrir un formulario que no se va a dejar guardar.
+ *
  *              validarEdicion es la otra cara: corta el guardado de un movimiento
  *              que ya no se corrige. Las dos cosas viven juntas porque son la
  *              misma regla vista desde los dos lados, lo que se muestra y lo que
@@ -25,16 +30,6 @@
  */
 define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository'],
     (serverWidget, redirect, error, message, runtime, CONSTANTES, movimientoRepository) => {
-
-    const CAMPOS_BLOQUEADOS_EN_EDICION = [
-        'custrecord_as_mov_tipo',
-        'custrecord_as_mov_subsidiaria',
-        'custrecord_as_mov_servicio',
-        'custrecord_as_mov_ubicacion',
-        'custrecord_as_mov_ubicacion_dest',
-        'custrecord_as_mov_motivo',
-        'custrecord_as_mov_prestamo_ref',
-    ];
 
     function construirVista(context) {
         const esVista = (context.type === context.UserEventType.VIEW);
@@ -78,16 +73,19 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
             return;
         }
 
+        if (!esVista) {
+            redirect.toRecord({
+                type      : CONSTANTES.RECORDS.MOVIMIENTO,
+                id        : context.newRecord.id,
+                parameters: { as_no_editable: 'T' },
+            });
+
+            return;
+        }
+
         context.form.getField({ id: 'custrecord_as_mov_fecha' }).label          = CONSTANTES.ETIQUETAS_FECHA[tipo] || 'Fecha';
         context.form.getField({ id: 'custrecord_as_mov_usuario_resp' }).label   = CONSTANTES.ETIQUETAS_RESPONSABLE[tipo] || 'Usuario Responsable';
         context.form.getField({ id: 'custrecord_as_mov_ubicacion' }).label      = CONSTANTES.ETIQUETAS_UBICACION[tipo] || 'Ubicacion Origen';
-
-        if (!esVista) {
-            CAMPOS_BLOQUEADOS_EN_EDICION.forEach((idCampo) => {
-                context.form.getField({ id: idCampo })
-                    .updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-            });
-        }
 
         if (tipo !== CONSTANTES.TIPOS.MERMA) {
             context.form.getField({ id: 'custrecord_as_mov_motivo' })
@@ -117,13 +115,22 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
                 .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         }
 
-        if (!esVista) {
-            return;
+        if (context.request.parameters.as_no_editable === 'T') {
+            avisarNoEditable(context, estado);
         }
 
         pintarDetalle(context, tipo);
 
         agregarBotones(context, tipo, estado, rolAutorizado);
+    }
+
+    function avisarNoEditable(context, estado) {
+        context.form.addPageInitMessage({
+            type   : message.Type.WARNING,
+            title  : 'Este movimiento ya no se puede editar',
+            message: 'El movimiento esta en estado ' + estado + '. '
+                   + 'Solo se puede editar mientras esta en ' + CONSTANTES.ESTADOS.PENDIENTE_PROCESAR + '.',
+        });
     }
 
     function pintarDetalle(context, tipo) {
