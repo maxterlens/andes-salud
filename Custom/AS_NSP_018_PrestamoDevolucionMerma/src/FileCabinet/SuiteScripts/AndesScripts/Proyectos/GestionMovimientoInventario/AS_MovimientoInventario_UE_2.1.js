@@ -1,14 +1,13 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
  * @description Entry point del User Event sobre la cabecera del movimiento. Solo
- *              rutea: los dos hooks los resuelve AS_MovimientoInventarioUEHandler.
+ *              rutea: los dos hooks los resuelve AS_VistaHandler.
  *
  *              beforeLoad   → arma la vista: campos por tipo, tab de detalle,
  *                             botones de proceso, y manda la creacion y la
  *                             edicion hacia el Suitelet.
  *              beforeSubmit → corta el guardado de un movimiento que ya no se
  *                             corrige.
- *
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
  * @NModuleScope Public
@@ -16,12 +15,12 @@
  * @deploymentid customdeploy_as_ue_movimiento_inv
  * @recordtype   customrecord_as_movimiento_inventario
  */
-define(['./lib/AS_MovimientoInventarioConstants', './handlers/AS_MovimientoInventarioUEHandler'],
-    (CONSTANTES, ueHandler) => {
+define(['./constants/AS_MovimientoInventarioConstants', './handler/AS_VistaHandler'],
+    (CONSTANTES, vistaHandler) => {
 
     function beforeLoad(context) {
         try {
-            ueHandler.construirVista(context);
+            vistaHandler.construirVista(context);
         } catch (fallo) {
             log.error({
                 title  : CONSTANTES.LOGS.ERROR,
@@ -35,7 +34,7 @@ define(['./lib/AS_MovimientoInventarioConstants', './handlers/AS_MovimientoInven
 
     function beforeSubmit(context) {
         try {
-            ueHandler.validarEdicion(context);
+            vistaHandler.validarEdicion(context);
         } catch (fallo) {
             log.error({
                 title  : CONSTANTES.LOGS.ERROR,

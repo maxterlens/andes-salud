@@ -1,14 +1,13 @@
 /**
- * AS_NSP_018 — Formulario de Merma
- * @description Lo que la Merma agrega al formulario maestro: motivo y cuenta de
- *              ajuste. No tiene destino ni entidad, porque el material sale
+ * AS_NSP_018 — Prestamo, Devolucion y Merma
+ * @description Lo que la Merma agrega al formulario de captura: motivo y cuenta
+ *              de ajuste. No tiene destino ni entidad, porque el material sale
  *              del inventario y no va a nadie.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/ui/serverWidget'],
-    (serverWidget) => {
+define(['N/ui/serverWidget'], (serverWidget) => {
 
     function armarCampos(form, datos) {
         const campos = datos.campos;

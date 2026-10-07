@@ -7,12 +7,11 @@
  *              Cabecera del registro → funciones de los botones Nuevo, Imprimir,
  *              Anular, Procesar y Devolver, referenciadas por nombre desde el
  *              User Event.
- *
  * @NApiVersion 2.1
  * @NScriptType ClientScript
  * @NModuleScope Public
  */
-define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_MovimientoInventarioConstants'],
+define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './constants/AS_MovimientoInventarioConstants'],
     (url, https, currentRecord, message, CONSTANTES) => {
 
     let movimientoEnProceso = false;
@@ -108,6 +107,136 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
         }
     }
 
+    function saveRecord(context) {
+        const registroActual = context.currentRecord;
+        const campoALaClinica = registroActual.getField({ fieldId: 'custpage_a_la_clinica' });
+        const esALaClinica = campoALaClinica && registroActual.getValue({ fieldId: 'custpage_a_la_clinica' });
+
+        if (registroActual.getValue({ fieldId: 'custpage_detalle_bloqueado' }) === 'T') {
+            return true;
+        }
+
+        const totalLineas = registroActual.getLineCount({ sublistId: 'custpage_sl_detalle' });
+
+        if (totalLineas < 1) {
+            alert('Agrega al menos un articulo al detalle antes de guardar. '
+                + 'Recuerda confirmar la linea con el boton Add.');
+
+            return false;
+        }
+
+        if (!esDevolucion(registroActual)) {
+            for (let i = 0; i < totalLineas; i++) {
+                const cantidad = Number(registroActual.getSublistValue({
+                    sublistId: 'custpage_sl_detalle',
+                    fieldId  : 'custpage_col_cantidad',
+                    line     : i,
+                }));
+
+                if (cantidad <= 0) {
+                    alert('La cantidad tiene que ser mayor que cero. Revisa la linea ' + (i + 1) + '.');
+
+                    return false;
+                }
+
+                if (!esALaClinica) {
+                    const disponible = Number(registroActual.getSublistValue({
+                        sublistId: 'custpage_sl_detalle',
+                        fieldId  : 'custpage_col_disponible',
+                        line     : i,
+                    }));
+
+                    if (cantidad > disponible) {
+                        alert('La linea ' + (i + 1) + ' pide ' + cantidad + ' y solo hay ' + disponible + '.');
+
+                        return false;
+                    }
+                }
+            }
+        }
+
+        if (esDevolucion(registroActual)) {
+            let lineasConCantidad = 0;
+
+            for (let i = 0; i < totalLineas; i++) {
+                const aDevolver = Number(registroActual.getSublistValue({
+                    sublistId: 'custpage_sl_detalle',
+                    fieldId  : 'custpage_col_a_devolver',
+                    line     : i,
+                }));
+
+                if (aDevolver > 0) {
+                    lineasConCantidad++;
+                }
+            }
+
+            if (lineasConCantidad < 1) {
+                alert('Indica cuanto vas a devolver: al menos un articulo tiene que llevar una cantidad mayor que cero.');
+
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Principales
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function crearMovimientoInventario() {
+        window.location.href = url.resolveScript({
+            scriptId    : CONSTANTES.SUITELET.SCRIPT,
+            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
+        });
+    }
+
+    function imprimirMovimiento() {
+        window.open(url.resolveScript({
+            scriptId    : CONSTANTES.SUITELET.SCRIPT,
+            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
+            params      : {
+                op          : CONSTANTES.OPERACIONES.IMPRIMIR,
+                idMovimiento: currentRecord.get().id,
+            },
+        }), '_blank');
+    }
+
+    function anularMovimientoInventario() {
+        if (!confirm('Se anulara el movimiento. Confirma?')) {
+            return;
+        }
+
+        window.location.href = url.resolveScript({
+            scriptId    : CONSTANTES.SUITELET.SCRIPT,
+            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
+            params      : {
+                op          : CONSTANTES.OPERACIONES.ANULAR,
+                idMovimiento: currentRecord.get().id,
+            },
+        });
+    }
+
+    /**
+     * Un boton Procesar por tipo. El Suitelet lee el check del registro y decide
+     * si genera traslado o ajuste: el boton no lo elige.
+     */
+    function procesarPrestamo() {
+        procesarMovimiento('custpage_btn_procesar', CONSTANTES.OPERACIONES.PROCESAR_PRESTAMO, 'Se esta procesando el prestamo.');
+    }
+
+    function procesarDevolucion() {
+        procesarMovimiento('custpage_btn_devolver', CONSTANTES.OPERACIONES.PROCESAR_DEVOLUCION, 'Se esta procesando la devolucion.');
+    }
+
+    function procesarMerma() {
+        procesarMovimiento('custpage_btn_mermar', CONSTANTES.OPERACIONES.PROCESAR_MERMA, 'Se esta procesando la merma.');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Secundarias
+    // ─────────────────────────────────────────────────────────────────────────
+
     function mostrarUnidadALaClinica(registroActual) {
         const articulo = registroActual.getCurrentSublistValue({
             sublistId: 'custpage_sl_detalle',
@@ -122,6 +251,22 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
             fieldId  : 'custpage_col_unidad',
             value    : stock.unidad,
         });
+    }
+
+    function consultarStock(articulo, ubicacion) {
+        const respuesta = https.get({
+            url: url.resolveScript({
+                scriptId    : CONSTANTES.SUITELET.SCRIPT,
+                deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
+                params      : {
+                    op       : CONSTANTES.OPERACIONES.DISPONIBLE,
+                    articulo : articulo,
+                    ubicacion: ubicacion,
+                },
+            }),
+        });
+
+        return JSON.parse(respuesta.body);
     }
 
     function mostrarDisponible(registroActual) {
@@ -152,22 +297,6 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
         });
 
         cargarLotesDelArticulo(registroActual, stock.lotes);
-    }
-
-    function consultarStock(articulo, ubicacion) {
-        const respuesta = https.get({
-            url: url.resolveScript({
-                scriptId    : CONSTANTES.SUITELET.SCRIPT,
-                deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
-                params      : {
-                    op       : CONSTANTES.OPERACIONES.DISPONIBLE,
-                    articulo : articulo,
-                    ubicacion: ubicacion,
-                },
-            }),
-        });
-
-        return JSON.parse(respuesta.body);
     }
 
     function cargarLotesDelArticulo(registroActual, lotes) {
@@ -509,212 +638,26 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
         });
     }
 
-    function saveRecord(context) {
-        const registroActual = context.currentRecord;
-        const campoALaClinica = registroActual.getField({ fieldId: 'custpage_a_la_clinica' });
-        const esALaClinica = campoALaClinica && registroActual.getValue({ fieldId: 'custpage_a_la_clinica' });
-
-        if (registroActual.getValue({ fieldId: 'custpage_detalle_bloqueado' }) === 'T') {
-            return true;
-        }
-
-        const totalLineas = registroActual.getLineCount({ sublistId: 'custpage_sl_detalle' });
-
-        if (totalLineas < 1) {
-            alert('Agrega al menos un articulo al detalle antes de guardar. '
-                + 'Recuerda confirmar la linea con el boton Add.');
-
-            return false;
-        }
-
-        if (!esDevolucion(registroActual)) {
-            for (let i = 0; i < totalLineas; i++) {
-                const cantidad = Number(registroActual.getSublistValue({
-                    sublistId: 'custpage_sl_detalle',
-                    fieldId  : 'custpage_col_cantidad',
-                    line     : i,
-                }));
-
-                if (cantidad <= 0) {
-                    alert('La cantidad tiene que ser mayor que cero. Revisa la linea ' + (i + 1) + '.');
-
-                    return false;
-                }
-
-                if (!esALaClinica) {
-                    const disponible = Number(registroActual.getSublistValue({
-                        sublistId: 'custpage_sl_detalle',
-                        fieldId  : 'custpage_col_disponible',
-                        line     : i,
-                    }));
-
-                    if (cantidad > disponible) {
-                        alert('La linea ' + (i + 1) + ' pide ' + cantidad + ' y solo hay ' + disponible + '.');
-
-                        return false;
-                    }
-                }
-            }
-        }
-
-        if (esDevolucion(registroActual)) {
-            let lineasConCantidad = 0;
-
-            for (let i = 0; i < totalLineas; i++) {
-                const aDevolver = Number(registroActual.getSublistValue({
-                    sublistId: 'custpage_sl_detalle',
-                    fieldId  : 'custpage_col_a_devolver',
-                    line     : i,
-                }));
-
-                if (aDevolver > 0) {
-                    lineasConCantidad++;
-                }
-            }
-
-            if (lineasConCantidad < 1) {
-                alert('Indica cuanto vas a devolver: al menos un articulo tiene que llevar una cantidad mayor que cero.');
-
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    function crearMovimientoInventario() {
-        window.location.href = url.resolveScript({
-            scriptId    : CONSTANTES.SUITELET.SCRIPT,
-            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
-        });
-    }
-
-    function imprimirMovimiento() {
-        window.open(url.resolveScript({
-            scriptId    : CONSTANTES.SUITELET.SCRIPT,
-            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
-            params      : {
-                op          : CONSTANTES.OPERACIONES.IMPRIMIR,
-                idMovimiento: currentRecord.get().id,
-            },
-        }), '_blank');
-    }
-
-    function anularMovimientoInventario() {
-        if (!confirm('Se anulara el movimiento. Confirma?')) {
-            return;
-        }
-
-        window.location.href = url.resolveScript({
-            scriptId    : CONSTANTES.SUITELET.SCRIPT,
-            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
-            params      : {
-                op          : CONSTANTES.OPERACIONES.ANULAR,
-                idMovimiento: currentRecord.get().id,
-            },
-        });
-    }
-
-    function generarTransferPrestamo() {
-        if (!bloquearProcesamiento('custpage_btn_procesar')) {
-            return;
-        }
-
-        avisarProcesando('Se esta generando el traslado del prestamo.');
-
-        window.location.href = url.resolveScript({
-            scriptId    : CONSTANTES.SUITELET.SCRIPT,
-            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
-            params      : {
-                op          : CONSTANTES.OPERACIONES.PROCESAR,
-                idMovimiento: currentRecord.get().id,
-            },
-        });
-    }
-
-    function generarAjustePrestamo() {
-        if (!bloquearProcesamiento('custpage_btn_procesar')) {
-            return;
-        }
-
-        avisarProcesando('Se esta generando el ajuste de inventario del prestamo.');
-
-        window.location.href = url.resolveScript({
-            scriptId    : CONSTANTES.SUITELET.SCRIPT,
-            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
-            params      : {
-                op          : CONSTANTES.OPERACIONES.AJUSTAR_PRESTAMO,
-                idMovimiento: currentRecord.get().id,
-            },
-        });
-    }
-
-    function bloquearProcesamiento(idBoton) {
-        if (movimientoEnProceso) {
-            return false;
-        }
+    function procesarMovimiento(idBoton, operacion, detalle) {
+        if (movimientoEnProceso) return;
 
         movimientoEnProceso = true;
 
         const boton = document.getElementById(idBoton);
 
-        if (boton) {
-            boton.disabled = true;
-        }
+        if (boton) boton.disabled = true;
 
-        return true;
-    }
-
-    function avisarProcesando(detalle) {
         message.create({
             title  : 'Procesando el movimiento',
             message: detalle + ' No cierres ni recargues la pagina.',
             type   : message.Type.WARNING,
         }).show();
-    }
-
-    function generarTransferDevolucion() {
-        if (!bloquearProcesamiento('custpage_btn_devolver')) {
-            return;
-        }
-
-        avisarProcesando('Se esta generando el traslado de la devolucion.');
 
         window.location.href = url.resolveScript({
             scriptId    : CONSTANTES.SUITELET.SCRIPT,
             deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
             params      : {
-                op          : CONSTANTES.OPERACIONES.DEVOLVER,
-                idMovimiento: currentRecord.get().id,
-            },
-        });
-    }
-
-    function generarAjusteDevolucion() {
-        if (!bloquearProcesamiento('custpage_btn_devolver')) return;
-        avisarProcesando('Se esta generando el ajuste de inventario de la devolucion.');
-        window.location.href = url.resolveScript({
-            scriptId    : CONSTANTES.SUITELET.SCRIPT,
-            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
-            params      : {
-                op          : CONSTANTES.OPERACIONES.AJUSTAR_DEVOLUCION,
-                idMovimiento: currentRecord.get().id,
-            },
-        });
-    }
-
-    function generarAjusteMerma() {
-        if (!bloquearProcesamiento('custpage_btn_mermar')) {
-            return;
-        }
-
-        avisarProcesando('Se esta generando el ajuste de inventario de la merma.');
-
-        window.location.href = url.resolveScript({
-            scriptId    : CONSTANTES.SUITELET.SCRIPT,
-            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
-            params      : {
-                op          : CONSTANTES.OPERACIONES.MERMAR,
+                op          : operacion,
                 idMovimiento: currentRecord.get().id,
             },
         });
@@ -727,10 +670,8 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
         crearMovimientoInventario : crearMovimientoInventario,
         imprimirMovimiento        : imprimirMovimiento,
         anularMovimientoInventario: anularMovimientoInventario,
-        generarTransferPrestamo   : generarTransferPrestamo,
-        generarAjustePrestamo     : generarAjustePrestamo,
-        generarTransferDevolucion : generarTransferDevolucion,
-        generarAjusteDevolucion   : generarAjusteDevolucion,
-        generarAjusteMerma        : generarAjusteMerma,
+        procesarPrestamo          : procesarPrestamo,
+        procesarDevolucion        : procesarDevolucion,
+        procesarMerma             : procesarMerma,
     };
 });

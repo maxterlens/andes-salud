@@ -1,75 +1,64 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
  * @description Entry point del Suitelet de movimientos de inventario. Hace dos
- *              cosas y nada mas: rutear y registrar el error.
+ *              cosas y nada mas: repartir cada operacion a su handler y
+ *              registrar el error.
  *
- *              GET                → muestra el formulario de captura.
- *              GET movimiento     → abre el formulario cargado para editar ese
- *                                   movimiento.
- *              GET op=procesar    → genera el traslado del prestamo indicado.
- *              GET op=ajustar_prestamo → genera el ajuste positivo del prestamo.
- *              GET op=devolver    → genera el traslado de la devolucion indicada.
- *              GET op=ajustar_devolucion → genera el ajuste negativo de la devolucion.
- *              GET op=mermar      → genera el ajuste de inventario de la merma.
- *              GET op=disponible  → responde en JSON el stock de un articulo.
- *              GET op=anular      → anula el movimiento indicado.
- *              GET op=imprimir    → devuelve el comprobante en PDF.
- *              POST               → guarda la cabecera y sus lineas de detalle,
- *                                   o actualiza el movimiento que se edita.
+ *              GET                          → AS_RegistroHandler.mostrarFormulario
+ *              GET movimiento               → el mismo formulario, cargado para editar
+ *              POST                         → AS_RegistroHandler.guardarMovimiento
+ *              GET op=anular                → AS_RegistroHandler.anularMovimiento
+ *              GET op=disponible            → AS_RegistroHandler.consultarDisponible (JSON)
+ *              GET op=procesar_prestamo     → AS_PrestamoHandler.procesarPrestamo
+ *              GET op=procesar_devolucion   → AS_DevolucionHandler.procesarDevolucion
+ *              GET op=procesar_merma        → AS_MermaHandler.procesarMerma
+ *              GET op=imprimir              → AS_ComprobanteHandler.imprimirComprobante (PDF)
  *
- *              Las siete que escriben -guardar, procesar, ajustar_prestamo, devolver,
- *              ajustar_devolucion, mermar y anular- pasan antes por validarPermisoEscritura.
- *              Las tres que solo leen
- *              van directo: el formulario no guarda nada por si solo, el
- *              comprobante lo necesita quien recibe el material, y el stock lo
- *              consulta el propio formulario.
+ *              Las que escriben -guardar, anular y los tres procesar- pasan antes
+ *              por validarPermisoEscritura. Las que solo leen van directo: el
+ *              formulario no guarda nada por si solo, el comprobante lo necesita
+ *              quien recibe el material, y el stock lo consulta el propio
+ *              formulario.
  *
  *              El catch es el unico lugar del modulo que emite MOVIMIENTO ERROR:
  *              por aqui entra todo, asi que cualquier fallo sale con el id, la
  *              operacion y el motivo, sin que los handlers loguen nada.
- *
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  * @NModuleScope Public
  * @scriptid     customscript_as_stlt_movimiento_inv
  * @deploymentid customdeploy_as_stlt_movimiento_inv
  */
-define(['./lib/AS_MovimientoInventarioConstants', './ui/AS_MovimientoInventarioForm', './handlers/AS_MovimientoInventarioHandler', './handlers/AS_MovimientoInventarioPrestamoDeLaClinicaHandler', './handlers/AS_MovimientoInventarioPrestamoALaClinicaHandler', './handlers/AS_MovimientoInventarioDevolucionHandler', './handlers/AS_MovimientoInventarioDevolucionALaClinicaHandler', './handlers/AS_MovimientoInventarioMermaHandler', './handlers/AS_MovimientoInventarioImpresionHandler'],
-    (CONSTANTES, formulario, movimientoHandler, prestamoDeLaClinicaHandler, prestamoALaClinicaHandler, devolucionHandler, devolucionALaClinicaHandler, mermaHandler, impresionHandler) => {
+define(['./constants/AS_MovimientoInventarioConstants', './handler/AS_RegistroHandler', './handler/AS_PrestamoHandler', './handler/AS_DevolucionHandler', './handler/AS_MermaHandler', './handler/AS_ComprobanteHandler'],
+    (CONSTANTES, registroHandler, prestamoHandler, devolucionHandler, mermaHandler, comprobanteHandler) => {
 
     const OPERACIONES = CONSTANTES.OPERACIONES;
-    
+
     function onRequest(context) {
         const parametros = obtenerParametros(context);
 
         try {
             if (parametros.operacion === OPERACIONES.GUARDADO) {
-                movimientoHandler.validarPermisoEscritura();
-                movimientoHandler.guardarMovimiento(context);
-            } else if (parametros.operacion === OPERACIONES.PROCESAR) {
-                movimientoHandler.validarPermisoEscritura();
-                prestamoDeLaClinicaHandler.generarTransferPrestamo(context);
-            } else if (parametros.operacion === OPERACIONES.AJUSTAR_PRESTAMO) {
-                movimientoHandler.validarPermisoEscritura();
-                prestamoALaClinicaHandler.generarAjustePrestamo(context);
-            } else if (parametros.operacion === OPERACIONES.DEVOLVER) {
-                movimientoHandler.validarPermisoEscritura();
-                devolucionHandler.generarTransferDevolucion(context);
-            } else if (parametros.operacion === OPERACIONES.AJUSTAR_DEVOLUCION) {
-                movimientoHandler.validarPermisoEscritura();
-                devolucionALaClinicaHandler.generarAjusteDevolucion(context);
-            } else if (parametros.operacion === OPERACIONES.MERMAR) {
-                movimientoHandler.validarPermisoEscritura();
-                mermaHandler.generarAjusteMerma(context);
+                registroHandler.validarPermisoEscritura();
+                registroHandler.guardarMovimiento(context);
             } else if (parametros.operacion === OPERACIONES.ANULAR) {
-                movimientoHandler.validarPermisoEscritura();
-                movimientoHandler.anularMovimientoInventario(context);
+                registroHandler.validarPermisoEscritura();
+                registroHandler.anularMovimiento(context);
             } else if (parametros.operacion === OPERACIONES.DISPONIBLE) {
-                movimientoHandler.consultarDisponible(context);
+                registroHandler.consultarDisponible(context);
+            } else if (parametros.operacion === OPERACIONES.PROCESAR_PRESTAMO) {
+                registroHandler.validarPermisoEscritura();
+                prestamoHandler.procesarPrestamo(context);
+            } else if (parametros.operacion === OPERACIONES.PROCESAR_DEVOLUCION) {
+                registroHandler.validarPermisoEscritura();
+                devolucionHandler.procesarDevolucion(context);
+            } else if (parametros.operacion === OPERACIONES.PROCESAR_MERMA) {
+                registroHandler.validarPermisoEscritura();
+                mermaHandler.procesarMerma(context);
             } else if (parametros.operacion === OPERACIONES.IMPRIMIR) {
-                impresionHandler.imprimirMovimiento(context);
+                comprobanteHandler.imprimirComprobante(context);
             } else {
-                formulario.renderizarFormulario(context);
+                registroHandler.mostrarFormulario(context);
             }
         } catch (fallo) {
             log.error({

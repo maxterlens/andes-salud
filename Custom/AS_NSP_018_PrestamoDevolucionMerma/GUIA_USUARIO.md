@@ -3,16 +3,23 @@
 ## Para qué sirve
 
 El Registro de Solicitud de Inventario permite registrar y procesar tres tipos de solicitud
-desde una sola pantalla:
+desde una sola pantalla: préstamos de material de farmacia, sus devoluciones y mermas.
 
-| Tipo | Resultado al procesar | Estado final inmediato | PDF |
+El préstamo y la devolución tienen un **sentido**, que se elige con los checks **De la Clinica**
+y **A la Clinica**:
+
+| Tipo y sentido | Qué representa | Resultado al procesar | Estado final inmediato |
 |---|---|---|---|
-| Préstamo | Traslado desde el origen hacia la bodega de préstamos | `Pendiente de Devolucion` | Sí |
-| Devolución | Traslado desde la bodega de préstamos hacia el origen del préstamo | `Procesado` | Sí |
-| Merma | Ajuste de inventario negativo en la misma ubicación | `Procesado` | Sí |
+| Préstamo De la Clínica | Andes le presta material a otra institución | Traslado desde el origen hacia la bodega de préstamos | `Pendiente de Devolucion` |
+| Préstamo A la Clínica | Otra institución le presta material a Andes | Ajuste de inventario que suma el material en la bodega de préstamos | `Pendiente de Devolucion` |
+| Devolución De la Clínica | Vuelve a Andes lo que prestó | Traslado desde la bodega de préstamos hacia el origen del préstamo | `Procesado` |
+| Devolución A la Clínica | Andes devuelve lo que le prestaron | Ajuste de inventario que descuenta el material de la bodega de préstamos | `Procesado` |
+| Merma | Material que se da de baja | Ajuste de inventario negativo en la misma ubicación | `Procesado` |
 
-El formulario cambia según el **Tipo de Movimiento**. Ese campo define los datos, productos y
-acciones que verá el usuario.
+Los cinco casos tienen comprobante PDF.
+
+El formulario cambia según el **Tipo de Movimiento** y el sentido. Esos dos datos definen los
+campos, productos y acciones que verá el usuario.
 
 Cada solicitud pasa por dos pasos: primero se guarda y queda `Pendiente de Procesar`, sin mover
 inventario; después se procesa con el botón de su tipo, y recién ahí se genera el movimiento de
@@ -22,17 +29,20 @@ inventario.
 
 El registro cubre:
 
-- Préstamos de uno o varios artículos, con o sin lote, siempre asociados a una entidad receptora.
-- Devoluciones totales o parciales vinculadas a un préstamo pendiente, con búsqueda del préstamo
-  por entidad receptora.
+- Préstamos de uno o varios artículos, con o sin lote, en los dos sentidos, siempre asociados a
+  una entidad.
+- Devoluciones totales o parciales vinculadas a un préstamo pendiente del mismo sentido, con
+  búsqueda del préstamo por entidad.
 - Varias devoluciones para un préstamo, mientras exista cantidad pendiente.
-- Cantidades con decimales, con un máximo de 2 decimales, en los tres tipos de solicitud.
+- Cantidades con decimales, con un máximo de 2 decimales, en todos los tipos de solicitud.
 - Mermas por vencimiento, deterioro, cuarentena u otro motivo.
-- Selección controlada de la cuenta contable de Merma según la subsidiaria.
-- Validación de stock antes de crear la transacción de inventario.
+- Selección controlada de la cuenta contable según la subsidiaria y el tipo de solicitud.
+- Validación de stock antes de crear la transacción de inventario, cuando el material sale de
+  Andes.
+- Numeración de cada solicitud según su tipo: `PRE#`, `DEV#` y `MER#`.
 - Bloqueo del botón durante el procesamiento para evitar varios clics.
 - Corrección y anulación de una solicitud mientras está `Pendiente de Procesar`.
-- Comprobante PDF para los tres tipos de solicitud.
+- Comprobante PDF para todos los tipos de solicitud.
 
 No permite editar una solicitud ya procesada ni revertir una devolución o Merma ya procesada.
 
@@ -55,14 +65,14 @@ Transacciones > Gestion de Movimientos
 | Opción del menú | Para qué se usa |
 |---|---|
 | **Solicitudes de Inventario** | Registrar, consultar, procesar e imprimir préstamos, devoluciones y mermas |
-| **Entidades Receptoras** | Cargar las instituciones a las que cada subsidiaria puede prestar |
-| **Cuentas de Merma** | Cargar las cuentas contables permitidas para la Merma de cada subsidiaria |
+| **Entidades Receptoras** | Cargar las instituciones con las que cada subsidiaria puede prestar |
+| **Cuentas de Merma** | Cargar las cuentas contables permitidas para la Merma y para el Préstamo A la Clínica de cada subsidiaria |
 
 Si NetSuite está en inglés, el menú aparece como `Transactions > Gestion de Movimientos`.
 
 El formulario de registro se llama **Registro de Solicitud de Inventario**, y el de corrección,
-**Edicion de Solicitud de Inventario**. Al abrir una solicitud guardada, NetSuite muestra su
-cabecera, detalle, estado y las acciones disponibles.
+**Edicion de Solicitud de Inventario**. Al abrir una solicitud guardada, NetSuite muestra arriba
+su número, y debajo la cabecera, el detalle, el estado y las acciones disponibles.
 
 ## Requisitos previos
 
@@ -71,61 +81,97 @@ Antes de operar, deben estar configurados:
 1. Las ubicaciones y su relación con la subsidiaria.
 2. Una sola bodega de préstamos por subsidiaria.
 3. La disponibilidad de inventario y los lotes correspondientes.
-4. Las entidades receptoras permitidas para la subsidiaria. Sin ellas no se puede guardar un
-   Préstamo, porque la entidad es obligatoria.
-5. Para Merma, al menos una cuenta activa para la subsidiaria en **Cuentas de Merma**. Sin ella
-   **Cuenta de Ajuste** queda vacía y la Merma no se puede guardar.
-6. Un rol autorizado para guardar y procesar.
+4. Las entidades permitidas para la subsidiaria. Sin ellas no se puede guardar un Préstamo,
+   porque la entidad es obligatoria.
+5. Para Merma, al menos una cuenta activa para la subsidiaria en **Cuentas de Merma**, con
+   **Tipo de Solicitud** `Merma` o vacío. Sin ella **Cuenta de Ajuste** queda vacía y la Merma no
+   se puede guardar.
+6. Para Préstamo A la Clínica, al menos una cuenta activa para la subsidiaria en **Cuentas de
+   Merma** con **Tipo de Solicitud** `Prestamo`.
+7. Un rol autorizado para guardar y procesar.
 
 ## Cómo usarlo
 
-### Crear un Préstamo
+### Crear un Préstamo De la Clínica
+
+Andes le presta material a otra institución.
 
 1. Ingresar a **Transacciones > Gestion de Movimientos > Solicitudes de Inventario**, crear una
    nueva y seleccionar `Prestamo`.
-2. Elegir la subsidiaria, el servicio y la ubicación de origen.
-3. Verificar la ubicación de destino. El sistema propone la bodega de préstamos de la subsidiaria.
-4. Elegir la **Entidad Receptora del Prestamo**: la institución a la que se entrega el material.
+2. Dejar marcado **De la Clinica**, que es el sentido que viene por defecto.
+3. Elegir la subsidiaria, el servicio y la ubicación de origen.
+4. Verificar la ubicación de destino. El sistema propone la bodega de préstamos de la subsidiaria.
+5. Elegir la **Entidad Receptora del Prestamo**: la institución a la que se entrega el material.
    Es obligatoria y es el dato que después permite saber quién tiene el material.
-5. Completar fecha, responsable y comentarios. El **Responsable del Prestamo** es la persona de
+6. Completar fecha, responsable y comentarios. El **Responsable del Prestamo** es la persona de
    Andes que entrega el material; la entidad es quien lo recibe.
-6. Agregar los artículos, lote cuando aplique y cantidad prestada.
-7. Presionar **Guardar Solicitud**.
-8. Revisar el registro y presionar **Procesar Prestamo**.
+7. Agregar los artículos, lote cuando aplique y cantidad prestada.
+8. Presionar **Guardar Solicitud**. La solicitud recibe su número, por ejemplo `PRE#000004`.
+9. Revisar el registro y presionar **Procesar Prestamo**.
 
 Al procesar se crea un `Inventory Transfer` desde el origen hacia la bodega de préstamos. La
-solicitud queda en `Pendiente de Devolucion`.
+solicitud queda en `Pendiente de Devolucion` y **Traslado Generado** muestra el traslado.
+
+### Crear un Préstamo A la Clínica
+
+Otra institución le presta material a Andes.
+
+1. Crear una solicitud nueva, seleccionar `Prestamo` y marcar **A la Clinica**. El formulario se
+   recarga para ese sentido.
+2. Elegir la subsidiaria y el servicio. No se pide ubicación de origen: el material llega de
+   afuera.
+3. Verificar la ubicación de destino: la bodega de préstamos de la subsidiaria.
+4. Elegir la **Entidad Emisora del Prestamo**: la institución que le presta a Andes.
+5. Elegir la **Cuenta de Ajuste**. Solo aparecen las cuentas cargadas para préstamo en la
+   subsidiaria.
+6. Completar fecha, responsable y comentarios.
+7. Agregar los artículos, la cantidad y el **Lote**, que se escribe a mano tal como viene en el
+   material. Es obligatorio en los artículos con control de lotes.
+8. Presionar **Guardar Solicitud** y después **Procesar Prestamo**.
+
+Al procesar se crea un `Inventory Adjustment` que suma el material en la bodega de préstamos,
+con el lote escrito y contra la cuenta elegida. No se valida stock, porque el material entra. La
+solicitud queda en `Pendiente de Devolucion` y **Ajuste Generado** muestra el ajuste.
 
 ### Crear una Devolución
 
-1. Seleccionar `Devolucion`.
+1. Seleccionar `Devolucion` y marcar el mismo sentido del préstamo que se devuelve: **De la
+   Clinica** o **A la Clinica**.
 2. Elegir primero la subsidiaria.
-3. Opcional: elegir la **Entidad Receptora** para ver solo los préstamos de esa institución. La
-   lista muestra únicamente entidades con préstamos pendientes en la subsidiaria. Si se deja
+3. Opcional: elegir la entidad para ver solo los préstamos de esa institución. Se llama **Entidad
+   Receptora** en De la Clínica y **Entidad Emisora del Prestamo** en A la Clínica. La lista muestra únicamente entidades con préstamos pendientes en la subsidiaria. Si se deja
    vacía, se ven todos los préstamos pendientes.
-4. Seleccionar el **Prestamo Relacionado**. Cada opción muestra el número del préstamo, a quién
-   se prestó, de qué ubicación salió y cuánto queda pendiente:
+4. Seleccionar el **Prestamo Relacionado**. La lista muestra solo los préstamos del sentido
+   marcado. Cada opción muestra el número del préstamo, la entidad, la ubicación y cuánto queda
+   pendiente:
 
    ```text
-   MOV#000007 - HOSPITAL XX - CARDIOLOGIA CEM CASPM - pendiente 10
+   PRE#000004 - HOSPITAL XX - CARDIOLOGIA CEM CASPM - pendiente 10
    ```
 
-   Los préstamos registrados antes de que la entidad fuera obligatoria aparecen como
-   `SIN ENTIDAD`.
+   Los préstamos registrados antes del 07/10/2026 se ven con su número `MOV#`, y los que se
+   registraron antes de que la entidad fuera obligatoria aparecen como `SIN ENTIDAD`.
 5. Completar fecha, responsable y comentarios.
 6. Indicar la cantidad que vuelve en cada línea. Viene precargada con el pendiente; puede ser
    menor, pero nunca mayor.
 7. Presionar **Guardar Solicitud**.
 8. Revisar el registro y presionar **Procesar Devolucion**.
 
-La devolución utiliza la ubicación y los lotes del préstamo relacionado. Al procesarla crea el
-traslado inverso y actualiza el préstamo a `Devuelto Parcial` o `Devuelto Total`.
+Al elegir el préstamo, la devolución hereda sus datos y los checks del sentido quedan
+bloqueados.
+
+| Sentido | Qué hereda | Qué crea al procesar |
+|---|---|---|
+| De la Clínica | Origen en la bodega de préstamos y destino en la ubicación de donde salió el material | Un traslado inverso, con los mismos lotes que salieron en el préstamo |
+| A la Clínica | Origen en la bodega de préstamos, sin destino, y la **Cuenta de Ajuste** del préstamo | Un ajuste que descuenta el material de la bodega, con el lote del préstamo |
+
+En los dos casos, el préstamo pasa a `Devuelto Parcial` o `Devuelto Total`.
 
 ### Crear una Merma
 
-1. Seleccionar `Merma`.
+1. Seleccionar `Merma`. La Merma no tiene sentido.
 2. Elegir la subsidiaria. **Cuenta de Ajuste** mostrará únicamente las cuentas activas configuradas
-   para esa subsidiaria.
+   para la Merma en esa subsidiaria.
 3. Completar ubicación de la Merma, servicio y fecha.
 4. Elegir el motivo: `Vencimiento`, `Deterioro`, `Cuarentena` u `Otro`.
 5. Elegir la cuenta de ajuste, responsable y comentarios.
@@ -134,11 +180,12 @@ traslado inverso y actualiza el préstamo a `Devuelto Parcial` o `Devuelto Total
 8. Revisar el registro y presionar **Procesar Merma**.
 
 Al procesar se crea un `Inventory Adjustment` con cantidades negativas en la ubicación elegida,
-usando la cuenta contable guardada. La solicitud queda en `Procesado`.
+usando la cuenta contable guardada. La solicitud queda en `Procesado` y **Ajuste Generado**
+muestra el ajuste.
 
 ### Cantidades con decimales
 
-Los tres tipos aceptan cantidades con decimales, con un máximo de **2 decimales**:
+Todos los tipos aceptan cantidades con decimales, con un máximo de **2 decimales**:
 
 | Situación | Qué hace el formulario |
 |---|---|
@@ -153,16 +200,19 @@ El ajuste hacia abajo evita pedir más de lo que existe. Por eso, un saldo con m
 decimales no se puede mover completo: de `7,566666` se pueden prestar o dar de baja como
 máximo `7,56`.
 
+En el Préstamo A la Clínica no se compara contra lo disponible: el material todavía no está en
+Andes.
+
 ### Corregir una solicitud
 
 Una solicitud se puede corregir solo mientras está en `Pendiente de Procesar`:
 
 1. Abrir la solicitud y presionar **Editar**, o usar **Editar** desde la lista.
-2. Corregir la fecha, el responsable, los comentarios o los artículos. En una Merma también se
-   puede cambiar la cuenta de ajuste.
+2. Corregir la fecha, el responsable, los comentarios o los artículos. En una Merma y en un
+   Préstamo A la Clínica también se puede cambiar la cuenta de ajuste.
 3. Presionar **Actualizar Solicitud**.
 
-El tipo, la subsidiaria, el servicio, las ubicaciones, la entidad receptora, el motivo de la
+El tipo, el sentido, la subsidiaria, el servicio, las ubicaciones, la entidad, el motivo de la
 Merma y el préstamo relacionado de una Devolución aparecen bloqueados. Si alguno de esos datos
 está mal, se anula la solicitud y se registra una nueva.
 
@@ -189,13 +239,18 @@ anulación cambia el estado a `Anulado`; no revierte una transacción de inventa
 Al presionar un botón de procesamiento, este queda deshabilitado y se muestra el aviso
 **Procesando el movimiento**. No se debe cerrar ni recargar la página.
 
+El botón es uno solo por tipo: **Procesar Prestamo**, **Procesar Devolucion** o **Procesar
+Merma**. El sistema decide si genera un traslado o un ajuste según el sentido guardado en la
+solicitud, no según el botón.
+
 El servidor vuelve a validar el estado antes de crear una transacción. Esta segunda validación
 evita generar otra transacción si el usuario hace doble clic o repite la URL.
 
 También se verifica:
 
 - Que exista detalle y que las cantidades sean mayores que cero.
-- Que haya stock suficiente para el artículo o lote.
+- Que haya stock suficiente para el artículo o lote, cuando el material sale de una ubicación
+  de Andes.
 - Que una devolución no exceda la cantidad pendiente.
 - Que la solicitud siga en `Pendiente de Procesar`.
 
@@ -216,8 +271,8 @@ En cada subsidiaria debe existir una sola ubicación con:
 - **AS Bodega de Prestamos y Devoluciones**: marcado.
 - **Make Inventory Available**: desmarcado.
 
-Esa ubicación recibe los préstamos y es el origen de sus devoluciones. Si falta, **Ubicación
-Destino** queda vacía y no se puede guardar el préstamo.
+Esa ubicación recibe los préstamos y es el origen de sus devoluciones, en los dos sentidos. Si
+falta, **Ubicación Destino** queda vacía y no se puede guardar el préstamo.
 
 ### Relación subsidiaria y ubicación
 
@@ -232,23 +287,24 @@ Ruta:
 Transacciones > Gestion de Movimientos > Entidades Receptoras > Nuevo
 ```
 
-El registro se llama **AS Entidad Receptora por Subsidiaria** y tiene dos campos obligatorios:
+El registro se llama **AS Entidad Receptora por Subsidiaria**:
 
 | Campo | Uso |
 |---|---|
-| Subsidiaria | La subsidiaria que presta |
-| Entidad Receptora | La institución que recibe el préstamo |
+| Subsidiaria | La subsidiaria que presta o recibe el préstamo |
+| Entidad Receptora | La institución del préstamo |
 | Inactivo | Al marcarlo, la entidad deja de aparecer al registrar un préstamo |
 
-Registrar una fila por pareja **Subsidiaria + Entidad Receptora**: la entidad es la institución
-(un cliente de NetSuite) a la que esa subsidiaria puede prestar. La entidad es **obligatoria en
-el préstamo**: si la subsidiaria no tiene filas activas, el selector queda vacío y no se puede
-guardar ningún préstamo.
+Registrar una fila por pareja **Subsidiaria + Entidad**: la entidad es la institución (un
+cliente de NetSuite) con la que esa subsidiaria hace préstamos. La misma lista sirve para los dos
+sentidos: en De la Clínica la entidad recibe el material; en A la Clínica, lo presta. La entidad
+es **obligatoria en el préstamo**: si la subsidiaria no tiene filas activas, el selector queda
+vacío y no se puede guardar ningún préstamo.
 
-Para dejar de prestarle a una entidad, se marca la fila como inactiva. Sus préstamos ya
+Para dejar de prestar con una entidad, se marca la fila como inactiva. Sus préstamos ya
 registrados siguen apareciendo en Devolución mientras tengan pendiente.
 
-### Cuentas permitidas para Merma
+### Cuentas de ajuste
 
 Ruta:
 
@@ -262,19 +318,42 @@ El registro se llama **AS Cuenta de Merma por Subsidiaria**:
 |---|---|
 | Subsidiaria | Define en qué subsidiaria estará disponible la cuenta |
 | Cuenta Contable | Cuenta que aparecerá en **Cuenta de Ajuste** |
+| Tipo de Solicitud | Para qué solicitud se ofrece la cuenta: `Merma` o `Prestamo`. Vacío cuenta como Merma |
 | Inactivo | Al marcarlo, la relación deja de aparecer en el formulario |
 
 La regla funcional es:
 
 ```text
-Subsidiaria seleccionada + configuración activa = cuentas disponibles en Cuenta de Ajuste
+Subsidiaria + Tipo de Solicitud + configuración activa = cuentas disponibles en Cuenta de Ajuste
 ```
+
+| Solicitud | Cuentas que aparecen |
+|---|---|
+| Merma | Las de la subsidiaria con **Tipo de Solicitud** `Merma` o vacío |
+| Préstamo A la Clínica | Las de la subsidiaria con **Tipo de Solicitud** `Prestamo` |
+| Devolución A la Clínica | No se elige: usa la cuenta guardada en el préstamo |
 
 Ejemplo: Puerto Montt + `5113001 Costo medicamentos e insumos`. Es un ejemplo operativo; la
 cuenta disponible depende de las filas activas en NetSuite.
 
 Para cambiar una cuenta no se modifica el código. Se inactiva la relación anterior y se crea o
 activa la nueva relación para la subsidiaria.
+
+### Numeración de las solicitudes
+
+Cada tipo de solicitud tiene su propio número correlativo:
+
+| Tipo | Número |
+|---|---|
+| Préstamo | `PRE#000001`, `PRE#000002`… |
+| Devolución | `DEV#000001`, `DEV#000002`… |
+| Merma | `MER#000001`, `MER#000002`… |
+
+El contador vive en el registro **AS Movimiento Inventario Correlativo** (`Personalización >
+Listas, registros y campos > Tipos de registro`), una fila por tipo. La primera solicitud de cada tipo crea su fila sola, así que no hace falta cargarla. Si se quiere
+continuar desde otro número, se edita **Último número** en la fila del tipo.
+
+Las solicitudes registradas antes del 07/10/2026 conservan su número `MOV#`.
 
 ### Listas del registro
 
@@ -296,31 +375,36 @@ una cuenta, cada subsidiaria que use el registro necesita esto:
 |---|---|---|---|
 | Bodega de préstamos | `Listas > Contabilidad > Ubicaciones` | Una sola ubicación por subsidiaria con **AS Bodega de Prestamos y Devoluciones** marcado y *Make Inventory Available* desmarcado | **Ubicación Destino** queda vacía y no se puede guardar un Préstamo |
 | Subsidiaria de cada ubicación | `Listas > Contabilidad > Ubicaciones` | La subsidiaria correspondiente en cada ubicación de origen y en la bodega de préstamos | La ubicación no aparece en el formulario |
-| Entidades receptoras | `Transacciones > Gestion de Movimientos > Entidades Receptoras` | Una fila por **Subsidiaria + Entidad Receptora** para cada institución a la que se presta | No se puede guardar un Préstamo |
-| Cuentas de Merma | `Transacciones > Gestion de Movimientos > Cuentas de Merma` | Al menos una fila activa por **Subsidiaria + Cuenta Contable** | **Cuenta de Ajuste** queda vacía y no se puede guardar una Merma |
+| Entidades receptoras | `Transacciones > Gestion de Movimientos > Entidades Receptoras` | Una fila por **Subsidiaria + Entidad** para cada institución con la que se presta | No se puede guardar un Préstamo |
+| Cuentas para Merma | `Transacciones > Gestion de Movimientos > Cuentas de Merma` | Al menos una fila activa por **Subsidiaria + Cuenta Contable**, con **Tipo de Solicitud** `Merma` o vacío | **Cuenta de Ajuste** queda vacía y no se puede guardar una Merma |
+| Cuentas para Préstamo A la Clínica | `Transacciones > Gestion de Movimientos > Cuentas de Merma` | Al menos una fila activa por **Subsidiaria + Cuenta Contable**, con **Tipo de Solicitud** `Prestamo` | **Cuenta de Ajuste** queda vacía y no se puede guardar un Préstamo A la Clínica |
 | Motivos de baja | Lista **Motivo de Baja** | Viene con `Vencimiento`, `Deterioro`, `Cuarentena` y `Otro`; se pueden agregar otros | — |
 | Roles autorizados | Configuración del registro | Verificar que los roles internos `3` y `1371` sean `Administrator` y `QF CASPM` en la cuenta | Un rol distinto podría registrar o no poder hacerlo |
 
-Después de configurar, probar una solicitud de cada tipo en Sandbox antes del despliegue
-productivo.
+La numeración no necesita configuración: el contador de cada tipo se crea solo.
+
+Después de configurar, probar una solicitud de cada tipo y sentido en Sandbox antes del
+despliegue productivo.
 
 ## Restricciones
 
 - Una solicitud solo se edita mientras está en `Pendiente de Procesar`.
-- Al editar no se cambian el tipo, la subsidiaria, el servicio, las ubicaciones ni la entidad
-  receptora: si están mal, se anula y se registra otra solicitud.
-- La devolución debe usar el mismo lote que salió en el préstamo.
+- Al editar no se cambian el tipo, el sentido, la subsidiaria, el servicio, las ubicaciones ni
+  la entidad: si están mal, se anula y se registra otra solicitud.
+- La devolución tiene el mismo sentido que su préstamo y usa el mismo lote que entró o salió en
+  el préstamo.
 - El préstamo mueve la cantidad completa registrada; no existe entrega parcial al procesar.
 - Una devolución procesada no tiene reverso automático.
 - La Merma reduce inventario en la misma ubicación; no utiliza ubicación destino.
-- El préstamo valida cantidad disponible. La devolución valida existencia física en la bodega.
+- El Préstamo De la Clínica valida la cantidad disponible en el origen. El Préstamo A la Clínica
+  no valida stock: el material entra.
+- Las devoluciones validan que el material siga en la bodega de préstamos.
 - Los estados `Bloqueado`, `En Inspección` y `Damaged` no se utilizan para asignar lotes.
 - Sin lote elegido, el orden automático usa la última modificación del balance; no es FEFO.
 - Las cantidades admiten como máximo 2 decimales. Un saldo con más decimales no se puede mover
   completo.
-- La entidad receptora debe ser un cliente de NetSuite cargado en la lista de la subsidiaria.
-  Un préstamo entre servicios internos de la misma clínica no tiene una entidad que lo
-  represente.
+- La entidad debe ser un cliente de NetSuite cargado en la lista de la subsidiaria. Un préstamo
+  entre servicios internos de la misma clínica no tiene una entidad que lo represente.
 - El filtro por entidad de la Devolución solo muestra entidades con préstamos pendientes; los
   préstamos antiguos sin entidad se encuentran dejando el filtro vacío.
 
@@ -332,17 +416,20 @@ productivo.
 | `AS_MOVIMIENTO_SIN_DETALLE` | No hay productos | Agregar al menos una línea |
 | `AS_CANTIDAD_INVALIDA` | Existe una cantidad cero o negativa | Corregir la cantidad |
 | `AS_DEVOLUCION_SIN_CANTIDAD` | Todas las cantidades devueltas son cero | Ingresar una cantidad en una línea |
+| `AS_LOTE_OBLIGATORIO`: «Indica un lote para los articulos con control de lotes en las lineas [n].» | En un Préstamo A la Clínica falta el lote de un artículo con control de lotes | Escribir el lote en esas líneas |
 | `AS_MOVIMIENTO_YA_PROCESADO` | La solicitud ya cambió de estado | Refrescar y revisar la transacción generada |
 | `AS_STOCK_INSUFICIENTE` | No alcanza el stock del artículo o lote | Revisar ubicación, lote y cantidad |
 | `AS_DEVOLUCION_EXCEDE_PENDIENTE` | La devolución supera el pendiente | Reducir la cantidad |
 | `AS_MOVIMIENTO_NO_EDITABLE` | Se intentó guardar cambios sobre una solicitud que ya no está en `Pendiente de Procesar` | No se edita: si hay un error, registrar una solicitud nueva |
 | **Este movimiento ya no se puede editar** | Se intentó editar una solicitud que ya no está en `Pendiente de Procesar` | No se edita: si hay un error, registrar una solicitud nueva |
 | «La linea [n] pide [cantidad] y solo hay [disponible].» | Sin lote elegido, la cantidad supera lo disponible | Bajar la cantidad o elegir un lote |
-| Cuenta de Ajuste vacía | No hay relación activa para la subsidiaria | Crear o activar una fila en **Gestion de Movimientos > Cuentas de Merma** |
+| Cuenta de Ajuste vacía en una Merma | No hay relación activa para la subsidiaria con Tipo de Solicitud `Merma` o vacío | Crear o activar una fila en **Gestion de Movimientos > Cuentas de Merma** |
+| Cuenta de Ajuste vacía en un Préstamo A la Clínica | No hay relación activa para la subsidiaria con Tipo de Solicitud `Prestamo` | Crear o activar esa fila en **Gestion de Movimientos > Cuentas de Merma** |
 | Ubicación Destino vacía | Falta la bodega de préstamos | Marcar una ubicación para la subsidiaria |
-| El Préstamo no se guarda y marca **Entidad Receptora del Prestamo** | El campo es obligatorio | Elegir la entidad |
-| **Entidad Receptora del Prestamo** sin opciones | La subsidiaria no tiene filas activas en **AS Entidad Receptora por Subsidiaria** | Cargar las entidades en **Gestion de Movimientos > Entidades Receptoras** |
-| La entidad receptora aparece bloqueada al editar | La entidad no se cambia en una corrección | Anular y registrar un préstamo nuevo con la entidad correcta |
+| El Préstamo no se guarda y marca la entidad | El campo es obligatorio | Elegir la entidad |
+| La entidad del Préstamo sin opciones | La subsidiaria no tiene filas activas en **AS Entidad Receptora por Subsidiaria** | Cargar las entidades en **Gestion de Movimientos > Entidades Receptoras** |
+| La entidad aparece bloqueada al editar | La entidad no se cambia en una corrección | Anular y registrar un préstamo nuevo con la entidad correcta |
+| Un préstamo no aparece en **Prestamo Relacionado** | Está marcado el otro sentido, o el préstamo ya no tiene pendiente | Marcar el sentido del préstamo; si ya fue devuelto completo, no hay nada que devolver |
 | Una entidad no aparece en el filtro de Devolución | No tiene préstamos pendientes en la subsidiaria | Revisar el préstamo; si ya fue devuelto completo, no hay nada que devolver |
 | Un préstamo muestra `SIN ENTIDAD` | Se registró antes de que la entidad fuera obligatoria | Dejar el filtro vacío para encontrarlo |
 | La cantidad cambió sola al escribirla | Tenía más de 2 decimales o superaba lo que hay del lote o lo pendiente | Revisar el valor ajustado |
@@ -350,14 +437,18 @@ productivo.
 
 ## Resultado esperado
 
-- Un Préstamo procesado tiene un `Inventory Transfer`, queda en `Pendiente de Devolucion`, el
-  material se encuentra en la bodega de préstamos y el registro indica a qué entidad se prestó.
-- Una Devolución procesada tiene un traslado inverso, queda en `Procesado` y disminuye el
-  pendiente del préstamo relacionado.
+- Un Préstamo De la Clínica procesado tiene un `Inventory Transfer`, queda en `Pendiente de
+  Devolucion`, el material se encuentra en la bodega de préstamos y el registro indica a qué
+  entidad se prestó.
+- Un Préstamo A la Clínica procesado tiene un `Inventory Adjustment` positivo en la bodega de
+  préstamos, con el lote escrito, y queda en `Pendiente de Devolucion`.
+- Una Devolución procesada tiene un traslado inverso (De la Clínica) o un ajuste negativo (A la
+  Clínica), queda en `Procesado` y disminuye el pendiente del préstamo relacionado.
 - Una Merma procesada tiene un `Inventory Adjustment` negativo, usa la cuenta configurada y
   queda en `Procesado`.
-- Cada solicitud dispone de su comprobante PDF y conserva la referencia a la transacción.
+- Cada solicitud tiene su número por tipo (`PRE#`, `DEV#`, `MER#`), su comprobante PDF y la
+  referencia a la transacción generada.
 
 Para préstamos abiertos, el saldo físico de la bodega de préstamos debe coincidir con la suma
-de las cantidades pendientes. Una diferencia indica un movimiento manual fuera del registro o
-un proceso incompleto.
+de las cantidades pendientes, en los dos sentidos. Una diferencia indica un movimiento manual
+fuera del registro o un proceso incompleto.

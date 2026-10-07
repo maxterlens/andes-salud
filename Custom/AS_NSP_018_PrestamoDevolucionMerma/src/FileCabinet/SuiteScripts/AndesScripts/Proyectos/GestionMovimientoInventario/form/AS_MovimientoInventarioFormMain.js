@@ -1,48 +1,82 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
+ * @description El MAIN del formulario de captura de la solicitud, con los datos
+ *              que arma AS_RegistroHandler.mostrarFormulario. Arma la cabecera
+ *              comun y llama a la parte del tipo:
+ *
+ *              AS_MovimientoInventarioFormPrestamo     lo propio del prestamo
+ *              AS_MovimientoInventarioFormDevolucion   lo propio de la devolucion
+ *              AS_MovimientoInventarioFormMerma        lo propio de la merma
+ *
+ *              construirFormulario se lee como indice: formulario y grupos,
+ *              cabecera, datos para el CS, la parte del tipo, el detalle, el modo
+ *              edicion y el boton de guardar.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_ConsultaStockRepository', './AS_MovimientoInventarioPrestamoUi', './AS_MovimientoInventarioDevolucionUi', './AS_MovimientoInventarioMermaUi'],
-    (serverWidget, message, runtime, CONSTANTES, movimientoRepository, consultaStockRepository, prestamoUi, devolucionUi, mermaUi) => {
+define(['N/ui/serverWidget', 'N/ui/message', '../constants/AS_MovimientoInventarioConstants', './AS_MovimientoInventarioFormPrestamo', './AS_MovimientoInventarioFormDevolucion', './AS_MovimientoInventarioFormMerma'],
+    (serverWidget, message, CONSTANTES, formPrestamo, formDevolucion, formMerma) => {
 
-    function renderizarFormulario(context) {
-        if (!CONSTANTES.ROLES_AUTORIZADOS.includes(runtime.getCurrentUser().role)) {
-            renderizarAvisoSoloConsulta(context);
-            return;
-        }
+    // ─────────────────────────────────────────────────────────────────────────
+    // Principales
+    // ─────────────────────────────────────────────────────────────────────────
 
-        const parametros = obtenerParametrosFormulario(context.request);
+    function construirFormulario(datos) {
+        const form = crearFormulario(datos);
 
-        let movimiento = null;
-        let idTipo     = parametros.tipo;
-        let idPrestamo = parametros.prestamo;
+        agregarCabecera(form, datos);
+        agregarDatosParaElCs(form, datos);
 
-        if (parametros.movimiento) {
-            movimiento = movimientoRepository.cargarMovimiento(parametros.movimiento);
-            idTipo     = movimiento.getValue({ fieldId: 'custrecord_as_mov_tipo' });
-            idPrestamo = movimiento.getValue({ fieldId: 'custrecord_as_mov_prestamo_ref' });
-        }
+        if (datos.esPrestamo) formPrestamo.armarCampos(form, datos);
+        if (datos.esDevolucion) formDevolucion.armarCampos(form, datos);
+        if (datos.esMerma) formMerma.armarCampos(form, datos);
+        if (!datos.esDevolucion) armarDetalleSalida(form, datos.nombreTipo, datos.esALaClinica);
+        if (datos.movimiento) aplicarModoEdicion(form, datos);
+        if (datos.esPrestamo && datos.esALaClinica) formPrestamo.ajustarALaClinica(form, datos);
+        if (datos.esDevolucion && datos.esALaClinica) formDevolucion.ajustarALaClinica(form, datos);
+        if (!datos.esDevolucion || datos.idPrestamo) form.addSubmitButton({ label: datos.movimiento ? 'Actualizar Solicitud' : 'Guardar Solicitud' });
 
-        const tipos        = movimientoRepository.listarTiposMovimiento();
-        const tipoElegido  = tipos.filter((opcion) => opcion.id === idTipo)[0];
-        const nombreTipo   = tipoElegido ? tipoElegido.nombre : '';
-        const esPrestamo   = nombreTipo === CONSTANTES.TIPOS.PRESTAMO;
-        const esDevolucion = nombreTipo === CONSTANTES.TIPOS.DEVOLUCION;
-        const esMerma      = nombreTipo === CONSTANTES.TIPOS.MERMA;
-        const prestamo     = esDevolucion && idPrestamo ? movimientoRepository.cargarMovimiento(idPrestamo) : null;
-        const esALaClinica = (esPrestamo || esDevolucion) && resolverALaClinica(movimiento || prestamo, parametros.sentido);
+        return form;
+    }
 
-        const prestamosPendientes = esDevolucion ? movimientoRepository.listarPrestamosPendientes(esALaClinica) : [];
-        const cuentasAjuste       = (esMerma || (esPrestamo && esALaClinica))
-                                  ? movimientoRepository.listarCuentasAjuste(idTipo, esMerma) : [];
-        const motivosBaja         = esMerma ? movimientoRepository.listarMotivosBaja() : [];
-        const lineasPrestamo      = prestamo ? movimientoRepository.buscarLineasPorMovimiento(idPrestamo) : [];
-        const lineasDevolucion    = esDevolucion && movimiento ? movimientoRepository.buscarLineasPorMovimiento(movimiento.id) : [];
+    function construirAvisoSoloConsulta() {
+        const form = serverWidget.createForm({ title: 'Movimiento de Inventario - Solo Consulta' });
 
-        const titulo          = movimiento ? 'Edicion de Solicitud de Inventario' : 'Registro de Solicitud de Inventario';
-        const etiquetaGuardar = movimiento ? 'Actualizar Solicitud' : 'Guardar Solicitud';
+        form.addPageInitMessage({
+            type   : message.Type.WARNING,
+            title  : 'Tu rol es de solo consulta',
+            message: 'No puedes crear ni editar movimientos de inventario. '
+                   + 'Puedes buscarlos, abrirlos en modo Ver e imprimir sus comprobantes.',
+        });
+
+        const aviso = form.addField({
+            id   : 'custpage_aviso_solo_consulta',
+            type : serverWidget.FieldType.INLINEHTML,
+            label: 'Aviso',
+        });
+
+        aviso.defaultValue = '<p>Ingresa a <strong>Transacciones &gt; Gestion de Movimientos '
+                           + '&gt; Movimientos de Inventario &gt; Buscar</strong> para consultar los registros.</p>';
+
+        return form;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Secundarias
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * El formulario con su titulo y los tres grupos: tipo, datos del movimiento
+     * y los datos propios del tipo. Deja los ids de grupo en datos para que la
+     * cabecera y cada tipo ubiquen sus campos.
+     */
+    function crearFormulario(datos) {
+        const esPrestamo      = datos.esPrestamo;
+        const esDevolucion    = datos.esDevolucion;
+        const esMerma         = datos.esMerma;
+        const esALaClinica    = datos.esALaClinica;
+        const titulo          = datos.movimiento ? 'Edicion de Solicitud de Inventario' : 'Registro de Solicitud de Inventario';
         const form            = serverWidget.createForm({ title: titulo });
         const grupoTipo       = 'custpage_grupo_tipo_movimiento';
         const grupoMovimiento = 'custpage_grupo_datos_movimiento';
@@ -68,16 +102,36 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         }
 
         form.clientScriptModulePath = CONSTANTES.CLIENT_SCRIPT;
+
+        datos.grupoTipo       = grupoTipo;
+        datos.grupoMovimiento = grupoMovimiento;
+        datos.grupoEspecifico = grupoEspecifico;
+
+        return form;
+    }
+
+    /**
+     * Los campos comunes a los tres tipos: tipo, sentido, fecha, subsidiaria,
+     * servicio, entidad, ubicaciones, responsable y comentarios. Deja los campos
+     * en datos.campos para que cada tipo los ajuste.
+     */
+    function agregarCabecera(form, datos) {
+        const parametros   = datos.parametros;
+        const nombreTipo   = datos.nombreTipo;
+        const esPrestamo   = datos.esPrestamo;
+        const esDevolucion = datos.esDevolucion;
+        const esALaClinica = datos.esALaClinica;
+
         const campoTipo = agregarCampo(form, {
             id   : 'custpage_tipo',
             type : serverWidget.FieldType.SELECT,
             label: 'Tipo de Movimiento',
-        }, grupoTipo);
+        }, datos.grupoTipo);
         campoTipo.isMandatory = true;
-        campoTipo.defaultValue = idTipo;
+        campoTipo.defaultValue = datos.idTipo;
         campoTipo.addSelectOption({ value: '', text: '' });
         CONSTANTES.ORDEN_TIPOS.forEach((nombre) => {
-            const opcion = tipos.filter((tipo) => tipo.nombre === nombre)[0];
+            const opcion = datos.tipos.filter((tipo) => tipo.nombre === nombre)[0];
             campoTipo.addSelectOption({ value: opcion.id, text: opcion.nombre });
         });
 
@@ -86,14 +140,14 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
                 id   : 'custpage_de_la_clinica',
                 type : serverWidget.FieldType.CHECKBOX,
                 label: 'De la Clinica',
-            }, grupoTipo);
+            }, datos.grupoTipo);
             campoDeLaClinica.defaultValue = esALaClinica ? 'F' : 'T';
             campoDeLaClinica.updateBreakType({ breakType: serverWidget.FieldBreakType.STARTCOL });
             const campoALaClinica = agregarCampo(form, {
                 id   : 'custpage_a_la_clinica',
                 type : serverWidget.FieldType.CHECKBOX,
                 label: 'A la Clinica',
-            }, grupoTipo);
+            }, datos.grupoTipo);
             campoALaClinica.defaultValue = esALaClinica ? 'T' : 'F';
             const campoSentido = form.addField({
                 id   : 'custpage_sentido',
@@ -102,7 +156,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
             });
             campoSentido.defaultValue = esALaClinica ? CONSTANTES.SENTIDOS.A_LA_CLINICA : CONSTANTES.SENTIDOS.DE_LA_CLINICA;
             campoSentido.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-            if (movimiento || (esDevolucion && idPrestamo)) {
+            if (datos.movimiento || (esDevolucion && datos.idPrestamo)) {
                 campoDeLaClinica.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
                 campoALaClinica.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
             }
@@ -112,7 +166,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
             id   : 'custpage_fecha',
             type : serverWidget.FieldType.DATE,
             label: CONSTANTES.ETIQUETAS_FECHA[nombreTipo] || 'Fecha',
-        }, (esPrestamo || esDevolucion) ? grupoEspecifico : grupoMovimiento);
+        }, (esPrestamo || esDevolucion) ? datos.grupoEspecifico : datos.grupoMovimiento);
         campoFecha.isMandatory = true;
         campoFecha.defaultValue = parametros.fecha;
 
@@ -121,26 +175,26 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
             type  : serverWidget.FieldType.SELECT,
             label : 'Subsidiaria',
             source: 'subsidiary',
-        }, grupoMovimiento);
+        }, datos.grupoMovimiento);
         campoSubsidiaria.isMandatory = true;
         const campoServicio = agregarCampo(form, {
             id    : 'custpage_servicio',
             type  : serverWidget.FieldType.SELECT,
             label : 'Servicio',
             source: 'department',
-        }, grupoMovimiento);
+        }, datos.grupoMovimiento);
         campoServicio.isMandatory = true;
         const campoEntidad = agregarCampo(form, {
             id   : 'custpage_entidad_receptora',
             type : serverWidget.FieldType.SELECT,
             label: esPrestamo ? 'Entidad Receptora del Prestamo' : 'Entidad Receptora',
-        }, grupoMovimiento);
+        }, datos.grupoMovimiento);
         campoEntidad.addSelectOption({ value: '', text: '' });
         const campoFrom = agregarCampo(form, {
             id   : 'custpage_ubicacion',
             type : serverWidget.FieldType.SELECT,
             label: CONSTANTES.ETIQUETAS_UBICACION[nombreTipo] || 'Ubicacion Origen',
-        }, grupoMovimiento);
+        }, datos.grupoMovimiento);
         campoFrom.isMandatory = true;
         campoFrom.addSelectOption({ value: '', text: '' });
         campoFrom.updateBreakType({ breakType: serverWidget.FieldBreakType.STARTCOL });
@@ -148,7 +202,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
             id   : 'custpage_ubicacion_dest',
             type : serverWidget.FieldType.SELECT,
             label: 'Ubicacion Destino',
-        }, grupoMovimiento);
+        }, datos.grupoMovimiento);
         campoTo.isMandatory = true;
         campoTo.addSelectOption({ value: '', text: '' });
         const campoUsuario = agregarCampo(form, {
@@ -156,7 +210,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
             type  : serverWidget.FieldType.SELECT,
             label : CONSTANTES.ETIQUETAS_RESPONSABLE[nombreTipo] || 'Usuario Responsable',
             source: 'employee',
-        }, grupoEspecifico || grupoMovimiento);
+        }, datos.grupoEspecifico || datos.grupoMovimiento);
         campoUsuario.isMandatory = true;
         campoUsuario.updateBreakType({ breakType: serverWidget.FieldBreakType.STARTCOL });
         campoUsuario.defaultValue = parametros.responsable;
@@ -164,9 +218,27 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
             id   : 'custpage_comentarios',
             type : serverWidget.FieldType.TEXTAREA,
             label: 'Comentarios',
-        }, grupoEspecifico || grupoMovimiento);
+        }, datos.grupoEspecifico || datos.grupoMovimiento);
         campoComentarios.defaultValue = parametros.comentarios;
 
+        datos.campos          = {
+            campoTipo       : campoTipo,
+            campoFecha      : campoFecha,
+            campoSubsidiaria: campoSubsidiaria,
+            campoServicio   : campoServicio,
+            campoEntidad    : campoEntidad,
+            campoFrom       : campoFrom,
+            campoTo         : campoTo,
+            campoUsuario    : campoUsuario,
+            campoComentarios: campoComentarios,
+        };
+    }
+
+    /**
+     * El JSON escondido con las ubicaciones, prestamos, entidades y cuentas de
+     * todas las subsidiarias: el CS filtra los combos con el sin volver al servidor.
+     */
+    function agregarDatosParaElCs(form, datos) {
         const campoUbicaciones = form.addField({
             id   : 'custpage_ubicaciones_data',
             type : serverWidget.FieldType.LONGTEXT,
@@ -174,95 +246,14 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         });
         campoUbicaciones.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         campoUbicaciones.defaultValue = JSON.stringify({
-            esPrestamo  : esPrestamo,
-            esMerma     : esMerma,
-            esALaClinica: esALaClinica,
-            ubicaciones : movimientoRepository.listarUbicacionesPorSubsidiaria(),
-            prestamos   : prestamosPendientes,
-            entidades   : movimientoRepository.listarEntidadesPorSubsidiaria(),
-            cuentas     : cuentasAjuste,
+            esPrestamo  : datos.esPrestamo,
+            esMerma     : datos.esMerma,
+            esALaClinica: datos.esALaClinica,
+            ubicaciones : datos.ubicaciones,
+            prestamos   : datos.prestamosPendientes,
+            entidades   : datos.entidades,
+            cuentas     : datos.cuentasAjuste,
         });
-
-        const datos = {
-            movimiento         : movimiento,
-            esMerma            : esMerma,
-            esDevolucion       : esDevolucion,
-            esALaClinica       : esALaClinica,
-            prestamo           : prestamo,
-            idPrestamo         : idPrestamo,
-            prestamosPendientes: prestamosPendientes,
-            cuentasAjuste      : cuentasAjuste,
-            motivosBaja        : motivosBaja,
-            lineasPrestamo     : lineasPrestamo,
-            lineasDevolucion   : lineasDevolucion,
-            grupoMovimiento    : grupoMovimiento,
-            grupoEspecifico    : grupoEspecifico,
-            campos             : {
-                campoTipo       : campoTipo,
-                campoFecha      : campoFecha,
-                campoSubsidiaria: campoSubsidiaria,
-                campoServicio   : campoServicio,
-                campoEntidad    : campoEntidad,
-                campoFrom       : campoFrom,
-                campoTo         : campoTo,
-                campoUsuario    : campoUsuario,
-                campoComentarios: campoComentarios,
-            },
-        };
-
-        if (esPrestamo) prestamoUi.armarCampos(form, datos);
-        if (esDevolucion) devolucionUi.armarCampos(form, datos);
-        if (esMerma) mermaUi.armarCampos(form, datos);
-        if (!esDevolucion) armarDetalleSalida(form, nombreTipo, esALaClinica);
-        if (movimiento) aplicarModoEdicion(form, datos);
-        if (esPrestamo && esALaClinica) prestamoUi.ajustarALaClinica(form, datos);
-        if (esDevolucion && esALaClinica) devolucionUi.ajustarALaClinica(form, datos);
-        if (!esDevolucion || idPrestamo) form.addSubmitButton({ label: etiquetaGuardar });
-
-        context.response.writePage(form);
-    }
-
-    function renderizarAvisoSoloConsulta(context) {
-        const form = serverWidget.createForm({ title: 'Movimiento de Inventario - Solo Consulta' });
-
-        form.addPageInitMessage({
-            type   : message.Type.WARNING,
-            title  : 'Tu rol es de solo consulta',
-            message: 'No puedes crear ni editar movimientos de inventario. '
-                   + 'Puedes buscarlos, abrirlos en modo Ver e imprimir sus comprobantes.',
-        });
-
-        const aviso = form.addField({
-            id   : 'custpage_aviso_solo_consulta',
-            type : serverWidget.FieldType.INLINEHTML,
-            label: 'Aviso',
-        });
-
-        aviso.defaultValue = '<p>Ingresa a <strong>Transacciones &gt; Gestion de Movimientos '
-                           + '&gt; Movimientos de Inventario &gt; Buscar</strong> para consultar los registros.</p>';
-
-        context.response.writePage(form);
-    }
-
-    function obtenerParametrosFormulario(request) {
-        return {
-            movimiento : request.parameters.movimiento,
-            tipo       : request.parameters.tipo,
-            sentido    : request.parameters.sentido,
-            prestamo   : request.parameters.prestamo,
-            fecha      : decodeURIComponent(request.parameters.fecha || ''),
-            responsable: request.parameters.responsable || '',
-            comentarios: decodeURIComponent(request.parameters.comentarios || ''),
-        };
-    }
-
-    /**
-     * El sentido de un movimiento ya guardado, o de la devolucion de un prestamo,
-     * sale del registro; el de uno nuevo, del parametro que manda el CS al recargar.
-     */
-    function resolverALaClinica(referencia, sentido) {
-        if (referencia) return !!referencia.getValue({ fieldId: 'custrecord_as_mov_a_la_clinica' });
-        return sentido === CONSTANTES.SENTIDOS.A_LA_CLINICA;
     }
 
     function agregarCampo(form, opciones, contenedor) {
@@ -326,11 +317,11 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         aplicarModoEdicionComun(form, datos);
 
         if (datos.esDevolucion) {
-            devolucionUi.aplicarModoEdicion(form, datos);
+            formDevolucion.aplicarModoEdicion(form, datos);
             return;
         }
 
-        if (datos.esMerma) mermaUi.aplicarModoEdicion(form, datos);
+        if (datos.esMerma) formMerma.aplicarModoEdicion(form, datos);
         aplicarModoEdicionSalida(form, datos);
     }
 
@@ -382,7 +373,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         const displaySalida = datos.esMerma ? serverWidget.FieldDisplayType.HIDDEN : serverWidget.FieldDisplayType.DISABLED;
         campos.campoTo.updateDisplayType({ displayType: displaySalida });
         campos.campoEntidad.updateDisplayType({ displayType: displaySalida });
-        precargarDetalleSalida(form, movimiento.id, ubicacionOrigen, datos.esALaClinica);
+        precargarDetalleSalida(form, datos);
         if (movimiento.getValue({ fieldId: 'custrecord_as_mov_transfer' })) {
             const sublista = form.getSublist({ id: 'custpage_sl_detalle' });
             sublista.getField({ id: 'custpage_col_articulo' })
@@ -396,11 +387,11 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         }
     }
 
-    function precargarDetalleSalida(form, idMovimiento, ubicacionOrigen, esALaClinica) {
+    function precargarDetalleSalida(form, datos) {
         const sublista = form.getSublist({ id: 'custpage_sl_detalle' });
-        const lineas   = movimientoRepository.buscarLineasPorMovimiento(idMovimiento);
+        const lineas   = datos.lineasSalida;
 
-        if (esALaClinica) {
+        if (datos.esALaClinica) {
             lineas.forEach((linea, indice) => {
                 sublista.setSublistValue({ id: 'custpage_col_articulo', line: indice, value: String(linea.articulo) });
                 sublista.setSublistValue({ id: 'custpage_col_cantidad', line: indice, value: String(linea.cantidad) });
@@ -410,8 +401,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
             return;
         }
 
-        const stock = consultaStockRepository.buscarStockPorArticulo(
-            lineas.map((linea) => linea.articulo), ubicacionOrigen);
+        const stock     = datos.stockSalida;
         const campoLote = sublista.getField({ id: 'custpage_col_lote' });
 
         const nombresCargados = {};
@@ -424,7 +414,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
 
             nombresCargados[linea.articulo] = true;
 
-            consultaStockRepository.buscarLotesDisponibles(linea.articulo, ubicacionOrigen).forEach((lote) => {
+            datos.lotesSalida[linea.articulo].forEach((lote) => {
                 nombresCargados[lote.nombreLote] = true;
                 stockDeLotes[linea.articulo + '|' + lote.nombreLote] = lote.enMano;
 
@@ -460,6 +450,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
     }
 
     return {
-        renderizarFormulario: renderizarFormulario,
+        construirFormulario       : construirFormulario,
+        construirAvisoSoloConsulta: construirAvisoSoloConsulta,
     };
 });

@@ -11,18 +11,17 @@
  *              No escribe: no crea ni modifica registros ni transacciones, asi
  *              que no valida permiso de escritura ni toca la logica de Prestamo,
  *              Devolucion o Merma.
- *
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  * @NModuleScope Public
  * @scriptid     customscript_as_stlt_consulta_stock
  * @deploymentid customdeploy_as_stlt_consulta_stock
  */
-define(['./ui/AS_ConsultaStockForm'], (consultaStockForm) => {
+define(['./handler/AS_ConsultaStockHandler'], (consultaStockHandler) => {
 
     function onRequest(context) {
         try {
-            consultaStockForm.construirVista(context);
+            consultaStockHandler.mostrarConsulta(context);
         } catch (fallo) {
             log.error({
                 title  : 'CONSULTA STOCK ERROR',

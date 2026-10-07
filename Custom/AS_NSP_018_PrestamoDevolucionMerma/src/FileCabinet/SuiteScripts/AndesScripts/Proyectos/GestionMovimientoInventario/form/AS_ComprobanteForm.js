@@ -1,34 +1,49 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
+ * @description Arma el PDF del comprobante con los datos ya leidos: el payload
+ *              que leen las plantillas (doc.cabecera, doc.lineas, doc.totales,
+ *              alias jsonString) y la plantilla FTL que corresponde al tipo.
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/render', 'N/file', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository'],
-    (render, file, CONSTANTES, movimientoRepository) => {
+define(['N/render', 'N/file', '../constants/AS_MovimientoInventarioConstants'],
+    (render, file, CONSTANTES) => {
 
-    function imprimirMovimiento(context) {
-        const idMovimiento = context.request.parameters.idMovimiento;
+    // ─────────────────────────────────────────────────────────────────────────
+    // Principales
+    // ─────────────────────────────────────────────────────────────────────────
 
-        const movimiento = movimientoRepository.cargarMovimiento(idMovimiento);
-        const tipo       = movimiento.getText({ fieldId: 'custrecord_as_mov_tipo' });
-        const lineas     = movimientoRepository.buscarLineasPorMovimiento(idMovimiento);
-        const prestadaPorLinea = {};
+    function construirComprobante(movimiento, tipo, lineas, prestadaPorLinea) {
+        const renderizador = render.create();
 
-        if (tipo === CONSTANTES.TIPOS.DEVOLUCION) {
-            movimientoRepository.buscarLineasPorMovimiento(
-                movimiento.getValue({ fieldId: 'custrecord_as_mov_prestamo_ref' })
-            ).forEach((linea) => {
-                prestadaPorLinea[linea.id] = linea.cantidad;
-            });
-        }
+        renderizador.templateContent = file.load({ id: elegirPlantilla(tipo) }).getContents();
+        renderizador.addCustomDataSource({
+            format: render.DataSource.OBJECT,
+            alias : 'jsonString',
+            data  : { text: JSON.stringify(armarDocumento(movimiento, lineas, prestadaPorLinea)).replace(/&/g, '&amp;') },
+        });
 
+        return renderizador.renderAsString();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Secundarias
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function elegirPlantilla(tipo) {
+        if (tipo === CONSTANTES.TIPOS.PRESTAMO) return CONSTANTES.PLANTILLAS.PRESTAMO;
+        if (tipo === CONSTANTES.TIPOS.DEVOLUCION) return CONSTANTES.PLANTILLAS.DEVOLUCION;
+        return CONSTANTES.PLANTILLAS.MERMA;
+    }
+
+    function armarDocumento(movimiento, lineas, prestadaPorLinea) {
         const totales = lineas.reduce((acumulado, linea) => ({
             cantidad : acumulado.cantidad + linea.cantidad,
             devuelta : acumulado.devuelta + linea.devuelta,
             pendiente: acumulado.pendiente + linea.pendiente,
         }), { cantidad: 0, devuelta: 0, pendiente: 0 });
 
-        const documento = {
+        return {
             cabecera: {
                 numero     : movimiento.getValue({ fieldId: 'name' }),
                 fecha      : movimiento.getText({ fieldId: 'custrecord_as_mov_fecha' }),
@@ -61,28 +76,9 @@ define(['N/render', 'N/file', '../lib/AS_MovimientoInventarioConstants', '../rep
                 pendiente: String(totales.pendiente),
             },
         };
-
-        let plantilla = CONSTANTES.PLANTILLAS.MERMA;
-
-        if (tipo === CONSTANTES.TIPOS.PRESTAMO) {
-            plantilla = CONSTANTES.PLANTILLAS.PRESTAMO;
-        } else if (tipo === CONSTANTES.TIPOS.DEVOLUCION) {
-            plantilla = CONSTANTES.PLANTILLAS.DEVOLUCION;
-        }
-                        
-        const renderizador = render.create();
-
-        renderizador.templateContent = file.load({ id: plantilla }).getContents();
-        renderizador.addCustomDataSource({
-            format: render.DataSource.OBJECT,
-            alias : 'jsonString',
-            data  : { text: JSON.stringify(documento).replace(/&/g, '&amp;') },
-        });
-
-        context.response.renderPdf(renderizador.renderAsString());
     }
 
     return {
-        imprimirMovimiento: imprimirMovimiento,
+        construirComprobante: construirComprobante,
     };
 });

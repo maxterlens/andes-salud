@@ -7,17 +7,11 @@
  *              Al cambiar la subsidiaria la ubicacion se manda vacia a proposito:
  *              la que estaba elegida pertenece a la subsidiaria anterior y ya no
  *              aplica.
- *
  * @NApiVersion 2.1
  * @NScriptType ClientScript
  * @NModuleScope Public
  */
-define(['N/url'], (url) => {
-
-    const SUITELET = {
-        SCRIPT    : 'customscript_as_stlt_consulta_stock',
-        DEPLOYMENT: 'customdeploy_as_stlt_consulta_stock',
-    };
+define(['N/url', './constants/AS_MovimientoInventarioConstants'], (url, CONSTANTES) => {
 
     function fieldChanged(context) {
         const registroActual = context.currentRecord;
@@ -35,8 +29,8 @@ define(['N/url'], (url) => {
 
     function abrirConsulta(subsidiaria, ubicacion) {
         window.location.href = url.resolveScript({
-            scriptId    : SUITELET.SCRIPT,
-            deploymentId: SUITELET.DEPLOYMENT,
+            scriptId    : CONSTANTES.CONSULTA_STOCK.SCRIPT,
+            deploymentId: CONSTANTES.CONSULTA_STOCK.DEPLOYMENT,
             params      : {
                 subsidiaria: subsidiaria,
                 ubicacion  : ubicacion,

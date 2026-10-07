@@ -1,6 +1,6 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
- * @description Arma la pantalla de la consulta de stock. Es una herramienta de
+ * @description Dibuja la pantalla de la consulta de stock. Es una herramienta de
  *              apoyo a desarrollo y QA: sirve para encontrar articulos con stock
  *              real antes de armar un Prestamo, una Devolucion o una Merma de
  *              prueba. No crea ni modifica nada.
@@ -14,37 +14,36 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/ui/serverWidget', '../repositories/AS_ConsultaStockRepository'],
-    (serverWidget, consultaStockRepository) => {
+define(['N/ui/serverWidget', '../constants/AS_MovimientoInventarioConstants'],
+    (serverWidget, CONSTANTES) => {
 
-    const TOPE_ARTICULOS = 200;
+    // ─────────────────────────────────────────────────────────────────────────
+    // Principales
+    // ─────────────────────────────────────────────────────────────────────────
 
-    const CLIENT_SCRIPT = '/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/AS_ConsultaStock_CS_2.1.js';
-
-    function construirVista(context) {
-        const parametros = obtenerParametros(context.request);
-
+    /**
+     * articulos llega en null mientras no se elige ubicacion: ahi la pantalla
+     * muestra solo los filtros.
+     */
+    function construirConsulta(parametros, ubicaciones, articulos) {
         const form = serverWidget.createForm({ title: 'Consulta de Stock por Ubicacion' });
 
-        form.clientScriptModulePath = CLIENT_SCRIPT;
+        form.clientScriptModulePath = CONSTANTES.CONSULTA_STOCK.CLIENT_SCRIPT;
 
-        agregarFiltros(form, parametros);
+        agregarFiltros(form, parametros, ubicaciones);
 
-        if (parametros.ubicacion) {
-            agregarArticulos(form, parametros.ubicacion);
+        if (articulos) {
+            agregarArticulos(form, articulos);
         }
 
-        context.response.writePage(form);
+        return form;
     }
 
-    function obtenerParametros(request) {
-        return {
-            subsidiaria: request.parameters.subsidiaria || '',
-            ubicacion  : request.parameters.ubicacion || '',
-        };
-    }
+    // ─────────────────────────────────────────────────────────────────────────
+    // Secundarias
+    // ─────────────────────────────────────────────────────────────────────────
 
-    function agregarFiltros(form, parametros) {
+    function agregarFiltros(form, parametros, ubicaciones) {
         const campoSubsidiaria = form.addField({
             id    : 'custpage_subsidiaria',
             type  : serverWidget.FieldType.SELECT,
@@ -60,7 +59,7 @@ define(['N/ui/serverWidget', '../repositories/AS_ConsultaStockRepository'],
         });
         campoUbicacion.addSelectOption({ value: '', text: '' });
 
-        consultaStockRepository.listarUbicacionesPorSubsidiaria().forEach((ubicacion) => {
+        ubicaciones.forEach((ubicacion) => {
             if (ubicacion.subsidiaria !== parametros.subsidiaria) {
                 return;
             }
@@ -71,9 +70,7 @@ define(['N/ui/serverWidget', '../repositories/AS_ConsultaStockRepository'],
         campoUbicacion.defaultValue = parametros.ubicacion;
     }
 
-    function agregarArticulos(form, ubicacion) {
-        const articulos = consultaStockRepository.listarArticulosConStock(ubicacion, TOPE_ARTICULOS);
-
+    function agregarArticulos(form, articulos) {
         const sublista = form.addSublist({
             id   : 'custpage_sl_articulos',
             type : serverWidget.SublistType.STATICLIST,
@@ -101,14 +98,14 @@ define(['N/ui/serverWidget', '../repositories/AS_ConsultaStockRepository'],
     }
 
     function armarTituloArticulos(encontrados) {
-        if (encontrados < TOPE_ARTICULOS) {
+        if (encontrados < CONSTANTES.CONSULTA_STOCK.TOPE_ARTICULOS) {
             return 'Articulos con stock disponible (' + encontrados + ')';
         }
 
-        return 'Articulos con stock disponible (primeros ' + TOPE_ARTICULOS + ', hay mas)';
+        return 'Articulos con stock disponible (primeros ' + CONSTANTES.CONSULTA_STOCK.TOPE_ARTICULOS + ', hay mas)';
     }
 
     return {
-        construirVista: construirVista,
+        construirConsulta: construirConsulta,
     };
 });

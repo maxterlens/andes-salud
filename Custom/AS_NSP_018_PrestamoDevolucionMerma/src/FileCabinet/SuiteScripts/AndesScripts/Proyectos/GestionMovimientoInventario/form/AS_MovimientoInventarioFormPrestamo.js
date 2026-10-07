@@ -1,15 +1,17 @@
 /**
- * AS_NSP_018 — Formulario de Prestamo
- * @description Lo que el Prestamo agrega al formulario maestro. De la Clinica
+ * AS_NSP_018 — Prestamo, Devolucion y Merma
+ * @description Lo que el Prestamo agrega al formulario de captura. De la Clinica
  *              usa los campos comunes tal cual; A la Clinica oculta el origen,
  *              porque el material llega de afuera, y pide la cuenta del ajuste
  *              positivo.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/ui/serverWidget'],
-    (serverWidget) => {
+define(['N/ui/serverWidget'], (serverWidget) => {
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Principales
+    // ─────────────────────────────────────────────────────────────────────────
 
     function armarCampos(form, datos) {
         datos.campos.campoEntidad.isMandatory = true;
@@ -37,6 +39,10 @@ define(['N/ui/serverWidget'],
         form.getSublist({ id: 'custpage_sl_detalle' }).getField({ id: 'custpage_col_disponible' })
             .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Secundarias
+    // ─────────────────────────────────────────────────────────────────────────
 
     function cargarCuentasGuardadas(campoCuentaAjuste, datos) {
         const subsidiariaGuardada = String(datos.movimiento.getValue({ fieldId: 'custrecord_as_mov_subsidiaria' }));

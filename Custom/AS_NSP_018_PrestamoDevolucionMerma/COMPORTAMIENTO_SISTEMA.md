@@ -1,18 +1,23 @@
 # Comportamiento del Sistema — Registro de Solicitud de Inventario
 
 <!-- ficha
-version: 0.1
-fecha: 01/10/2026
+version: 0.2
+fecha: 07/10/2026
 -->
 
 ## Cómo funciona
 
 Se entra por `Transacciones > Gestion de Movimientos > Solicitudes de Inventario`. Cada
-solicitud es un préstamo, una devolución o una merma, y pasa por dos pasos: primero se guarda
-con `Guardar Solicitud`, y queda `Pendiente de Procesar` sin mover inventario; después se
-procesa con el botón de su tipo, y el sistema valida el stock y genera el movimiento de
-inventario. Mientras está `Pendiente de Procesar` se puede corregir o anular; una vez procesada
-ya no se edita y queda como registro.
+solicitud es un préstamo, una devolución o una merma. Al guardarla con `Guardar Solicitud`
+recibe su número según el tipo (`PRE#000001`, `DEV#000001`, `MER#000001`) y queda `Pendiente de
+Procesar`, sin mover inventario. Después se procesa con el botón de su tipo, y recién ahí el
+sistema valida y genera el movimiento de inventario. Mientras está `Pendiente de Procesar` se
+puede corregir o anular; una vez procesada ya no se edita y queda como registro.
+
+El préstamo y la devolución tienen un sentido. **De la Clínica**: Andes presta material a otra
+institución, y se mueve con un traslado de inventario. **A la Clínica**: otra institución le
+presta material a Andes, y entra o sale con un ajuste de inventario. La devolución siempre tiene
+el mismo sentido que su préstamo. La merma no tiene sentido.
 
 | Estado | Qué significa | Qué se puede hacer |
 |---|---|---|
@@ -36,17 +41,21 @@ ya no se edita y queda como registro.
 | Palabra | Qué significa |
 |---|---|
 | Solicitud | El registro de un préstamo, una devolución o una merma |
-| Préstamo | Material de farmacia que se entrega a otra institución y que tiene que volver |
+| Número de solicitud | El número que el sistema le da al guardarla, según el tipo: `PRE#` préstamo, `DEV#` devolución, `MER#` merma. Las solicitudes registradas antes del 07/10/2026 conservan su número `MOV#` |
+| Préstamo | Material de farmacia que se presta entre Andes y otra institución y que tiene que volver |
+| De la Clínica | Sentido del préstamo en que Andes le presta material a otra institución |
+| A la Clínica | Sentido del préstamo en que otra institución le presta material a Andes |
 | Devolución | El material de un préstamo que vuelve, completo o en partes |
 | Merma | Material que se da de baja porque está vencido, deteriorado, en cuarentena u otro motivo |
-| Entidad receptora | La institución que recibe el material prestado |
-| Bodega de préstamos | La ubicación de cada subsidiaria donde queda registrado el material prestado mientras está afuera |
+| Entidad receptora | La institución que recibe el material prestado (De la Clínica) |
+| Entidad emisora | La institución que le presta el material a Andes (A la Clínica) |
+| Bodega de préstamos | La ubicación de cada subsidiaria donde queda registrado el material prestado mientras dura el préstamo |
 | Lote | El número que identifica una partida de un artículo |
 | Pendiente | Lo que falta devolver de un préstamo |
 | Procesar | El paso que mueve el inventario de verdad |
-| Traslado de inventario | El movimiento que NetSuite genera al procesar un préstamo o una devolución |
-| Ajuste de inventario | El movimiento que NetSuite genera al procesar una merma: descuenta el material |
-| Cuenta de ajuste | La cuenta contable donde se registra la merma |
+| Traslado de inventario | El movimiento que NetSuite genera al procesar un préstamo o una devolución De la Clínica: pasa el material de una ubicación a otra |
+| Ajuste de inventario | El movimiento que NetSuite genera al procesar una merma, o un préstamo o una devolución A la Clínica: suma o descuenta material contra una cuenta contable |
+| Cuenta de ajuste | La cuenta contable donde se registra el ajuste de inventario |
 
 ## Cómo leer los diagramas
 
@@ -60,58 +69,59 @@ ya no se edita y queda como registro.
 
 ### Proceso 1 — Préstamo
 
-Flujo: QF CASPM o Administrator registra el préstamo: selecciona subsidiaria, servicio y
-ubicación de origen; el sistema asigna como destino la bodega de préstamos; elige la entidad
-receptora e ingresa artículos, lotes y cantidades. Mientras no lo procese, puede corregirlo o
-anularlo. Al procesarlo, el sistema valida el stock y genera el traslado hacia la bodega de
-préstamos, y el préstamo queda `Pendiente de Devolucion`.
+Flujo: QF CASPM o Administrator registra el préstamo: elige el sentido, la subsidiaria, el
+servicio y la ubicación de origen; el sistema asigna como destino la bodega de préstamos; elige
+la entidad e ingresa artículos, lotes y cantidades. Al procesarlo, De la Clínica valida el stock
+y genera el traslado hacia la bodega de préstamos; A la Clínica suma el material en la bodega
+con un ajuste de inventario. En los dos el préstamo queda `Pendiente de Devolucion`.
 
 | ID | Caso de uso | Relación | Qué hace |
 |---|---|---|---|
-| CU-01 | Registrar préstamo | Usa: ACT-01, ACT-02 | Crea la solicitud de préstamo con sus datos y artículos; queda `Pendiente de Procesar`, sin mover inventario |
+| CU-01 | Registrar préstamo | Usa: ACT-01, ACT-02 | Crea la solicitud de préstamo con sus datos y artículos y le da su número `PRE#`; queda `Pendiente de Procesar`, sin mover inventario |
+| CU-29 | Elegir sentido del préstamo | Incluido en: CU-01 | Marca `De la Clinica` o `A la Clinica` y el formulario se arma según el sentido. A la Clínica no pide ubicación de origen, la entidad pasa a ser la emisora, pide `Cuenta de Ajuste` y el lote se escribe a mano |
 | CU-02 | Seleccionar subsidiaria | Incluido en: CU-01 | Define la subsidiaria de la solicitud; las listas del formulario se cargan solo con lo de esa subsidiaria |
 | CU-03 | Seleccionar servicio y ubicación | Incluido en: CU-01 | Indica el servicio y la ubicación de donde sale el material |
 | CU-04 | Asignar bodega de préstamos como destino | Incluido en: CU-01 | El sistema completa el destino con la bodega de préstamos de la subsidiaria |
-| CU-05 | Seleccionar entidad receptora | Incluido en: CU-01 | Elige la institución que se lleva el material, solo entre las activas autorizadas para la subsidiaria; es obligatoria |
+| CU-05 | Seleccionar entidad receptora | Incluido en: CU-01 | Elige la institución del préstamo, solo entre las activas autorizadas para la subsidiaria; es obligatoria |
 | CU-06 | Ingresar artículos, lotes y cantidades | Incluido en: CU-01 | Agrega cada artículo, el lote cuando aplica y la cantidad; el sistema muestra lo disponible. Con lote, si se pide más de lo que hay se ajusta solo; sin lote, no deja guardar |
 | CU-07 | Procesar préstamo | Usa: ACT-01, ACT-02 | Ejecuta el préstamo con `Procesar Prestamo`; queda `Pendiente de Devolucion` y el material, en la bodega de préstamos |
 | CU-08 | Validar stock | Incluido en: CU-07 | Antes de mover, compara lo pedido con lo que hay del lote o del artículo en la ubicación de salida; los lotes `Bloqueado`, `En Inspección` o `Damaged` no cuentan. Si falta en una línea, no se mueve nada |
 | CU-09 | Generar traslado de inventario | Incluido en: CU-07 | Mueve el material con un traslado de inventario: hacia la bodega de préstamos al prestar, de vuelta a la ubicación de origen al devolver |
-| CU-10 | Corregir o anular solicitud | Extiende: CU-01 | Solo mientras está `Pendiente de Procesar`: permite corregir fecha, responsable, comentarios y artículos, o anular la solicitud sin mover inventario |
+| CU-30 | Generar ajuste de entrada | Extiende: CU-07 | Solo A la Clínica: en vez del traslado, suma el material en la bodega de préstamos con un ajuste de inventario, con el lote escrito y contra la cuenta elegida, sin validar stock |
 
 ### Proceso 2 — Devolución
 
-Flujo: QF CASPM o Administrator registra la devolución: selecciona la subsidiaria y el préstamo
-pendiente, con un filtro opcional por entidad receptora; el sistema hereda del préstamo el
-origen (la bodega de préstamos) y el destino (la ubicación de donde salió), y el usuario indica
-cuánto vuelve. Al procesarla, el sistema toma los mismos lotes del préstamo, valida que estén en
-la bodega, genera el traslado de vuelta y descuenta el pendiente del préstamo.
+Flujo: QF CASPM o Administrator registra la devolución: elige el sentido, la subsidiaria y el
+préstamo pendiente, con un filtro opcional por entidad; el sistema hereda del préstamo sus datos
+y el usuario indica cuánto vuelve. Al procesarla, De la Clínica toma los mismos lotes del préstamo
+y genera el traslado de vuelta; A la Clínica descuenta el material de la bodega con un ajuste.
+En los dos descuenta el pendiente del préstamo.
 
 | ID | Caso de uso | Relación | Qué hace |
 |---|---|---|---|
-| CU-11 | Registrar devolución | Usa: ACT-01, ACT-02 | Crea la solicitud de devolución de un préstamo; queda `Pendiente de Procesar`, sin mover inventario |
+| CU-11 | Registrar devolución | Usa: ACT-01, ACT-02 | Crea la solicitud de devolución de un préstamo y le da su número `DEV#`; queda `Pendiente de Procesar`, sin mover inventario |
 | CU-02 | Seleccionar subsidiaria | Incluido en: CU-11 | Define la subsidiaria de la solicitud; las listas del formulario se cargan solo con lo de esa subsidiaria |
-| CU-12 | Seleccionar préstamo pendiente | Incluido en: CU-11 | Muestra los préstamos de la subsidiaria con cantidad pendiente, con su número, entidad, ubicación de origen y pendiente, y toma el elegido |
+| CU-12 | Seleccionar préstamo pendiente | Incluido en: CU-11 | Según el sentido marcado (`De la Clinica` o `A la Clinica`), muestra los préstamos de la subsidiaria de ese sentido con cantidad pendiente, con su número, entidad, ubicación y pendiente, y toma el elegido |
 | CU-13 | Filtrar por entidad receptora | Extiende: CU-12 | Opcional: deja solo los préstamos de una entidad; vacío, muestra todos, incluidos los antiguos registrados sin entidad |
-| CU-14 | Heredar origen y destino del préstamo | Incluido en: CU-11 | El sistema toma subsidiaria, servicio y entidad del préstamo, fija el origen en la bodega de préstamos y el destino en la ubicación de donde salió el material |
+| CU-14 | Heredar los datos del préstamo | Incluido en: CU-11 | El sistema toma subsidiaria, servicio, entidad y sentido del préstamo y fija el origen en la bodega de préstamos. De la Clínica, el destino es la ubicación de donde salió el material; A la Clínica no hay destino y se usa la cuenta de ajuste del préstamo |
 | CU-15 | Ingresar cantidades a devolver | Incluido en: CU-11 | Muestra lo prestado, lo devuelto y lo pendiente de cada artículo, con la cantidad a devolver cargada con lo pendiente; no deja devolver más |
 | CU-16 | Procesar devolución | Usa: ACT-01, ACT-02 | Ejecuta la devolución con `Procesar Devolucion`; queda `Procesado` y el préstamo, `Devuelto Parcial` o `Devuelto Total` |
-| CU-17 | Tomar los lotes del préstamo | Incluido en: CU-16 | El sistema devuelve los mismos lotes que salieron en el préstamo, descontando lo que ya volvió en devoluciones anteriores |
+| CU-17 | Tomar los lotes del préstamo | Incluido en: CU-16 | El sistema devuelve los mismos lotes del préstamo: De la Clínica, los que salieron en el traslado, descontando lo que ya volvió; A la Clínica, el lote escrito en el préstamo |
 | CU-08 | Validar stock | Incluido en: CU-16 | Antes de mover, compara lo pedido con lo que hay del lote o del artículo en la ubicación de salida; los lotes `Bloqueado`, `En Inspección` o `Damaged` no cuentan. Si falta en una línea, no se mueve nada |
 | CU-09 | Generar traslado de inventario | Incluido en: CU-16 | Mueve el material con un traslado de inventario: hacia la bodega de préstamos al prestar, de vuelta a la ubicación de origen al devolver |
+| CU-31 | Generar ajuste de salida de la devolución | Extiende: CU-16 | Solo A la Clínica: en vez del traslado, descuenta el material de la bodega de préstamos con un ajuste de inventario contra la cuenta del préstamo |
 | CU-18 | Actualizar pendiente del préstamo | Incluido en: CU-16 | Resta lo devuelto de cada línea del préstamo; si no queda nada pendiente lo deja `Devuelto Total` y, si queda, `Devuelto Parcial` |
-| CU-10 | Corregir o anular solicitud | Extiende: CU-11 | Solo mientras está `Pendiente de Procesar`: permite corregir fecha, responsable, comentarios y artículos, o anular la solicitud sin mover inventario |
 
 ### Proceso 3 — Merma
 
 Flujo: QF CASPM o Administrator registra la merma: selecciona subsidiaria, servicio y ubicación,
-el motivo de la baja y la cuenta de ajuste, e ingresa artículos, lotes y cantidades. Mientras no
-la procese, puede corregirla o anularla. Al procesarla, el sistema valida el stock y genera un
-ajuste que descuenta el material de la misma ubicación, y la merma queda `Procesado`.
+el motivo de la baja y la cuenta de ajuste, e ingresa artículos, lotes y cantidades. Al
+procesarla, el sistema valida el stock y genera un ajuste que descuenta el material de la misma
+ubicación, y la merma queda `Procesado`.
 
 | ID | Caso de uso | Relación | Qué hace |
 |---|---|---|---|
-| CU-19 | Registrar merma | Usa: ACT-01, ACT-02 | Crea la solicitud de merma con sus datos y artículos; queda `Pendiente de Procesar`, sin mover inventario |
+| CU-19 | Registrar merma | Usa: ACT-01, ACT-02 | Crea la solicitud de merma con sus datos y artículos y le da su número `MER#`; queda `Pendiente de Procesar`, sin mover inventario |
 | CU-02 | Seleccionar subsidiaria | Incluido en: CU-19 | Define la subsidiaria de la solicitud; las listas del formulario se cargan solo con lo de esa subsidiaria |
 | CU-03 | Seleccionar servicio y ubicación | Incluido en: CU-19 | Indica el servicio y la ubicación de donde sale el material |
 | CU-20 | Seleccionar motivo de baja | Incluido en: CU-19 | Elige el motivo: `Vencimiento`, `Deterioro`, `Cuarentena` u `Otro` |
@@ -120,20 +130,19 @@ ajuste que descuenta el material de la misma ubicación, y la merma queda `Proce
 | CU-22 | Procesar merma | Usa: ACT-01, ACT-02 | Ejecuta la merma con `Procesar Merma`; queda `Procesado` y el material sale del inventario |
 | CU-08 | Validar stock | Incluido en: CU-22 | Antes de mover, compara lo pedido con lo que hay del lote o del artículo en la ubicación de salida; los lotes `Bloqueado`, `En Inspección` o `Damaged` no cuentan. Si falta en una línea, no se mueve nada |
 | CU-23 | Generar ajuste de inventario | Incluido en: CU-22 | Descuenta el material de la misma ubicación contra la cuenta elegida |
-| CU-10 | Corregir o anular solicitud | Extiende: CU-19 | Solo mientras está `Pendiente de Procesar`: permite corregir fecha, responsable, comentarios y artículos, o anular la solicitud sin mover inventario |
 
 ### Proceso 4 — Corrección, consulta y configuración
 
 Flujo: Antes de procesar, QF CASPM o Administrator puede corregir o anular cualquier solicitud;
 una vez procesada, ya no se edita. Cualquier rol consulta las solicitudes e imprime su
-comprobante. Administrator, además, configura por subsidiaria las entidades receptoras, las
-cuentas de merma y la bodega de préstamos, que alimentan las listas del registro.
+comprobante. Administrator, además, configura por subsidiaria las entidades, las cuentas de
+ajuste y la bodega de préstamos, que alimentan las listas del registro.
 
 | ID | Caso de uso | Relación | Qué hace |
 |---|---|---|---|
-| CU-10 | Corregir o anular solicitud | Usa: ACT-01, ACT-02 | Solo mientras está `Pendiente de Procesar`: permite corregir fecha, responsable, comentarios y artículos, o anular la solicitud sin mover inventario |
+| CU-10 | Corregir o anular solicitud | Usa: ACT-01, ACT-02 | Solo mientras está `Pendiente de Procesar`: permite corregir fecha, responsable, comentarios y artículos, o anular la solicitud sin mover inventario. El sentido no se cambia |
 | CU-24 | Consultar solicitudes | Usa: ACT-01, ACT-02, ACT-03 | Busca y abre solicitudes: estado, artículos, lotes y movimiento de inventario generado. Un rol de consulta solo puede verlas |
 | CU-25 | Imprimir comprobante | Usa: ACT-01, ACT-02, ACT-03 | Genera el PDF con la plantilla del tipo de solicitud, en cualquier estado, incluso anulada |
-| CU-26 | Configurar entidades receptoras | Usa: ACT-02 | Registra las instituciones a las que presta cada subsidiaria; una entidad inactiva deja de aparecer al prestar |
-| CU-27 | Configurar cuentas de merma | Usa: ACT-02 | Registra las cuentas contables autorizadas para merma en cada subsidiaria; una cuenta inactiva deja de aparecer |
+| CU-26 | Configurar entidades receptoras | Usa: ACT-02 | Registra las instituciones con las que presta cada subsidiaria; una entidad inactiva deja de aparecer al prestar |
+| CU-27 | Configurar cuentas de merma | Usa: ACT-02 | Registra las cuentas contables autorizadas en cada subsidiaria y para qué tipo de solicitud: la merma o el préstamo A la Clínica; una cuenta inactiva deja de aparecer |
 | CU-28 | Configurar bodega de préstamos | Usa: ACT-02 | Marca una ubicación por subsidiaria como bodega de préstamos, que el sistema usa como destino al prestar |

@@ -1,15 +1,18 @@
 /**
- * AS_NSP_018 — Formulario de Devolucion
- * @description Lo que la Devolucion agrega al formulario maestro: el prestamo
+ * AS_NSP_018 — Prestamo, Devolucion y Merma
+ * @description Lo que la Devolucion agrega al formulario de captura: el prestamo
  *              relacionado y su detalle, heredado del prestamo. A la Clinica
  *              oculta el destino, porque el material sale de Andes, y muestra
  *              la cuenta del prestamo, que es la que revierte el ajuste.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants'],
+define(['N/ui/serverWidget', '../constants/AS_MovimientoInventarioConstants'],
     (serverWidget, CONSTANTES) => {
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Principales
+    // ─────────────────────────────────────────────────────────────────────────
 
     function armarCampos(form, datos) {
         const campos = datos.campos;
@@ -45,6 +48,27 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants'],
 
         armarDetalleDevolucion(form, datos);
     }
+
+    function aplicarModoEdicion(form, datos) {
+        form.getField({ id: 'custpage_prestamo_ref' })
+            .updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
+
+        precargarCantidadesDevolucion(form, datos);
+    }
+
+    function ajustarALaClinica(form, datos) {
+        const campos = datos.campos;
+
+        campos.campoTo.isMandatory = false;
+        campos.campoTo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+        campos.campoEntidad.label = 'Entidad Emisora del Prestamo';
+
+        if (datos.prestamo) mostrarCuentaDelPrestamo(form, datos);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Secundarias
+    // ─────────────────────────────────────────────────────────────────────────
 
     function armarDetalleDevolucion(form, datos) {
         if (!datos.idPrestamo) return;
@@ -139,13 +163,6 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants'],
         });
     }
 
-    function aplicarModoEdicion(form, datos) {
-        form.getField({ id: 'custpage_prestamo_ref' })
-            .updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-
-        precargarCantidadesDevolucion(form, datos);
-    }
-
     function precargarCantidadesDevolucion(form, datos) {
         const sublista = form.getSublist({ id: 'custpage_sl_detalle' });
         datos.lineasPrestamo.forEach((lineaPrestamo, indice) => {
@@ -153,16 +170,6 @@ define(['N/ui/serverWidget', '../lib/AS_MovimientoInventarioConstants'],
             const cantidad = guardada ? guardada.cantidad : 0;
             sublista.setSublistValue({ id: 'custpage_col_a_devolver', line: indice, value: String(cantidad) });
         });
-    }
-
-    function ajustarALaClinica(form, datos) {
-        const campos = datos.campos;
-
-        campos.campoTo.isMandatory = false;
-        campos.campoTo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-        campos.campoEntidad.label = 'Entidad Emisora del Prestamo';
-
-        if (datos.prestamo) mostrarCuentaDelPrestamo(form, datos);
     }
 
     function mostrarCuentaDelPrestamo(form, datos) {

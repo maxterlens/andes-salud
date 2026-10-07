@@ -1,5 +1,7 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
+ * @description Valores fijos del modulo: ids de records, listas y scripts,
+ *              estados, etiquetas y rutas del File Cabinet.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
@@ -80,8 +82,13 @@ define([], () => {
     };
 
     const CORRELATIVO = {
-        DIGITOS  : 6,
+        DIGITOS   : 6,
         REINTENTOS: 5,
+        PREFIJOS  : {
+            Prestamo  : 'PRE#',
+            Devolucion: 'DEV#',
+            Merma     : 'MER#',
+        },
     };
 
     const LISTAS = {
@@ -91,22 +98,20 @@ define([], () => {
     };
 
     const PLANTILLAS = {
-        PRESTAMO  : '/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/templates/AS.FTL.PrestamoPDF.ftl',
-        DEVOLUCION: '/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/templates/AS.FTL.DevolucionPDF.ftl',
-        MERMA     : '/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/templates/AS.FTL.MermaPDF.ftl',
+        PRESTAMO  : '/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/templates/AS_ComprobantePrestamo.ftl',
+        DEVOLUCION: '/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/templates/AS_ComprobanteDevolucion.ftl',
+        MERMA     : '/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/templates/AS_ComprobanteMerma.ftl',
     };
 
     const OPERACIONES = {
-        FORMULARIO        : 'formulario',
-        GUARDADO          : 'guardado',
-        PROCESAR          : 'procesar',
-        AJUSTAR_PRESTAMO  : 'ajustar_prestamo',
-        DEVOLVER          : 'devolver',
-        AJUSTAR_DEVOLUCION: 'ajustar_devolucion',
-        MERMAR            : 'mermar',
-        ANULAR            : 'anular',
-        IMPRIMIR          : 'imprimir',
-        DISPONIBLE        : 'disponible',
+        FORMULARIO         : 'formulario',
+        GUARDADO           : 'guardado',
+        PROCESAR_PRESTAMO  : 'procesar_prestamo',
+        PROCESAR_DEVOLUCION: 'procesar_devolucion',
+        PROCESAR_MERMA     : 'procesar_merma',
+        ANULAR             : 'anular',
+        IMPRIMIR           : 'imprimir',
+        DISPONIBLE         : 'disponible',
     };
 
     const SUITELET = {
@@ -115,7 +120,14 @@ define([], () => {
     };
 
     const CLIENT_SCRIPT = '/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/AS_MovimientoInventario_CS_2.1.js';
-    
+
+    const CONSULTA_STOCK = {
+        SCRIPT        : 'customscript_as_stlt_consulta_stock',
+        DEPLOYMENT    : 'customdeploy_as_stlt_consulta_stock',
+        CLIENT_SCRIPT : '/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/AS_ConsultaStock_CS_2.1.js',
+        TOPE_ARTICULOS: 200,
+    };
+
     const ROLES_AUTORIZADOS = [3, 1371];
 
     return {
@@ -140,6 +152,8 @@ define([], () => {
         OPERACIONES  : OPERACIONES,
         CLIENT_SCRIPT: CLIENT_SCRIPT,
         PLANTILLAS   : PLANTILLAS,
+
+        CONSULTA_STOCK: CONSULTA_STOCK,
 
         LOGS             : LOGS,
         ROLES_AUTORIZADOS: ROLES_AUTORIZADOS,
