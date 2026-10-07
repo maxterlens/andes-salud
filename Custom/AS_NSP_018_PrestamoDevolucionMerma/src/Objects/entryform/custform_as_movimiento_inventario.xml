@@ -44,6 +44,33 @@
           <sameRowAsPrevious>F</sameRowAsPrevious>
         </field>
         <field>
+          <id>[scriptid=customrecord_as_movimiento_inventario.custrecord_as_mov_correlativo]</id>
+          <label>Correlativo del Tipo</label>
+          <visible>T</visible>
+          <mandatory>F</mandatory>
+          <displayType>DISABLED</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>[scriptid=customrecord_as_movimiento_inventario.custrecord_as_mov_de_la_clinica]</id>
+          <label>De la Clinica</label>
+          <visible>T</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
+          <id>[scriptid=customrecord_as_movimiento_inventario.custrecord_as_mov_a_la_clinica]</id>
+          <label>A la Clinica</label>
+          <visible>T</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
           <id>[scriptid=customrecord_as_movimiento_inventario.custrecord_as_mov_fecha]</id>
           <label>Fecha</label>
           <visible>T</visible>
@@ -89,10 +116,19 @@
           <sameRowAsPrevious>F</sameRowAsPrevious>
         </field>
         <field>
+          <id>[scriptid=customrecord_as_movimiento_inventario.custrecord_as_mov_entidad_receptora]</id>
+          <label>Entidad Receptora</label>
+          <visible>T</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
           <id>[scriptid=customrecord_as_movimiento_inventario.custrecord_as_mov_ubicacion]</id>
           <label>Ubicacion Origen</label>
           <visible>T</visible>
-          <mandatory>T</mandatory>
+          <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>
           <columnBreak>F</columnBreak>
           <sameRowAsPrevious>F</sameRowAsPrevious>
@@ -144,7 +180,7 @@
         </field>
         <field>
           <id>[scriptid=customrecord_as_movimiento_inventario.custrecord_as_mov_transfer]</id>
-          <label>Traslado Generado</label>
+          <label>Transaccion Generada</label>
           <visible>T</visible>
           <mandatory>F</mandatory>
           <displayType>NORMAL</displayType>

@@ -19,22 +19,45 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
 
     const stockPorLote = {};
 
+    function pageInit(context) {
+        const registroActual = context.currentRecord;
+        if (!registroActual.getField({ fieldId: 'custpage_sentido' })) return;
+        const sentido = registroActual.getValue({ fieldId: 'custpage_sentido' });
+        registroActual.setValue({
+            fieldId          : 'custpage_de_la_clinica',
+            value            : sentido === CONSTANTES.SENTIDOS.DE_LA_CLINICA,
+            ignoreFieldChange: true,
+        });
+        registroActual.setValue({
+            fieldId          : 'custpage_a_la_clinica',
+            value            : sentido === CONSTANTES.SENTIDOS.A_LA_CLINICA,
+            ignoreFieldChange: true,
+        });
+    }
+
     function fieldChanged(context) {
         const registroActual = context.currentRecord;
+        const esALaClinica = context.sublistId === 'custpage_sl_detalle'
+                           && registroActual.getField({ fieldId: 'custpage_a_la_clinica' })
+                           && registroActual.getValue({ fieldId: 'custpage_a_la_clinica' });
 
         if (context.sublistId === 'custpage_sl_detalle' && context.fieldId === 'custpage_col_articulo') {
-            mostrarDisponible(registroActual);
+            if (esALaClinica) {
+                mostrarUnidadALaClinica(registroActual);
+            } else {
+                mostrarDisponible(registroActual);
+            }
             return;
         }
 
         if (context.sublistId === 'custpage_sl_detalle' && context.fieldId === 'custpage_col_lote') {
-            mostrarStockDelLote(registroActual);
+            if (!esALaClinica) mostrarStockDelLote(registroActual);
             return;
         }
 
         if (context.sublistId === 'custpage_sl_detalle' && context.fieldId === 'custpage_col_cantidad') {
             redondearCantidad(registroActual, 'custpage_col_cantidad');
-            topearCantidadPrestada(registroActual);
+            if (!esALaClinica) topearCantidadPrestada(registroActual);
             return;
         }
 
@@ -46,6 +69,26 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
 
         if (context.fieldId === 'custpage_tipo') {
             recargarFormulario(registroActual);
+            return;
+        }
+
+        if (context.fieldId === 'custpage_de_la_clinica' || context.fieldId === 'custpage_a_la_clinica') {
+            const marcado          = registroActual.getValue({ fieldId: context.fieldId });
+            const eligioALaClinica = (context.fieldId === 'custpage_a_la_clinica') === marcado;
+            const sentido          = eligioALaClinica ? CONSTANTES.SENTIDOS.A_LA_CLINICA : CONSTANTES.SENTIDOS.DE_LA_CLINICA;
+            registroActual.setValue({
+                fieldId          : 'custpage_de_la_clinica',
+                value            : !eligioALaClinica,
+                ignoreFieldChange: true,
+            });
+            registroActual.setValue({
+                fieldId          : 'custpage_a_la_clinica',
+                value            : eligioALaClinica,
+                ignoreFieldChange: true,
+            });
+            registroActual.getField({ fieldId: 'custpage_de_la_clinica' }).isDisabled = true;
+            registroActual.getField({ fieldId: 'custpage_a_la_clinica' }).isDisabled = true;
+            recargarFormulario(registroActual, sentido);
             return;
         }
 
@@ -63,6 +106,22 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
             cargarPrestamosDeSubsidiaria(registroActual);
             return;
         }
+    }
+
+    function mostrarUnidadALaClinica(registroActual) {
+        const articulo = registroActual.getCurrentSublistValue({
+            sublistId: 'custpage_sl_detalle',
+            fieldId  : 'custpage_col_articulo',
+        });
+        const ubicacionDestino = registroActual.getValue({ fieldId: 'custpage_ubicacion_dest' });
+        if (!articulo || !ubicacionDestino) return;
+
+        const stock = consultarStock(articulo, ubicacionDestino);
+        registroActual.setCurrentSublistValue({
+            sublistId: 'custpage_sl_detalle',
+            fieldId  : 'custpage_col_unidad',
+            value    : stock.unidad,
+        });
     }
 
     function mostrarDisponible(registroActual) {
@@ -258,9 +317,16 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
         }
     }
 
-    function recargarFormulario(registroActual) {
+    function recargarFormulario(registroActual, sentido) {
+        let sentidoElegido = sentido;
+        if (!sentidoElegido) {
+            const campoALaClinica = registroActual.getField({ fieldId: 'custpage_a_la_clinica' });
+            sentidoElegido = campoALaClinica && registroActual.getValue({ fieldId: 'custpage_a_la_clinica' })
+                           ? CONSTANTES.SENTIDOS.A_LA_CLINICA : CONSTANTES.SENTIDOS.DE_LA_CLINICA;
+        }
         const parametros = {
             tipo       : registroActual.getValue({ fieldId: 'custpage_tipo' }),
+            sentido    : sentidoElegido,
             fecha      : encodeURIComponent(registroActual.getText({ fieldId: 'custpage_fecha' })),
             responsable: registroActual.getValue({ fieldId: 'custpage_usuario_resp' }),
             comentarios: encodeURIComponent(registroActual.getValue({ fieldId: 'custpage_comentarios' })),
@@ -359,8 +425,10 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
         const campoFrom = registroActual.getField({ fieldId: 'custpage_ubicacion' });
         const campoTo   = registroActual.getField({ fieldId: 'custpage_ubicacion_dest' });
 
-        campoFrom.removeSelectOption({ value: null });
-        campoFrom.insertSelectOption({ value: '', text: '' });
+        if (!datos.esALaClinica) {
+            campoFrom.removeSelectOption({ value: null });
+            campoFrom.insertSelectOption({ value: '', text: '' });
+        }
 
         if (!datos.esMerma) {
             campoTo.removeSelectOption({ value: null });
@@ -372,7 +440,7 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
                 return;
             }
 
-            if (!datos.esPrestamo || !ubicacion.esBodegaPrestamo) {
+            if (!datos.esALaClinica && (!datos.esPrestamo || !ubicacion.esBodegaPrestamo)) {
                 campoFrom.insertSelectOption({ value: ubicacion.id, text: ubicacion.nombre });
             }
 
@@ -443,6 +511,8 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
 
     function saveRecord(context) {
         const registroActual = context.currentRecord;
+        const campoALaClinica = registroActual.getField({ fieldId: 'custpage_a_la_clinica' });
+        const esALaClinica = campoALaClinica && registroActual.getValue({ fieldId: 'custpage_a_la_clinica' });
 
         if (registroActual.getValue({ fieldId: 'custpage_detalle_bloqueado' }) === 'T') {
             return true;
@@ -471,16 +541,18 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
                     return false;
                 }
 
-                const disponible = Number(registroActual.getSublistValue({
-                    sublistId: 'custpage_sl_detalle',
-                    fieldId  : 'custpage_col_disponible',
-                    line     : i,
-                }));
+                if (!esALaClinica) {
+                    const disponible = Number(registroActual.getSublistValue({
+                        sublistId: 'custpage_sl_detalle',
+                        fieldId  : 'custpage_col_disponible',
+                        line     : i,
+                    }));
 
-                if (cantidad > disponible) {
-                    alert('La linea ' + (i + 1) + ' pide ' + cantidad + ' y solo hay ' + disponible + '.');
+                    if (cantidad > disponible) {
+                        alert('La linea ' + (i + 1) + ' pide ' + cantidad + ' y solo hay ' + disponible + '.');
 
-                    return false;
+                        return false;
+                    }
                 }
             }
         }
@@ -560,6 +632,23 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
         });
     }
 
+    function generarAjustePrestamo() {
+        if (!bloquearProcesamiento('custpage_btn_procesar')) {
+            return;
+        }
+
+        avisarProcesando('Se esta generando el ajuste de inventario del prestamo.');
+
+        window.location.href = url.resolveScript({
+            scriptId    : CONSTANTES.SUITELET.SCRIPT,
+            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
+            params      : {
+                op          : CONSTANTES.OPERACIONES.AJUSTAR_PRESTAMO,
+                idMovimiento: currentRecord.get().id,
+            },
+        });
+    }
+
     function bloquearProcesamiento(idBoton) {
         if (movimientoEnProceso) {
             return false;
@@ -601,6 +690,19 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
         });
     }
 
+    function generarAjusteDevolucion() {
+        if (!bloquearProcesamiento('custpage_btn_devolver')) return;
+        avisarProcesando('Se esta generando el ajuste de inventario de la devolucion.');
+        window.location.href = url.resolveScript({
+            scriptId    : CONSTANTES.SUITELET.SCRIPT,
+            deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
+            params      : {
+                op          : CONSTANTES.OPERACIONES.AJUSTAR_DEVOLUCION,
+                idMovimiento: currentRecord.get().id,
+            },
+        });
+    }
+
     function generarAjusteMerma() {
         if (!bloquearProcesamiento('custpage_btn_mermar')) {
             return;
@@ -619,13 +721,16 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './lib/AS_Movimie
     }
 
     return {
+        pageInit                  : pageInit,
         fieldChanged              : fieldChanged,
         saveRecord                : saveRecord,
         crearMovimientoInventario : crearMovimientoInventario,
         imprimirMovimiento        : imprimirMovimiento,
         anularMovimientoInventario: anularMovimientoInventario,
         generarTransferPrestamo   : generarTransferPrestamo,
+        generarAjustePrestamo     : generarAjustePrestamo,
         generarTransferDevolucion : generarTransferDevolucion,
+        generarAjusteDevolucion   : generarAjusteDevolucion,
         generarAjusteMerma        : generarAjusteMerma,
     };
 });

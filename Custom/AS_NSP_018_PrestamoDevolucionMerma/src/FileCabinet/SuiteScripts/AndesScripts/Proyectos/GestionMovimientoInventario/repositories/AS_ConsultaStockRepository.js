@@ -11,7 +11,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/query'], (query) => {
+define(['N/query', 'N/search'], (query, search) => {
 
     function listarUbicacionesPorSubsidiaria() {
         const filas = query.runSuiteQL({
@@ -125,10 +125,27 @@ define(['N/query'], (query) => {
         return stock;
     }
 
+    function buscarArticulosConLote(articulos) {
+        if (articulos.length === 0) return {};
+
+        const conLote = {};
+        search.create({
+            type   : search.Type.ITEM,
+            filters: [['internalid', 'anyof', articulos], 'and', ['islotitem', 'is', 'T']],
+            columns: ['internalid'],
+        }).run().each((resultado) => {
+            conLote[String(resultado.id)] = true;
+            return true;
+        });
+
+        return conLote;
+    }
+
     return {
         listarUbicacionesPorSubsidiaria: listarUbicacionesPorSubsidiaria,
         listarArticulosConStock        : listarArticulosConStock,
         buscarLotesDisponibles         : buscarLotesDisponibles,
         buscarStockPorArticulo         : buscarStockPorArticulo,
+        buscarArticulosConLote         : buscarArticulosConLote,
     };
 });

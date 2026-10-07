@@ -3,8 +3,8 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_ConsultaStockRepository'],
-    (redirect, error, runtime, format, CONSTANTES, movimientoRepository, consultaStockRepository) => {
+define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_MovimientoInventarioCorrelativoRepository', '../repositories/AS_ConsultaStockRepository'],
+    (redirect, error, runtime, format, CONSTANTES, movimientoRepository, correlativoRepository, consultaStockRepository) => {
 
     function validarPermisoEscritura() {
         if (CONSTANTES.ROLES_AUTORIZADOS.includes(runtime.getCurrentUser().role)) {
@@ -20,144 +20,36 @@ define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../lib/AS_MovimientoI
     }
 
     function guardarMovimiento(context) {
-        const request = context.request;
+        const request           = context.request;
+        const parametros        = obtenerParametrosGuardado(request);
+        const movimiento        = parametros.movimiento ? movimientoRepository.cargarMovimiento(parametros.movimiento) : null;
+        const nombreTipo        = obtenerNombreTipo(movimiento ? movimiento.getValue({ fieldId: 'custrecord_as_mov_tipo' }) : parametros.tipo);
+        const esDevolucionNueva = !movimiento && nombreTipo === CONSTANTES.TIPOS.DEVOLUCION;
+        const prestamo          = esDevolucionNueva ? movimientoRepository.cargarMovimiento(parametros.prestamo) : null;
 
-        const parametros = obtenerParametrosGuardado(request);
+        resolverSentido(parametros, nombreTipo, movimiento || prestamo);
 
-        const idMovimiento = parametros.movimiento;
+        const rehaceDetalle = !movimiento || !movimiento.getValue({ fieldId: 'custrecord_as_mov_transfer' });
+        const totalLineas   = request.getLineCount({ group: 'custpage_sl_detalle' });
 
-        let movimiento = null;
-        let idTipo     = parametros.tipo;
+        if (rehaceDetalle) validarDetalle(request, parametros, nombreTipo, totalLineas);
 
-        if (idMovimiento) {
-            movimiento = movimientoRepository.cargarMovimiento(idMovimiento);
-            idTipo     = movimiento.getValue({ fieldId: 'custrecord_as_mov_tipo' });
-        }
+        const cabecera = movimiento
+                       ? actualizarCabecera(movimiento, parametros, nombreTipo, rehaceDetalle)
+                       : crearCabecera(parametros, prestamo);
 
-        const tipos = movimientoRepository.listarTiposMovimiento();
-
-        const tipoElegido = tipos.filter((opcion) => opcion.id === idTipo)[0];
-        const nombreTipo  = tipoElegido ? tipoElegido.nombre : '';
-        const rehaceDetalle = !idMovimiento || !movimiento.getValue({ fieldId: 'custrecord_as_mov_transfer' });
-
-        const totalLineas = request.getLineCount({ group: 'custpage_sl_detalle' });
-
-        if (rehaceDetalle) {
-
-            if (totalLineas < 1) {
-                throw error.create({
-                    name     : 'AS_MOVIMIENTO_SIN_DETALLE',
-                    message  : 'El movimiento no tiene lineas de detalle. Agrega al menos un articulo con el boton Add antes de guardar.',
-                    notifyOff: true,
-                });
-            }
-
-            if (nombreTipo !== CONSTANTES.TIPOS.DEVOLUCION) {
-                for (let i = 0; i < totalLineas; i++) {
-                    if (format.parse({ value: request.getSublistValue({ group: 'custpage_sl_detalle', name: 'custpage_col_cantidad', line: i }), type: format.Type.FLOAT }) <= 0) {
-                        throw error.create({
-                            name     : 'AS_CANTIDAD_INVALIDA',
-                            message  : 'La cantidad de cada articulo tiene que ser mayor que cero.',
-                            notifyOff: true,
-                        });
-                    }
-                }
-            }
-
-            if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION) {
-                let lineasConCantidad = 0;
-
-                for (let i = 0; i < totalLineas; i++) {
-                    if (format.parse({ value: request.getSublistValue({ group: 'custpage_sl_detalle', name: 'custpage_col_a_devolver', line: i }), type: format.Type.FLOAT }) > 0) {
-                        lineasConCantidad++;
-                    }
-                }
-
-                if (lineasConCantidad < 1) {
-                    throw error.create({
-                        name     : 'AS_DEVOLUCION_SIN_CANTIDAD',
-                        message  : 'Indica cuanto vas a devolver: al menos un articulo tiene que llevar una cantidad mayor que cero.',
-                        notifyOff: true,
-                    });
-                }
-            }
-        }
-
-        let idCabecera       = idMovimiento;
-        let ubicacionOrigen  = parametros.ubicacionOrigen;
-        let ubicacionDestino = parametros.ubicacionDestino;
-
-        if (idMovimiento) {
-            ubicacionOrigen  = movimiento.getValue({ fieldId: 'custrecord_as_mov_ubicacion' });
-            ubicacionDestino = movimiento.getValue({ fieldId: 'custrecord_as_mov_ubicacion_dest' });
-
-            movimientoRepository.actualizarDatosMovimiento(idMovimiento, {
-                fecha             : parametros.fecha,
-                usuarioResponsable: parametros.usuarioResponsable,
-                comentarios       : parametros.comentarios,
-            });
-
-            if (nombreTipo === CONSTANTES.TIPOS.MERMA) {
-                movimientoRepository.actualizarCuentaAjuste(idMovimiento, parametros.cuentaAjuste);
-            }
-
-            if (rehaceDetalle) {
-                movimientoRepository.eliminarLineasMovimiento(idMovimiento);
-            }
-        } else {
-            let subsidiaria = parametros.subsidiaria;
-            let servicio    = parametros.servicio;
-
-            if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION) {
-                const prestamo = movimientoRepository.cargarMovimiento(parametros.prestamo);
-
-                subsidiaria      = prestamo.getValue({ fieldId: 'custrecord_as_mov_subsidiaria' });
-                servicio         = prestamo.getValue({ fieldId: 'custrecord_as_mov_servicio' });
-                ubicacionOrigen  = prestamo.getValue({ fieldId: 'custrecord_as_mov_ubicacion_dest' });
-                ubicacionDestino = prestamo.getValue({ fieldId: 'custrecord_as_mov_ubicacion' });
-            }
-
-            idCabecera = movimientoRepository.crearMovimiento({
-                tipo               : parametros.tipo,
-                subsidiaria        : subsidiaria,
-                servicio           : servicio,
-                ubicacionOrigen    : ubicacionOrigen,
-                ubicacionDestino   : ubicacionDestino,
-                estado             : movimientoRepository.obtenerIdEstadoMovimiento(CONSTANTES.ESTADOS.PENDIENTE_PROCESAR),
-                usuarioResponsable : parametros.usuarioResponsable,
-                motivo             : parametros.motivo,
-                cuentaAjuste       : parametros.cuentaAjuste,
-                prestamoRelacionado: parametros.prestamo,
-                entidadReceptora   : parametros.entidadReceptora,
-                comentarios        : parametros.comentarios,
-                fecha              : parametros.fecha,
-            });
-        }
-
-        const articulos = [];
-
-        if (rehaceDetalle) {
-            for (let i = 0; i < totalLineas; i++) {
-                const guardada = (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION)
-                               ? guardarLineaDevolucion(request, idCabecera, i)
-                               : guardarLineaSalida(request, idCabecera, i);
-
-                if (guardada) {
-                    articulos.push(guardada.articulo + ' x' + guardada.cantidad);
-                }
-            }
-        }
+        const articulos = rehaceDetalle ? guardarLineas(request, cabecera.id, nombreTipo, totalLineas) : [];
 
         log.audit({
             title  : CONSTANTES.LOGS.REGISTRADO,
-            details: 'movimiento: ' + idCabecera + ' | tipo: ' + nombreTipo
-                   + ' | origen: ' + ubicacionOrigen + ' | destino: ' + ubicacionDestino
+            details: 'movimiento: ' + cabecera.id + ' | tipo: ' + nombreTipo
+                   + ' | origen: ' + cabecera.ubicacionOrigen + ' | destino: ' + cabecera.ubicacionDestino
                    + ' | articulos: ' + (articulos.join(' | ') || 'detalle sin cambios'),
         });
 
         redirect.toRecord({
             type: CONSTANTES.RECORDS.MOVIMIENTO,
-            id  : idCabecera,
+            id  : cabecera.id,
         });
     }
 
@@ -176,7 +68,200 @@ define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../lib/AS_MovimientoI
             prestamo          : request.parameters.custpage_prestamo_ref,
             entidadReceptora  : request.parameters.custpage_entidad_receptora,
             comentarios       : request.parameters.custpage_comentarios,
+            deLaClinica       : request.parameters.custpage_de_la_clinica === 'T',
+            aLaClinica        : request.parameters.custpage_a_la_clinica === 'T',
         };
+    }
+
+    function obtenerNombreTipo(idTipo) {
+        const tipoElegido = movimientoRepository.listarTiposMovimiento().filter((opcion) => opcion.id === idTipo)[0];
+
+        return tipoElegido ? tipoElegido.nombre : '';
+    }
+
+    /**
+     * El sentido de un movimiento ya guardado, o de la devolucion de un prestamo,
+     * manda el registro y pisa los checks del request: no se edita ni se elige
+     * distinto al del prestamo. El de un prestamo nuevo sale de los checks.
+     */
+    function resolverSentido(parametros, nombreTipo, referencia) {
+        if (referencia) {
+            parametros.aLaClinica  = !!referencia.getValue({ fieldId: 'custrecord_as_mov_a_la_clinica' });
+            parametros.deLaClinica = !parametros.aLaClinica;
+        }
+
+        if (nombreTipo !== CONSTANTES.TIPOS.PRESTAMO && nombreTipo !== CONSTANTES.TIPOS.DEVOLUCION) return;
+        if (parametros.deLaClinica !== parametros.aLaClinica) return;
+
+        throw error.create({
+            name     : 'AS_SENTIDO_INVALIDO',
+            message  : 'Marca solo uno de los sentidos: De la Clinica o A la Clinica.',
+            notifyOff: true,
+        });
+    }
+
+    function validarDetalle(request, parametros, nombreTipo, totalLineas) {
+        if (totalLineas < 1) {
+            throw error.create({
+                name     : 'AS_MOVIMIENTO_SIN_DETALLE',
+                message  : 'El movimiento no tiene lineas de detalle. Agrega al menos un articulo con el boton Add antes de guardar.',
+                notifyOff: true,
+            });
+        }
+
+        if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION) {
+            validarCantidadesDevolucion(request, totalLineas);
+            return;
+        }
+
+        validarCantidadesSalida(request, totalLineas);
+
+        if (nombreTipo === CONSTANTES.TIPOS.PRESTAMO && parametros.aLaClinica) {
+            validarLotesPrestamoALaClinica(request, totalLineas);
+        }
+    }
+
+    function validarCantidadesDevolucion(request, totalLineas) {
+        let lineasConCantidad = 0;
+
+        for (let i = 0; i < totalLineas; i++) {
+            if (format.parse({ value: request.getSublistValue({ group: 'custpage_sl_detalle', name: 'custpage_col_a_devolver', line: i }), type: format.Type.FLOAT }) > 0) {
+                lineasConCantidad++;
+            }
+        }
+
+        if (lineasConCantidad > 0) return;
+
+        throw error.create({
+            name     : 'AS_DEVOLUCION_SIN_CANTIDAD',
+            message  : 'Indica cuanto vas a devolver: al menos un articulo tiene que llevar una cantidad mayor que cero.',
+            notifyOff: true,
+        });
+    }
+
+    function validarCantidadesSalida(request, totalLineas) {
+        for (let i = 0; i < totalLineas; i++) {
+            if (format.parse({ value: request.getSublistValue({ group: 'custpage_sl_detalle', name: 'custpage_col_cantidad', line: i }), type: format.Type.FLOAT }) <= 0) {
+                throw error.create({
+                    name     : 'AS_CANTIDAD_INVALIDA',
+                    message  : 'La cantidad de cada articulo tiene que ser mayor que cero.',
+                    notifyOff: true,
+                });
+            }
+        }
+    }
+
+    function validarLotesPrestamoALaClinica(request, totalLineas) {
+        const sinLote = [];
+
+        for (let i = 0; i < totalLineas; i++) {
+            const lote = request.getSublistValue({ group: 'custpage_sl_detalle', name: 'custpage_col_lote', line: i });
+            if (String(lote || '').trim()) continue;
+
+            sinLote.push({
+                articulo: request.getSublistValue({ group: 'custpage_sl_detalle', name: 'custpage_col_articulo', line: i }),
+                linea   : i + 1,
+            });
+        }
+
+        if (sinLote.length === 0) return;
+        const articulosConLote = consultaStockRepository.buscarArticulosConLote(sinLote.map((fila) => fila.articulo));
+        const faltantes = sinLote.filter((fila) => articulosConLote[String(fila.articulo)]);
+        if (faltantes.length === 0) return;
+
+        throw error.create({
+            name     : 'AS_LOTE_OBLIGATORIO',
+            message  : 'Indica un lote para los articulos con control de lotes en las lineas '
+                     + faltantes.map((fila) => fila.linea).join(', ') + '.',
+            notifyOff: true,
+        });
+    }
+
+    function actualizarCabecera(movimiento, parametros, nombreTipo, rehaceDetalle) {
+        movimientoRepository.actualizarDatosMovimiento(movimiento.id, {
+            fecha             : parametros.fecha,
+            usuarioResponsable: parametros.usuarioResponsable,
+            comentarios       : parametros.comentarios,
+            deLaClinica       : parametros.deLaClinica,
+            aLaClinica        : parametros.aLaClinica,
+        });
+
+        if (nombreTipo === CONSTANTES.TIPOS.MERMA
+            || (nombreTipo === CONSTANTES.TIPOS.PRESTAMO && parametros.aLaClinica)) {
+            movimientoRepository.actualizarCuentaAjuste(movimiento.id, parametros.cuentaAjuste);
+        }
+
+        if (rehaceDetalle) movimientoRepository.eliminarLineasMovimiento(movimiento.id);
+
+        return {
+            id              : movimiento.id,
+            ubicacionOrigen : movimiento.getValue({ fieldId: 'custrecord_as_mov_ubicacion' }),
+            ubicacionDestino: movimiento.getValue({ fieldId: 'custrecord_as_mov_ubicacion_dest' }),
+        };
+    }
+
+    /**
+     * La devolucion no toma del request subsidiaria, servicio, ubicaciones ni
+     * cuenta: los hereda del prestamo. Sale de la bodega donde quedo el prestamo
+     * y, De la Clinica, vuelve a su origen; A la Clinica no tiene destino y usa
+     * la cuenta del prestamo para revertir el ajuste.
+     */
+    function crearCabecera(parametros, prestamo) {
+        const datos = {
+            subsidiaria     : parametros.subsidiaria,
+            servicio        : parametros.servicio,
+            ubicacionOrigen : parametros.ubicacionOrigen,
+            ubicacionDestino: parametros.ubicacionDestino,
+            cuentaAjuste    : parametros.cuentaAjuste,
+        };
+
+        if (prestamo) {
+            datos.subsidiaria      = prestamo.getValue({ fieldId: 'custrecord_as_mov_subsidiaria' });
+            datos.servicio         = prestamo.getValue({ fieldId: 'custrecord_as_mov_servicio' });
+            datos.ubicacionOrigen  = prestamo.getValue({ fieldId: 'custrecord_as_mov_ubicacion_dest' });
+            datos.ubicacionDestino = parametros.aLaClinica ? '' : prestamo.getValue({ fieldId: 'custrecord_as_mov_ubicacion' });
+            if (parametros.aLaClinica) datos.cuentaAjuste = prestamo.getValue({ fieldId: 'custrecord_as_mov_cuenta_ajuste' });
+        }
+
+        const correlativo = correlativoRepository.obtenerSiguienteCorrelativo(parametros.tipo);
+        const idCabecera  = movimientoRepository.crearMovimiento({
+            tipo               : parametros.tipo,
+            correlativo        : correlativo,
+            subsidiaria        : datos.subsidiaria,
+            servicio           : datos.servicio,
+            ubicacionOrigen    : datos.ubicacionOrigen,
+            ubicacionDestino   : datos.ubicacionDestino,
+            estado             : movimientoRepository.obtenerIdEstadoMovimiento(CONSTANTES.ESTADOS.PENDIENTE_PROCESAR),
+            usuarioResponsable : parametros.usuarioResponsable,
+            motivo             : parametros.motivo,
+            cuentaAjuste       : datos.cuentaAjuste,
+            prestamoRelacionado: parametros.prestamo,
+            entidadReceptora   : parametros.entidadReceptora,
+            comentarios        : parametros.comentarios,
+            fecha              : parametros.fecha,
+            deLaClinica        : parametros.deLaClinica,
+            aLaClinica         : parametros.aLaClinica,
+        });
+
+        return {
+            id              : idCabecera,
+            ubicacionOrigen : datos.ubicacionOrigen,
+            ubicacionDestino: datos.ubicacionDestino,
+        };
+    }
+
+    function guardarLineas(request, idCabecera, nombreTipo, totalLineas) {
+        const articulos = [];
+
+        for (let i = 0; i < totalLineas; i++) {
+            const guardada = (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION)
+                           ? guardarLineaDevolucion(request, idCabecera, i)
+                           : guardarLineaSalida(request, idCabecera, i);
+
+            if (guardada) articulos.push(guardada.articulo + ' x' + guardada.cantidad);
+        }
+
+        return articulos;
     }
 
     function guardarLineaDevolucion(request, idCabecera, linea) {

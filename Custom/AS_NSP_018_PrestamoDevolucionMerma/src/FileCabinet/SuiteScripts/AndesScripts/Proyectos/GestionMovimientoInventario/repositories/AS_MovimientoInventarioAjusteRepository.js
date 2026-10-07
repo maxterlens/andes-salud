@@ -1,9 +1,8 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
- * @description Unico punto del proyecto que crea el Inventory Adjustment de la
- *              Merma. Es la salida definitiva del inventario: no hay ubicacion
- *              destino, la cantidad va negativa y la cuenta contable de la
- *              cabecera del movimiento es la que recibe el ajuste.
+ * @description Crea Inventory Adjustments: negativo para la Merma y positivo
+ *              para el Prestamo A la Clinica. Ambos usan la cuenta contable
+ *              de la cabecera del movimiento.
  *
  *              Tres diferencias con el Inventory Transfer que conviene tener a
  *              mano si el ajuste falla al guardar: la ubicacion va en la linea y
@@ -35,6 +34,52 @@ define(['N/record', 'N/search', '../lib/AS_MovimientoInventarioConstants', './AS
 
         const idAjuste = ajuste.save();
 
+        const numeroAjuste = search.lookupFields({
+            type   : CONSTANTES.RECORDS.AJUSTE,
+            id     : idAjuste,
+            columns: ['tranid'],
+        }).tranid;
+
+        return { id: idAjuste, numero: numeroAjuste };
+    }
+
+    function crearAjustePositivo(datos, lineas) {
+        const ajuste = record.create({
+            type     : CONSTANTES.RECORDS.AJUSTE,
+            isDynamic: true,
+        });
+
+        ajuste.setValue({ fieldId: 'subsidiary', value: datos.subsidiaria });
+        ajuste.setValue({ fieldId: 'account',    value: datos.cuenta });
+        ajuste.setValue({ fieldId: 'department', value: datos.servicio });
+        ajuste.setValue({ fieldId: 'memo',       value: datos.memo });
+
+        lineas.forEach((linea) => {
+            ajuste.selectNewLine({ sublistId: 'inventory' });
+            ajuste.setCurrentSublistValue({ sublistId: 'inventory', fieldId: 'item',        value: linea.articulo });
+            ajuste.setCurrentSublistValue({ sublistId: 'inventory', fieldId: 'location',    value: datos.ubicacion });
+            ajuste.setCurrentSublistValue({ sublistId: 'inventory', fieldId: 'department',  value: datos.servicio });
+            ajuste.setCurrentSublistValue({ sublistId: 'inventory', fieldId: 'adjustqtyby', value: linea.cantidad });
+
+            if (linea.lote) {
+                const detalle = ajuste.getCurrentSublistSubrecord({
+                    sublistId: 'inventory',
+                    fieldId  : 'inventorydetail',
+                });
+                detalle.selectNewLine({ sublistId: 'inventoryassignment' });
+                detalle.setCurrentSublistValue({
+                    sublistId: 'inventoryassignment',
+                    fieldId  : 'receiptinventorynumber',
+                    value    : linea.lote,
+                });
+                detalle.setCurrentSublistValue({ sublistId: 'inventoryassignment', fieldId: 'quantity', value: linea.cantidad });
+                detalle.commitLine({ sublistId: 'inventoryassignment' });
+            }
+
+            ajuste.commitLine({ sublistId: 'inventory' });
+        });
+
+        const idAjuste = ajuste.save();
         const numeroAjuste = search.lookupFields({
             type   : CONSTANTES.RECORDS.AJUSTE,
             id     : idAjuste,
@@ -127,5 +172,5 @@ define(['N/record', 'N/search', '../lib/AS_MovimientoInventarioConstants', './AS
         return asignaciones;
     }
 
-    return { crearAjusteInventario };
+    return { crearAjusteInventario, crearAjustePositivo };
 });

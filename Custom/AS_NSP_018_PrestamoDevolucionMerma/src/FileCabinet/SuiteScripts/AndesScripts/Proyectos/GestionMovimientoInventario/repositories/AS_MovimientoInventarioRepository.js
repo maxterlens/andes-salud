@@ -44,9 +44,12 @@ define(['N/record', 'N/search', 'N/query', '../lib/AS_MovimientoInventarioConsta
         });
 
         cabecera.setValue({ fieldId: 'custrecord_as_mov_tipo',           value: datos.tipo });
+        cabecera.setValue({ fieldId: 'custrecord_as_mov_correlativo',    value: datos.correlativo });
+        cabecera.setValue({ fieldId: 'custrecord_as_mov_de_la_clinica',   value: datos.deLaClinica });
+        cabecera.setValue({ fieldId: 'custrecord_as_mov_a_la_clinica',    value: datos.aLaClinica });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_subsidiaria',    value: datos.subsidiaria });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_servicio',       value: datos.servicio });
-        cabecera.setValue({ fieldId: 'custrecord_as_mov_ubicacion',      value: datos.ubicacionOrigen });
+        if (datos.ubicacionOrigen) cabecera.setValue({ fieldId: 'custrecord_as_mov_ubicacion', value: datos.ubicacionOrigen });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_ubicacion_dest', value: datos.ubicacionDestino });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_estado',         value: datos.estado });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_usuario_resp',   value: datos.usuarioResponsable });
@@ -66,9 +69,11 @@ define(['N/record', 'N/search', 'N/query', '../lib/AS_MovimientoInventarioConsta
             type  : CONSTANTES.RECORDS.MOVIMIENTO,
             id    : idMovimiento,
             values: {
-                custrecord_as_mov_fecha       : datos.fecha,
-                custrecord_as_mov_usuario_resp: datos.usuarioResponsable,
-                custrecord_as_mov_comentarios : datos.comentarios,
+                custrecord_as_mov_fecha        : datos.fecha,
+                custrecord_as_mov_usuario_resp : datos.usuarioResponsable,
+                custrecord_as_mov_comentarios  : datos.comentarios,
+                custrecord_as_mov_de_la_clinica: datos.deLaClinica,
+                custrecord_as_mov_a_la_clinica : datos.aLaClinica,
             },
         });
     }
@@ -245,7 +250,10 @@ define(['N/record', 'N/search', 'N/query', '../lib/AS_MovimientoInventarioConsta
         }));
     }
 
-    function listarCuentasAjuste() {
+    function listarCuentasAjuste(idTipo, incluirTipoVacio) {
+        const filtroTipo = incluirTipoVacio
+                         ? 'AND (c.custrecord_as_cuenta_merma_tipo = ? OR c.custrecord_as_cuenta_merma_tipo IS NULL)'
+                         : 'AND c.custrecord_as_cuenta_merma_tipo = ?';
         const filas = query.runSuiteQL({
             query: [
                 'SELECT DISTINCT c.custrecord_as_cuenta_merma_subsidiaria AS subsidiaria,',
@@ -253,9 +261,10 @@ define(['N/record', 'N/search', 'N/query', '../lib/AS_MovimientoInventarioConsta
                 '       BUILTIN.DF(c.custrecord_as_cuenta_merma_cuenta) AS nombre',
                 'FROM customrecord_as_cuenta_merma_subsidiaria c',
                 'WHERE c.isinactive = ?',
+                filtroTipo,
                 'ORDER BY BUILTIN.DF(c.custrecord_as_cuenta_merma_cuenta)',
             ].join(' '),
-            params: ['F'],
+            params: ['F', idTipo],
         }).asMappedResults();
 
         return filas.map((fila) => ({
@@ -265,7 +274,7 @@ define(['N/record', 'N/search', 'N/query', '../lib/AS_MovimientoInventarioConsta
         }));
     }
 
-    function listarPrestamosPendientes() {
+    function listarPrestamosPendientes(esALaClinica) {
         const filas = query.runSuiteQL({
             query: [
                 'SELECT m.id AS id,',
@@ -279,15 +288,19 @@ define(['N/record', 'N/search', 'N/query', '../lib/AS_MovimientoInventarioConsta
                 'INNER JOIN customlist_as_tipo_movimiento t ON t.id = m.custrecord_as_mov_tipo',
                 'INNER JOIN customlist_as_estado_movimiento e ON e.id = m.custrecord_as_mov_estado',
                 'INNER JOIN customrecord_as_mov_inventario_det d ON d.custrecord_as_mov_det_ref = m.id',
-                'LEFT JOIN location l ON l.id = m.custrecord_as_mov_ubicacion',
+                'LEFT JOIN location l ON l.id = CASE WHEN NVL(m.custrecord_as_mov_a_la_clinica, \'F\') = \'T\'',
+                '                             THEN m.custrecord_as_mov_ubicacion_dest',
+                '                             ELSE m.custrecord_as_mov_ubicacion END',
                 'WHERE t.name = ?',
                 '  AND e.name IN (?, ?)',
+                '  AND NVL(m.custrecord_as_mov_a_la_clinica, \'F\') = ?',
                 'GROUP BY m.id, m.name, m.custrecord_as_mov_subsidiaria,',
                 '         m.custrecord_as_mov_entidad_receptora, BUILTIN.DF(m.custrecord_as_mov_entidad_receptora), l.name',
                 'HAVING SUM(d.custrecord_as_mov_det_cant_pendiente) > 0',
                 'ORDER BY m.name',
             ].join(' '),
-            params: [CONSTANTES.TIPOS.PRESTAMO, CONSTANTES.ESTADOS.PENDIENTE_DEVOLUCION, CONSTANTES.ESTADOS.DEVUELTO_PARCIAL],
+            params: [CONSTANTES.TIPOS.PRESTAMO, CONSTANTES.ESTADOS.PENDIENTE_DEVOLUCION,
+                     CONSTANTES.ESTADOS.DEVUELTO_PARCIAL, esALaClinica ? 'T' : 'F'],
         }).asMappedResults();
 
         return filas.map((fila) => ({

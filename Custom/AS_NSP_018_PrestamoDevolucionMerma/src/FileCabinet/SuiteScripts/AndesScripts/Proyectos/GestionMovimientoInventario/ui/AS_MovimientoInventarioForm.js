@@ -4,8 +4,8 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_ConsultaStockRepository'],
-    (serverWidget, message, runtime, CONSTANTES, movimientoRepository, consultaStockRepository) => {
+define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoInventarioConstants', '../repositories/AS_MovimientoInventarioRepository', '../repositories/AS_ConsultaStockRepository', './AS_MovimientoInventarioPrestamoUi', './AS_MovimientoInventarioDevolucionUi', './AS_MovimientoInventarioMermaUi'],
+    (serverWidget, message, runtime, CONSTANTES, movimientoRepository, consultaStockRepository, prestamoUi, devolucionUi, mermaUi) => {
 
     function renderizarFormulario(context) {
         if (!CONSTANTES.ROLES_AUTORIZADOS.includes(runtime.getCurrentUser().role)) {
@@ -15,37 +15,42 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
 
         const parametros = obtenerParametrosFormulario(context.request);
 
-        const idMovimiento = parametros.movimiento;
-
         let movimiento = null;
         let idTipo     = parametros.tipo;
         let idPrestamo = parametros.prestamo;
 
-        if (idMovimiento) {
-            movimiento = movimientoRepository.cargarMovimiento(idMovimiento);
+        if (parametros.movimiento) {
+            movimiento = movimientoRepository.cargarMovimiento(parametros.movimiento);
             idTipo     = movimiento.getValue({ fieldId: 'custrecord_as_mov_tipo' });
             idPrestamo = movimiento.getValue({ fieldId: 'custrecord_as_mov_prestamo_ref' });
         }
 
-        const tipos = movimientoRepository.listarTiposMovimiento();
-
-        const tipoElegido = tipos.filter((opcion) => opcion.id === idTipo)[0];
-        const nombreTipo  = tipoElegido ? tipoElegido.nombre : '';
+        const tipos        = movimientoRepository.listarTiposMovimiento();
+        const tipoElegido  = tipos.filter((opcion) => opcion.id === idTipo)[0];
+        const nombreTipo   = tipoElegido ? tipoElegido.nombre : '';
         const esPrestamo   = nombreTipo === CONSTANTES.TIPOS.PRESTAMO;
         const esDevolucion = nombreTipo === CONSTANTES.TIPOS.DEVOLUCION;
         const esMerma      = nombreTipo === CONSTANTES.TIPOS.MERMA;
+        const prestamo     = esDevolucion && idPrestamo ? movimientoRepository.cargarMovimiento(idPrestamo) : null;
+        const esALaClinica = (esPrestamo || esDevolucion) && resolverALaClinica(movimiento || prestamo, parametros.sentido);
+
+        const prestamosPendientes = esDevolucion ? movimientoRepository.listarPrestamosPendientes(esALaClinica) : [];
+        const cuentasAjuste       = (esMerma || (esPrestamo && esALaClinica))
+                                  ? movimientoRepository.listarCuentasAjuste(idTipo, esMerma) : [];
+        const motivosBaja         = esMerma ? movimientoRepository.listarMotivosBaja() : [];
+        const lineasPrestamo      = prestamo ? movimientoRepository.buscarLineasPorMovimiento(idPrestamo) : [];
+        const lineasDevolucion    = esDevolucion && movimiento ? movimientoRepository.buscarLineasPorMovimiento(movimiento.id) : [];
 
         const titulo          = movimiento ? 'Edicion de Solicitud de Inventario' : 'Registro de Solicitud de Inventario';
         const etiquetaGuardar = movimiento ? 'Actualizar Solicitud' : 'Guardar Solicitud';
-
-        const form = serverWidget.createForm({ title: titulo });
-
+        const form            = serverWidget.createForm({ title: titulo });
         const grupoTipo       = 'custpage_grupo_tipo_movimiento';
         const grupoMovimiento = 'custpage_grupo_datos_movimiento';
-        let grupoEspecifico   = '';
+
+        let grupoEspecifico         = '';
         let etiquetaGrupoMovimiento = '2. Datos del Movimiento';
 
-        if (esPrestamo) etiquetaGrupoMovimiento = '2. Origen y Destino';
+        if (esPrestamo) etiquetaGrupoMovimiento = esALaClinica ? '2. Destino' : '2. Origen y Destino';
         if (esDevolucion) etiquetaGrupoMovimiento = '2. Prestamo a Devolver';
 
         form.addFieldGroup({ id: grupoTipo, label: '1. Tipo de Movimiento' });
@@ -54,12 +59,12 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         if (esPrestamo) {
             grupoEspecifico = 'custpage_grupo_datos_prestamo';
             form.addFieldGroup({ id: grupoEspecifico, label: '3. Datos del Prestamo' });
-        } else if (esMerma) {
-            grupoEspecifico = 'custpage_grupo_datos_baja';
-            form.addFieldGroup({ id: grupoEspecifico, label: '3. Datos de la Baja' });
         } else if (esDevolucion) {
             grupoEspecifico = 'custpage_grupo_datos_devolucion';
             form.addFieldGroup({ id: grupoEspecifico, label: '3. Datos de la Devolucion' });
+        } else if (esMerma) {
+            grupoEspecifico = 'custpage_grupo_datos_baja';
+            form.addFieldGroup({ id: grupoEspecifico, label: '3. Datos de la Baja' });
         }
 
         form.clientScriptModulePath = CONSTANTES.CLIENT_SCRIPT;
@@ -68,40 +73,48 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
             type : serverWidget.FieldType.SELECT,
             label: 'Tipo de Movimiento',
         }, grupoTipo);
-        campoTipo.isMandatory  = true;
+        campoTipo.isMandatory = true;
         campoTipo.defaultValue = idTipo;
         campoTipo.addSelectOption({ value: '', text: '' });
-
         CONSTANTES.ORDEN_TIPOS.forEach((nombre) => {
             const opcion = tipos.filter((tipo) => tipo.nombre === nombre)[0];
             campoTipo.addSelectOption({ value: opcion.id, text: opcion.nombre });
         });
 
-        let grupoFecha = grupoMovimiento;
-
-        if (esPrestamo || esDevolucion) grupoFecha = grupoEspecifico;
+        if (esPrestamo || esDevolucion) {
+            const campoDeLaClinica = agregarCampo(form, {
+                id   : 'custpage_de_la_clinica',
+                type : serverWidget.FieldType.CHECKBOX,
+                label: 'De la Clinica',
+            }, grupoTipo);
+            campoDeLaClinica.defaultValue = esALaClinica ? 'F' : 'T';
+            campoDeLaClinica.updateBreakType({ breakType: serverWidget.FieldBreakType.STARTCOL });
+            const campoALaClinica = agregarCampo(form, {
+                id   : 'custpage_a_la_clinica',
+                type : serverWidget.FieldType.CHECKBOX,
+                label: 'A la Clinica',
+            }, grupoTipo);
+            campoALaClinica.defaultValue = esALaClinica ? 'T' : 'F';
+            const campoSentido = form.addField({
+                id   : 'custpage_sentido',
+                type : serverWidget.FieldType.TEXT,
+                label: 'Sentido',
+            });
+            campoSentido.defaultValue = esALaClinica ? CONSTANTES.SENTIDOS.A_LA_CLINICA : CONSTANTES.SENTIDOS.DE_LA_CLINICA;
+            campoSentido.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+            if (movimiento || (esDevolucion && idPrestamo)) {
+                campoDeLaClinica.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
+                campoALaClinica.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
+            }
+        }
 
         const campoFecha = agregarCampo(form, {
             id   : 'custpage_fecha',
             type : serverWidget.FieldType.DATE,
             label: CONSTANTES.ETIQUETAS_FECHA[nombreTipo] || 'Fecha',
-        }, grupoFecha);
+        }, (esPrestamo || esDevolucion) ? grupoEspecifico : grupoMovimiento);
         campoFecha.isMandatory = true;
         campoFecha.defaultValue = parametros.fecha;
-
-        if (esMerma) {
-            const campoMotivo = agregarCampo(form, {
-                id   : 'custpage_motivo',
-                type : serverWidget.FieldType.SELECT,
-                label: 'Motivo de la Baja',
-            }, grupoEspecifico);
-            campoMotivo.isMandatory = true;
-            campoMotivo.addSelectOption({ value: '', text: '' });
-
-            movimientoRepository.listarMotivosBaja().forEach((opcion) => {
-                campoMotivo.addSelectOption({ value: opcion.id, text: opcion.nombre });
-            });
-        }
 
         const campoSubsidiaria = agregarCampo(form, {
             id    : 'custpage_subsidiaria',
@@ -110,58 +123,6 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
             source: 'subsidiary',
         }, grupoMovimiento);
         campoSubsidiaria.isMandatory = true;
-
-        let cuentasAjuste = [];
-
-        if (esMerma) {
-            cuentasAjuste = movimientoRepository.listarCuentasAjuste();
-
-            const campoCuentaAjuste = agregarCampo(form, {
-                id   : 'custpage_cuenta_ajuste',
-                type : serverWidget.FieldType.SELECT,
-                label: 'Cuenta de Ajuste',
-            }, grupoEspecifico);
-            campoCuentaAjuste.isMandatory = true;
-            campoCuentaAjuste.addSelectOption({ value: '', text: '' });
-
-            if (movimiento) {
-                const subsidiariaGuardada = String(movimiento.getValue({ fieldId: 'custrecord_as_mov_subsidiaria' }));
-
-                cuentasAjuste.forEach((cuenta) => {
-                    if (cuenta.subsidiaria !== subsidiariaGuardada) {
-                        return;
-                    }
-
-                    campoCuentaAjuste.addSelectOption({ value: cuenta.id, text: cuenta.nombre });
-                });
-            }
-        }
-        let prestamosPendientes = [];
-
-        if (esDevolucion) {
-            prestamosPendientes = movimientoRepository.listarPrestamosPendientes();
-
-            const campoPrestamo = agregarCampo(form, {
-                id   : 'custpage_prestamo_ref',
-                type : serverWidget.FieldType.SELECT,
-                label: 'Prestamo Relacionado',
-            }, grupoMovimiento);
-            campoPrestamo.isMandatory = true;
-            campoPrestamo.addSelectOption({ value: '', text: '' });
-            const prestamoElegido = prestamosPendientes.filter((prestamo) => prestamo.id === idPrestamo)[0];
-
-            if (prestamoElegido) {
-                campoPrestamo.addSelectOption({
-                    value: prestamoElegido.id,
-                    text : prestamoElegido.nombre + ' - ' + prestamoElegido.entidad
-                         + ' - ' + prestamoElegido.ubicacion
-                         + ' - pendiente ' + prestamoElegido.pendiente,
-                });
-            }
-
-            campoPrestamo.defaultValue = idPrestamo;
-        }
-
         const campoServicio = agregarCampo(form, {
             id    : 'custpage_servicio',
             type  : serverWidget.FieldType.SELECT,
@@ -169,20 +130,12 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
             source: 'department',
         }, grupoMovimiento);
         campoServicio.isMandatory = true;
-
-        let etiquetaEntidad = 'Entidad Receptora';
-
-        if (esPrestamo) etiquetaEntidad = 'Entidad Receptora del Prestamo';
-
         const campoEntidad = agregarCampo(form, {
             id   : 'custpage_entidad_receptora',
             type : serverWidget.FieldType.SELECT,
-            label: etiquetaEntidad,
+            label: esPrestamo ? 'Entidad Receptora del Prestamo' : 'Entidad Receptora',
         }, grupoMovimiento);
         campoEntidad.addSelectOption({ value: '', text: '' });
-
-        if (esPrestamo) campoEntidad.isMandatory = true;
-
         const campoFrom = agregarCampo(form, {
             id   : 'custpage_ubicacion',
             type : serverWidget.FieldType.SELECT,
@@ -191,7 +144,6 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         campoFrom.isMandatory = true;
         campoFrom.addSelectOption({ value: '', text: '' });
         campoFrom.updateBreakType({ breakType: serverWidget.FieldBreakType.STARTCOL });
-
         const campoTo = agregarCampo(form, {
             id   : 'custpage_ubicacion_dest',
             type : serverWidget.FieldType.SELECT,
@@ -199,7 +151,6 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         }, grupoMovimiento);
         campoTo.isMandatory = true;
         campoTo.addSelectOption({ value: '', text: '' });
-
         const campoUsuario = agregarCampo(form, {
             id    : 'custpage_usuario_resp',
             type  : serverWidget.FieldType.SELECT,
@@ -209,14 +160,12 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         campoUsuario.isMandatory = true;
         campoUsuario.updateBreakType({ breakType: serverWidget.FieldBreakType.STARTCOL });
         campoUsuario.defaultValue = parametros.responsable;
-
         const campoComentarios = agregarCampo(form, {
             id   : 'custpage_comentarios',
             type : serverWidget.FieldType.TEXTAREA,
             label: 'Comentarios',
         }, grupoEspecifico || grupoMovimiento);
         campoComentarios.defaultValue = parametros.comentarios;
-        const ubicaciones = movimientoRepository.listarUbicacionesPorSubsidiaria();
 
         const campoUbicaciones = form.addField({
             id   : 'custpage_ubicaciones_data',
@@ -225,57 +174,50 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         });
         campoUbicaciones.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         campoUbicaciones.defaultValue = JSON.stringify({
-            esPrestamo : (nombreTipo === CONSTANTES.TIPOS.PRESTAMO),
-            esMerma    : (nombreTipo === CONSTANTES.TIPOS.MERMA),
-            ubicaciones: ubicaciones,
-            prestamos  : prestamosPendientes,
-            entidades  : movimientoRepository.listarEntidadesPorSubsidiaria(),
-            cuentas    : cuentasAjuste,
+            esPrestamo  : esPrestamo,
+            esMerma     : esMerma,
+            esALaClinica: esALaClinica,
+            ubicaciones : movimientoRepository.listarUbicacionesPorSubsidiaria(),
+            prestamos   : prestamosPendientes,
+            entidades   : movimientoRepository.listarEntidadesPorSubsidiaria(),
+            cuentas     : cuentasAjuste,
         });
 
-        if (esMerma) {
-            campoEntidad.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-
-            campoTo.isMandatory = false;
-            campoTo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-
-            form.insertField({ field: campoSubsidiaria, nextfield: 'custpage_fecha' });
-            form.insertField({ field: campoServicio, nextfield: 'custpage_fecha' });
-            form.insertField({ field: campoFrom, nextfield: 'custpage_fecha' });
-        }
-
-        if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION && !idPrestamo) {
-            campoServicio.isMandatory = false;
-            campoFrom.isMandatory     = false;
-            campoTo.isMandatory       = false;
-
-            campoServicio.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-            campoFrom.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-            campoTo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-
-            form.insertField({ field: campoEntidad, nextfield: 'custpage_prestamo_ref' });
-        }
-
-        if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION) {
-            armarDetalleDevolucion(form, {
-                campoFrom       : campoFrom,
-                campoTo         : campoTo,
+        const datos = {
+            movimiento         : movimiento,
+            esMerma            : esMerma,
+            esDevolucion       : esDevolucion,
+            esALaClinica       : esALaClinica,
+            prestamo           : prestamo,
+            idPrestamo         : idPrestamo,
+            prestamosPendientes: prestamosPendientes,
+            cuentasAjuste      : cuentasAjuste,
+            motivosBaja        : motivosBaja,
+            lineasPrestamo     : lineasPrestamo,
+            lineasDevolucion   : lineasDevolucion,
+            grupoMovimiento    : grupoMovimiento,
+            grupoEspecifico    : grupoEspecifico,
+            campos             : {
+                campoTipo       : campoTipo,
+                campoFecha      : campoFecha,
                 campoSubsidiaria: campoSubsidiaria,
                 campoServicio   : campoServicio,
                 campoEntidad    : campoEntidad,
-                idPrestamo      : idPrestamo,
-            });
-        } else {
-            armarDetalleSalida(form, nombreTipo);
-        }
+                campoFrom       : campoFrom,
+                campoTo         : campoTo,
+                campoUsuario    : campoUsuario,
+                campoComentarios: campoComentarios,
+            },
+        };
 
-        if (movimiento) {
-            aplicarModoEdicion(form, movimiento, nombreTipo, idPrestamo);
-        }
-
-        if (nombreTipo !== CONSTANTES.TIPOS.DEVOLUCION || idPrestamo) {
-            form.addSubmitButton({ label: etiquetaGuardar });
-        }
+        if (esPrestamo) prestamoUi.armarCampos(form, datos);
+        if (esDevolucion) devolucionUi.armarCampos(form, datos);
+        if (esMerma) mermaUi.armarCampos(form, datos);
+        if (!esDevolucion) armarDetalleSalida(form, nombreTipo, esALaClinica);
+        if (movimiento) aplicarModoEdicion(form, datos);
+        if (esPrestamo && esALaClinica) prestamoUi.ajustarALaClinica(form, datos);
+        if (esDevolucion && esALaClinica) devolucionUi.ajustarALaClinica(form, datos);
+        if (!esDevolucion || idPrestamo) form.addSubmitButton({ label: etiquetaGuardar });
 
         context.response.writePage(form);
     }
@@ -306,11 +248,21 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         return {
             movimiento : request.parameters.movimiento,
             tipo       : request.parameters.tipo,
+            sentido    : request.parameters.sentido,
             prestamo   : request.parameters.prestamo,
             fecha      : decodeURIComponent(request.parameters.fecha || ''),
             responsable: request.parameters.responsable || '',
             comentarios: decodeURIComponent(request.parameters.comentarios || ''),
         };
+    }
+
+    /**
+     * El sentido de un movimiento ya guardado, o de la devolucion de un prestamo,
+     * sale del registro; el de uno nuevo, del parametro que manda el CS al recargar.
+     */
+    function resolverALaClinica(referencia, sentido) {
+        if (referencia) return !!referencia.getValue({ fieldId: 'custrecord_as_mov_a_la_clinica' });
+        return sentido === CONSTANTES.SENTIDOS.A_LA_CLINICA;
     }
 
     function agregarCampo(form, opciones, contenedor) {
@@ -321,117 +273,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         return form.addField(opciones);
     }
 
-    function armarDetalleDevolucion(form, datos) {
-        if (!datos.idPrestamo) {
-            return;
-        }
-
-        const sublista = form.addSublist({
-            id   : 'custpage_sl_detalle',
-            type : serverWidget.SublistType.INLINEEDITOR,
-            label: '4. Productos a Devolver',
-        });
-
-        sublista.addField({
-            id   : 'custpage_col_linea',
-            type : serverWidget.FieldType.TEXT,
-            label: 'Linea',
-        }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-
-        sublista.addField({
-            id   : 'custpage_col_articulo_id',
-            type : serverWidget.FieldType.TEXT,
-            label: 'Articulo Id',
-        }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-
-        sublista.addField({
-            id   : 'custpage_col_articulo',
-            type : serverWidget.FieldType.TEXT,
-            label: CONSTANTES.ETIQUETAS_DETALLE.ARTICULO,
-        }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-
-        sublista.addField({
-            id   : 'custpage_col_unidad',
-            type : serverWidget.FieldType.TEXT,
-            label: CONSTANTES.ETIQUETAS_DETALLE.UNIDAD,
-        }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-
-        sublista.addField({
-            id   : 'custpage_col_prestada',
-            type : serverWidget.FieldType.TEXT,
-            label: CONSTANTES.ETIQUETAS_DETALLE.PRESTADA,
-        }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-
-        sublista.addField({
-            id   : 'custpage_col_devuelta',
-            type : serverWidget.FieldType.TEXT,
-            label: CONSTANTES.ETIQUETAS_DETALLE.DEVUELTA,
-        }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-
-        sublista.addField({
-            id   : 'custpage_col_pendiente',
-            type : serverWidget.FieldType.TEXT,
-            label: CONSTANTES.ETIQUETAS_DETALLE.PENDIENTE,
-        }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-
-        sublista.addField({
-            id   : 'custpage_col_a_devolver',
-            type : serverWidget.FieldType.FLOAT,
-            label: 'Cantidad a Devolver',
-        });
-
-        const prestamo = movimientoRepository.cargarMovimiento(datos.idPrestamo);
-        datos.campoSubsidiaria.defaultValue = prestamo.getValue({ fieldId: 'custrecord_as_mov_subsidiaria' });
-        datos.campoServicio.defaultValue    = prestamo.getValue({ fieldId: 'custrecord_as_mov_servicio' });
-        const entidadDelPrestamo = prestamo.getValue({ fieldId: 'custrecord_as_mov_entidad_receptora' });
-
-        if (entidadDelPrestamo) {
-            datos.campoEntidad.addSelectOption({
-                value: entidadDelPrestamo,
-                text : prestamo.getText({ fieldId: 'custrecord_as_mov_entidad_receptora' }),
-            });
-
-            datos.campoEntidad.defaultValue = entidadDelPrestamo;
-        }
-
-        const bodegaDelPrestamo = prestamo.getValue({ fieldId: 'custrecord_as_mov_ubicacion_dest' });
-        const ubicacionRetorno  = prestamo.getValue({ fieldId: 'custrecord_as_mov_ubicacion' });
-
-        datos.campoFrom.addSelectOption({
-            value: bodegaDelPrestamo,
-            text : prestamo.getText({ fieldId: 'custrecord_as_mov_ubicacion_dest' }),
-        });
-        datos.campoTo.addSelectOption({
-            value: ubicacionRetorno,
-            text : prestamo.getText({ fieldId: 'custrecord_as_mov_ubicacion' }),
-        });
-
-        datos.campoFrom.defaultValue = bodegaDelPrestamo;
-        datos.campoTo.defaultValue   = ubicacionRetorno;
-        datos.campoSubsidiaria.updateDisplayType({ displayType: serverWidget.FieldDisplayType.INLINE });
-        datos.campoServicio.updateDisplayType({ displayType: serverWidget.FieldDisplayType.INLINE });
-        datos.campoEntidad.updateDisplayType({ displayType: serverWidget.FieldDisplayType.INLINE });
-        datos.campoFrom.updateDisplayType({ displayType: serverWidget.FieldDisplayType.INLINE });
-        datos.campoTo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.INLINE });
-
-        movimientoRepository.buscarLineasPorMovimiento(datos.idPrestamo).forEach((linea, indice) => {
-            const cantidadPendiente = Math.floor(Math.round(linea.pendiente * 1000000) / 10000) / 100;
-
-            sublista.setSublistValue({ id: 'custpage_col_linea',       line: indice, value: String(linea.id) });
-            sublista.setSublistValue({ id: 'custpage_col_articulo_id', line: indice, value: String(linea.articulo) });
-            sublista.setSublistValue({ id: 'custpage_col_articulo',    line: indice, value: linea.articuloTexto });
-            sublista.setSublistValue({ id: 'custpage_col_prestada',    line: indice, value: String(linea.cantidad) });
-            sublista.setSublistValue({ id: 'custpage_col_devuelta',    line: indice, value: String(linea.devuelta) });
-            sublista.setSublistValue({ id: 'custpage_col_pendiente',   line: indice, value: String(linea.pendiente) });
-            sublista.setSublistValue({ id: 'custpage_col_a_devolver',  line: indice, value: String(cantidadPendiente) });
-
-            if (linea.unidadTexto) {
-                sublista.setSublistValue({ id: 'custpage_col_unidad', line: indice, value: linea.unidadTexto });
-            }
-        });
-    }
-
-    function armarDetalleSalida(form, nombreTipo) {
+    function armarDetalleSalida(form, nombreTipo, esALaClinica) {
         const sublista = form.addSublist({
             id   : 'custpage_sl_detalle',
             type : serverWidget.SublistType.INLINEEDITOR,
@@ -457,11 +299,12 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
             label: 'Disponible',
         }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
 
-        sublista.addField({
+        const campoLote = sublista.addField({
             id   : 'custpage_col_lote',
-            type : serverWidget.FieldType.SELECT,
+            type : esALaClinica ? serverWidget.FieldType.TEXT : serverWidget.FieldType.SELECT,
             label: CONSTANTES.ETIQUETAS_DETALLE.LOTE,
-        }).addSelectOption({ value: '', text: '' });
+        });
+        if (!esALaClinica) campoLote.addSelectOption({ value: '', text: '' });
 
         const etiquetaCantidad = (nombreTipo === CONSTANTES.TIPOS.MERMA) ? 'Cantidad a Dar de Baja' : 'Cantidad Prestada';
 
@@ -479,7 +322,20 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         return '3. ' + CONSTANTES.ETIQUETAS_DETALLE.TITULO;
     }
 
-    function aplicarModoEdicion(form, movimiento, nombreTipo, idPrestamo) {
+    function aplicarModoEdicion(form, datos) {
+        aplicarModoEdicionComun(form, datos);
+
+        if (datos.esDevolucion) {
+            devolucionUi.aplicarModoEdicion(form, datos);
+            return;
+        }
+
+        if (datos.esMerma) mermaUi.aplicarModoEdicion(form, datos);
+        aplicarModoEdicionSalida(form, datos);
+    }
+
+    function aplicarModoEdicionComun(form, datos) {
+        const movimiento = datos.movimiento;
         const campoMovimiento = form.addField({
             id   : 'custpage_movimiento',
             type : serverWidget.FieldType.TEXT,
@@ -487,7 +343,6 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         });
         campoMovimiento.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         campoMovimiento.defaultValue = movimiento.id;
-
         const tieneTraslado = movimiento.getValue({ fieldId: 'custrecord_as_mov_transfer' });
         const campoBloqueado = form.addField({
             id   : 'custpage_detalle_bloqueado',
@@ -496,75 +351,40 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         });
         campoBloqueado.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         campoBloqueado.defaultValue = tieneTraslado ? 'T' : 'F';
+        datos.campos.campoFecha.defaultValue = movimiento.getText({ fieldId: 'custrecord_as_mov_fecha' });
+        datos.campos.campoUsuario.defaultValue = movimiento.getValue({ fieldId: 'custrecord_as_mov_usuario_resp' });
+        datos.campos.campoComentarios.defaultValue = movimiento.getValue({ fieldId: 'custrecord_as_mov_comentarios' });
+        datos.campos.campoTipo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
+    }
 
-        form.getField({ id: 'custpage_fecha' }).defaultValue        = movimiento.getText({ fieldId: 'custrecord_as_mov_fecha' });
-        form.getField({ id: 'custpage_usuario_resp' }).defaultValue = movimiento.getValue({ fieldId: 'custrecord_as_mov_usuario_resp' });
-        form.getField({ id: 'custpage_comentarios' }).defaultValue  = movimiento.getValue({ fieldId: 'custrecord_as_mov_comentarios' });
-        form.getField({ id: 'custpage_tipo' })
-            .updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-
-        if (nombreTipo === CONSTANTES.TIPOS.DEVOLUCION) {
-            form.getField({ id: 'custpage_prestamo_ref' })
-                .updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-
-            precargarCantidadesDevolucion(form, movimiento.id, idPrestamo);
-
-            return;
-        }
-
-        if (nombreTipo === CONSTANTES.TIPOS.MERMA) {
-            const campoMotivo = form.getField({ id: 'custpage_motivo' });
-
-            campoMotivo.defaultValue = movimiento.getValue({ fieldId: 'custrecord_as_mov_motivo' });
-            campoMotivo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-
-            form.getField({ id: 'custpage_cuenta_ajuste' }).defaultValue =
-                movimiento.getValue({ fieldId: 'custrecord_as_mov_cuenta_ajuste' });
-        }
-
+    function aplicarModoEdicionSalida(form, datos) {
+        const movimiento = datos.movimiento;
+        const campos = datos.campos;
         const entidadGuardada = movimiento.getValue({ fieldId: 'custrecord_as_mov_entidad_receptora' });
-        const campoEntidad    = form.getField({ id: 'custpage_entidad_receptora' });
-
         if (entidadGuardada) {
-            campoEntidad.addSelectOption({
+            campos.campoEntidad.addSelectOption({
                 value: entidadGuardada,
                 text : movimiento.getText({ fieldId: 'custrecord_as_mov_entidad_receptora' }),
             });
-
-            campoEntidad.defaultValue = entidadGuardada;
+            campos.campoEntidad.defaultValue = entidadGuardada;
         }
-
-        const campoSubsidiaria = form.getField({ id: 'custpage_subsidiaria' });
-        const campoServicio    = form.getField({ id: 'custpage_servicio' });
-        const campoFrom        = form.getField({ id: 'custpage_ubicacion' });
-        const campoTo          = form.getField({ id: 'custpage_ubicacion_dest' });
-
-        const ubicacionOrigen  = movimiento.getValue({ fieldId: 'custrecord_as_mov_ubicacion' });
+        const ubicacionOrigen = movimiento.getValue({ fieldId: 'custrecord_as_mov_ubicacion' });
         const ubicacionDestino = movimiento.getValue({ fieldId: 'custrecord_as_mov_ubicacion_dest' });
-
-        campoFrom.addSelectOption({ value: ubicacionOrigen,  text: movimiento.getText({ fieldId: 'custrecord_as_mov_ubicacion' }) });
-        campoTo.addSelectOption({   value: ubicacionDestino, text: movimiento.getText({ fieldId: 'custrecord_as_mov_ubicacion_dest' }) });
-
-        campoSubsidiaria.defaultValue = movimiento.getValue({ fieldId: 'custrecord_as_mov_subsidiaria' });
-        campoServicio.defaultValue    = movimiento.getValue({ fieldId: 'custrecord_as_mov_servicio' });
-        campoFrom.defaultValue        = ubicacionOrigen;
-        campoTo.defaultValue          = ubicacionDestino;
-
-        const displaySoloPrestamo = (nombreTipo === CONSTANTES.TIPOS.MERMA)
-                                  ? serverWidget.FieldDisplayType.HIDDEN
-                                  : serverWidget.FieldDisplayType.DISABLED;
-
-        campoSubsidiaria.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-        campoServicio.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-        campoFrom.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
-        campoTo.updateDisplayType({ displayType: displaySoloPrestamo });
-        campoEntidad.updateDisplayType({ displayType: displaySoloPrestamo });
-
-        precargarDetalleSalida(form, movimiento.id, ubicacionOrigen);
-
-        if (tieneTraslado) {
+        if (ubicacionOrigen) campos.campoFrom.addSelectOption({ value: ubicacionOrigen, text: movimiento.getText({ fieldId: 'custrecord_as_mov_ubicacion' }) });
+        campos.campoTo.addSelectOption({ value: ubicacionDestino, text: movimiento.getText({ fieldId: 'custrecord_as_mov_ubicacion_dest' }) });
+        campos.campoSubsidiaria.defaultValue = movimiento.getValue({ fieldId: 'custrecord_as_mov_subsidiaria' });
+        campos.campoServicio.defaultValue = movimiento.getValue({ fieldId: 'custrecord_as_mov_servicio' });
+        campos.campoFrom.defaultValue = ubicacionOrigen;
+        campos.campoTo.defaultValue = ubicacionDestino;
+        campos.campoSubsidiaria.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
+        campos.campoServicio.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
+        campos.campoFrom.updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
+        const displaySalida = datos.esMerma ? serverWidget.FieldDisplayType.HIDDEN : serverWidget.FieldDisplayType.DISABLED;
+        campos.campoTo.updateDisplayType({ displayType: displaySalida });
+        campos.campoEntidad.updateDisplayType({ displayType: displaySalida });
+        precargarDetalleSalida(form, movimiento.id, ubicacionOrigen, datos.esALaClinica);
+        if (movimiento.getValue({ fieldId: 'custrecord_as_mov_transfer' })) {
             const sublista = form.getSublist({ id: 'custpage_sl_detalle' });
-
             sublista.getField({ id: 'custpage_col_articulo' })
                 .updateDisplayType({ displayType: serverWidget.FieldDisplayType.DISABLED });
             sublista.getField({ id: 'custpage_col_cantidad' })
@@ -576,23 +396,19 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/runtime', '../lib/AS_MovimientoI
         }
     }
 
-    function precargarCantidadesDevolucion(form, idMovimiento, idPrestamo) {
-        const sublista = form.getSublist({ id: 'custpage_sl_detalle' });
-
-        const lineasPrestamo   = movimientoRepository.buscarLineasPorMovimiento(idPrestamo);
-        const lineasDevolucion = movimientoRepository.buscarLineasPorMovimiento(idMovimiento);
-
-        lineasPrestamo.forEach((lineaPrestamo, indice) => {
-            const guardada = lineasDevolucion.filter((linea) => linea.lineaPrestamo === lineaPrestamo.id)[0];
-            const cantidad = guardada ? guardada.cantidad : 0;
-
-            sublista.setSublistValue({ id: 'custpage_col_a_devolver', line: indice, value: String(cantidad) });
-        });
-    }
-
-    function precargarDetalleSalida(form, idMovimiento, ubicacionOrigen) {
+    function precargarDetalleSalida(form, idMovimiento, ubicacionOrigen, esALaClinica) {
         const sublista = form.getSublist({ id: 'custpage_sl_detalle' });
         const lineas   = movimientoRepository.buscarLineasPorMovimiento(idMovimiento);
+
+        if (esALaClinica) {
+            lineas.forEach((linea, indice) => {
+                sublista.setSublistValue({ id: 'custpage_col_articulo', line: indice, value: String(linea.articulo) });
+                sublista.setSublistValue({ id: 'custpage_col_cantidad', line: indice, value: String(linea.cantidad) });
+                if (linea.lote) sublista.setSublistValue({ id: 'custpage_col_lote', line: indice, value: linea.lote });
+                if (linea.unidadTexto) sublista.setSublistValue({ id: 'custpage_col_unidad', line: indice, value: linea.unidadTexto });
+            });
+            return;
+        }
 
         const stock = consultaStockRepository.buscarStockPorArticulo(
             lineas.map((linea) => linea.articulo), ubicacionOrigen);

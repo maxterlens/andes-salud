@@ -7,7 +7,9 @@
  *              GET movimiento     → abre el formulario cargado para editar ese
  *                                   movimiento.
  *              GET op=procesar    → genera el traslado del prestamo indicado.
+ *              GET op=ajustar_prestamo → genera el ajuste positivo del prestamo.
  *              GET op=devolver    → genera el traslado de la devolucion indicada.
+ *              GET op=ajustar_devolucion → genera el ajuste negativo de la devolucion.
  *              GET op=mermar      → genera el ajuste de inventario de la merma.
  *              GET op=disponible  → responde en JSON el stock de un articulo.
  *              GET op=anular      → anula el movimiento indicado.
@@ -15,8 +17,9 @@
  *              POST               → guarda la cabecera y sus lineas de detalle,
  *                                   o actualiza el movimiento que se edita.
  *
- *              Las cinco que escriben -guardar, procesar, devolver, mermar y
- *              anular- pasan antes por validarPermisoEscritura. Las tres que solo leen
+ *              Las siete que escriben -guardar, procesar, ajustar_prestamo, devolver,
+ *              ajustar_devolucion, mermar y anular- pasan antes por validarPermisoEscritura.
+ *              Las tres que solo leen
  *              van directo: el formulario no guarda nada por si solo, el
  *              comprobante lo necesita quien recibe el material, y el stock lo
  *              consulta el propio formulario.
@@ -31,8 +34,8 @@
  * @scriptid     customscript_as_stlt_movimiento_inv
  * @deploymentid customdeploy_as_stlt_movimiento_inv
  */
-define(['./lib/AS_MovimientoInventarioConstants', './ui/AS_MovimientoInventarioForm', './handlers/AS_MovimientoInventarioHandler', './handlers/AS_MovimientoInventarioPrestamoHandler', './handlers/AS_MovimientoInventarioDevolucionHandler', './handlers/AS_MovimientoInventarioMermaHandler', './handlers/AS_MovimientoInventarioImpresionHandler'],
-    (CONSTANTES, formulario, movimientoHandler, prestamoHandler, devolucionHandler, mermaHandler, impresionHandler) => {
+define(['./lib/AS_MovimientoInventarioConstants', './ui/AS_MovimientoInventarioForm', './handlers/AS_MovimientoInventarioHandler', './handlers/AS_MovimientoInventarioPrestamoDeLaClinicaHandler', './handlers/AS_MovimientoInventarioPrestamoALaClinicaHandler', './handlers/AS_MovimientoInventarioDevolucionHandler', './handlers/AS_MovimientoInventarioDevolucionALaClinicaHandler', './handlers/AS_MovimientoInventarioMermaHandler', './handlers/AS_MovimientoInventarioImpresionHandler'],
+    (CONSTANTES, formulario, movimientoHandler, prestamoDeLaClinicaHandler, prestamoALaClinicaHandler, devolucionHandler, devolucionALaClinicaHandler, mermaHandler, impresionHandler) => {
 
     const OPERACIONES = CONSTANTES.OPERACIONES;
     
@@ -45,10 +48,16 @@ define(['./lib/AS_MovimientoInventarioConstants', './ui/AS_MovimientoInventarioF
                 movimientoHandler.guardarMovimiento(context);
             } else if (parametros.operacion === OPERACIONES.PROCESAR) {
                 movimientoHandler.validarPermisoEscritura();
-                prestamoHandler.generarTransferPrestamo(context);
+                prestamoDeLaClinicaHandler.generarTransferPrestamo(context);
+            } else if (parametros.operacion === OPERACIONES.AJUSTAR_PRESTAMO) {
+                movimientoHandler.validarPermisoEscritura();
+                prestamoALaClinicaHandler.generarAjustePrestamo(context);
             } else if (parametros.operacion === OPERACIONES.DEVOLVER) {
                 movimientoHandler.validarPermisoEscritura();
                 devolucionHandler.generarTransferDevolucion(context);
+            } else if (parametros.operacion === OPERACIONES.AJUSTAR_DEVOLUCION) {
+                movimientoHandler.validarPermisoEscritura();
+                devolucionALaClinicaHandler.generarAjusteDevolucion(context);
             } else if (parametros.operacion === OPERACIONES.MERMAR) {
                 movimientoHandler.validarPermisoEscritura();
                 mermaHandler.generarAjusteMerma(context);

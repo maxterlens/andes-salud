@@ -87,14 +87,38 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
         context.form.getField({ id: 'custrecord_as_mov_usuario_resp' }).label   = CONSTANTES.ETIQUETAS_RESPONSABLE[tipo] || 'Usuario Responsable';
         context.form.getField({ id: 'custrecord_as_mov_ubicacion' }).label      = CONSTANTES.ETIQUETAS_UBICACION[tipo] || 'Ubicacion Origen';
 
+        const esPrestamoALaClinica = tipo === CONSTANTES.TIPOS.PRESTAMO
+                                  && !!context.newRecord.getValue({ fieldId: 'custrecord_as_mov_a_la_clinica' });
+        const esDevolucionALaClinica = tipo === CONSTANTES.TIPOS.DEVOLUCION
+                                    && !!context.newRecord.getValue({ fieldId: 'custrecord_as_mov_a_la_clinica' });
+        context.form.getField({ id: 'custrecord_as_mov_transfer' }).label =
+            (tipo === CONSTANTES.TIPOS.MERMA || esPrestamoALaClinica || esDevolucionALaClinica)
+            ? 'Ajuste Generado' : 'Traslado Generado';
+        if (esPrestamoALaClinica) {
+            context.form.getField({ id: 'custrecord_as_mov_ubicacion' })
+                .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+            context.form.getField({ id: 'custrecord_as_mov_entidad_receptora' }).label = 'Entidad Emisora del Prestamo';
+        }
+        if (esDevolucionALaClinica) {
+            context.form.getField({ id: 'custrecord_as_mov_ubicacion_dest' })
+                .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+            context.form.getField({ id: 'custrecord_as_mov_entidad_receptora' }).label = 'Entidad Emisora del Prestamo';
+        }
+
         if (tipo !== CONSTANTES.TIPOS.MERMA) {
             context.form.getField({ id: 'custrecord_as_mov_motivo' })
                 .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-            context.form.getField({ id: 'custrecord_as_mov_cuenta_ajuste' })
-                .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+            if (!esPrestamoALaClinica && !esDevolucionALaClinica) {
+                context.form.getField({ id: 'custrecord_as_mov_cuenta_ajuste' })
+                    .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+            }
         }
 
         if (tipo === CONSTANTES.TIPOS.MERMA) {
+            context.form.getField({ id: 'custrecord_as_mov_de_la_clinica' })
+                .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+            context.form.getField({ id: 'custrecord_as_mov_a_la_clinica' })
+                .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
             context.form.getField({ id: 'custrecord_as_mov_entidad_receptora' })
                 .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
             context.form.getField({ id: 'custrecord_as_mov_ubicacion_dest' })
@@ -151,8 +175,19 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
         const lineas = movimientoRepository.buscarLineasPorMovimiento(context.newRecord.id);
 
         const esPrestamo = (tipo === CONSTANTES.TIPOS.PRESTAMO);
-
-        const muestraLote = lineas.some((linea) => linea.lote);
+        const esDevolucionALaClinica = tipo === CONSTANTES.TIPOS.DEVOLUCION
+                                    && !!context.newRecord.getValue({ fieldId: 'custrecord_as_mov_a_la_clinica' });
+        const prestadaPorLinea = {};
+        const lotePorLinea = {};
+        if (tipo === CONSTANTES.TIPOS.DEVOLUCION) {
+            movimientoRepository.buscarLineasPorMovimiento(
+                context.newRecord.getValue({ fieldId: 'custrecord_as_mov_prestamo_ref' })
+            ).forEach((linea) => {
+                prestadaPorLinea[linea.id] = linea.cantidad;
+                if (esDevolucionALaClinica) lotePorLinea[linea.id] = linea.lote;
+            });
+        }
+        const muestraLote = lineas.some((linea) => linea.lote || lotePorLinea[linea.lineaPrestamo]);
 
         sublista.addField({ id: 'custpage_col_articulo', type: serverWidget.FieldType.TEXT, label: CONSTANTES.ETIQUETAS_DETALLE.ARTICULO });
         sublista.addField({ id: 'custpage_col_unidad',   type: serverWidget.FieldType.TEXT, label: CONSTANTES.ETIQUETAS_DETALLE.UNIDAD });
@@ -172,21 +207,12 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
             sublista.addField({ id: 'custpage_col_cantidad', type: serverWidget.FieldType.TEXT, label: CONSTANTES.ETIQUETAS_DETALLE.CANTIDAD });
         }
 
-        const prestadaPorLinea = {};
-
-        if (tipo === CONSTANTES.TIPOS.DEVOLUCION) {
-            movimientoRepository.buscarLineasPorMovimiento(
-                context.newRecord.getValue({ fieldId: 'custrecord_as_mov_prestamo_ref' })
-            ).forEach((linea) => {
-                prestadaPorLinea[linea.id] = linea.cantidad;
-            });
-        }
-
         lineas.forEach((linea, indice) => {
             sublista.setSublistValue({ id: 'custpage_col_articulo', line: indice, value: linea.articuloTexto });
 
-            if (muestraLote && linea.lote) {
-                sublista.setSublistValue({ id: 'custpage_col_lote', line: indice, value: linea.lote });
+            const lote = linea.lote || lotePorLinea[linea.lineaPrestamo];
+            if (muestraLote && lote) {
+                sublista.setSublistValue({ id: 'custpage_col_lote', line: indice, value: lote });
             }
 
             if (esPrestamo) {
@@ -208,6 +234,7 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
     }
 
     function agregarBotones(context, tipo, estado, rolAutorizado) {
+        const esDeLaClinica = !context.newRecord.getValue({ fieldId: 'custrecord_as_mov_a_la_clinica' });
         const devolucionSinPendiente = tipo === CONSTANTES.TIPOS.DEVOLUCION
                                     && estado === CONSTANTES.ESTADOS.PENDIENTE_PROCESAR
                                     && movimientoRepository.obtenerEstadoMovimiento(
@@ -272,15 +299,16 @@ define(['N/ui/serverWidget', 'N/redirect', 'N/error', 'N/ui/message', 'N/runtime
             context.form.addButton({
                 id          : 'custpage_btn_procesar',
                 label       : 'Procesar Prestamo',
-                functionName: 'generarTransferPrestamo',
+                functionName: esDeLaClinica ? 'generarTransferPrestamo' : 'generarAjustePrestamo',
             });
         }
 
-        if (tipo === CONSTANTES.TIPOS.DEVOLUCION && estado === CONSTANTES.ESTADOS.PENDIENTE_PROCESAR && !devolucionSinPendiente) {
+        if (tipo === CONSTANTES.TIPOS.DEVOLUCION
+            && estado === CONSTANTES.ESTADOS.PENDIENTE_PROCESAR && !devolucionSinPendiente) {
             context.form.addButton({
                 id          : 'custpage_btn_devolver',
                 label       : 'Procesar Devolucion',
-                functionName: 'generarTransferDevolucion',
+                functionName: esDeLaClinica ? 'generarTransferDevolucion' : 'generarAjusteDevolucion',
             });
         }
 

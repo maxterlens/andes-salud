@@ -59,7 +59,8 @@ Todo bajo
 | `ui/AS_ConsultaStockForm.js` | Arma la pantalla auxiliar de consulta de stock para desarrollo y QA |
 | `handlers/AS_MovimientoInventarioHandler.js` | Guardar, anular, disponibilidad y el control de rol |
 | `handlers/AS_MovimientoInventarioUEHandler.js` | Vista del registro: campos por tipo, tab de detalle, botones, y el bloqueo de edición |
-| `handlers/AS_MovimientoInventarioPrestamoHandler.js` | Solo generar el traslado de un préstamo |
+| `handlers/AS_MovimientoInventarioPrestamoDeLaClinicaHandler.js` | Solo generar el traslado de un préstamo |
+| `handlers/AS_MovimientoInventarioPrestamoALaClinicaHandler.js` | Solo generar el ajuste positivo de un préstamo |
 | `handlers/AS_MovimientoInventarioDevolucionHandler.js` | Solo generar el traslado inverso y descontar del préstamo |
 | `handlers/AS_MovimientoInventarioMermaHandler.js` | Valida y genera el ajuste de inventario de una merma |
 | `handlers/AS_MovimientoInventarioImpresionHandler.js` | Payload del PDF y render contra el FTL del tipo |
@@ -86,7 +87,7 @@ de desplegar esta versión se deben borrar manualmente los archivos de la column
 | `handlers/AS_ConsultaStockHandler.js` | `ui/AS_ConsultaStockForm.js` |
 | `handlers/MovimientoInventarioHandler.js` | `handlers/AS_MovimientoInventarioHandler.js` |
 | `handlers/MovimientoInventarioUEHandler.js` | `handlers/AS_MovimientoInventarioUEHandler.js` |
-| `handlers/PrestamoHandler.js` | `handlers/AS_MovimientoInventarioPrestamoHandler.js` |
+| `handlers/PrestamoHandler.js` | `handlers/AS_MovimientoInventarioPrestamoDeLaClinicaHandler.js` |
 | `handlers/DevolucionHandler.js` | `handlers/AS_MovimientoInventarioDevolucionHandler.js` |
 | `handlers/AS_MermaHandler.js` | `handlers/AS_MovimientoInventarioMermaHandler.js` |
 | `handlers/ImpresionHandler.js` | `handlers/AS_MovimientoInventarioImpresionHandler.js` |
@@ -179,7 +180,8 @@ todo el módulo. Las operaciones se resuelven por el parámetro `op`:
 | `op` | Handler | Escribe |
 |---|---|---|
 | *(POST)* | `guardarMovimiento` | Sí |
-| `procesar` | `AS_MovimientoInventarioPrestamoHandler` | Sí |
+| `procesar` | `AS_MovimientoInventarioPrestamoDeLaClinicaHandler` | Sí |
+| `ajustar_prestamo` | `AS_MovimientoInventarioPrestamoALaClinicaHandler` | Sí |
 | `devolver` | `AS_MovimientoInventarioDevolucionHandler` | Sí |
 | `mermar` | `AS_MovimientoInventarioMermaHandler` | Sí |
 | `anular` | `anularMovimientoInventario` | Sí |

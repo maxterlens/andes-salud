@@ -14,6 +14,11 @@ define([], () => {
 
     const ORDEN_TIPOS = [TIPOS.PRESTAMO, TIPOS.DEVOLUCION, TIPOS.MERMA];
 
+    const SENTIDOS = {
+        DE_LA_CLINICA: 'de',
+        A_LA_CLINICA : 'a',
+    };
+
     const ESTADOS = {
         PENDIENTE_PROCESAR  : 'Pendiente de Procesar',
         PENDIENTE_DEVOLUCION: 'Pendiente de Devolucion',
@@ -61,11 +66,22 @@ define([], () => {
     };
 
     const RECORDS = {
-        MOVIMIENTO: 'customrecord_as_movimiento_inventario',
-        DETALLE   : 'customrecord_as_mov_inventario_det',
-        RECEPTOR  : 'customrecord_as_receptor_subsidiaria',
-        TRASLADO  : 'inventorytransfer',
-        AJUSTE    : 'inventoryadjustment',
+        MOVIMIENTO : 'customrecord_as_movimiento_inventario',
+        DETALLE    : 'customrecord_as_mov_inventario_det',
+        CORRELATIVO: 'customrecord_as_mov_correlativo',
+        RECEPTOR   : 'customrecord_as_receptor_subsidiaria',
+        TRASLADO   : 'inventorytransfer',
+        AJUSTE     : 'inventoryadjustment',
+    };
+
+    const CAMPOS_CORRELATIVO = {
+        TIPO  : 'custrecord_as_mov_corr_tipo',
+        ULTIMO: 'custrecord_as_mov_corr_ultimo',
+    };
+
+    const CORRELATIVO = {
+        DIGITOS  : 6,
+        REINTENTOS: 5,
     };
 
     const LISTAS = {
@@ -81,14 +97,16 @@ define([], () => {
     };
 
     const OPERACIONES = {
-        FORMULARIO: 'formulario',
-        GUARDADO  : 'guardado',
-        PROCESAR  : 'procesar',
-        DEVOLVER  : 'devolver',
-        MERMAR    : 'mermar',
-        ANULAR    : 'anular',
-        IMPRIMIR  : 'imprimir',
-        DISPONIBLE: 'disponible',
+        FORMULARIO        : 'formulario',
+        GUARDADO          : 'guardado',
+        PROCESAR          : 'procesar',
+        AJUSTAR_PRESTAMO  : 'ajustar_prestamo',
+        DEVOLVER          : 'devolver',
+        AJUSTAR_DEVOLUCION: 'ajustar_devolucion',
+        MERMAR            : 'mermar',
+        ANULAR            : 'anular',
+        IMPRIMIR          : 'imprimir',
+        DISPONIBLE        : 'disponible',
     };
 
     const SUITELET = {
@@ -103,6 +121,7 @@ define([], () => {
     return {
         TIPOS      : TIPOS,
         ORDEN_TIPOS: ORDEN_TIPOS,
+        SENTIDOS   : SENTIDOS,
 
         ESTADOS          : ESTADOS,
         ESTADOS_EDITABLES: ESTADOS_EDITABLES,
@@ -112,8 +131,10 @@ define([], () => {
         ETIQUETAS_UBICACION  : ETIQUETAS_UBICACION,
         ETIQUETAS_DETALLE    : ETIQUETAS_DETALLE,
 
-        RECORDS: RECORDS,
-        LISTAS : LISTAS,
+        RECORDS           : RECORDS,
+        CAMPOS_CORRELATIVO: CAMPOS_CORRELATIVO,
+        CORRELATIVO       : CORRELATIVO,
+        LISTAS            : LISTAS,
 
         SUITELET     : SUITELET,
         OPERACIONES  : OPERACIONES,
