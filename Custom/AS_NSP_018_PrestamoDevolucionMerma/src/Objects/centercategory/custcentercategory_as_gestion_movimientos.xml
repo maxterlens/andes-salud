@@ -12,13 +12,13 @@
     <link>
       <linkobject>[scriptid=customrecord_as_receptor_subsidiaria]</linkobject>
       <linktasktype>LIST</linktasktype>
-      <linklabel>Entidades Receptoras</linklabel>
+      <linklabel>Entidades Asociadas por Subsidiaria</linklabel>
       <shortlist>F</shortlist>
     </link>
     <link>
       <linkobject>[scriptid=customrecord_as_cuenta_merma_subsidiaria]</linkobject>
       <linktasktype>LIST</linktasktype>
-      <linklabel>Cuentas de Merma</linklabel>
+      <linklabel>Cuentas por Tipo de Movimiento</linklabel>
       <shortlist>F</shortlist>
     </link>
   </links>

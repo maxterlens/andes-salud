@@ -136,6 +136,12 @@
 <td class="label">Subsidiaria</td>
 <td class="value">${doc.cabecera.subsidiaria}</td>
 </tr>
+<#if doc.cabecera.sentido?has_content>
+<tr>
+<td class="label">Sentido del prestamo</td>
+<td class="value">${doc.cabecera.sentido}</td>
+</tr>
+</#if>
 <tr>
 <td class="label">Servicio</td>
 <td class="value">${doc.cabecera.servicio}</td>

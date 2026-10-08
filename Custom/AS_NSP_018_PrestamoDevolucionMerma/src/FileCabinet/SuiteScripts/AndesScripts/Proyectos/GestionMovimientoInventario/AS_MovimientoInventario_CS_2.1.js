@@ -465,6 +465,7 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './constants/AS_M
             parametros.prestamo = registroActual.getValue({ fieldId: 'custpage_prestamo_ref' });
         }
 
+        setWindowChanged(window, false);
         window.location.href = url.resolveScript({
             scriptId    : CONSTANTES.SUITELET.SCRIPT,
             deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,

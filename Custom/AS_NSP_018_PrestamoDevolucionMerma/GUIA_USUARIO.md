@@ -65,8 +65,8 @@ Transacciones > Gestion de Movimientos
 | Opción del menú | Para qué se usa |
 |---|---|
 | **Solicitudes de Inventario** | Registrar, consultar, procesar e imprimir préstamos, devoluciones y mermas |
-| **Entidades Receptoras** | Cargar las instituciones con las que cada subsidiaria puede prestar |
-| **Cuentas de Merma** | Cargar las cuentas contables permitidas para la Merma y para el Préstamo A la Clínica de cada subsidiaria |
+| **Entidades Asociadas por Subsidiaria** | Cargar las instituciones con las que cada subsidiaria puede prestar |
+| **Cuentas por Tipo de Movimiento** | Cargar las cuentas contables permitidas para la Merma y para el Préstamo A la Clínica de cada subsidiaria |
 
 Si NetSuite está en inglés, el menú aparece como `Transactions > Gestion de Movimientos`.
 
@@ -83,11 +83,11 @@ Antes de operar, deben estar configurados:
 3. La disponibilidad de inventario y los lotes correspondientes.
 4. Las entidades permitidas para la subsidiaria. Sin ellas no se puede guardar un Préstamo,
    porque la entidad es obligatoria.
-5. Para Merma, al menos una cuenta activa para la subsidiaria en **Cuentas de Merma**, con
+5. Para Merma, al menos una cuenta activa para la subsidiaria en **Cuentas por Tipo de Movimiento**, con
    **Tipo de Solicitud** `Merma` o vacío. Sin ella **Cuenta de Ajuste** queda vacía y la Merma no
    se puede guardar.
-6. Para Préstamo A la Clínica, al menos una cuenta activa para la subsidiaria en **Cuentas de
-   Merma** con **Tipo de Solicitud** `Prestamo`.
+6. Para Préstamo A la Clínica, al menos una cuenta activa para la subsidiaria en **Cuentas por
+   Tipo de Movimiento** con **Tipo de Solicitud** `Prestamo`.
 7. Un rol autorizado para guardar y procesar.
 
 ## Cómo usarlo
@@ -279,20 +279,20 @@ falta, **Ubicación Destino** queda vacía y no se puede guardar el préstamo.
 Cada ubicación utilizada debe tener asignada la subsidiaria correspondiente. Una ubicación sin
 esa relación no aparece en el formulario.
 
-### Entidades receptoras
+### Entidades asociadas por subsidiaria
 
 Ruta:
 
 ```text
-Transacciones > Gestion de Movimientos > Entidades Receptoras > Nuevo
+Transacciones > Gestion de Movimientos > Entidades Asociadas por Subsidiaria > Nuevo
 ```
 
-El registro se llama **AS Entidad Receptora por Subsidiaria**:
+El registro se llama **AS Entidad por Subsidiaria**:
 
 | Campo | Uso |
 |---|---|
 | Subsidiaria | La subsidiaria que presta o recibe el préstamo |
-| Entidad Receptora | La institución del préstamo |
+| Entidad | La institución del préstamo |
 | Inactivo | Al marcarlo, la entidad deja de aparecer al registrar un préstamo |
 
 Registrar una fila por pareja **Subsidiaria + Entidad**: la entidad es la institución (un
@@ -304,15 +304,15 @@ vacío y no se puede guardar ningún préstamo.
 Para dejar de prestar con una entidad, se marca la fila como inactiva. Sus préstamos ya
 registrados siguen apareciendo en Devolución mientras tengan pendiente.
 
-### Cuentas de ajuste
+### Cuentas por tipo de movimiento
 
 Ruta:
 
 ```text
-Transacciones > Gestion de Movimientos > Cuentas de Merma > Nuevo
+Transacciones > Gestion de Movimientos > Cuentas por Tipo de Movimiento > Nuevo
 ```
 
-El registro se llama **AS Cuenta de Merma por Subsidiaria**:
+El registro se llama **AS Cuenta Tipo Movimiento Solicitud**:
 
 | Campo | Uso |
 |---|---|
@@ -375,9 +375,9 @@ una cuenta, cada subsidiaria que use el registro necesita esto:
 |---|---|---|---|
 | Bodega de préstamos | `Listas > Contabilidad > Ubicaciones` | Una sola ubicación por subsidiaria con **AS Bodega de Prestamos y Devoluciones** marcado y *Make Inventory Available* desmarcado | **Ubicación Destino** queda vacía y no se puede guardar un Préstamo |
 | Subsidiaria de cada ubicación | `Listas > Contabilidad > Ubicaciones` | La subsidiaria correspondiente en cada ubicación de origen y en la bodega de préstamos | La ubicación no aparece en el formulario |
-| Entidades receptoras | `Transacciones > Gestion de Movimientos > Entidades Receptoras` | Una fila por **Subsidiaria + Entidad** para cada institución con la que se presta | No se puede guardar un Préstamo |
-| Cuentas para Merma | `Transacciones > Gestion de Movimientos > Cuentas de Merma` | Al menos una fila activa por **Subsidiaria + Cuenta Contable**, con **Tipo de Solicitud** `Merma` o vacío | **Cuenta de Ajuste** queda vacía y no se puede guardar una Merma |
-| Cuentas para Préstamo A la Clínica | `Transacciones > Gestion de Movimientos > Cuentas de Merma` | Al menos una fila activa por **Subsidiaria + Cuenta Contable**, con **Tipo de Solicitud** `Prestamo` | **Cuenta de Ajuste** queda vacía y no se puede guardar un Préstamo A la Clínica |
+| Entidades asociadas por subsidiaria | `Transacciones > Gestion de Movimientos > Entidades Asociadas por Subsidiaria` | Una fila por **Subsidiaria + Entidad** para cada institución con la que se presta | No se puede guardar un Préstamo |
+| Cuentas para Merma | `Transacciones > Gestion de Movimientos > Cuentas por Tipo de Movimiento` | Al menos una fila activa por **Subsidiaria + Cuenta Contable**, con **Tipo de Solicitud** `Merma` o vacío | **Cuenta de Ajuste** queda vacía y no se puede guardar una Merma |
+| Cuentas para Préstamo A la Clínica | `Transacciones > Gestion de Movimientos > Cuentas por Tipo de Movimiento` | Al menos una fila activa por **Subsidiaria + Cuenta Contable**, con **Tipo de Solicitud** `Prestamo` | **Cuenta de Ajuste** queda vacía y no se puede guardar un Préstamo A la Clínica |
 | Motivos de baja | Lista **Motivo de Baja** | Viene con `Vencimiento`, `Deterioro`, `Cuarentena` y `Otro`; se pueden agregar otros | — |
 | Roles autorizados | Configuración del registro | Verificar que los roles internos `3` y `1371` sean `Administrator` y `QF CASPM` en la cuenta | Un rol distinto podría registrar o no poder hacerlo |
 
@@ -423,11 +423,11 @@ despliegue productivo.
 | `AS_MOVIMIENTO_NO_EDITABLE` | Se intentó guardar cambios sobre una solicitud que ya no está en `Pendiente de Procesar` | No se edita: si hay un error, registrar una solicitud nueva |
 | **Este movimiento ya no se puede editar** | Se intentó editar una solicitud que ya no está en `Pendiente de Procesar` | No se edita: si hay un error, registrar una solicitud nueva |
 | «La linea [n] pide [cantidad] y solo hay [disponible].» | Sin lote elegido, la cantidad supera lo disponible | Bajar la cantidad o elegir un lote |
-| Cuenta de Ajuste vacía en una Merma | No hay relación activa para la subsidiaria con Tipo de Solicitud `Merma` o vacío | Crear o activar una fila en **Gestion de Movimientos > Cuentas de Merma** |
-| Cuenta de Ajuste vacía en un Préstamo A la Clínica | No hay relación activa para la subsidiaria con Tipo de Solicitud `Prestamo` | Crear o activar esa fila en **Gestion de Movimientos > Cuentas de Merma** |
+| Cuenta de Ajuste vacía en una Merma | No hay relación activa para la subsidiaria con Tipo de Solicitud `Merma` o vacío | Crear o activar una fila en **Gestion de Movimientos > Cuentas por Tipo de Movimiento** |
+| Cuenta de Ajuste vacía en un Préstamo A la Clínica | No hay relación activa para la subsidiaria con Tipo de Solicitud `Prestamo` | Crear o activar esa fila en **Gestion de Movimientos > Cuentas por Tipo de Movimiento** |
 | Ubicación Destino vacía | Falta la bodega de préstamos | Marcar una ubicación para la subsidiaria |
 | El Préstamo no se guarda y marca la entidad | El campo es obligatorio | Elegir la entidad |
-| La entidad del Préstamo sin opciones | La subsidiaria no tiene filas activas en **AS Entidad Receptora por Subsidiaria** | Cargar las entidades en **Gestion de Movimientos > Entidades Receptoras** |
+| La entidad del Préstamo sin opciones | La subsidiaria no tiene filas activas en **AS Entidad por Subsidiaria** | Cargar las entidades en **Gestion de Movimientos > Entidades Asociadas por Subsidiaria** |
 | La entidad aparece bloqueada al editar | La entidad no se cambia en una corrección | Anular y registrar un préstamo nuevo con la entidad correcta |
 | Un préstamo no aparece en **Prestamo Relacionado** | Está marcado el otro sentido, o el préstamo ya no tiene pendiente | Marcar el sentido del préstamo; si ya fue devuelto completo, no hay nada que devolver |
 | Una entidad no aparece en el filtro de Devolución | No tiene préstamos pendientes en la subsidiaria | Revisar el préstamo; si ya fue devuelto completo, no hay nada que devolver |

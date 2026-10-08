@@ -132,20 +132,28 @@
 <td class="label">Subsidiaria</td>
 <td class="value">${doc.cabecera.subsidiaria}</td>
 </tr>
+<#if doc.cabecera.sentido?has_content>
+<tr>
+<td class="label">Sentido del prestamo</td>
+<td class="value">${doc.cabecera.sentido}</td>
+</tr>
+</#if>
 <tr>
 <td class="label">Servicio</td>
 <td class="value">${doc.cabecera.servicio}</td>
 </tr>
 <#if doc.cabecera.entidad?has_content>
 <tr>
-<td class="label">Entidad receptora</td>
+<td class="label"><#if doc.cabecera.sentido == 'A la Clinica'>Entidad emisora del prestamo<#else>Entidad receptora del prestamo</#if></td>
 <td class="value">${doc.cabecera.entidad}</td>
 </tr>
 </#if>
+<#if doc.cabecera.origen?has_content>
 <tr>
 <td class="label">Ubicacion origen</td>
 <td class="value">${doc.cabecera.origen}</td>
 </tr>
+</#if>
 <tr>
 <td class="label">Ubicacion destino</td>
 <td class="value">${doc.cabecera.destino}</td>

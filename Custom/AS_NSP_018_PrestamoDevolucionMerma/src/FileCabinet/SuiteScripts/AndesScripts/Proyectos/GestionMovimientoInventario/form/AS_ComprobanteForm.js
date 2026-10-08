@@ -46,6 +46,7 @@ define(['N/render', 'N/file', '../constants/AS_MovimientoInventarioConstants'],
         return {
             cabecera: {
                 numero     : movimiento.getValue({ fieldId: 'name' }),
+                sentido    : movimiento.getValue({ fieldId: 'custrecord_as_mov_a_la_clinica' }) ? 'A la Clinica' : (movimiento.getValue({ fieldId: 'custrecord_as_mov_de_la_clinica' }) ? 'De la Clinica' : ''),
                 fecha      : movimiento.getText({ fieldId: 'custrecord_as_mov_fecha' }),
                 subsidiaria: movimiento.getText({ fieldId: 'custrecord_as_mov_subsidiaria' }),
                 servicio   : movimiento.getText({ fieldId: 'custrecord_as_mov_servicio' }),

@@ -296,6 +296,7 @@ define(['N/ui/serverWidget', 'N/ui/message', '../constants/AS_MovimientoInventar
             label: CONSTANTES.ETIQUETAS_DETALLE.LOTE,
         });
         if (!esALaClinica) campoLote.addSelectOption({ value: '', text: '' });
+        if (esALaClinica && nombreTipo === CONSTANTES.TIPOS.PRESTAMO) campoLote.isMandatory = true;
 
         const etiquetaCantidad = (nombreTipo === CONSTANTES.TIPOS.MERMA) ? 'Cantidad a Dar de Baja' : 'Cantidad Prestada';
 
