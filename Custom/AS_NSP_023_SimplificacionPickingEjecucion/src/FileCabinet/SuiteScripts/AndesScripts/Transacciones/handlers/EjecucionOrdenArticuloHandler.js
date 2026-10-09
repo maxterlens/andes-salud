@@ -1,20 +1,45 @@
 /**
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
+ * @file EjecucionOrdenArticuloHandler.js
+ * @description Handler — orquesta los eventos del User Event de Ejecución de Orden de Artículo.
  */
 define([
-], () => {
+    '../services/EjecucionOrdenArticuloService'
+], (EjecucionOrdenArticuloService) => {
 
-	function asignarEstadoEnviado(context) {
-		const SENT_SHIP_STATUS = 'C';
-		const { newRecord, type } = context;
+    /**
+     * beforeLoad: sugiere el estado Enviado en el formulario al crear
+     * una ejecución desde una Orden de Traslado.
+     * @param {Object} context - Contexto del User Event.
+     */
+    function asignarEstadoEnviado(context) {
+        const { newRecord, type } = context;
+        const createdFrom = newRecord.getValue('createdfrom');
 
-		if (type == 'create') {
-			newRecord.setValue('shipstatus', SENT_SHIP_STATUS);
-		}
-	}
+        if (EjecucionOrdenArticuloService.debeMarcarseEnviado({ type, createdFrom })) {
+            newRecord.setValue('shipstatus', EjecucionOrdenArticuloService.SHIP_STATUS.SHIPPED);
+        }
+    }
+
+    /**
+     * afterSubmit: asegura el estado Enviado en ejecuciones creadas
+     * desde una Orden de Traslado (UI, script, CSV o integración).
+     * @param {Object} context - Contexto del User Event.
+     */
+    function marcarComoEnviado(context) {
+        const { newRecord, type } = context;
+
+        EjecucionOrdenArticuloService.marcarComoEnviado({
+            id: newRecord.id,
+            type,
+            createdFrom: newRecord.getValue('createdfrom'),
+            shipStatus: newRecord.getValue('shipstatus')
+        });
+    }
 
     return {
-		asignarEstadoEnviado
+        asignarEstadoEnviado,
+        marcarComoEnviado
     };
 });

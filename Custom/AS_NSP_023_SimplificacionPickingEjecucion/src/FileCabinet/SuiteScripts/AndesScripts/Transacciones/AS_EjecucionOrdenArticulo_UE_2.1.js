@@ -13,10 +13,17 @@ define([
         try {
             EjecucionOrdenArticuloHandler.asignarEstadoEnviado(context);
         } catch (e) {
-            log.error({ title: 'UE beforeLoad - AS_OrdenTraslado', details: e.message });
-            throw e;
+            log.error({ title: 'UE beforeLoad - AS_EjecucionOrdenArticulo', details: e.message });
         }
     };
-    
-    return { beforeLoad };
+
+    const afterSubmit = (context) => {
+        try {
+            EjecucionOrdenArticuloHandler.marcarComoEnviado(context);
+        } catch (e) {
+            log.error({ title: 'UE afterSubmit - AS_EjecucionOrdenArticulo', details: e.message });
+        }
+    };
+
+    return { beforeLoad, afterSubmit };
 });
