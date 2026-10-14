@@ -11,7 +11,7 @@
  *   - [FEAT] Boton Generar: operaciones Cargar/Generar, el campo oculto de la
  *            operacion, la ubicacion con la que se valido el CSV, el check
  *            AS Recuento Inventario Carga del recuento y la accion startcount
- *            (Comenzar recuento).
+ *            (Comenzar recuento), y los textos del aviso "Generando recuento".
  *
  * CHANGELOG v1.4.0 (2026-10-13):
  *   - [FEAT] CUENTAS_DATA (campo oculto con las cuentas configuradas) y la ruta
@@ -34,10 +34,12 @@
 define([], () => {
 
     const FORMULARIO = {
-        TITULO       : 'Carga de Recuento de Inventario',
-        BOTON_CARGAR : 'Cargar',
-        BOTON_GENERAR: 'Generar',
-        CLIENT_SCRIPT: '/SuiteScripts/AndesScripts/Proyectos/RecuentoInventario/AS_RecuentoInventario_CS_2.1.js',
+        TITULO          : 'Carga de Recuento de Inventario',
+        BOTON_CARGAR    : 'Cargar',
+        BOTON_GENERAR   : 'Generar',
+        GENERANDO_TITULO: 'Generando recuento',
+        GENERANDO_TEXTO : 'Se esta creando el recuento de inventario. No cierre ni recargue la pagina.',
+        CLIENT_SCRIPT   : '/SuiteScripts/AndesScripts/Proyectos/RecuentoInventario/AS_RecuentoInventario_CS_2.1.js',
     };
 
     const GRUPOS = {
