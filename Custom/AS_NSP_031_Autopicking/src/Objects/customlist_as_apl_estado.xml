@@ -1,0 +1,39 @@
+<customlist scriptid="customlist_as_apl_estado">
+  <description>AS_NSP_031 - Estados del log de reproceso de autopicking.</description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>AS Estado Reproceso Autopicking</name>
+  <customvalues>
+    <customvalue scriptid="val_as_apl_ejecutada">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Ejecutada</value>
+    </customvalue>
+    <customvalue scriptid="val_as_apl_parcial">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Parcial</value>
+    </customvalue>
+    <customvalue scriptid="val_as_apl_sin_stock">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Sin stock</value>
+    </customvalue>
+    <customvalue scriptid="val_as_apl_error">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Error</value>
+    </customvalue>
+    <customvalue scriptid="val_as_apl_omitida_cola">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Omitida (en cola)</value>
+    </customvalue>
+    <customvalue scriptid="val_as_apl_simulacion">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Simulación</value>
+    </customvalue>
+  </customvalues>
+</customlist>

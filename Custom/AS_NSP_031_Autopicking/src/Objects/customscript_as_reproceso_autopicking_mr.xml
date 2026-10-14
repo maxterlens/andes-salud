@@ -1,0 +1,188 @@
+<mapreducescript scriptid="customscript_as_reproceso_autopicking_mr">
+  <description>AS_NSP_031 - Crea las Ejecuciones de Orden de Artículo pendientes de las Órdenes de Venta que el autopicking en línea no completó. Registra un log por OV en customrecord_as_autopicking_log.</description>
+  <isinactive>F</isinactive>
+  <name>AS MR Reproceso Autopicking</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/AndesScripts/Proyectos/Autopicking/processors/AS_ReprocesoAutopicking_MR_2.1.js]</scriptfile>
+  <scriptcustomfields>
+    <scriptcustomfield scriptid="custscript_as_rap_ids_ov">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>IDs internos de Orden de Venta separados por coma. Si se informa, solo se procesan esas OV.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>TEXT</fieldtype>
+      <help>IDs internos de Orden de Venta separados por coma. Si se informa, solo se procesan esas OV y no se aplica el filtro de días.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>IDs de Orden de Venta</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_rap_dias_atras">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue>30</defaultvalue>
+      <description>Antigüedad máxima (en días) de las OV a revisar.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>INTEGER</fieldtype>
+      <help>Antigüedad máxima (en días, según la fecha de la OV) de las órdenes a revisar. Por defecto 30.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Días hacia atrás</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue>1</minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_rap_limite_ov">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue>1000</defaultvalue>
+      <description>Máximo de OV a procesar por ejecución.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>INTEGER</fieldtype>
+      <help>Máximo de Órdenes de Venta a procesar en cada ejecución. Por defecto 1000.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Límite de OV por ejecución</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue>1</minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_rap_simulacion">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Si está marcado, calcula y registra el log sin crear Ejecuciones.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>CHECKBOX</fieldtype>
+      <help>Si está marcado, el proceso calcula qué se podría ejecutar con el stock actual y registra el log con estado Simulación, sin crear Ejecuciones.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Modo simulación</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_rap_usar_fecha_linea">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>T</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Fecha de la Ejecución = fecha de creación de la línea de la OV.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>CHECKBOX</fieldtype>
+      <help>Si está marcado, cada Ejecución toma la fecha de creación de sus líneas (una Ejecución por ubicación y fecha). Si el período está cerrado, se usa la fecha del día. Si no está marcado, todas usan la fecha del día.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Usar fecha de la línea</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_rap_log_sin_cambios">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>T</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Registrar log también cuando la OV sigue sin stock.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>CHECKBOX</fieldtype>
+      <help>Si está marcado, se crea un registro de log aunque la OV no haya podido ejecutarse por falta de stock. Desmárquelo si genera demasiados registros.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Registrar log sin cambios</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+  </scriptcustomfields>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_reproceso_autopicking_mr">
+      <buffersize>1</buffersize>
+      <concurrencylimit>5</concurrencylimit>
+      <custscript_as_rap_dias_atras>30</custscript_as_rap_dias_atras>
+      <custscript_as_rap_ids_ov></custscript_as_rap_ids_ov>
+      <custscript_as_rap_limite_ov>1000</custscript_as_rap_limite_ov>
+      <custscript_as_rap_log_sin_cambios>T</custscript_as_rap_log_sin_cambios>
+      <custscript_as_rap_simulacion>F</custscript_as_rap_simulacion>
+      <custscript_as_rap_usar_fecha_linea>T</custscript_as_rap_usar_fecha_linea>
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <queueallstagesatonce>T</queueallstagesatonce>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>NOTSCHEDULED</status>
+      <title>AS MR Reproceso Autopicking</title>
+      <yieldaftermins>60</yieldaftermins>
+      <recurrence>
+        <daily>
+          <everyxdays>1</everyxdays>
+          <repeat>PT2H</repeat>
+          <startdate>2026-10-15</startdate>
+          <starttime>04:00:00Z</starttime>
+        </daily>
+      </recurrence>
+    </scriptdeployment>
+  </scriptdeployments>
+</mapreducescript>
