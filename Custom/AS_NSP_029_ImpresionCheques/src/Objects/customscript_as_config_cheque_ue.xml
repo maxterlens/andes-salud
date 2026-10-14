@@ -1,0 +1,25 @@
+<usereventscript scriptid="customscript_as_config_cheque_ue">
+  <description>AS_NSP_029 - Valida una sola impresora predeterminada por subsidiaria en AS Configuración Impresión Cheque</description>
+  <isinactive>F</isinactive>
+  <name>AS Configuración Cheque UE</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/AndesScripts/Proyectos/ImpresionCheques/AS_ConfiguracionCheque_UE_2.1.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_config_cheque_ue">
+      <allemployees>F</allemployees>
+      <alllocalizationcontexts>T</alllocalizationcontexts>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
+      <eventtype></eventtype>
+      <isdeployed>T</isdeployed>
+      <loglevel>ERROR</loglevel>
+      <recordtype>[scriptid=customrecord_as_config_cheque]</recordtype>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>RELEASED</status>
+    </scriptdeployment>
+  </scriptdeployments>
+</usereventscript>

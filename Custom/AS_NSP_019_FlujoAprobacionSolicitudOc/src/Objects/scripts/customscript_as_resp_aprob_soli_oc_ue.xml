@@ -1,0 +1,24 @@
+<usereventscript scriptid="customscript_as_resp_aprob_soli_oc_ue">
+  <description>AS_NSP_019 - Listado de Departamentos filtrado por Subsidiaria en AS Responsable Aprobacion Solicitud OC.</description>
+  <isinactive>F</isinactive>
+  <name>AS Responsable Aprob Solicitud OC UE</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/AndesScripts/CustomRecord/AS_ResponsableAprobacionSolicitudOC_UE_2.1.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_resp_aprob_soli_oc_ue">
+      <allemployees>F</allemployees>
+      <alllocalizationcontexts>T</alllocalizationcontexts>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <executioncontext>USERINTERFACE</executioncontext>
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <recordtype>[scriptid=customrecord_as_respon_aprob_soli_oc]</recordtype>
+      <runasrole></runasrole>
+      <status>RELEASED</status>
+    </scriptdeployment>
+  </scriptdeployments>
+</usereventscript>

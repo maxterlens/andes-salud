@@ -1,0 +1,19 @@
+<customlist scriptid="customlist_as_metodo_pago">
+  <description>AS_NSP_029 - Método de pago del Pago de Factura. "Cheque" identifica los pagos que se imprimen en cheque físico.</description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>AS Metodo de Pago</name>
+  <customvalues>
+    <customvalue scriptid="val_as_metodo_pago_transferencia">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Transferencia</value>
+    </customvalue>
+    <customvalue scriptid="val_as_metodo_pago_cheque">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Cheque</value>
+    </customvalue>
+  </customvalues>
+</customlist>

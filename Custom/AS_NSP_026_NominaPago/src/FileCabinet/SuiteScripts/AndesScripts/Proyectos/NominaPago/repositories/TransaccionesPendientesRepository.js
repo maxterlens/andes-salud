@@ -16,7 +16,9 @@ define(['N/search'], (search) => {
     /**
      * Busca transacciones (VendPymt, TaxPymt, VPrep) candidatas a nomina de pago:
      * cuenta con numero de cuenta bancaria informado, approval status distinto de
-     * Rechazado, y que aun no tengan un customrecord_2w_detalle_nomina_pago vinculado.
+     * Rechazado, que aun no tengan un customrecord_2w_detalle_nomina_pago vinculado,
+     * y cuyo metodo de pago (custbody_as_metodo_pago) no sea Cheque (id 2). Los pagos
+     * sin metodo de pago informado si se incluyen.
      *
      * @param {Object} params
      * @param {string|number} [params.subsidiaria] - internal id de la subsidiaria (opcional)
@@ -35,6 +37,11 @@ define(['N/search'], (search) => {
             ['approvalstatus', 'noneof', '3'],
             'AND',
             ['custrecord_2w_detpago_transaccion.internalidnumber', 'isempty', ''],
+            'AND',
+            // Excluye pagos con metodo de pago Cheque (id 2). 'noneof' incluye los
+            // registros con el campo vacio, asi que los pagos sin metodo informado
+            // (y los TaxPymt, donde el campo no aplica) siguen apareciendo.
+            ['custbody_as_metodo_pago', 'noneof', '2'],
             'AND',
             ['account', 'anyof', cuenta]
         ];

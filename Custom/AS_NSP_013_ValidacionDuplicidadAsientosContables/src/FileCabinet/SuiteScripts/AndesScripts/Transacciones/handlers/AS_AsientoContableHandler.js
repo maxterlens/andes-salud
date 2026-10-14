@@ -188,34 +188,51 @@ define(['N/search', 'N/log'], (search, log) => {
     // ARQUITECTURA.md, sección "Campos obligatorios por tipo de cuenta", para el
     // detalle de por qué no se cruza con la exención de cuenta ni con el UE.
 
-    const TIPOS_CUENTA_OBLIGAN_CAMPOS = ['Bank', 'AcctRec', 'AcctPay', 'OthCurrAsset'];
+    const TIPOS_CUENTA_OBLIGAN_FOLIO = ['Bank', 'AcctRec', 'AcctPay', 'OthCurrAsset'];
+    const TIPOS_CUENTA_OBLIGAN_DEPARTAMENTO = ['FixedAsset', 'Income', 'COGS', 'Expense', 'OthIncome', 'OthExpense', 'DeferExpense'];
 
     /**
-     * Determina, para una línea del Diario, qué campos obligatorios faltan
-     * según el tipo de cuenta. Devuelve null si no aplica o si está todo
-     * completo, o un array con los nombres de los campos faltantes.
+     * Determina, para una línea del Diario, qué campos obligatorios faltan.
+     * Fecha de Documento, Fecha de Vencimiento, Nombre y Nota son obligatorios
+     * en toda línea, sin importar el tipo de cuenta. Folio y Departamento
+     * tienen cada uno su propia condición de tipo de cuenta, independiente
+     * entre sí. Devuelve null si está todo completo, o un array con los
+     * nombres de los campos faltantes.
      */
     const camposFaltantesAsiento = (cuenta, valores) => {
-        if (!cuenta) return null;
+        let tipoCuenta = null;
+        if (cuenta) {
+            const resultado = search.lookupFields({
+                type: 'account',
+                id: cuenta,
+                columns: ['type']
+            });
+            tipoCuenta = resultado.type && resultado.type[0] && resultado.type[0].value;
+        }
 
-        const resultado = search.lookupFields({
-            type: 'account',
-            id: cuenta,
-            columns: ['type']
-        });
-        const tipoCuenta = resultado.type && resultado.type[0] && resultado.type[0].value;
+        const faltantes = [];
 
-        if (!TIPOS_CUENTA_OBLIGAN_CAMPOS.includes(tipoCuenta)) return null;
+        if (tipoCuenta && TIPOS_CUENTA_OBLIGAN_FOLIO.includes(tipoCuenta) && !valores.Folio) {
+            faltantes.push('Folio');
+        }
+        if (!valores['Fecha de Documento']) faltantes.push('Fecha de Documento');
+        if (!valores['Fecha de Vencimiento']) faltantes.push('Fecha de Vencimiento');
+        if (!valores.Nombre) faltantes.push('Nombre');
+        if (tipoCuenta && TIPOS_CUENTA_OBLIGAN_DEPARTAMENTO.includes(tipoCuenta) && !valores.Departamento) {
+            faltantes.push('Departamento');
+        }
+        if (!valores.Nota) faltantes.push('Nota');
 
-        const faltantes = Object.keys(valores).filter((campo) => !valores[campo]);
         return faltantes.length ? faltantes : null;
     };
 
     /**
-     * Exige Folio, Fecha de Documento, Fecha de Vencimiento, Nombre, Departamento
-     * y Nota en la línea del Diario Contable (sublist 'line') cuando la cuenta
-     * seleccionada es de tipo Banco, CxC, CxP u Otros Activos Corrientes. Aplica
-     * solo al formulario Andes - Diario Contable (customform 115); el CS es quien
+     * Exige, en toda línea del Diario Contable (sublist 'line'): Fecha de
+     * Documento, Fecha de Vencimiento, Nombre y Nota siempre; Folio solo si
+     * la cuenta es de tipo Banco, CxC, CxP u Otros Activos Corrientes;
+     * Departamento solo si la cuenta es de tipo Activo Fijo, Ingresos, COGS,
+     * Gastos, Otros Ingresos, Otros Gastos o Gastos Diferidos. Aplica solo
+     * al formulario Andes - Diario Contable (customform 115); el CS es quien
      * filtra por formulario antes de llamar a esta función.
      *
      * @param {Object} context - Contexto validateLine del Client Script
@@ -244,7 +261,7 @@ define(['N/search', 'N/log'], (search, log) => {
 
         dialog.alert({
             title: 'Campos requeridos',
-            message: 'Para el tipo de cuenta seleccionado, son obligatorios en la línea: ' + faltantes.join(', ') + '.'
+            message: 'Son obligatorios en esta línea: ' + faltantes.join(', ') + '.'
         });
         return false;
     };

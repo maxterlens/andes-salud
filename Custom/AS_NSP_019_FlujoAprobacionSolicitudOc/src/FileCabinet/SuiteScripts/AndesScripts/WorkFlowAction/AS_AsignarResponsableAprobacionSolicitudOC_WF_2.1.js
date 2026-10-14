@@ -10,8 +10,13 @@
  * Workflow Action: Asignar Responsable de Aprobación - Solicitud de Compra
  *
  * Busca en el custom record customrecord_as_respon_aprob_soli_oc el
- * responsable configurado para la subsidiaria de la solicitud de compra
- * (purchaserequisition) y lo asigna al campo estándar nextapprover de la transacción.
+ * responsable configurado para la combinación Subsidiaria + Departamento
+ * (cabecera) de la solicitud de compra (purchaserequisition) y lo asigna al
+ * campo estándar nextapprover de la transacción.
+ *
+ * Si falta la subsidiaria o el departamento, o no existe responsable para la
+ * combinación, la solicitud queda Pendiente de Aprobación sin aprobador
+ * (nextapprover vacío) y se registra el motivo en el log.
  *
  * Aplica únicamente a registros de tipo purchaserequisition.
  *
@@ -23,6 +28,7 @@ define(['../CustomRecord/repositories/ASResponsableAprobacionSoliOCRepository'],
     (ASResponsableAprobacionSoliOCRepository) => {
 
         const FIELD_SUBSIDIARY = 'subsidiary';
+        const FIELD_DEPARTMENT = 'department';
         const FIELD_NEXT_APPROVER = 'nextapprover';
         const RECORD_TYPE_PURCHASE_REQUISITION = 'purchaserequisition';
 
@@ -38,7 +44,7 @@ define(['../CustomRecord/repositories/ASResponsableAprobacionSoliOCRepository'],
 
             try {
                 if (newRecord.type !== RECORD_TYPE_PURCHASE_REQUISITION) {
-                    log.error({
+                    log.audit({
                         title: 'onAction - Tipo de registro no soportado',
                         details: `Este action solo aplica a ${RECORD_TYPE_PURCHASE_REQUISITION}. Tipo recibido: ${newRecord.type}`
                     });
@@ -46,24 +52,31 @@ define(['../CustomRecord/repositories/ASResponsableAprobacionSoliOCRepository'],
                 }
 
                 const subsidiaria = newRecord.getValue({ fieldId: FIELD_SUBSIDIARY });
-                log.error('subsidiaria', subsidiaria);
+                const departamento = newRecord.getValue({ fieldId: FIELD_DEPARTMENT });
 
-                if (!subsidiaria) {
-                    log.error({ title: 'onAction - Subsidiaria no encontrada', details: `La solicitud ${newRecord.id} no tiene subsidiaria asignada.` });
-                    return;
-                }
-
-                const responsable = ASResponsableAprobacionSoliOCRepository.buscarResponsablesPorSubsidiaria(subsidiaria);
-                log.error('responsable', responsable);
-
-                if (!responsable) {
-                    log.error({
-                        title: 'onAction - Responsable no encontrado',
-                        details: `No se encontró responsable de aprobación configurado para la Subsidiaria: ${subsidiaria}`
+                if (!subsidiaria || !departamento) {
+                    log.audit({
+                        title: 'onAction - Datos incompletos, queda sin aprobador',
+                        details: `Solicitud ${newRecord.id || '(nueva)'} | Subsidiaria: ${subsidiaria || '-'} | Departamento: ${departamento || '-'}`
                     });
                     return;
                 }
+
+                const responsable = ASResponsableAprobacionSoliOCRepository.buscarResponsable(subsidiaria, departamento);
+
+                if (!responsable) {
+                    log.audit({
+                        title: 'onAction - Responsable no configurado, queda sin aprobador',
+                        details: `Solicitud ${newRecord.id || '(nueva)'} | Subsidiaria: ${subsidiaria} | Departamento: ${departamento}`
+                    });
+                    return;
+                }
+
                 newRecord.setValue({ fieldId: FIELD_NEXT_APPROVER, value: responsable });
+                log.debug({
+                    title: 'onAction - Responsable asignado',
+                    details: `Solicitud ${newRecord.id || '(nueva)'} | Subsidiaria: ${subsidiaria} | Departamento: ${departamento} | Responsable: ${responsable}`
+                });
 
             } catch (e) {
                 log.error({ title: 'onAction - Error inesperado', details: `${e.name}: ${e.message}` });

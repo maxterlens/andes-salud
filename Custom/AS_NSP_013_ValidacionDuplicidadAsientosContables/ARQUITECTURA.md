@@ -85,17 +85,21 @@ Este suitelet y su deployment se borran cuando la investigación termine, como d
 
 ## Campos obligatorios por tipo de cuenta (form 115 - Andes - Diario Contable)
 
-Además del control de duplicidad, este proyecto ahora valida que ciertas líneas del asiento
-tengan datos mínimos completos: si la cuenta de la línea es de tipo Banco, Cuentas por Cobrar,
-Cuentas por Pagar u Otros Activos Corrientes, son obligatorios en esa línea: Folio
-(`custcol_2w_folio`), Fecha de Documento (`custcol8`), Fecha de Vencimiento (`custcol2`),
-Nombre (`entity`), Departamento (`department`) y Nota (`memo`).
+Además del control de duplicidad, este proyecto valida que ciertas líneas del asiento tengan
+datos mínimos completos. Cuatro campos son obligatorios en toda línea, sin importar el tipo de
+cuenta: Fecha de Documento (`custcol8`), Fecha de Vencimiento (`custcol2`), Nombre (`entity`) y
+Nota (`memo`). Folio y Departamento tienen, en cambio, cada uno su propia condición de tipo de
+cuenta, independiente entre sí: Folio (`custcol_2w_folio`) es obligatorio si la cuenta es de tipo
+Banco, Cuentas por Cobrar, Cuentas por Pagar u Otros Activos Corrientes; Departamento
+(`department`) es obligatorio si la cuenta es de tipo Activo Fijo, Ingresos, COGS, Gastos, Otros
+Ingresos, Otros Gastos o Gastos Diferidos — el mismo set de tipos que usa la regla equivalente en
+Factura de Compra.
 
 Es una regla independiente del control de duplicidad — vive en una función aparte del handler
 (`validarCamposObligatoriosLinea`, junto a `validar`) y no se cruza con la exención por cuenta
 (`custrecord_as_cuenta_exenta_dup`): una cuenta marcada como exenta de duplicidad igual exige
-estos campos si su tipo está en la lista de arriba. Son conceptos distintos: uno decide si una
-línea entra al control de identidad repetida, el otro exige completitud de datos.
+los campos que le correspondan según su tipo. Son conceptos distintos: uno decide si una línea
+entra al control de identidad repetida, el otro exige completitud de datos.
 
 Se acotó a solo Client Script (`validateLine`), sin contraparte en el User Event — a diferencia
 del control de duplicidad, que sí necesita el UE porque cubre CSV Import. Esta regla es

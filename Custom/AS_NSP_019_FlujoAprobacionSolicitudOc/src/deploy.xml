@@ -6,7 +6,7 @@
         <path>~/FileCabinet/*</path>
     </files>
     <objects>
-        <path>~/Objects/newtemplate/*</path>
+        <!--<path>~/Objects/noobject/*</path>-->
     </objects>
     <translationimports>
         <path>~/Translations/*</path>
