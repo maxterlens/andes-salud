@@ -1,3 +1,7 @@
+/*  Control de Cambios:
+    - Se comento la función eliminarLineasDeOtrasSubsidiarias que se ejecuta en la función agregarLineasRegistro 
+*/
+
 define([
     "N/record",
     "N/runtime",
@@ -1400,12 +1404,12 @@ define([
                     subsidiaryActual: parametro.datos.subsidiary
                 });
 
-                // Eliminar líneas que fueron movidas a otras subsidiarias
-                eliminarLineasDeOtrasSubsidiarias({
+                // Eliminar líneas que fueron movidas a otras subsidiarias - Depreciado ya que el nroCuentaPaciente se repite en diferente subsidiaria
+                /*eliminarLineasDeOtrasSubsidiarias({
                     nroCuentaPaciente: parametro.datos.custbody_2win_nro_cuenta_paciente,
                     identificadoresFila: identificadoresFila,
                     subsidiaryActual: parametro.datos.subsidiary
-                });
+                });*/
             } catch (error) {
                 // Registrar error pero no interrumpir el flujo principal
                 nLog.error("agregarLineasRegistro - error eliminar lineas movidas a otras subsidiarias", error);

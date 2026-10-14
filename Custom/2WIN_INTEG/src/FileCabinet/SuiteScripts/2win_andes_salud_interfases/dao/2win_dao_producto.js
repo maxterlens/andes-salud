@@ -3,7 +3,7 @@
  * @module ./2win_dao_producto.js
  * @NModuleScope Public
  */
-define(["N/query", "N/record", "N/search", "N/log", "N/config", "../lib/2win_lib_peticion", "./2win_dao"], function (query, record, search, nLog, config, libPeticion, dao) {
+define(["N/query", "N/record", "N/search", "N/log", "N/config", "../lib/2win_lib_peticion", "./2win_dao", "./2win_dao_jerarquia_subsidiaria"], function (query, record, search, nLog, config, libPeticion, dao, daoJerarquiaSubsidiaria) {
     /**
      * @function busquedaRegistroPorUpcCode - Función para realizar una busqueda en una tabla de netsuite.
      * @param {string} parametro - Parametros a usar en los filtros de la busqueda.
@@ -576,6 +576,36 @@ define(["N/query", "N/record", "N/search", "N/log", "N/config", "../lib/2win_lib
                 .asMappedResults()[0]?.abbreviation;
 
             const taxschedule = search.lookupFields({ type: parametro.getValue("type"), columns: ["taxschedule"], id: parametro.getValue("id") })?.taxschedule[0]?.value;
+
+            // subsidiary es multi-select y lookupFields solo devuelve un valor: hay que cargar el registro.
+            // El registro de afterSubmit es parcial, por eso se carga el guardado y no se usa parametro.
+            // Ojo: getValue("type") devuelve "item" (generico) y record.load lo rechaza. El tipo concreto
+            // (inventoryitem, lotnumberedinventoryitem, serializedinventoryitem) esta en parametro.type.
+            // Va aislado en su propio try: si la carga falla, el mensaje se envia igual que antes de
+            // agregar este campo, en vez de tumbar toda la interfaz por un dato accesorio.
+            let subsidiarias = [];
+            try {
+                const registroItem = record.load({
+                    type: parametro.type,
+                    id: parametro.getValue("id")
+                });
+                const subsidiariasSeleccionadas = registroItem.getValue({ fieldId: "subsidiary" }) || [];
+                subsidiarias = [].concat(subsidiariasSeleccionadas).map(Number);
+
+                // Con "Incluir hijos" marcado, NetSuite guarda solo la subsidiaria seleccionada y deja los
+                // descendientes implicitos. Andes necesita la lista completa, asi que se expande la jerarquia.
+                // Si la expansion falla, quedan las seleccionadas: se pierde detalle, no el campo entero.
+                if (registroItem.getValue({ fieldId: "includechildren" })) {
+                    try {
+                        subsidiarias = daoJerarquiaSubsidiaria.expandirDescendientes(subsidiarias);
+                    } catch (errorJerarquia) {
+                        nLog.error("recuperarCamposRegistro - no se pudo expandir la jerarquia de subsidiarias", errorJerarquia);
+                    }
+                }
+            } catch (errorSubsidiarias) {
+                nLog.error("recuperarCamposRegistro - no se pudieron leer las subsidiarias", errorSubsidiarias);
+            }
+
             let camposRecuperados = {
                 CodProducto: parametro.getValue({ fieldId: "id" }),
                 NomProducto: parametro.getValue({ fieldId: "itemid" }),
@@ -583,7 +613,8 @@ define(["N/query", "N/record", "N/search", "N/log", "N/config", "../lib/2win_lib
                 CodFamilia: codFamilia,
                 CodUnidProducto: codUnidadProducto,
                 Vigente: parametro.getValue({ fieldId: "isinactive" }) ? "N" : "S",
-                ProAfectoIva: Number(taxschedule) === 1 ? "S" : "N"
+                ProAfectoIva: Number(taxschedule) === 1 ? "S" : "N",
+                Subsidiarias: subsidiarias
             };
             nLog.debug("recuperarCamposRegistro - camposRecuperados", camposRecuperados);
             return camposRecuperados;
