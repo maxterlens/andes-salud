@@ -17,7 +17,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.6.0
+ * @version 1.7.0
  *
  */
 
@@ -41,12 +41,15 @@ define(['N/encode', 'N/redirect', '../form/AS_RecuentoInventarioForm', '../data/
             return;
         }
         const filas      = leerFilas(parametros.contenido);
+        const nombres    = [...new Set(filas.map((fila) => UTILS.pasarAMayusculasSinEspaciosExtra(fila.item)).filter((nombre) => nombre))];
         const ubicacion  = recuentoInventarioQuery.obtenerUbicacion(parametros.cabecera.ubicacion);
-        const articulos  = recuentoInventarioQuery.obtenerArticulosPorNombre(obtenerNombres(filas));
+        const articulos  = recuentoInventarioQuery.obtenerArticulosPorNombre(nombres);
         const resultados = filas.map((fila) => validarFila(fila, ubicacion, articulos));
-        const errores    = validarSubsidiaria(ubicacion, parametros.cabecera.subsidiaria)
-            .concat(resultados.filter((resultado) => resultado.error).map((resultado) => resultado.error));
+        const errores    = resultados.filter((resultado) => resultado.error).map((resultado) => resultado.error);
         const lineas     = armarLineas(resultados.filter((resultado) => resultado.articulo));
+        if (ubicacion.subsidiaria !== String(parametros.cabecera.subsidiaria)) {
+            errores.unshift('La ubicacion ' + ubicacion.nombre + ' no pertenece a la subsidiaria seleccionada');
+        }
 
         log.audit({
             title  : 'RECUENTO INVENTARIO CARGADO',
@@ -67,7 +70,14 @@ define(['N/encode', 'N/redirect', '../form/AS_RecuentoInventarioForm', '../data/
             responderConFormulario(context, parametros.cabecera, [], ['La ubicacion cambio despues de cargar el CSV: vuelva a cargarlo']);
             return;
         }
-        const recuentoId = recuentoInventarioRecord.crearRecuento(parametros.cabecera, parametros.articulos);
+        let recuentoId;
+        try {
+            recuentoId = recuentoInventarioRecord.crearRecuento(parametros.cabecera, parametros.articulos);
+        } catch (fallo) {
+            if (fallo.name !== 'USER_ERROR') throw fallo;
+            responderConFormulario(context, parametros.cabecera, [], [], fallo.message);
+            return;
+        }
         recuentoInventarioRecord.comenzarRecuento(recuentoId);
 
         log.audit({
@@ -83,21 +93,32 @@ define(['N/encode', 'N/redirect', '../form/AS_RecuentoInventarioForm', '../data/
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Los tres procesos terminan aqui: el select Cuenta necesita las cuentas
-     * configuradas cada vez que se dibuja la pantalla.
+     * Los tres procesos terminan aqui: los selects Cuenta y Ubicacion necesitan
+     * sus opciones con la subsidiaria cada vez que se dibuja la pantalla.
      */
-    function responderConFormulario(context, cabecera, lineas, errores) {
-        const cuentas = recuentoInventarioQuery.obtenerCuentasRecuento();
-        context.response.writePage(recuentoInventarioForm.construirFormulario(cabecera, lineas, errores, cuentas));
+    function responderConFormulario(context, cabecera, lineas, errores, alerta) {
+        const cuentas     = recuentoInventarioQuery.obtenerCuentasRecuento();
+        const ubicaciones = recuentoInventarioQuery.obtenerUbicaciones();
+        context.response.writePage(recuentoInventarioForm.construirFormulario(cabecera, lineas, errores, cuentas, ubicaciones, alerta));
     }
 
+    /**
+     * En Windows el navegador sube el .csv como "application/vnd.ms-excel":
+     * NetSuite lo toma como Excel (binario) y getContents lo devuelve en base64,
+     * sin saltos de linea. Ahi se decodifica a texto.
+     */
     function obtenerParametrosCarga(request) {
         const archivo = request.files[CONSTANTES.CAMPOS.ARCHIVO];
+        let contenido = '';
+        if (archivo) {
+            contenido = archivo.isText ? archivo.getContents() : encode.convert({
+                string        : archivo.getContents(),
+                inputEncoding : encode.Encoding.BASE_64,
+                outputEncoding: encode.Encoding.UTF_8,
+            });
+        }
 
-        return {
-            cabecera : leerCabecera(request.parameters),
-            contenido: archivo ? leerContenido(archivo) : '',
-        };
+        return { cabecera: leerCabecera(request.parameters), contenido: contenido };
     }
 
     function leerCabecera(valores) {
@@ -112,20 +133,6 @@ define(['N/encode', 'N/redirect', '../form/AS_RecuentoInventarioForm', '../data/
             cuenta      : valores[campos.CUENTA],
             nota        : valores[campos.NOTA],
         };
-    }
-
-    /**
-     * En Windows el navegador sube el .csv como "application/vnd.ms-excel":
-     * NetSuite lo toma como Excel (binario) y getContents lo devuelve en base64,
-     * sin saltos de linea. Ahi se decodifica a texto.
-     */
-    function leerContenido(archivo) {
-        if (archivo.isText) return archivo.getContents();
-        return encode.convert({
-            string        : archivo.getContents(),
-            inputEncoding : encode.Encoding.BASE_64,
-            outputEncoding: encode.Encoding.UTF_8,
-        });
     }
 
     function leerFilas(contenido) {
@@ -145,11 +152,6 @@ define(['N/encode', 'N/redirect', '../form/AS_RecuentoInventarioForm', '../data/
             .filter((fila) => fila.ubicacion || fila.item || fila.upc);
     }
 
-    function obtenerNombres(filas) {
-        const nombres = filas.map((fila) => UTILS.pasarAMayusculasSinEspaciosExtra(fila.item)).filter((nombre) => nombre);
-        return nombres.filter((nombre, posicion) => nombres.indexOf(nombre) === posicion);
-    }
-
     function validarFila(fila, ubicacion, articulos) {
         const prefijo    = 'Fila ' + fila.numero + ': ';
         const candidatos = articulos[UTILS.pasarAMayusculasSinEspaciosExtra(fila.item)] || [];
@@ -161,11 +163,6 @@ define(['N/encode', 'N/redirect', '../form/AS_RecuentoInventarioForm', '../data/
             return { error: prefijo + 'la ubicacion "' + fila.ubicacion + '" no es la seleccionada (' + ubicacion.nombre + ')' };
         }
         return { articulo: coincidentes[0] };
-    }
-
-    function validarSubsidiaria(ubicacion, subsidiaria) {
-        if (ubicacion.subsidiaria === String(subsidiaria)) return [];
-        return ['La ubicacion ' + ubicacion.nombre + ' no pertenece a la subsidiaria seleccionada'];
     }
 
     /**

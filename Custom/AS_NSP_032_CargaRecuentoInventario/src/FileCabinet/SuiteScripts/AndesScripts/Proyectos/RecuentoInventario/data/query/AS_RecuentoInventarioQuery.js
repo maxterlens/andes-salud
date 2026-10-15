@@ -6,6 +6,8 @@
  *                - obtenerCuentasRecuento: las cuentas activas de AS Recuento
  *                  Inventario Cuenta, con su subsidiaria.
  *              Ubicaciones
+ *                - obtenerUbicaciones: las ubicaciones activas, con su
+ *                  subsidiaria.
  *                - obtenerUbicacion: nombre y subsidiaria de una ubicacion.
  *              Articulos
  *                - obtenerArticulosPorNombre: los articulos activos cuyo nombre
@@ -13,7 +15,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.2.0
+ * @version 1.3.0
  *
  */
 define(['N/query'], (query) => {
@@ -30,6 +32,18 @@ define(['N/query'], (query) => {
                   + ' FROM customrecord_as_rec_inv_cuenta c'
                   + ' WHERE c.isinactive = ?'
                   + ' ORDER BY BUILTIN.DF(c.custrecord_as_rec_inv_cta_cuenta)',
+            params: ['F'],
+        }).asMappedResults();
+
+        return filas.map((fila) => ({ subsidiaria: String(fila.subsidiaria), id: String(fila.id), nombre: fila.nombre }));
+    }
+
+    function obtenerUbicaciones() {
+        const filas = query.runSuiteQL({
+            query : 'SELECT l.id, l.fullname AS nombre, l.subsidiary AS subsidiaria'
+                  + ' FROM location l'
+                  + ' WHERE l.isinactive = ?'
+                  + ' ORDER BY l.fullname',
             params: ['F'],
         }).asMappedResults();
 
@@ -71,6 +85,7 @@ define(['N/query'], (query) => {
 
     return {
         obtenerCuentasRecuento   : obtenerCuentasRecuento,
+        obtenerUbicaciones       : obtenerUbicaciones,
         obtenerUbicacion         : obtenerUbicacion,
         obtenerArticulosPorNombre: obtenerArticulosPorNombre,
     };

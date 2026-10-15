@@ -9,8 +9,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.0.0
- *
+ * @version 1.1.0
  */
 
 define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventarioConstants'],
@@ -31,7 +30,11 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
         recuento.setValue({ fieldId: 'account',    value: cabecera.cuenta });
         recuento.setValue({ fieldId: 'memo',       value: cabecera.nota });
         recuento.setValue({ fieldId: CONSTANTES.RECUENTO.CAMPO_CARGA, value: true });
-        agregarArticulos(recuento, articulos);
+        articulos.forEach((articulo) => {
+            recuento.selectNewLine({ sublistId: 'item' });
+            recuento.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: articulo });
+            recuento.commitLine({ sublistId: 'item' });
+        });
 
         return recuento.save();
     }
@@ -41,18 +44,6 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
             recordType: CONSTANTES.RECUENTO.TIPO,
             id        : CONSTANTES.RECUENTO.ACCION_COMENZAR,
             params    : { recordId: recuentoId },
-        });
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Secundarias
-    // ─────────────────────────────────────────────────────────────────────────
-
-    function agregarArticulos(recuento, articulos) {
-        articulos.forEach((articulo) => {
-            recuento.selectNewLine({ sublistId: 'item' });
-            recuento.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: articulo });
-            recuento.commitLine({ sublistId: 'item' });
         });
     }
 

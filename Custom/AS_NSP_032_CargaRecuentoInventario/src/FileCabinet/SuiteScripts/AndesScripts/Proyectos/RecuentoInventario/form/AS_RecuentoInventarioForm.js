@@ -8,28 +8,31 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.5.0
- *
+ * @version 1.6.0
+
  */
 
-define(['N/ui/serverWidget', 'N/format', '../constants/AS_RecuentoInventarioConstants'],
-    (serverWidget, format, CONSTANTES) => {
+define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_RecuentoInventarioConstants'],
+    (serverWidget, message, format, CONSTANTES) => {
 
     // ─────────────────────────────────────────────────────────────────────────
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    function construirFormulario(cabecera, lineas, errores, cuentas) {
+    function construirFormulario(cabecera, lineas, errores, cuentas, ubicaciones, alerta) {
         const form = serverWidget.createForm({ title: CONSTANTES.FORMULARIO.TITULO });
 
         form.clientScriptModulePath = CONSTANTES.FORMULARIO.CLIENT_SCRIPT;
-        agregarCabecera(form, cabecera, cuentas);
+        if (alerta) form.addPageInitMessage({ type: message.Type.ERROR, title: CONSTANTES.FORMULARIO.ALERTA_TITULO, message: alerta });
+        agregarCabecera(form, cabecera, cuentas, ubicaciones);
         agregarArchivo(form);
         if (errores.length) agregarErrores(form, errores);
         if (lineas.length) agregarArticulos(form, lineas);
         agregarOperacion(form, cabecera);
         form.addSubmitButton({ label: CONSTANTES.FORMULARIO.BOTON_CARGAR });
-        if (lineas.length && !errores.length) agregarBotonGenerar(form);
+        if (lineas.length && !errores.length) {
+            form.addButton({ id: CONSTANTES.BOTONES.GENERAR, label: CONSTANTES.FORMULARIO.BOTON_GENERAR, functionName: 'generarRecuento' });
+        }
 
         return form;
     }
@@ -38,7 +41,7 @@ define(['N/ui/serverWidget', 'N/format', '../constants/AS_RecuentoInventarioCons
     // Secundarias
     // ─────────────────────────────────────────────────────────────────────────
 
-    function agregarCabecera(form, cabecera, cuentas) {
+    function agregarCabecera(form, cabecera, cuentas, ubicaciones) {
         const grupo = CONSTANTES.GRUPOS.CABECERA;
 
         form.addFieldGroup({ id: grupo, label: 'Recuento' });
@@ -56,11 +59,22 @@ define(['N/ui/serverWidget', 'N/format', '../constants/AS_RecuentoInventarioCons
             id       : CONSTANTES.CAMPOS.UBICACION,
             type     : serverWidget.FieldType.SELECT,
             label    : 'Ubicacion',
-            source   : 'location',
             container: grupo,
         });
-        campoUbicacion.isMandatory  = true;
+        campoUbicacion.isMandatory = true;
+        campoUbicacion.addSelectOption({ value: '', text: '' });
+        ubicaciones.forEach((ubicacion) => {
+            if (ubicacion.subsidiaria !== cabecera.subsidiaria) return;
+            campoUbicacion.addSelectOption({ value: ubicacion.id, text: ubicacion.nombre });
+        });
         campoUbicacion.defaultValue = cabecera.ubicacion || '';
+        const campoUbicacionesData = form.addField({
+            id   : CONSTANTES.CAMPOS.UBICACIONES_DATA,
+            type : serverWidget.FieldType.LONGTEXT,
+            label: 'Ubicaciones',
+        });
+        campoUbicacionesData.defaultValue = JSON.stringify(ubicaciones);
+        campoUbicacionesData.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         const campoDepartamento = form.addField({
             id       : CONSTANTES.CAMPOS.DEPARTAMENTO,
             type     : serverWidget.FieldType.SELECT,
@@ -115,7 +129,7 @@ define(['N/ui/serverWidget', 'N/format', '../constants/AS_RecuentoInventarioCons
     }
 
     function agregarArchivo(form) {
-        const campoArchivo = form.addField({
+        form.addField({
             id   : CONSTANTES.CAMPOS.ARCHIVO,
             type : serverWidget.FieldType.FILE,
             label: 'Archivo CSV (UBICACION, ITEM, UPC)',
@@ -183,14 +197,6 @@ define(['N/ui/serverWidget', 'N/format', '../constants/AS_RecuentoInventarioCons
         });
         campoUbicacionCargada.defaultValue = cabecera.ubicacion || '';
         campoUbicacionCargada.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-    }
-
-    function agregarBotonGenerar(form) {
-        form.addButton({
-            id          : CONSTANTES.BOTONES.GENERAR,
-            label       : CONSTANTES.FORMULARIO.BOTON_GENERAR,
-            functionName: 'generarRecuento',
-        });
     }
 
     return {

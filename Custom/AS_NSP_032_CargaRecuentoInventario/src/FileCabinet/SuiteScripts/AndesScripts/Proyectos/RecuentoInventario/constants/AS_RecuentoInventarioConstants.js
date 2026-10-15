@@ -5,7 +5,13 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.7.0
+ * @version 1.8.0
+ *
+ * CHANGELOG v1.8.0 (2026-10-15):
+ *   - [FEAT] CAMPOS.UBICACIONES_DATA: las ubicaciones con su subsidiaria para
+ *            el client script.
+ *   - [FEAT] FORMULARIO.ALERTA_TITULO: titulo de la alerta cuando NetSuite
+ *            rechaza el recuento.
  */
 define([], () => {
 
@@ -15,6 +21,7 @@ define([], () => {
         BOTON_GENERAR   : 'Generar',
         GENERANDO_TITULO: 'Generando recuento',
         GENERANDO_TEXTO : 'Se esta creando el recuento de inventario. No cierre ni recargue la pagina.',
+        ALERTA_TITULO   : 'No se pudo generar el recuento',
         CLIENT_SCRIPT   : '/SuiteScripts/AndesScripts/Proyectos/RecuentoInventario/AS_RecuentoInventario_CS_2.1.js',
     };
 
@@ -33,6 +40,7 @@ define([], () => {
         ARCHIVO          : 'custpage_archivo',
         ERRORES          : 'custpage_errores',
         CUENTAS_DATA     : 'custpage_cuentas_data',
+        UBICACIONES_DATA : 'custpage_ubicaciones_data',
         OPERACION        : 'custpage_operacion',
         UBICACION_CARGADA: 'custpage_ubicacion_cargada',
     };

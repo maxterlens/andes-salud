@@ -14,64 +14,49 @@
  * @NScriptType ClientScript
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.2.0
+ * @version 1.3.0
  *
- * CHANGELOG v1.2.0 (2026-10-14):
- *   - [FEAT] generarRecuento: deshabilita el boton Generar y muestra el aviso
- *            "Generando recuento" mientras el servidor crea el recuento.
- *
- * CHANGELOG v1.1.0 (2026-10-14):
- *   - [FEAT] generarRecuento: boton Generar.
- *
- * CHANGELOG v1.0.0 (2026-10-13):
- *   - [FEAT] fieldChanged: filtra el select Cuenta por la subsidiaria elegida.
  */
 define(['N/currentRecord', 'N/ui/message', './constants/AS_RecuentoInventarioConstants'],
     (currentRecord, message, CONSTANTES) => {
 
     function fieldChanged(context) {
         if (context.fieldId !== CONSTANTES.CAMPOS.SUBSIDIARIA) return;
-        cargarCuentasDeSubsidiaria(context.currentRecord);
+        filtrarPorSubsidiaria(context.currentRecord, CONSTANTES.CAMPOS.CUENTA, CONSTANTES.CAMPOS.CUENTAS_DATA);
+        filtrarPorSubsidiaria(context.currentRecord, CONSTANTES.CAMPOS.UBICACION, CONSTANTES.CAMPOS.UBICACIONES_DATA);
     }
 
-    function cargarCuentasDeSubsidiaria(registroActual) {
-        const campoCuenta = registroActual.getField({ fieldId: CONSTANTES.CAMPOS.CUENTA });
+    /**
+     * Rehace las opciones del select con las de la subsidiaria elegida, sacadas
+     * del JSON oculto que dejo el servidor ({ subsidiaria, id, nombre }).
+     */
+    function filtrarPorSubsidiaria(registroActual, campoId, datosId) {
+        const campo       = registroActual.getField({ fieldId: campoId });
         const subsidiaria = registroActual.getValue({ fieldId: CONSTANTES.CAMPOS.SUBSIDIARIA });
-        const cuentas     = JSON.parse(registroActual.getValue({ fieldId: CONSTANTES.CAMPOS.CUENTAS_DATA }));
+        const opciones    = JSON.parse(registroActual.getValue({ fieldId: datosId }));
 
-        campoCuenta.removeSelectOption({ value: null });
-        campoCuenta.insertSelectOption({ value: '', text: '' });
-
-        cuentas.forEach((cuenta) => {
-            if (cuenta.subsidiaria !== subsidiaria) return;
-            campoCuenta.insertSelectOption({ value: cuenta.id, text: cuenta.nombre });
+        campo.removeSelectOption({ value: null });
+        campo.insertSelectOption({ value: '', text: '' });
+        opciones.forEach((opcion) => {
+            if (opcion.subsidiaria !== subsidiaria) return;
+            campo.insertSelectOption({ value: opcion.id, text: opcion.nombre });
         });
-    }
-
-    function generarRecuento() {
-        const registroActual = currentRecord.get();
-
-        registroActual.setValue({ fieldId: CONSTANTES.CAMPOS.OPERACION, value: CONSTANTES.OPERACIONES.GENERAR });
-        deshabilitarBotonGenerar();
-        avisarGenerando();
-        document.getElementById('submitter').click();
     }
 
     /**
      * NetSuite dibuja cada boton dos veces, arriba y abajo del formulario: el de
      * abajo lleva el prefijo 'secondary' en el id.
      */
-    function deshabilitarBotonGenerar() {
+    function generarRecuento() {
+        currentRecord.get().setValue({ fieldId: CONSTANTES.CAMPOS.OPERACION, value: CONSTANTES.OPERACIONES.GENERAR });
         document.getElementById(CONSTANTES.BOTONES.GENERAR).disabled = true;
         document.getElementById('secondary' + CONSTANTES.BOTONES.GENERAR).disabled = true;
-    }
-
-    function avisarGenerando() {
         message.create({
             type   : message.Type.INFORMATION,
             title  : CONSTANTES.FORMULARIO.GENERANDO_TITULO,
             message: CONSTANTES.FORMULARIO.GENERANDO_TEXTO,
         }).show();
+        document.getElementById('submitter').click();
     }
 
     return {
