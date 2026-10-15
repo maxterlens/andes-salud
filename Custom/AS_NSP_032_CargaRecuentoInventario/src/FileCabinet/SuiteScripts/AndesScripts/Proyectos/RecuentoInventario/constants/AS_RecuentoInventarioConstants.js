@@ -5,31 +5,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.5.0
- *
- * CHANGELOG v1.5.0 (2026-10-14):
- *   - [FEAT] Boton Generar: operaciones Cargar/Generar, el campo oculto de la
- *            operacion, la ubicacion con la que se valido el CSV, el check
- *            AS Recuento Inventario Carga del recuento y la accion startcount
- *            (Comenzar recuento), y los textos del aviso "Generando recuento".
- *
- * CHANGELOG v1.4.0 (2026-10-13):
- *   - [FEAT] CUENTAS_DATA (campo oculto con las cuentas configuradas) y la ruta
- *            del client script que filtra el select Cuenta.
- *
- * CHANGELOG v1.3.0 (2026-10-13):
- *   - [FEAT] NO_ENCONTRADOS pasa a ERRORES: el campo lista todos los errores de
- *            validacion del CSV.
- *
- * CHANGELOG v1.2.0 (2026-10-13):
- *   - [FEAT] El CSV es solo una lista (UPC, ITEM): se quitan las columnas FISICO y
- *            OBSERVACION y se agrega el campo de codigos no encontrados.
- *
- * CHANGELOG v1.1.0 (2026-10-09):
- *   - [FEAT] Sublista de articulos cargados y sus columnas.
- *
- * CHANGELOG v1.0.0 (2026-10-09):
- *   - [FEAT] Ids de campos, grupos y textos del formulario de carga.
+ * @version 1.7.0
  */
 define([], () => {
 
@@ -74,7 +50,10 @@ define([], () => {
         TIPO           : 'inventorycount',
         CAMPO_CARGA    : 'custbody_as_rec_inv_carga',
         ACCION_COMENZAR: 'startcount',
+        BOTON_COMPLETAR: 'completecount',
     };
+
+    const ROLES_AUTORIZADOS = [3, 1455];
 
     const SUBLISTA = {
         ID      : 'custpage_lineas',
@@ -87,12 +66,13 @@ define([], () => {
     };
 
     return {
-        FORMULARIO   : FORMULARIO,
-        GRUPOS       : GRUPOS,
-        CAMPOS       : CAMPOS,
-        BOTONES      : BOTONES,
-        OPERACIONES  : OPERACIONES,
-        RECUENTO     : RECUENTO,
-        SUBLISTA     : SUBLISTA,
+        FORMULARIO       : FORMULARIO,
+        GRUPOS           : GRUPOS,
+        CAMPOS           : CAMPOS,
+        BOTONES          : BOTONES,
+        OPERACIONES      : OPERACIONES,
+        RECUENTO         : RECUENTO,
+        ROLES_AUTORIZADOS: ROLES_AUTORIZADOS,
+        SUBLISTA         : SUBLISTA,
     };
 });

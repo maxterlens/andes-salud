@@ -11,10 +11,8 @@
  * @author Andes Salud
  * @version 1.0.0
  *
- * CHANGELOG v1.0.0 (2026-10-14):
- *   - [FEAT] crearRecuento: crea el Inventory Count con los articulos del CSV.
- *   - [FEAT] comenzarRecuento: ejecuta la accion startcount (Comenzar recuento).
  */
+
 define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventarioConstants'],
     (record, action, format, CONSTANTES) => {
 
@@ -22,11 +20,6 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * @param {Object} cabecera   { subsidiaria, ubicacion, departamento, clase, fecha, cuenta, nota }
-     * @param {Array}  articulos  ids internos de los articulos, uno por linea
-     * @returns {number} id del recuento
-     */
     function crearRecuento(cabecera, articulos) {
         const recuento = record.create({ type: CONSTANTES.RECUENTO.TIPO, isDynamic: true });
 
@@ -43,12 +36,6 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
         return recuento.save();
     }
 
-    /**
-     * NetSuite no deja escribir el estado del recuento por script: submitFields
-     * de status o statuskey se guarda sin error pero el estado no cambia (probado
-     * en QA, 2026-10-14). Lo que hace el boton Comenzar recuento es la accion
-     * startcount, y esa se ejecuta por su id, igual en cualquier idioma.
-     */
     function comenzarRecuento(recuentoId) {
         action.execute({
             recordType: CONSTANTES.RECUENTO.TIPO,

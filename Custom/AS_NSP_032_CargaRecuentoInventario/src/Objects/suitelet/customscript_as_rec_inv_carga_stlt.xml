@@ -12,7 +12,7 @@
       <allemployees>F</allemployees>
       <allpartners>F</allpartners>
       <allroles>F</allroles>
-      <audslctrole>ADMINISTRATOR</audslctrole>
+      <audslctrole>ADMINISTRATOR|[scriptid=customrole1701]</audslctrole>
       <eventtype></eventtype>
       <isdeployed>T</isdeployed>
       <isonline>F</isonline>
@@ -20,6 +20,12 @@
       <runasrole>ADMINISTRATOR</runasrole>
       <status>RELEASED</status>
       <title>AS Recuento Inventario Carga STLT</title>
+      <links>
+        <link>
+          <linkcategory>BASICTRANSACTIONSINVENTORY</linkcategory>
+          <linklabel>Cargar recuento de inventario</linklabel>
+        </link>
+      </links>
     </scriptdeployment>
   </scriptdeployments>
 </suitelet>

@@ -10,42 +10,8 @@
  * @author Andes Salud
  * @version 1.5.0
  *
- * CHANGELOG v1.5.0 (2026-10-14):
- *   - [FEAT] Boton Generar: aparece cuando el CSV cargo articulos sin errores.
- *            Viajan ocultas la operacion y la ubicacion con la que se valido.
- *   - [FEAT] El archivo deja de ser obligatorio en pantalla: Generar no lo
- *            vuelve a pedir; el handler lo exige solo al Cargar.
- *
- * CHANGELOG v1.4.0 (2026-10-13):
- *   - [FEAT] Cuenta deja de listar todas las cuentas: muestra solo las de AS
- *            Recuento Inventario Cuenta para la subsidiaria, y el client script
- *            la vuelve a filtrar al cambiar la subsidiaria.
- *
- * CHANGELOG v1.3.0 (2026-10-13):
- *   - [FEAT] El campo de solo lectura lista los errores de validacion del CSV
- *            por fila; el archivo pasa a (UBICACION, ITEM, UPC).
- *
- * CHANGELOG v1.2.0 (2026-10-13):
- *   - [FEAT] La lista queda como la del recuento nativo (UPC, Articulo, Unidades):
- *            sin FISICO ni OBSERVACION. Los codigos que no existen se muestran
- *            aparte, en un campo de solo lectura.
- *
- * CHANGELOG v1.1.0 (2026-10-09):
- *   - [FEAT] La cabecera conserva lo que lleno el usuario al cargar y debajo se
- *            listan los articulos del CSV con su observacion.
- *
- * CHANGELOG v1.0.5 (2026-10-09):
- *   - [FIX] El campo del archivo va sin grupo: NetSuite rechaza un FILE dentro de
- *           un addFieldGroup (USER_ERROR al abrir el Suitelet).
- *
- * CHANGELOG v1.0.4 (2026-10-09):
- *   - [FIX] Cabecera campo por campo, como el FormMain de AS_NSP_018: sin lista
- *           ni recorrido, cada campo se lee donde se crea.
- *
- * CHANGELOG v1.0.0 (2026-10-09):
- *   - [FEAT] construirFormulario: cabecera (subsidiaria, ubicacion, departamento,
- *            clase, fecha, cuenta, nota), campo de archivo CSV y boton Cargar.
  */
+
 define(['N/ui/serverWidget', 'N/format', '../constants/AS_RecuentoInventarioConstants'],
     (serverWidget, format, CONSTANTES) => {
 
@@ -53,12 +19,6 @@ define(['N/ui/serverWidget', 'N/format', '../constants/AS_RecuentoInventarioCons
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * @param {Object} cabecera  lo que lleno el usuario; vacio la primera vez
-     * @param {Array}  lineas    los articulos validos del CSV; vacio hasta que se carga
-     * @param {Array}  errores   los errores de validacion del CSV, uno por fila
-     * @param {Array}  cuentas   las cuentas configuradas, [{ subsidiaria, id, nombre }]
-     */
     function construirFormulario(cabecera, lineas, errores, cuentas) {
         const form = serverWidget.createForm({ title: CONSTANTES.FORMULARIO.TITULO });
 
@@ -78,12 +38,6 @@ define(['N/ui/serverWidget', 'N/format', '../constants/AS_RecuentoInventarioCons
     // Secundarias
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Los mismos campos y en el mismo orden que la cabecera del recuento nativo.
-     * Cuenta lista solo las configuradas para la subsidiaria elegida; todas las
-     * configuradas viajan en un campo oculto para que el client script la
-     * vuelva a filtrar cuando cambia la subsidiaria.
-     */
     function agregarCabecera(form, cabecera, cuentas) {
         const grupo = CONSTANTES.GRUPOS.CABECERA;
 
@@ -160,12 +114,6 @@ define(['N/ui/serverWidget', 'N/format', '../constants/AS_RecuentoInventarioCons
         campoNota.defaultValue = cabecera.nota || '';
     }
 
-    /**
-     * NetSuite no acepta un campo FILE dentro de un grupo, ficha o sublista
-     * (USER_ERROR "Se agrego un campo no valido para cargar el archivo"): va
-     * suelto en el formulario, sin container. No es obligatorio en pantalla:
-     * un FILE no conserva el archivo despues del POST y Generar no lo necesita.
-     */
     function agregarArchivo(form) {
         const campoArchivo = form.addField({
             id   : CONSTANTES.CAMPOS.ARCHIVO,

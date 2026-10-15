@@ -2,29 +2,19 @@
  * AS_NSP_032 — Carga de Recuento de Inventario
  * @description Todas las consultas SuiteQL del modulo.
  *
- *              Articulos
- *                - obtenerArticulosPorCodigo: los articulos activos cuyo UPC esta
- *                  en la lista.
- *              Ubicaciones
- *                - obtenerUbicacion: nombre y subsidiaria de una ubicacion.
  *              Cuentas
  *                - obtenerCuentasRecuento: las cuentas activas de AS Recuento
  *                  Inventario Cuenta, con su subsidiaria.
+ *              Ubicaciones
+ *                - obtenerUbicacion: nombre y subsidiaria de una ubicacion.
+ *              Articulos
+ *                - obtenerArticulosPorCodigo: los articulos activos cuyo UPC esta
+ *                  en la lista.
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
  * @version 1.2.0
  *
- * CHANGELOG v1.2.0 (2026-10-13):
- *   - [FEAT] obtenerCuentasRecuento: las cuentas configuradas para el select Cuenta.
- *
- * CHANGELOG v1.1.0 (2026-10-13):
- *   - [FEAT] obtenerArticulosPorCodigo: devuelve todos los articulos de cada UPC
- *            (en NetSuite hay UPC compartidos por varios articulos).
- *   - [FEAT] obtenerUbicacion: para validar la ubicacion del CSV.
- *
- * CHANGELOG v1.0.0 (2026-10-09):
- *   - [FEAT] obtenerArticulosPorCodigo: busca los articulos del CSV por upccode.
  */
 define(['N/query'], (query) => {
 
@@ -32,12 +22,29 @@ define(['N/query'], (query) => {
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * El UPC del CSV se compara exacto contra el upccode. Oracle acepta hasta
-     * 1000 valores en un IN: por eso va en bloques.
-     *
-     * @returns {Object} upccode → [{ id, upc, nombre, unidad }]
-     */
+    function obtenerCuentasRecuento() {
+        const filas = query.runSuiteQL({
+            query : 'SELECT c.custrecord_as_rec_inv_cta_subsidiaria AS subsidiaria,'
+                  + ' c.custrecord_as_rec_inv_cta_cuenta AS id,'
+                  + ' BUILTIN.DF(c.custrecord_as_rec_inv_cta_cuenta) AS nombre'
+                  + ' FROM customrecord_as_rec_inv_cuenta c'
+                  + ' WHERE c.isinactive = ?'
+                  + ' ORDER BY BUILTIN.DF(c.custrecord_as_rec_inv_cta_cuenta)',
+            params: ['F'],
+        }).asMappedResults();
+
+        return filas.map((fila) => ({ subsidiaria: String(fila.subsidiaria), id: String(fila.id), nombre: fila.nombre }));
+    }
+
+    function obtenerUbicacion(id) {
+        const fila = query.runSuiteQL({
+            query : 'SELECT l.id, l.name, l.subsidiary FROM location l WHERE l.id = ?',
+            params: [id],
+        }).asMappedResults()[0];
+
+        return { id: fila.id, nombre: fila.name, subsidiaria: String(fila.subsidiary) };
+    }
+
     function obtenerArticulosPorCodigo(codigos) {
         const articulos = {};
 
@@ -60,38 +67,9 @@ define(['N/query'], (query) => {
         return articulos;
     }
 
-    /**
-     * @returns {Object} { id, nombre, subsidiaria }
-     */
-    function obtenerUbicacion(id) {
-        const fila = query.runSuiteQL({
-            query : 'SELECT l.id, l.name, l.subsidiary FROM location l WHERE l.id = ?',
-            params: [id],
-        }).asMappedResults()[0];
-
-        return { id: fila.id, nombre: fila.name, subsidiaria: String(fila.subsidiary) };
-    }
-
-    /**
-     * @returns {Array} [{ subsidiaria, id, nombre }]
-     */
-    function obtenerCuentasRecuento() {
-        const filas = query.runSuiteQL({
-            query : 'SELECT c.custrecord_as_rec_inv_cta_subsidiaria AS subsidiaria,'
-                  + ' c.custrecord_as_rec_inv_cta_cuenta AS id,'
-                  + ' BUILTIN.DF(c.custrecord_as_rec_inv_cta_cuenta) AS nombre'
-                  + ' FROM customrecord_as_rec_inv_cuenta c'
-                  + ' WHERE c.isinactive = ?'
-                  + ' ORDER BY BUILTIN.DF(c.custrecord_as_rec_inv_cta_cuenta)',
-            params: ['F'],
-        }).asMappedResults();
-
-        return filas.map((fila) => ({ subsidiaria: String(fila.subsidiaria), id: String(fila.id), nombre: fila.nombre }));
-    }
-
     return {
-        obtenerArticulosPorCodigo: obtenerArticulosPorCodigo,
-        obtenerUbicacion         : obtenerUbicacion,
         obtenerCuentasRecuento   : obtenerCuentasRecuento,
+        obtenerUbicacion         : obtenerUbicacion,
+        obtenerArticulosPorCodigo: obtenerArticulosPorCodigo,
     };
 });

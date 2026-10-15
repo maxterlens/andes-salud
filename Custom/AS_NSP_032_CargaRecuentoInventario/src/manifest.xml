@@ -6,5 +6,8 @@
       <feature required="true">SERVERSIDESCRIPTING</feature>
       <feature required="false">CRM</feature>
     </features>
+    <objects>
+      <object>customrole1701</object>
+    </objects>
   </dependencies>
 </manifest>
