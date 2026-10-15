@@ -42,7 +42,7 @@ define(['N/encode', 'N/redirect', '../form/AS_RecuentoInventarioForm', '../data/
         }
         const filas      = leerFilas(parametros.contenido);
         const ubicacion  = recuentoInventarioQuery.obtenerUbicacion(parametros.cabecera.ubicacion);
-        const articulos  = recuentoInventarioQuery.obtenerArticulosPorCodigo(obtenerCodigos(filas));
+        const articulos  = recuentoInventarioQuery.obtenerArticulosPorNombre(obtenerNombres(filas));
         const resultados = filas.map((fila) => validarFila(fila, ubicacion, articulos));
         const errores    = validarSubsidiaria(ubicacion, parametros.cabecera.subsidiaria)
             .concat(resultados.filter((resultado) => resultado.error).map((resultado) => resultado.error));
@@ -145,22 +145,21 @@ define(['N/encode', 'N/redirect', '../form/AS_RecuentoInventarioForm', '../data/
             .filter((fila) => fila.ubicacion || fila.item || fila.upc);
     }
 
-    function obtenerCodigos(filas) {
-        const codigos = filas.map((fila) => fila.upc).filter((codigo) => codigo);
-        return codigos.filter((codigo, posicion) => codigos.indexOf(codigo) === posicion);
+    function obtenerNombres(filas) {
+        const nombres = filas.map((fila) => UTILS.pasarAMayusculasSinEspaciosExtra(fila.item)).filter((nombre) => nombre);
+        return nombres.filter((nombre, posicion) => nombres.indexOf(nombre) === posicion);
     }
 
     function validarFila(fila, ubicacion, articulos) {
-        const prefijo = 'Fila ' + fila.numero + ': ';
+        const prefijo    = 'Fila ' + fila.numero + ': ';
+        const candidatos = articulos[UTILS.pasarAMayusculasSinEspaciosExtra(fila.item)] || [];
+        if (!candidatos.length) return { error: prefijo + 'el ITEM "' + fila.item + '" no existe en NetSuite' };
+        const coincidentes = candidatos.filter((articulo) => articulo.upc === fila.upc);
+        if (!coincidentes.length) return { error: prefijo + 'el UPC "' + fila.upc + '" no es el del ITEM "' + fila.item + '"' };
+        if (coincidentes.length > 1) return { error: prefijo + 'hay ' + coincidentes.length + ' articulos con el ITEM "' + fila.item + '" y el UPC ' + fila.upc };
         if (UTILS.pasarAMayusculasSinEspaciosExtra(fila.ubicacion) !== UTILS.pasarAMayusculasSinEspaciosExtra(ubicacion.nombre)) {
             return { error: prefijo + 'la ubicacion "' + fila.ubicacion + '" no es la seleccionada (' + ubicacion.nombre + ')' };
         }
-        const candidatos = articulos[fila.upc] || [];
-        if (!candidatos.length) return { error: prefijo + 'el UPC "' + fila.upc + '" no existe en NetSuite' };
-        const nombreItem   = UTILS.pasarAMayusculasSinEspaciosExtra(fila.item);
-        const coincidentes = candidatos.filter((articulo) => UTILS.pasarAMayusculasSinEspaciosExtra(articulo.nombre) === nombreItem);
-        if (!coincidentes.length) return { error: prefijo + 'el ITEM "' + fila.item + '" no es el articulo del UPC ' + fila.upc };
-        if (coincidentes.length > 1) return { error: prefijo + 'hay ' + coincidentes.length + ' articulos con el UPC ' + fila.upc + ' y ese nombre' };
         return { articulo: coincidentes[0] };
     }
 

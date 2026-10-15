@@ -129,7 +129,7 @@ define(['N/ui/serverWidget', 'N/format', '../constants/AS_RecuentoInventarioCons
     function agregarErrores(form, errores) {
         const campoErrores = form.addField({
             id   : CONSTANTES.CAMPOS.ERRORES,
-            type : serverWidget.FieldType.TEXTAREA,
+            type : serverWidget.FieldType.LONGTEXT,
             label: 'Errores del archivo (' + errores.length + ')',
         });
         campoErrores.defaultValue = errores.join('\n');
