@@ -1,5 +1,5 @@
 <usereventscript scriptid="customscript_as_rec_inv_cierre_ue">
-  <description>Oculta el boton Completar recuento a todo rol que no sea Administrador ni Supervisor Contable.</description>
+  <description>Oculta los botones Aprobar y Rechazar del recuento a todo rol que no sea Administrador ni Supervisor Contable.</description>
   <isinactive>F</isinactive>
   <name>AS Recuento Inventario Cierre UE</name>
   <notifyadmins>F</notifyadmins>

@@ -3,10 +3,10 @@
  * @description Entry point del control de cierre del Recuento de inventario.
  *              Solo recibe la vista del recuento y se la pasa al handler.
  *
- *              beforeLoad (vista) → oculta Completar recuento a todo rol que no
- *                                   sea el que cierra (Contable): el recuento lo
- *                                   inicia y lo cierra Contable; Abastecimiento y
- *                                   Farmacia solo cuentan.
+ *              beforeLoad → con el recuento en Aprobacion pendiente, oculta
+ *                           Aprobar y Rechazar a todo rol que no sea Contable
+ *                           (o Administrador). Farmacia cuenta y completa;
+ *                           solo Contable aprueba o rechaza.
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
  * @NModuleScope Public
@@ -21,8 +21,7 @@ define(['./handler/AS_CierreRecuentoHandler'], (cierreRecuentoHandler) => {
 
     function beforeLoad(context) {
         try {
-            if (context.type !== context.UserEventType.VIEW) return;
-            cierreRecuentoHandler.ocultarCompletarRecuento(context.form);
+            cierreRecuentoHandler.ocultarAprobarRechazar(context.form, context.newRecord);
         } catch (fallo) {
             log.error({
                 title  : 'RECUENTO INVENTARIO CIERRE ERROR',

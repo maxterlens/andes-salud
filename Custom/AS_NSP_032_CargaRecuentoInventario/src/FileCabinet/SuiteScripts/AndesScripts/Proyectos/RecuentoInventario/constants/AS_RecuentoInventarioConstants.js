@@ -7,11 +7,6 @@
  * @author Andes Salud
  * @version 1.8.0
  *
- * CHANGELOG v1.8.0 (2026-10-15):
- *   - [FEAT] CAMPOS.UBICACIONES_DATA: las ubicaciones con su subsidiaria para
- *            el client script.
- *   - [FEAT] FORMULARIO.ALERTA_TITULO: titulo de la alerta cuando NetSuite
- *            rechaza el recuento.
  */
 define([], () => {
 
@@ -55,10 +50,12 @@ define([], () => {
     };
 
     const RECUENTO = {
-        TIPO           : 'inventorycount',
-        CAMPO_CARGA    : 'custbody_as_rec_inv_carga',
-        ACCION_COMENZAR: 'startcount',
-        BOTON_COMPLETAR: 'completecount',
+        TIPO                       : 'inventorycount',
+        CAMPO_CARGA                : 'custbody_as_rec_inv_carga',
+        ACCION_COMENZAR            : 'startcount',
+        ESTADO_PENDIENTE_APROBACION: 'C',
+        BOTON_APROBAR              : 'approve',
+        BOTON_RECHAZAR             : 'reject',
     };
 
     const ROLES_AUTORIZADOS = [3, 1455];

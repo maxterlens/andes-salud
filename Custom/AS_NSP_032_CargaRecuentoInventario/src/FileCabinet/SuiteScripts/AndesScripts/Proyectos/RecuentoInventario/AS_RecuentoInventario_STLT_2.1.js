@@ -14,15 +14,6 @@
  * @author Andes Salud
  * @version 1.2.0
  *
- * CHANGELOG v1.2.0 (2026-10-14):
- *   - [FEAT] POST: la operacion Generar va a generarRecuento.
- *
- * CHANGELOG v1.1.0 (2026-10-09):
- *   - [FEAT] POST: el boton Cargar lee el CSV y lista los articulos.
- *
- * CHANGELOG v1.0.0 (2026-10-09):
- *   - [FEAT] Formulario inicial: cabecera del recuento y campo de archivo CSV.
- *            El boton Cargar todavia no procesa el archivo.
  */
 define(['./handler/AS_RecuentoInventarioHandler', './constants/AS_RecuentoInventarioConstants'],
     (recuentoInventarioHandler, CONSTANTES) => {
