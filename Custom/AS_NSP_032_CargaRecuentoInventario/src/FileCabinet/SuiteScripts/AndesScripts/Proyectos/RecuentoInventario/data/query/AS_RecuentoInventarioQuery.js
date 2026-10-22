@@ -10,12 +10,12 @@
  *                  subsidiaria.
  *                - obtenerUbicacion: nombre y subsidiaria de una ubicacion.
  *              Articulos
- *                - obtenerArticulosPorNombre: los articulos activos cuyo nombre
- *                  esta en la lista.
+ *                - obtenerArticulosPorId: los articulos activos cuyo id
+ *                  interno esta en la lista.
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.3.0
+ * @version 1.4.0
  *
  */
 define(['N/query'], (query) => {
@@ -59,24 +59,21 @@ define(['N/query'], (query) => {
         return { id: fila.id, nombre: fila.name, subsidiaria: String(fila.subsidiary) };
     }
 
-    
-    function obtenerArticulosPorNombre(nombres) {
+    function obtenerArticulosPorId(ids) {
         const articulos = {};
 
-        for (let inicio = 0; inicio < nombres.length; inicio += 1000) {
-            const bloque = nombres.slice(inicio, inicio + 1000);
+        for (let inicio = 0; inicio < ids.length; inicio += 1000) {
+            const bloque = ids.slice(inicio, inicio + 1000);
             const filas  = query.runSuiteQL({
-                query : 'SELECT i.id, i.upccode, i.itemid, BUILTIN.DF(i.stockunit) AS unidad,'
-                      + " REGEXP_REPLACE(UPPER(TRIM(i.itemid)), '[[:space:]]+', ' ') AS nombre"
+                query : 'SELECT i.id, i.itemid, BUILTIN.DF(i.stockunit) AS unidad'
                       + ' FROM item i'
                       + " WHERE i.isinactive = 'F'"
-                      + " AND REGEXP_REPLACE(UPPER(TRIM(i.itemid)), '[[:space:]]+', ' ') IN (" + bloque.map(() => '?').join(',') + ')',
+                      + ' AND i.id IN (' + bloque.map(() => '?').join(',') + ')',
                 params: bloque,
             }).asMappedResults();
 
             filas.forEach((fila) => {
-                if (!articulos[fila.nombre]) articulos[fila.nombre] = [];
-                articulos[fila.nombre].push({ id: fila.id, upc: fila.upccode, nombre: fila.itemid, unidad: fila.unidad });
+                articulos[String(fila.id)] = { id: fila.id, nombre: fila.itemid, unidad: fila.unidad };
             });
         }
 
@@ -84,9 +81,9 @@ define(['N/query'], (query) => {
     }
 
     return {
-        obtenerCuentasRecuento   : obtenerCuentasRecuento,
-        obtenerUbicaciones       : obtenerUbicaciones,
-        obtenerUbicacion         : obtenerUbicacion,
-        obtenerArticulosPorNombre: obtenerArticulosPorNombre,
+        obtenerCuentasRecuento: obtenerCuentasRecuento,
+        obtenerUbicaciones    : obtenerUbicaciones,
+        obtenerUbicacion      : obtenerUbicacion,
+        obtenerArticulosPorId : obtenerArticulosPorId,
     };
 });

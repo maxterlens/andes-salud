@@ -63,7 +63,6 @@ define([], () => {
     const SUBLISTA = {
         ID      : 'custpage_lineas',
         COLUMNAS: {
-            CODIGO     : 'custpage_col_codigo',
             ARTICULO   : 'custpage_col_articulo',
             ARTICULO_ID: 'custpage_col_articulo_id',
             UNIDAD     : 'custpage_col_unidad',

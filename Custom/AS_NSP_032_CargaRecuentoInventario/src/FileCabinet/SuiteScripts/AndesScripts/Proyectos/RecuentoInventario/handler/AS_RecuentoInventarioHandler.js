@@ -3,7 +3,7 @@
  * @description Proceso de la pantalla de carga.
  *
  *              mostrarFormulario → el formulario vacio (GET).
- *              cargarArchivo     → lee el CSV (UBICACION, ITEM, UPC), valida cada
+ *              cargarArchivo     → lee el CSV (UBICACION, ITEM = id interno), valida cada
  *                                  fila contra NetSuite y vuelve a dibujar la
  *                                  pantalla con la cabecera que lleno el usuario,
  *                                  los errores y la lista de articulos (POST).
@@ -17,7 +17,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.7.0
+ * @version 1.8.0
  *
  */
 
@@ -41,9 +41,9 @@ define(['N/encode', 'N/redirect', '../form/AS_RecuentoInventarioForm', '../data/
             return;
         }
         const filas      = leerFilas(parametros.contenido);
-        const nombres    = [...new Set(filas.map((fila) => UTILS.pasarAMayusculasSinEspaciosExtra(fila.item)).filter((nombre) => nombre))];
+        const ids        = [...new Set(filas.map((fila) => fila.item).filter((id) => id))];
         const ubicacion  = recuentoInventarioQuery.obtenerUbicacion(parametros.cabecera.ubicacion);
-        const articulos  = recuentoInventarioQuery.obtenerArticulosPorNombre(nombres);
+        const articulos  = recuentoInventarioQuery.obtenerArticulosPorId(ids);
         const resultados = filas.map((fila) => validarFila(fila, ubicacion, articulos));
         const errores    = resultados.filter((resultado) => resultado.error).map((resultado) => resultado.error);
         const lineas     = armarLineas(resultados.filter((resultado) => resultado.articulo));
@@ -145,24 +145,20 @@ define(['N/encode', 'N/redirect', '../form/AS_RecuentoInventarioForm', '../data/
                     numero   : posicion + 1,
                     ubicacion: (columnas[0] || '').trim(),
                     item     : (columnas[1] || '').trim(),
-                    upc      : (columnas[2] || '').trim(),
                 };
             })
             .slice(1)
-            .filter((fila) => fila.ubicacion || fila.item || fila.upc);
+            .filter((fila) => fila.ubicacion || fila.item);
     }
 
     function validarFila(fila, ubicacion, articulos) {
-        const prefijo    = 'Fila ' + fila.numero + ': ';
-        const candidatos = articulos[UTILS.pasarAMayusculasSinEspaciosExtra(fila.item)] || [];
-        if (!candidatos.length) return { error: prefijo + 'el ITEM "' + fila.item + '" no existe en NetSuite' };
-        const coincidentes = candidatos.filter((articulo) => articulo.upc === fila.upc);
-        if (!coincidentes.length) return { error: prefijo + 'el UPC "' + fila.upc + '" no es el del ITEM "' + fila.item + '"' };
-        if (coincidentes.length > 1) return { error: prefijo + 'hay ' + coincidentes.length + ' articulos con el ITEM "' + fila.item + '" y el UPC ' + fila.upc };
+        const prefijo  = 'Fila ' + fila.numero + ': ';
+        const articulo = articulos[fila.item];
+        if (!articulo) return { error: prefijo + 'el ITEM "' + fila.item + '" no es el id interno de un articulo activo en NetSuite' };
         if (UTILS.pasarAMayusculasSinEspaciosExtra(fila.ubicacion) !== UTILS.pasarAMayusculasSinEspaciosExtra(ubicacion.nombre)) {
             return { error: prefijo + 'la ubicacion "' + fila.ubicacion + '" no es la seleccionada (' + ubicacion.nombre + ')' };
         }
-        return { articulo: coincidentes[0] };
+        return { articulo: articulo };
     }
 
     /**
@@ -176,7 +172,7 @@ define(['N/encode', 'N/redirect', '../form/AS_RecuentoInventarioForm', '../data/
             const articulo = resultado.articulo;
             if (vistos[articulo.id]) return;
             vistos[articulo.id] = true;
-            lineas.push({ codigo: articulo.upc, articuloId: String(articulo.id), articulo: articulo.nombre, unidad: articulo.unidad });
+            lineas.push({ articuloId: String(articulo.id), articulo: articulo.nombre, unidad: articulo.unidad });
         });
 
         return lineas;

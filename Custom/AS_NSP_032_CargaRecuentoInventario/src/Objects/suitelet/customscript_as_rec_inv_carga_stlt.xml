@@ -1,5 +1,5 @@
 <suitelet scriptid="customscript_as_rec_inv_carga_stlt">
-  <description>Formulario de carga del recuento de inventario: cabecera del recuento y archivo CSV (UBICACION, ITEM, UPC).</description>
+  <description>Formulario de carga del recuento de inventario: cabecera del recuento y archivo CSV (UBICACION, ITEM).</description>
   <isinactive>F</isinactive>
   <name>AS Recuento Inventario Carga STLT</name>
   <notifyadmins>F</notifyadmins>

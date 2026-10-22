@@ -8,7 +8,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.6.0
+ * @version 1.7.0
 
  */
 
@@ -132,7 +132,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Recuen
         form.addField({
             id   : CONSTANTES.CAMPOS.ARCHIVO,
             type : serverWidget.FieldType.FILE,
-            label: 'Archivo CSV (UBICACION, ITEM, UPC)',
+            label: 'Archivo CSV (UBICACION, ITEM)',
         });
     }
 
@@ -163,14 +163,12 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Recuen
             type : serverWidget.SublistType.LIST,
             label: 'Articulos (' + lineas.length + ')',
         });
-        sublista.addField({ id: columnas.CODIGO,      type: serverWidget.FieldType.TEXT, label: 'UPC' });
         sublista.addField({ id: columnas.ARTICULO,    type: serverWidget.FieldType.TEXT, label: 'Articulo' });
         sublista.addField({ id: columnas.ARTICULO_ID, type: serverWidget.FieldType.TEXT, label: 'Id articulo' })
             .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         sublista.addField({ id: columnas.UNIDAD,      type: serverWidget.FieldType.TEXT, label: 'Unidades' });
 
         lineas.forEach((linea, fila) => {
-            sublista.setSublistValue({ id: columnas.CODIGO,      line: fila, value: linea.codigo });
             sublista.setSublistValue({ id: columnas.ARTICULO_ID, line: fila, value: linea.articuloId });
             sublista.setSublistValue({ id: columnas.ARTICULO,    line: fila, value: linea.articulo });
             if (linea.unidad) sublista.setSublistValue({ id: columnas.UNIDAD, line: fila, value: linea.unidad });
