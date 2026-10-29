@@ -1,0 +1,142 @@
+<workflow scriptid="customworkflow_2win_expense_invoice_pay">
+  <description></description>
+  <initcontexts>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</initcontexts>
+  <initeventtypes></initeventtypes>
+  <initlocalizationcontext></initlocalizationcontext>
+  <initoncreate>T</initoncreate>
+  <initonvieworupdate>T</initonvieworupdate>
+  <initsavedsearchcondition></initsavedsearchcondition>
+  <inittriggertype></inittriggertype>
+  <isinactive>T</isinactive>
+  <islogenabled>T</islogenabled>
+  <keephistory>ONLYWHENTESTING</keephistory>
+  <name>Paga factura de gasto</name>
+  <recordtypes>EXPENSEREPORT</recordtypes>
+  <releasestatus>TESTING</releasestatus>
+  <runasadmin>T</runasadmin>
+  <initcondition>
+    <formula></formula>
+    <type>VISUAL_BUILDER</type>
+  </initcondition>
+  <workflowcustomfields>
+    <workflowcustomfield scriptid="custworkflow5">
+      <aidescription></aidescription>
+      <applyformatting>F</applyformatting>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Numero de transaccion</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>TEXT</fieldtype>
+      <help></help>
+      <label>Reference</label>
+      <linktext></linktext>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <selectrecordtype></selectrecordtype>
+      <storevalue>T</storevalue>
+    </workflowcustomfield>
+  </workflowcustomfields>
+  <workflowstates>
+    <workflowstate scriptid="workflowstate2406">
+      <description></description>
+      <donotexitworkflow>F</donotexitworkflow>
+      <name>Estado 1</name>
+      <positionx>243</positionx>
+      <positiony>133</positiony>
+      <workflowactions triggertype="AFTERFIELDEDIT">
+        <setfieldvalueaction scriptid="workflowaction13722">
+          <clienttriggerfields>STDBODYAPPROVALSTATUS</clienttriggerfields>
+          <clienttriggerfieldsissublistfield>F</clienttriggerfieldsissublistfield>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=customworkflow_2win_expense_invoice_pay.custworkflow5]</field>
+          <isinactive>F</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>STDBODYTRANSACTIONNUMBER</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield></valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
+      <workflowtransitions>
+        <workflowtransition scriptid="workflowtransition356">
+          <buttonaction></buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow_2win_expense_invoice_pay.workflowstate2407]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </workflowtransition>
+      </workflowtransitions>
+    </workflowstate>
+    <workflowstate scriptid="workflowstate2407">
+      <description></description>
+      <donotexitworkflow>F</donotexitworkflow>
+      <name>Estado 2</name>
+      <positionx>243</positionx>
+      <positiony>243</positiony>
+      <workflowactions triggertype="ONEXIT">
+        <gotorecordaction scriptid="workflowaction13723">
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <ineditmode>F</ineditmode>
+          <isinactive>F</isinactive>
+          <recordidfield></recordidfield>
+          <recordidjoinfield>STDBODYVENDOR</recordidjoinfield>
+          <recordtype>VENDORBILL</recordtype>
+          <initcondition>
+            <formula><![CDATA["Approval Status" IN ("Approval Status1")]]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Approval Status</name>
+                <value>STDBODYAPPROVALSTATUS</value>
+              </parameter>
+              <parameter>
+                <name>Approval Status1</name>
+                <selectrecordtype>-243</selectrecordtype>
+                <value>2</value>
+              </parameter>
+            </parameters>
+          </initcondition>
+          <fieldsettings>
+            <fieldsetting>
+              <targetfield>STDBODYTRANSACTIONNUMBER</targetfield>
+              <valuechecked></valuechecked>
+              <valuedate></valuedate>
+              <valuefield>[scriptid=customworkflow_2win_expense_invoice_pay.custworkflow5]</valuefield>
+              <valueformula></valueformula>
+              <valuejoinfield></valuejoinfield>
+              <valueselect></valueselect>
+              <valuetext></valuetext>
+            </fieldsetting>
+          </fieldsettings>
+        </gotorecordaction>
+      </workflowactions>
+    </workflowstate>
+  </workflowstates>
+</workflow>

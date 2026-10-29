@@ -1,0 +1,25 @@
+<workflowactionscript scriptid="customscript_2win_wf_rendiciones_gastos">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>2Win WF Rendiciones de Gastos</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <returnrecordtype></returnrecordtype>
+  <returntype></returntype>
+  <scriptfile>[/SuiteBundles/Bundle 529705/rendiciones_de_gastos/2win_wf_rendiciones_gastos.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_wf_rendiciones_gastos">
+      <allemployees>F</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>F</allroles>
+      <audslctrole></audslctrole>
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <recordtype>EXPENSEREPORT</recordtype>
+      <runasrole></runasrole>
+      <status>RELEASED</status>
+    </scriptdeployment>
+  </scriptdeployments>
+</workflowactionscript>

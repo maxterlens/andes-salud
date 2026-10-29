@@ -1,0 +1,67 @@
+<workflow scriptid="customworkflow_2w_tipooperacion">
+  <description></description>
+  <initcontexts>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</initcontexts>
+  <initeventtypes></initeventtypes>
+  <initlocalizationcontext></initlocalizationcontext>
+  <initoncreate>T</initoncreate>
+  <initonvieworupdate>T</initonvieworupdate>
+  <initsavedsearchcondition></initsavedsearchcondition>
+  <inittriggertype></inittriggertype>
+  <isinactive>F</isinactive>
+  <islogenabled>T</islogenabled>
+  <keephistory>ALWAYS</keephistory>
+  <name>2Win Tipo de operacion</name>
+  <recordtypes>JOURNALENTRY|VENDORBILL|EXPENSEREPORT|PURCHASEORDER</recordtypes>
+  <releasestatus>SUSPENDED</releasestatus>
+  <runasadmin>F</runasadmin>
+  <initcondition>
+    <formula></formula>
+    <type>VISUAL_BUILDER</type>
+  </initcondition>
+  <workflowstates>
+    <workflowstate scriptid="workflowstate2433">
+      <description></description>
+      <donotexitworkflow>F</donotexitworkflow>
+      <name>Estado 1</name>
+      <positionx>243</positionx>
+      <positiony>133</positiony>
+      <workflowactions triggertype="BEFOREUSERSUBMIT">
+        <setfieldvalueaction scriptid="workflowaction13895">
+          <clienttriggerfields></clienttriggerfields>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CUSTOMTOOL|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <field>[scriptid=custbody6]</field>
+          <isinactive>F</isinactive>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <valuechecked>F</valuechecked>
+          <valuedate></valuedate>
+          <valuefield>[scriptid=custentity4]</valuefield>
+          <valueformula></valueformula>
+          <valuejoinfield>STDBODYVENDOR</valuejoinfield>
+          <valueselect></valueselect>
+          <valuetext></valuetext>
+          <valuetype>FIELD</valuetype>
+          <initcondition>
+            <formula><![CDATA[isEmpty("Tipo de operación") = 'T' AND isEmpty("Vendor:Tipo de operación1") = 'F']]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Tipo de operación</name>
+                <value>[scriptid=custbody6]</value>
+              </parameter>
+              <parameter>
+                <name>Vendor:Tipo de operación1</name>
+                <value>STDBODYVENDOR:[scriptid=custentity2w_tipo_de_operacion]</value>
+              </parameter>
+            </parameters>
+          </initcondition>
+        </setfieldvalueaction>
+      </workflowactions>
+    </workflowstate>
+  </workflowstates>
+</workflow>

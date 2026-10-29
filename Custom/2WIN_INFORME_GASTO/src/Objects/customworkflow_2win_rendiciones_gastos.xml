@@ -1,0 +1,111 @@
+<workflow scriptid="customworkflow_2win_rendiciones_gastos">
+  <description></description>
+  <initcontexts>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</initcontexts>
+  <initeventtypes></initeventtypes>
+  <initlocalizationcontext></initlocalizationcontext>
+  <initoncreate>T</initoncreate>
+  <initonvieworupdate>T</initonvieworupdate>
+  <initsavedsearchcondition></initsavedsearchcondition>
+  <inittriggertype></inittriggertype>
+  <isinactive>F</isinactive>
+  <islogenabled>T</islogenabled>
+  <keephistory>ALWAYS</keephistory>
+  <name>2Win Rendiciones de Gastos</name>
+  <recordtypes>EXPENSEREPORT</recordtypes>
+  <releasestatus>RELEASED</releasestatus>
+  <runasadmin>F</runasadmin>
+  <initcondition>
+    <formula></formula>
+    <type>VISUAL_BUILDER</type>
+  </initcondition>
+  <workflowstates>
+    <workflowstate scriptid="workflowstate2417">
+      <description></description>
+      <donotexitworkflow>F</donotexitworkflow>
+      <name>Informe de Gastos</name>
+      <positionx>603</positionx>
+      <positiony>153</positiony>
+      <workflowactions triggertype="BEFORELOAD">
+        <addbuttonaction scriptid="workflowaction13736">
+          <buttondescription></buttondescription>
+          <checkconditionbeforeexecution>T</checkconditionbeforeexecution>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <exposetorecordactionapi>F</exposetorecordactionapi>
+          <isinactive>F</isinactive>
+          <label>Reembolso</label>
+          <saverecordfirst>F</saverecordfirst>
+          <initcondition>
+            <formula><![CDATA["Status" IN ("Transaction Status1","Transaction Status2") AND "Document Status" NOT LIKE '%Pagado por completo%']]></formula>
+            <type>VISUAL_BUILDER</type>
+            <parameters>
+              <parameter>
+                <name>Status</name>
+                <value>STDBODYSTATUS</value>
+              </parameter>
+              <parameter>
+                <name>Transaction Status1</name>
+                <selectrecordtype>-164</selectrecordtype>
+                <value>7</value>
+              </parameter>
+              <parameter>
+                <name>Transaction Status2</name>
+                <selectrecordtype>-164</selectrecordtype>
+                <value>6</value>
+              </parameter>
+              <parameter>
+                <name>Document Status</name>
+                <value>STDBODYDOCUMENTSTATUS</value>
+              </parameter>
+            </parameters>
+          </initcondition>
+        </addbuttonaction>
+      </workflowactions>
+      <workflowtransitions>
+        <workflowtransition scriptid="workflowtransition357">
+          <buttonaction>[scriptid=customworkflow_2win_rendiciones_gastos.workflowstate2417.workflowaction13736]</buttonaction>
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <scheduledelay></scheduledelay>
+          <scheduletimeunit></scheduletimeunit>
+          <tostate>[scriptid=customworkflow_2win_rendiciones_gastos.workflowstate2418]</tostate>
+          <triggertype></triggertype>
+          <waitforworkflow></waitforworkflow>
+          <waitforworkflowstate></waitforworkflowstate>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </workflowtransition>
+      </workflowtransitions>
+    </workflowstate>
+    <workflowstate scriptid="workflowstate2418">
+      <description></description>
+      <donotexitworkflow>F</donotexitworkflow>
+      <name>Generar Reembolso</name>
+      <positionx>603</positionx>
+      <positiony>293</positiony>
+      <workflowactions triggertype="ONENTRY">
+        <customaction scriptid="workflowaction13737">
+          <conditionsavedsearch></conditionsavedsearch>
+          <contexttypes>ACTION|RECORDACTION|CUSTOMMASSUPDATE|CONSOLRATEADJUSTOR|FIPARSER|BANKSTATEMENTPARSER|EMAILCAPTURE|CLIENT|OFFLINECLIENT|BANKCONNECTIVITY|FICONNECTIVITY|DEBUGGER|PLATFORMEXTENSION|WORKFLOW|ADVANCEDREVREC|CSVIMPORT|SDFINSTALLATION|BUNDLEINSTALLATION|USERINTERFACE|CUSTOMGLLINES|MAPREDUCE|TAXCALCULATION|OTHER|OCRPLUGIN|DATASETBUILDER|WORKBOOKBUILDER|PORTLET|PAYMENTPOSTBACK|PAYMENTGATEWAY|PROMOTIONS|RESTLET|USEREVENT|SCHEDULED|RESTWEBSERVICES|WEBSERVICES|SHIPPINGPARTNERS|SUITELET</contexttypes>
+          <eventtypes></eventtypes>
+          <isinactive>F</isinactive>
+          <resultfield></resultfield>
+          <scheduledelay></scheduledelay>
+          <schedulemode>DELAY</schedulemode>
+          <schedulerecurrence></schedulerecurrence>
+          <scheduletimeofday></scheduletimeofday>
+          <scheduletimeunit></scheduletimeunit>
+          <scripttype>[scriptid=customscript_2win_wf_rendiciones_gastos]</scripttype>
+          <initcondition>
+            <formula></formula>
+            <type>VISUAL_BUILDER</type>
+          </initcondition>
+        </customaction>
+      </workflowactions>
+    </workflowstate>
+  </workflowstates>
+</workflow>
