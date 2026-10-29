@@ -22,10 +22,20 @@ define(["N/query", "../constants/AutopickingConstants"], (query, CONST) => {
     `;
 
     /**
+     * Condición SQL reutilizable: el nombre de la ubicación no coincide con ningún patrón excluido (p. ej. "OLD").
+     * @param {string} aliasLoc - alias de Location en la consulta
+     */
+    const condicionUbicacionNoExcluida = (aliasLoc) =>
+        REGLAS.PATRONES_UBICACION_EXCLUIDA.map(
+            (patron) => `UPPER(NVL(${aliasLoc}.name, ' ')) NOT LIKE ${listaTexto([String(patron).toUpperCase()])}`
+        ).join(" AND ") || "1 = 1";
+
+    /**
      * Devuelve los IDs de OV candidatas a reproceso.
      *  - Con idsOrdenVenta: solo esas OV (no aplica filtro de fecha).
      *  - Sin idsOrdenVenta: OV de los últimos `diasAtras` días.
-     * En ambos casos exige líneas pendientes con cantidad comprometida y excluye
+     * En ambos casos exige líneas pendientes con cantidad comprometida en una ubicación activa
+     * cuyo nombre no coincide con REGLAS.PATRONES_UBICACION_EXCLUIDA (p. ej. "OLD"), y excluye
      * las OV que tienen un registro Pendiente en la cola de autopicking.
      *
      * @param {{ idsOrdenVenta: number[], diasAtras: number, limite: number }} filtros
@@ -56,6 +66,7 @@ define(["N/query", "../constants/AutopickingConstants"], (query, CONST) => {
                       AND ${condicionLineaPendiente("tl")}
                       AND ABS(NVL(tl.quantitycommitted, 0)) > 0
                       AND NVL(loc.isinactive, 'F') = 'F'
+                      AND ${condicionUbicacionNoExcluida("loc")}
               )
               AND NOT EXISTS (
                     SELECT 1
@@ -81,6 +92,8 @@ define(["N/query", "../constants/AutopickingConstants"], (query, CONST) => {
 
     /**
      * Líneas de inventario de una OV que aún tienen cantidad pendiente de ejecutar.
+     * Omite las líneas en ubicaciones excluidas por nombre (REGLAS.PATRONES_UBICACION_EXCLUIDA): no se
+     * ejecutan ni cuentan como pendiente. Las líneas sin ubicación se mantienen para reportarlas en el log.
      * `lineId` corresponde al campo `line` de la OV y a `orderline` en la Ejecución.
      *
      * @param {number} idOrdenVenta
@@ -108,6 +121,7 @@ define(["N/query", "../constants/AutopickingConstants"], (query, CONST) => {
             LEFT JOIN location loc ON loc.id = tl.inventorylocation
             WHERE tl.transaction = ?
               AND ${condicionLineaPendiente("tl")}
+              AND (loc.id IS NULL OR (${condicionUbicacionNoExcluida("loc")}))
             ORDER BY tl.id ASC
         `;
 

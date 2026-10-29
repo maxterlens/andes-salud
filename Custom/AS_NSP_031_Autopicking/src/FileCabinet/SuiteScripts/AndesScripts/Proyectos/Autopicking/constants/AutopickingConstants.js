@@ -14,7 +14,8 @@ define([], () => {
         LIMITE_OV: "custscript_as_rap_limite_ov",
         SIMULACION: "custscript_as_rap_simulacion",
         USAR_FECHA_LINEA: "custscript_as_rap_usar_fecha_linea",
-        LOG_SIN_CAMBIOS: "custscript_as_rap_log_sin_cambios"
+        LOG_SIN_CAMBIOS: "custscript_as_rap_log_sin_cambios",
+        REGISTRAR_LOG: "custscript_as_rap_registrar_log"
     };
 
     /** Valores por defecto cuando el parámetro viene vacío */
@@ -32,8 +33,15 @@ define([], () => {
         // B = Ejecución de la orden pendiente, D = Parcialmente ejecutada,
         // E = Facturación pendiente / parcialmente ejecutada
         ESTADOS_OV: ["B", "D", "E"],
+        // Estados de OV cuyos lotes asignados (detalle de inventario) se consideran comprometidos
+        // y no se pueden tomar desde otra OV. No incluye A (Aprobación pendiente).
+        ESTADOS_OV_COMPROMISO: ["B", "D", "E"],
+        // Tipo de vínculo OV -> Ejecución en NextTransactionLineLink
+        TIPO_VINCULO_EJECUCION: "ShipRcpt",
         // Estados de inventario que NO se pueden consumir
         ESTADOS_INVENTARIO_EXCLUIDOS: ["Bloqueado", "En Inspección", "Damaged"],
+        // Patrones (LIKE, sin distinguir mayúsculas) del nombre de ubicación que se excluyen del reproceso
+        PATRONES_UBICACION_EXCLUIDA: ["%OLD%"],
         EPSILON: 0.00001
     };
 
@@ -77,7 +85,9 @@ define([], () => {
             OMITIDA_COLA: "Omitida (en cola)",
             SIMULACION: "Simulación"
         },
-        MAX_TEXTO: 100000
+        MAX_TEXTO: 100000,
+        // Límite del campo "details" de N/log (4000); se deja margen para el sufijo de truncado
+        MAX_TEXTO_LOG_SCRIPT: 3900
     };
 
     /** Claves de salida del reduce hacia summarize */

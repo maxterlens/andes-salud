@@ -7,6 +7,8 @@
 define([
     'N/log',
     'N/runtime',
+    'N/format',
+    '../lib/moment',
     '../dao/pos_farmacia/2win_dao_create_invoice',
     '../dao/pos_farmacia/2win_dao_auditoria',
     '../dao/pos_farmacia/2win_dao_create_customer_payment',
@@ -22,6 +24,8 @@ define([
     function(
         log,
         runtime,
+        format,
+        moment,
         daoCreateInvoice,
         daoAuditoria,
         daoCreateCustomerPayment,
@@ -87,14 +91,73 @@ define([
         }
 
         /**
+         * @description Obtiene la fecha de las transacciones a partir del campo "fecha" del JSON.
+         *              La fecha llega en ISO 8601 (UTC) y se convierte a la fecha de Santiago de Chile,
+         *              que es la zona horaria del POS.
+         *              - Sin fecha (vacía o no enviada): se usa la fecha actual de Santiago.
+         *              - Fecha con formato inválido: error (la venta no se registra).
+         * @param {string} fechaTexto - Ej: "2026-10-07T16:00:22.967Z"
+         * @returns {{ success: boolean, result: Date|null, error: string }}
+         */
+        function obtenerFechaTransaccion(fechaTexto) {
+            var sinFecha = fechaTexto === undefined || fechaTexto === null || String(fechaTexto).trim() === '';
+            var fechaMoment = sinFecha ? moment() : moment(String(fechaTexto).trim(), moment.ISO_8601, true);
+            if (!fechaMoment.isValid()) {
+                return { success: false, result: null, error: 'Fecha inválida: "' + fechaTexto + '". Formato esperado ISO 8601, ej: 2026-10-07T16:00:22.967Z' };
+            }
+
+            // 1. Fecha y hora del instante recibido, expresadas en Santiago de Chile
+            //    (texto en el formato de fecha/hora del usuario que ejecuta el RESTlet).
+            var textoChile = format.format({
+                value: fechaMoment.toDate(),
+                type: format.Type.DATETIME,
+                timezone: format.Timezone.AMERICA_SANTIAGO
+            });
+
+            // 2. Se descarta la hora y se lee solo el día. Leer únicamente la fecha (tipo DATE)
+            //    evita que NetSuite vuelva a aplicar una zona horaria y cambie el día cerca de medianoche.
+            var textoDia = String(textoChile).replace(/\s+\d{1,2}:\d{2}(:\d{2})?(\s*[ap]\.?\s?m\.?)?\s*$/i, '');
+            var dia = format.parse({ value: textoDia, type: format.Type.DATE });
+            if (!(dia instanceof Date) || isNaN(dia.getTime())) {
+                return { success: false, result: null, error: 'No se pudo convertir la fecha "' + fechaTexto + '" a la zona horaria de Santiago (' + textoChile + ')' };
+            }
+
+            // 3. Mediodía del día de Chile, para que el campo fecha no se corra por zona horaria.
+            var fechaChile = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate(), 12, 0, 0);
+
+            log.audit('obtenerFechaTransaccion', { recibida: fechaTexto, santiago: textoChile, dia: textoDia });
+            return { success: true, result: fechaChile, error: '' };
+        }
+
+        /**
          * @description Proceso de venta
-         * @param {*} context 
-         * @returns 
+         * @param {*} context
+         * @returns
          */
         function procesoVenta(context) {
             try{
                 var datosContext = context.datos;
                 log.debug('Datos recibidos en procesoVenta:', datosContext);
+
+                // Fecha de las transacciones (factura, pago y asiento de redondeo)
+                var fechaTransaccion = obtenerFechaTransaccion(datosContext.fecha);
+                if (!fechaTransaccion.success) {
+                    registrarAuditoria({
+                        etapa: 'Validación de Fecha',
+                        estado: '001',
+                        descripcionResultado: fechaTransaccion.error + ' (folio ' + datosContext.folio + ')'
+                    });
+
+                    return {
+                        "tipoMensaje": "POS^VENTA",
+                        "estado": {
+                            "success": false,
+                            "codigo": CODE_RESPONSE.BAD_REQUEST,
+                            "mensaje": fechaTransaccion.error
+                        }
+                    };
+                }
+                var fechaTrx = fechaTransaccion.result;
                 var rutSubContext = datosContext.subsidiaria;
                 var formatRutSubsidiaria = rutSubContext.slice(0, -1) + '-' + rutSubContext.slice(-1);
 
@@ -272,7 +335,8 @@ define([
                     id_tipo_dte: idTipoDTE,
                     folio: datosContext.folio,
                     formaPago: idFormaPago,
-                    datosLinea: datosLineas
+                    datosLinea: datosLineas,
+                    fecha: fechaTrx
                 };
 
                 var resultadoFactura = crearInvoice(dataJsonTrx);
@@ -348,7 +412,8 @@ define([
                                 montoRedondeo: Math.abs(diferenciaRedondeo),
                                 cuentaRedondeo: cuentaRedondeoResult.result,
                                 cuentaAR: detalleFactura.account,
-                                direccionJournal: direccionJournal
+                                direccionJournal: direccionJournal,
+                                fecha: fechaTrx
                             };
                             
                             var resultadoJournal = daoJournalRounding.createJournalRounding(journalData);
@@ -440,7 +505,8 @@ define([
                         monto: pago.monto,
                         cliente: idCliente,
                         subsidiaria: idSubsidiaria,
-                        id_journal: (pago.tipoFormaPago && pago.tipoFormaPago.toUpperCase() === 'EFECTIVO') ? idJournalRedondeo : null
+                        id_journal: (pago.tipoFormaPago && pago.tipoFormaPago.toUpperCase() === 'EFECTIVO') ? idJournalRedondeo : null,
+                        fecha: fechaTrx
                     };
 
                     try {

@@ -16,6 +16,8 @@
  *               - custscript_as_rap_simulacion        Solo calcula y registra, no crea Ejecuciones
  *               - custscript_as_rap_usar_fecha_linea  Fecha de la Ejecución = fecha de creación de la línea
  *               - custscript_as_rap_log_sin_cambios   Registrar log también cuando la OV sigue sin stock
+ *               - custscript_as_rap_registrar_log     Guardar el log en customrecord_as_autopicking_log;
+ *                                                     desmarcado = solo log de ejecución del script
  */
 define([
     "N/runtime",
@@ -28,6 +30,9 @@ define([
     const { PARAMETROS, DEFAULTS, RESULTADO, LOG } = CONST;
 
     const esVerdadero = (v) => v === true || v === "T" || v === "true";
+
+    /** Checkbox que vale verdadero salvo que venga desmarcado explícitamente (deploys anteriores al parámetro). */
+    const esVerdaderoPorDefecto = (v) => !(v === false || v === "F" || v === "false");
 
     const numeroPositivo = (valor, porDefecto) => {
         const n = parseInt(valor, 10);
@@ -53,7 +58,8 @@ define([
             limite: numeroPositivo(p(PARAMETROS.LIMITE_OV), DEFAULTS.LIMITE_OV),
             simulacion: esVerdadero(p(PARAMETROS.SIMULACION)),
             usarFechaLinea: esVerdadero(p(PARAMETROS.USAR_FECHA_LINEA)),
-            logSinCambios: esVerdadero(p(PARAMETROS.LOG_SIN_CAMBIOS))
+            logSinCambios: esVerdadero(p(PARAMETROS.LOG_SIN_CAMBIOS)),
+            registrarLog: esVerdaderoPorDefecto(p(PARAMETROS.REGISTRAR_LOG))
         };
     }
 
@@ -89,6 +95,7 @@ define([
             simulacion: parametros.simulacion,
             usarFechaLinea: parametros.usarFechaLinea,
             logSinCambios: parametros.logSinCambios,
+            registrarLog: parametros.registrarLog,
             idProceso: entrada.idProceso
         };
 
@@ -98,8 +105,9 @@ define([
         } catch (e) {
             const mensaje = (e && e.message) || String(e);
             nLog.error({ title: `AS_NSP_031 - Error OV ${entrada.tranid || entrada.idOrdenVenta}`, details: mensaje });
-            salida = { resultado: RESULTADO.ERROR, idOrdenVenta: entrada.idOrdenVenta, tranid: entrada.tranid, ejecuciones: [], errores: [mensaje] };
-            salida.idLog = logRepo.crear({
+            salida = { resultado: RESULTADO.ERROR, idOrdenVenta: entrada.idOrdenVenta, tranid: entrada.tranid, ejecuciones: [], errores: [mensaje], idLog: null };
+            // Sin registro personalizado, el nLog.error anterior es el único rastro (ya incluye OV y mensaje)
+            if (opciones.registrarLog) salida.idLog = logRepo.crear({
                 idOrdenVenta: entrada.idOrdenVenta,
                 tranid: entrada.tranid,
                 estado: LOG.ESTADOS.ERROR,

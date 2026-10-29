@@ -49,7 +49,7 @@
       <defaultselection></defaultselection>
       <defaultvalue></defaultvalue>
       <description></description>
-      <displaytype>INLINE</displaytype>
+      <displaytype>NORMAL</displaytype>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
       <fieldtype>SELECT</fieldtype>
@@ -86,7 +86,7 @@
       <defaultselection></defaultselection>
       <defaultvalue></defaultvalue>
       <description></description>
-      <displaytype>INLINE</displaytype>
+      <displaytype>NORMAL</displaytype>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
       <fieldtype>SELECT</fieldtype>
@@ -123,7 +123,7 @@
       <defaultselection></defaultselection>
       <defaultvalue></defaultvalue>
       <description></description>
-      <displaytype>INLINE</displaytype>
+      <displaytype>NORMAL</displaytype>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
       <fieldtype>CHECKBOX</fieldtype>
@@ -160,7 +160,7 @@
       <defaultselection></defaultselection>
       <defaultvalue></defaultvalue>
       <description></description>
-      <displaytype>INLINE</displaytype>
+      <displaytype>NORMAL</displaytype>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
       <fieldtype>TEXT</fieldtype>
@@ -197,7 +197,7 @@
       <defaultselection></defaultselection>
       <defaultvalue></defaultvalue>
       <description></description>
-      <displaytype>INLINE</displaytype>
+      <displaytype>NORMAL</displaytype>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
       <fieldtype>TEXT</fieldtype>
@@ -234,7 +234,7 @@
       <defaultselection></defaultselection>
       <defaultvalue></defaultvalue>
       <description></description>
-      <displaytype>INLINE</displaytype>
+      <displaytype>NORMAL</displaytype>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
       <fieldtype>FLOAT</fieldtype>
@@ -271,7 +271,7 @@
       <defaultselection></defaultselection>
       <defaultvalue></defaultvalue>
       <description></description>
-      <displaytype>INLINE</displaytype>
+      <displaytype>NORMAL</displaytype>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
       <fieldtype>FLOAT</fieldtype>
@@ -308,7 +308,7 @@
       <defaultselection></defaultselection>
       <defaultvalue></defaultvalue>
       <description></description>
-      <displaytype>INLINE</displaytype>
+      <displaytype>NORMAL</displaytype>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
       <fieldtype>FLOAT</fieldtype>
@@ -345,7 +345,7 @@
       <defaultselection></defaultselection>
       <defaultvalue></defaultvalue>
       <description></description>
-      <displaytype>INLINE</displaytype>
+      <displaytype>NORMAL</displaytype>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
       <fieldtype>CLOBTEXT</fieldtype>
@@ -382,7 +382,7 @@
       <defaultselection></defaultselection>
       <defaultvalue></defaultvalue>
       <description></description>
-      <displaytype>INLINE</displaytype>
+      <displaytype>NORMAL</displaytype>
       <dynamicdefault></dynamicdefault>
       <encryptatrest>F</encryptatrest>
       <fieldtype>CLOBTEXT</fieldtype>

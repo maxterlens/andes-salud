@@ -21,6 +21,11 @@ define(['N/record', 'N/log'], function (record, log) {
 
     //   try { payment.setValue({ fieldId: 'autoapply', value: false }); } catch (e) {}
 
+      // Fecha del pago = fecha de la venta (si no viene, NetSuite usa la fecha del día)
+      if (data.fecha) {
+        payment.setValue({ fieldId: 'trandate', value: data.fecha });
+      }
+
       payment.setValue({ fieldId: 'payment', value: Number(data.monto) });
 
       if (data.cuenta) {

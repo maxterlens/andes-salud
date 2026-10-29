@@ -83,7 +83,7 @@ Un hallazgo de esa investigación que vale la pena dejar anotado: el campo `cust
 
 Este suitelet y su deployment se borran cuando la investigación termine, como dice su propia descripción.
 
-## Campos obligatorios por tipo de cuenta (form 115 - Andes - Diario Contable)
+## Campos obligatorios por tipo de cuenta (form 273 - Andes - Diario Contable)
 
 Además del control de duplicidad, este proyecto valida que ciertas líneas del asiento tengan
 datos mínimos completos. Cuatro campos son obligatorios en toda línea, sin importar el tipo de
@@ -103,8 +103,8 @@ entra al control de identidad repetida, el otro exige completitud de datos.
 
 Se acotó a solo Client Script (`validateLine`), sin contraparte en el User Event — a diferencia
 del control de duplicidad, que sí necesita el UE porque cubre CSV Import. Esta regla es
-exclusivamente de UI, para formularios cargados manualmente con el form 115; una carga masiva
+exclusivamente de UI, para formularios cargados manualmente con el form 273; una carga masiva
 por CSV Import no la valida, a pedido.
 
-Se acotó al form 115 comparando `customform` dentro de `validateLine`, mismo criterio que ya se
+Se acotó al form 273 comparando `customform` dentro de `validateLine`, mismo criterio que ya se
 usó en Factura de Compra (form 117) y Factura de Venta (form 118) para reglas equivalentes.

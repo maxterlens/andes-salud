@@ -7,7 +7,7 @@ define(['N/record', '../lib/AS_FactoringConstants'],
     (record, CONSTANTES) => {
 
     const crearAsiento = (datos) => {
-        const asiento = record.create({ type: record.Type.JOURNAL_ENTRY });
+        const asiento = record.create({ type: record.Type.JOURNAL_ENTRY, defaultValues: { customform: CONSTANTES.ANDES_DIARIO_CONTABLE_FORM } });
 
         asiento.setValue({ fieldId: 'trandate',     value: datos.fecha });
         asiento.setValue({ fieldId: 'subsidiary',   value: datos.subsidiaria });
@@ -19,7 +19,7 @@ define(['N/record', '../lib/AS_FactoringConstants'],
         agregarLineaDebe(asiento, datos);
         agregarLineaHaber(asiento, datos);
 
-        const idAsiento = asiento.save();
+        const idAsiento = asiento.save({ enableSourcing: true, ignoreMandatoryFields: false });
 
         log.debug({
             title  : CONSTANTES.LOGS.ASIENTO,

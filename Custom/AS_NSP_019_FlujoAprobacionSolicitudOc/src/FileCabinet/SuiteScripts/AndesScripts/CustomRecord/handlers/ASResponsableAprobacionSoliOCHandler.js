@@ -30,6 +30,9 @@ define([
 
     const TITULO_ALERTA = 'Responsable de Aprobación';
 
+    /** Texto de la opción vacía: Departamento vacío = aprobador por defecto de la subsidiaria. */
+    const TEXTO_POR_DEFECTO = '— Por defecto (todos los departamentos) —';
+
     const esVerdadero = (valor) => valor === true || valor === 'T';
 
     const alertar = (dialog, message) => dialog.alert({ title: TITULO_ALERTA, message });
@@ -61,14 +64,17 @@ define([
             type: serverWidget.FieldType.SELECT,
             label: 'Departamento'
         });
-        campo.isMandatory = true;
-        campo.setHelpText({ help: 'Departamentos disponibles para la subsidiaria seleccionada.' });
+        campo.setHelpText({
+            help: 'Departamentos disponibles para la subsidiaria seleccionada. ' +
+                'Déjelo en "Por defecto" para definir el aprobador de la subsidiaria cuando la ' +
+                'solicitud no tenga departamento o su departamento no tenga configuración específica.'
+        });
 
         if (form.getField({ id: CAMPOS.RESPONSABLE })) {
             form.insertField({ field: campo, nextfield: CAMPOS.RESPONSABLE });
         }
 
-        campo.addSelectOption({ value: '', text: '' });
+        campo.addSelectOption({ value: '', text: TEXTO_POR_DEFECTO });
 
         const subsidiaria = newRecord.getValue({ fieldId: CAMPOS.SUBSIDIARIA });
         const departamentoActual = String(newRecord.getValue({ fieldId: CAMPOS.DEPARTAMENTO }) || '');
@@ -111,7 +117,7 @@ define([
         if (!campo) return;
 
         campo.removeSelectOption({ value: null });
-        campo.insertSelectOption({ value: '', text: '' });
+        campo.insertSelectOption({ value: '', text: TEXTO_POR_DEFECTO });
 
         const subsidiaria = currentRecord.getValue({ fieldId: CAMPOS.SUBSIDIARIA });
         if (subsidiaria) {
@@ -140,7 +146,8 @@ define([
     };
 
     /**
-     * Valida que Subsidiaria, Departamento y Responsable estén informados.
+     * Valida que Subsidiaria y Responsable estén informados.
+     * Departamento es opcional: vacío = aprobador por defecto de la subsidiaria.
      *
      * @param {Object} context - Contexto saveRecord
      * @param {Object} dialog  - Módulo N/ui/dialog
@@ -150,11 +157,9 @@ define([
         const { currentRecord } = context;
 
         const subsidiaria = currentRecord.getValue({ fieldId: CAMPOS.SUBSIDIARIA });
-        const departamento = currentRecord.getValue({ fieldId: CAMPOS.DEPARTAMENTO });
         const responsable = currentRecord.getValue({ fieldId: CAMPOS.RESPONSABLE });
 
         if (!subsidiaria) { alertar(dialog, 'Debe seleccionar una Subsidiaria.'); return false; }
-        if (!departamento) { alertar(dialog, 'Debe seleccionar un Departamento.'); return false; }
         if (!responsable || (Array.isArray(responsable) && !responsable.length)) {
             alertar(dialog, 'Debe seleccionar un Responsable.');
             return false;
@@ -165,7 +170,8 @@ define([
 
     /**
      * Valida que no exista otro registro activo con la misma combinación
-     * Subsidiaria + Departamento. No aplica si el registro está inactivo.
+     * Subsidiaria + Departamento (o otro aprobador por defecto activo para la
+     * subsidiaria, si Departamento está vacío). No aplica si el registro está inactivo.
      *
      * @param {Object} context - Contexto saveRecord
      * @param {Object} dialog  - Módulo N/ui/dialog
@@ -176,15 +182,20 @@ define([
 
         if (esVerdadero(currentRecord.getValue({ fieldId: CAMPOS.INACTIVO }))) return true;
 
+        const departamento = currentRecord.getValue({ fieldId: CAMPOS.DEPARTAMENTO });
+
         const duplicadoId = ASResponsableAprobacionSoliOCRepository.buscarCombinacionExistente(
             currentRecord.getValue({ fieldId: CAMPOS.SUBSIDIARIA }),
-            currentRecord.getValue({ fieldId: CAMPOS.DEPARTAMENTO }),
+            departamento,
             currentRecord.id || null
         );
 
         if (duplicadoId) {
-            alertar(dialog, 'Ya existe un registro activo para la misma Subsidiaria y Departamento ' +
-                `(ID interno: ${duplicadoId}). Edite ese registro o inactívelo antes de crear uno nuevo.`);
+            const detalle = departamento
+                ? 'Ya existe un registro activo para la misma Subsidiaria y Departamento'
+                : 'Ya existe un aprobador por defecto activo para esta Subsidiaria';
+            alertar(dialog, `${detalle} (ID interno: ${duplicadoId}). ` +
+                'Edite ese registro o inactívelo antes de crear uno nuevo.');
             return false;
         }
 

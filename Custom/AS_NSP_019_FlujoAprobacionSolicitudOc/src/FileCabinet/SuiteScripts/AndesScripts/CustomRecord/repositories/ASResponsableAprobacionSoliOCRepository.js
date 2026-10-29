@@ -6,9 +6,13 @@
  * Gestiona la búsqueda del responsable de aprobación de Solicitud de Compra
  * por combinación Subsidiaria + Departamento.
  *
- * Regla de configuración: un registro por cada combinación Subsidiaria +
- * Departamento, con un único responsable. Un mismo departamento habilitado en
- * varias subsidiarias se configura con un registro por subsidiaria.
+ * Reglas de configuración:
+ *  - Un registro por cada combinación Subsidiaria + Departamento, con un único
+ *    responsable. Un mismo departamento habilitado en varias subsidiarias se
+ *    configura con un registro por subsidiaria.
+ *  - Un registro con Subsidiaria y Departamento VACÍO define el aprobador por
+ *    defecto de la subsidiaria. Se usa cuando la solicitud no tiene
+ *    departamento o cuando su combinación no tiene configuración específica.
  */
 define(['N/search'], (search) => {
 
@@ -17,19 +21,28 @@ define(['N/search'], (search) => {
     const FIELD_DEPARTAMENTO = 'custrecord_as_resp_apb_sol_oc_departamen';
     const FIELD_RESPONSABLE = 'custrecord_as_resp_apb_sol_oc_responsabl';
 
+    /** Valor de filtro para "Departamento vacío" (aprobador por defecto). */
+    const SIN_DEPARTAMENTO = '@NONE@';
+
     /**
-     * Busca el responsable de aprobación configurado para la combinación
-     * Subsidiaria + Departamento.
+     * Filtro de departamento: el ID recibido o, si viene vacío, registros sin
+     * departamento (aprobador por defecto de la subsidiaria).
      *
-     * Si existe más de un registro activo para la misma combinación, se toma
-     * el primero (menor internal ID) y se deja una advertencia en el log para
-     * que se corrija la configuración.
+     * @param {number|string} departamentoId
+     * @returns {string}
+     */
+    const valorFiltroDepartamento = (departamentoId) => departamentoId || SIN_DEPARTAMENTO;
+
+    /**
+     * Busca el responsable configurado para una Subsidiaria + Departamento exactos.
+     * Si hay más de un registro activo, toma el de menor internal ID y deja una
+     * advertencia en el log.
      *
-     * @param {number|string} subsidiariaId  - Internal ID de la subsidiaria
-     * @param {number|string} departamentoId - Internal ID del departamento
+     * @param {number|string} subsidiariaId
+     * @param {number|string} departamentoId - Vacío para buscar el aprobador por defecto
      * @returns {string} Internal ID del responsable, o '' si no hay configuración
      */
-    const buscarResponsable = (subsidiariaId, departamentoId) => {
+    const buscarPorCombinacion = (subsidiariaId, departamentoId) => {
         const responsables = [];
 
         search.create({
@@ -37,7 +50,7 @@ define(['N/search'], (search) => {
             filters: [
                 [FIELD_SUBSIDIARIA, 'anyof', subsidiariaId],
                 'AND',
-                [FIELD_DEPARTAMENTO, 'anyof', departamentoId],
+                [FIELD_DEPARTAMENTO, 'anyof', valorFiltroDepartamento(departamentoId)],
                 'AND',
                 ['isinactive', 'is', 'F']
             ],
@@ -54,8 +67,8 @@ define(['N/search'], (search) => {
 
         if (responsables.length > 1) {
             log.audit({
-                title: 'ASResponsableAprobacionSoliOCRepository.buscarResponsable - Configuración duplicada',
-                details: `Subsidiaria: ${subsidiariaId} | Departamento: ${departamentoId} | ` +
+                title: 'ASResponsableAprobacionSoliOCRepository.buscarPorCombinacion - Configuración duplicada',
+                details: `Subsidiaria: ${subsidiariaId} | Departamento: ${departamentoId || '(por defecto)'} | ` +
                     `Registros: ${responsables.map(r => r.registroId).join(', ')}. Se usa el registro ${responsables[0].registroId}.`
             });
         }
@@ -64,11 +77,32 @@ define(['N/search'], (search) => {
     };
 
     /**
-     * Indica si ya existe otro registro activo con la misma combinación
-     * Subsidiaria + Departamento.
+     * Busca el responsable de aprobación para la solicitud:
+     *  1. Configuración específica Subsidiaria + Departamento (si hay departamento).
+     *  2. Si no existe, el aprobador por defecto de la subsidiaria
+     *     (registro con Departamento vacío).
      *
      * @param {number|string} subsidiariaId  - Internal ID de la subsidiaria
-     * @param {number|string} departamentoId - Internal ID del departamento
+     * @param {number|string} [departamentoId] - Internal ID del departamento
+     * @returns {{responsable: string, porDefecto: boolean}}
+     *          responsable = '' si no hay configuración ni aprobador por defecto
+     */
+    const buscarResponsable = (subsidiariaId, departamentoId) => {
+        if (departamentoId) {
+            const especifico = buscarPorCombinacion(subsidiariaId, departamentoId);
+            if (especifico) return { responsable: especifico, porDefecto: false };
+        }
+
+        return { responsable: buscarPorCombinacion(subsidiariaId, ''), porDefecto: true };
+    };
+
+    /**
+     * Indica si ya existe otro registro activo con la misma combinación
+     * Subsidiaria + Departamento. Con departamento vacío valida que exista un
+     * solo aprobador por defecto activo por subsidiaria.
+     *
+     * @param {number|string} subsidiariaId  - Internal ID de la subsidiaria
+     * @param {number|string} departamentoId - Internal ID del departamento (vacío = por defecto)
      * @param {number|string} [excluirId]    - Internal ID del registro actual (edición)
      * @returns {string|null} Internal ID del registro duplicado, o null si no existe
      */
@@ -76,7 +110,7 @@ define(['N/search'], (search) => {
         const filtros = [
             [FIELD_SUBSIDIARIA, 'anyof', subsidiariaId],
             'AND',
-            [FIELD_DEPARTAMENTO, 'anyof', departamentoId],
+            [FIELD_DEPARTAMENTO, 'anyof', valorFiltroDepartamento(departamentoId)],
             'AND',
             ['isinactive', 'is', 'F']
         ];

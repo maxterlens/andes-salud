@@ -41,8 +41,9 @@ define([
                     isDynamic: true
                 });
 
-                var trandate = moment(data.fecha).toDate();
-                var duedate = moment(data.fecha).add(30, 'days').toDate();
+                // Fecha recibida desde 2win_dom_venta (ya convertida a fecha de Chile); si no viene, fecha del día
+                var trandate = data.fecha ? data.fecha : new Date();
+                var duedate = moment(trandate).add(30, 'days').toDate();
 
                 var internalIdCC = libCache.getCentroCostoByUbicacionId(data.ubicacion);
                 if(!internalIdCC.success){

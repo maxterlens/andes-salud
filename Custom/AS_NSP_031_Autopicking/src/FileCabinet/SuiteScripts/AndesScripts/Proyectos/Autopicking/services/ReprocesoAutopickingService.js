@@ -4,7 +4,8 @@
  *
  * @description AS_NSP_031 - Orquesta el reproceso de una Orden de Venta:
  *              valida la cola, crea las Ejecuciones pendientes, verifica el resultado
- *              contra NetSuite, clasifica la OV y registra el log.
+ *              contra NetSuite, clasifica la OV y registra el log
+ *              (registro personalizado, o solo log de ejecución si opciones.registrarLog = false).
  */
 define([
     "N/log",
@@ -130,7 +131,7 @@ define([
      * @param {object} p
      * @param {number} p.idOrdenVenta
      * @param {string} p.tranid
-     * @param {{ simulacion: boolean, usarFechaLinea: boolean, logSinCambios: boolean, idProceso: string }} p.opciones
+     * @param {{ simulacion: boolean, usarFechaLinea: boolean, logSinCambios: boolean, registrarLog: boolean, idProceso: string }} p.opciones
      * @returns {{ resultado: string, idOrdenVenta: number, tranid: string, ejecuciones: number[], pendienteInicial: number, ejecutada: number, pendienteFinal: number, errores: string[], idLog: number|null }}
      */
     function procesarOrdenVenta({ idOrdenVenta, tranid, opciones }) {
@@ -169,7 +170,8 @@ define([
         // 4. Ejecutar (o simular) por grupo ubicación/fecha
         const existencias = inventarioRepo.cargarExistencias(
             procesables.map((l) => l.item),
-            procesables.map((l) => l.ubicacion)
+            procesables.map((l) => l.ubicacion),
+            idOrdenVenta
         );
         const asignador = new ejecucionService.AsignadorInventario(existencias);
 
@@ -210,7 +212,31 @@ define([
         return salida;
     }
 
+    /** Texto recortado para el campo "details" de N/log. */
+    const textoLogScript = (valor) => {
+        const s = typeof valor === "string" ? valor : JSON.stringify(valor);
+        return s.length > LOG.MAX_TEXTO_LOG_SCRIPT ? `${s.substring(0, LOG.MAX_TEXTO_LOG_SCRIPT - 15)}...[truncado]` : s;
+    };
+
+    /**
+     * Registra el resultado de la OV:
+     *  - registrarLog = true  -> registro customrecord_as_autopicking_log (comportamiento original).
+     *  - registrarLog = false -> solo log de ejecución del script, con el detalle por línea.
+     * @returns {number|null} ID del registro creado, o null si solo se dejó log del script
+     */
     function registrarLog(salida, opciones, detalle) {
+        if (!opciones.registrarLog) {
+            nLog.audit({
+                title: `AS_NSP_031 - OV ${salida.tranid || salida.idOrdenVenta}: ${TEXTO_ESTADO_LOG[salida.resultado]} - detalle`,
+                details: textoLogScript({
+                    idProceso: opciones.idProceso,
+                    simulacion: !!opciones.simulacion,
+                    ejecuciones: salida.ejecuciones,
+                    detalle
+                })
+            });
+            return null;
+        }
         return logRepo.crear({
             idOrdenVenta: salida.idOrdenVenta,
             tranid: salida.tranid,

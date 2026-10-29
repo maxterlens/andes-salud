@@ -3,7 +3,7 @@
   <isinactive>F</isinactive>
   <ismatrixoption>F</ismatrixoption>
   <isordered>T</isordered>
-  <name>AS Estado Reproceso Autopicking</name>
+  <name>AS Estado Rep Autopicking</name>
   <customvalues>
     <customvalue scriptid="val_as_apl_ejecutada">
       <abbreviation></abbreviation>

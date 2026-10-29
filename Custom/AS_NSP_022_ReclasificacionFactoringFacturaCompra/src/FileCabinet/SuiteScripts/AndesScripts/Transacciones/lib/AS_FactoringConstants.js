@@ -43,6 +43,7 @@ define([], () => {
     const CUENTA_FACTORING      = '577';
     const TIPO_DIARIO_FACTORING = '3';
     const APROBACION_APROBADA = '2';
+    const ANDES_DIARIO_CONTABLE_FORM = '115';
 
     const LOGS = {
         ENCOLADA: 'FACTORING ENCOLADA',
@@ -100,5 +101,6 @@ define([], () => {
         LOGS         : LOGS,
         MEMOS        : MEMOS,
         MENSAJES     : MENSAJES,
+        ANDES_DIARIO_CONTABLE_FORM : ANDES_DIARIO_CONTABLE_FORM
     };
 });

@@ -157,6 +157,31 @@
       <setting></setting>
       <storevalue>T</storevalue>
     </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_rap_registrar_log">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>T</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Guardar el log en el registro AS Log Reproceso Autopicking. Desmarcado: solo log de ejecución del script.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>CHECKBOX</fieldtype>
+      <help>Si está marcado, cada OV procesada crea un registro en AS Log Reproceso Autopicking (customrecord_as_autopicking_log). Si está desmarcado, no se crean registros: el resultado y el detalle por línea quedan solo en el log de ejecución del script (nivel Auditoría), que NetSuite conserva por tiempo limitado y recorta a unos 3.900 caracteres por entrada.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Registrar log en registro personalizado</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
   </scriptcustomfields>
   <scriptdeployments>
     <scriptdeployment scriptid="customdeploy_as_reproceso_autopicking_mr">
@@ -166,6 +191,7 @@
       <custscript_as_rap_ids_ov></custscript_as_rap_ids_ov>
       <custscript_as_rap_limite_ov>1000</custscript_as_rap_limite_ov>
       <custscript_as_rap_log_sin_cambios>T</custscript_as_rap_log_sin_cambios>
+      <custscript_as_rap_registrar_log>T</custscript_as_rap_registrar_log>
       <custscript_as_rap_simulacion>F</custscript_as_rap_simulacion>
       <custscript_as_rap_usar_fecha_linea>T</custscript_as_rap_usar_fecha_linea>
       <isdeployed>T</isdeployed>

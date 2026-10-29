@@ -14,6 +14,8 @@
  *                 se ejecuta la parte disponible y el resto queda pendiente.
  *               - El consumo de lotes se controla en memoria para que dos líneas o dos
  *                 Ejecuciones de la misma OV no tomen el mismo stock dos veces.
+ *               - No se toman lotes comprometidos a otras OV; los lotes ya asignados a la
+ *                 propia OV se usan primero (ver InventarioRepository.cargarExistencias).
  */
 define(["N/record", "N/log", "../constants/AutopickingConstants"], (record, nLog, CONST) => {
     const { REGLAS, CAMPOS } = CONST;
@@ -75,9 +77,26 @@ define(["N/record", "N/log", "../constants/AutopickingConstants"], (record, nLog
             }
 
             const total = asignaciones.reduce((s, a) => s + a.cantidad, 0);
-            return { total, requiereDetalle, asignaciones };
+            // Lotes retenidos por otras OV: solo interesa informarlos si faltó stock
+            const comprometidos = restante > EPS ? filas.filter((f) => f.comprometidoOtras > EPS) : [];
+            return { total, requiereDetalle, asignaciones, comprometidos };
         }
     }
+
+    /** Texto para el log cuando parte del stock está comprometido a otras OV. */
+    const textoCompromiso = (reserva) =>
+        reserva.comprometidos && reserva.comprometidos.length
+            ? `Stock comprometido a otras OV: ${reserva.comprometidos
+                  .map((f) => `${f.lote || "sin lote"}:${f.comprometidoOtras} (${f.ovsCompromiso.join(", ")})`)
+                  .join("; ")}`
+            : null;
+
+    /** Une el motivo base con el detalle de compromiso, si lo hay. */
+    const motivoConCompromiso = (motivoBase, reserva) => {
+        if (!motivoBase) return null;
+        const compromiso = textoCompromiso(reserva);
+        return compromiso ? `${motivoBase}. ${compromiso}` : motivoBase;
+    };
 
     // ── Helpers de sublista ────────────────────────────────────────────────────
 
@@ -128,7 +147,7 @@ define(["N/record", "N/log", "../constants/AutopickingConstants"], (record, nLog
                 lineId: l.lineId,
                 asignado: reserva.total,
                 lotes: resumenLotes(reserva.asignaciones),
-                motivo: reserva.total + EPS < l.pendiente ? "Stock insuficiente" : null
+                motivo: motivoConCompromiso(reserva.total + EPS < l.pendiente ? "Stock insuficiente" : null, reserva)
             };
         });
     }
@@ -185,7 +204,7 @@ define(["N/record", "N/log", "../constants/AutopickingConstants"], (record, nLog
 
                 if (reserva.total <= EPS) {
                     desmarcarLinea(ejecucion);
-                    resultados.push({ lineId: linea.lineId, asignado: 0, lotes: "", motivo: "Sin stock disponible" });
+                    resultados.push({ lineId: linea.lineId, asignado: 0, lotes: "", motivo: motivoConCompromiso("Sin stock disponible", reserva) });
                     continue;
                 }
 
@@ -201,7 +220,7 @@ define(["N/record", "N/log", "../constants/AutopickingConstants"], (record, nLog
                     lineId: linea.lineId,
                     asignado: reserva.total,
                     lotes: resumenLotes(reserva.asignaciones),
-                    motivo: reserva.total + EPS < objetivo ? "Stock insuficiente (ejecución parcial)" : null
+                    motivo: motivoConCompromiso(reserva.total + EPS < objetivo ? "Stock insuficiente (ejecución parcial)" : null, reserva)
                 });
             }
 

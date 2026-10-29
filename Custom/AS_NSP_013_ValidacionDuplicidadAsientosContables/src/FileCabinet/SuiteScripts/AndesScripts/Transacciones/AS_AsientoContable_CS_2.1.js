@@ -21,6 +21,9 @@ define(['./handlers/AS_AsientoContableHandler', 'N/ui/dialog', 'N/log'], (Asient
     // Los demás quedan de fallback por si en otro tipo de formulario cambia el id.
     const IDS_BOTON_GUARDAR = ['btn_multibutton_submitter', 'spanEDIT_bottom', 'spanEDIT', 'spanSAVE_bottom', 'spanSAVE'];
 
+    // Formulario Andes - Diario Contable: unico donde aplica la regla de campos obligatorios.
+    const FORMULARIO_DIARIO_CONTABLE = 273;
+
     let continuarConDuplicidadInterna = false;
 
     const clickBotonGuardarNativo = () => {
@@ -42,7 +45,7 @@ define(['./handlers/AS_AsientoContableHandler', 'N/ui/dialog', 'N/log'], (Asient
             context.currentRecord.getValue({ fieldId: 'customform' })
         );
 
-        if (customForm !== 115) return true;
+        if (customForm !== FORMULARIO_DIARIO_CONTABLE) return true;
 
         return AsientoContableHandler.validarCamposObligatoriosLinea(context, dialog);
     };
@@ -52,7 +55,7 @@ define(['./handlers/AS_AsientoContableHandler', 'N/ui/dialog', 'N/log'], (Asient
             const currentRecord = context.currentRecord;
 
             const customForm = Number(currentRecord.getValue({ fieldId: 'customform' }));
-            if (customForm === 115 && !AsientoContableHandler.validarTodasLasLineasCamposObligatorios(currentRecord, dialog)) {
+            if (customForm === FORMULARIO_DIARIO_CONTABLE && !AsientoContableHandler.validarTodasLasLineasCamposObligatorios(currentRecord, dialog)) {
                 return false;
             }
 

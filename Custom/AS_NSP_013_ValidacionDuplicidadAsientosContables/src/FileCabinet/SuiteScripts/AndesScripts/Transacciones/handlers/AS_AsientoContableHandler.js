@@ -183,7 +183,7 @@ define(['N/search', 'N/log'], (search, log) => {
         return expresion;
     };
 
-    // ─── Campos obligatorios por tipo de cuenta (form 115) ─────────────────────
+    // ─── Campos obligatorios por tipo de cuenta (form 273) ─────────────────────
     // Regla independiente del control de duplicidad de más arriba. Ver
     // ARQUITECTURA.md, sección "Campos obligatorios por tipo de cuenta", para el
     // detalle de por qué no se cruza con la exención de cuenta ni con el UE.
@@ -232,7 +232,7 @@ define(['N/search', 'N/log'], (search, log) => {
      * la cuenta es de tipo Banco, CxC, CxP u Otros Activos Corrientes;
      * Departamento solo si la cuenta es de tipo Activo Fijo, Ingresos, COGS,
      * Gastos, Otros Ingresos, Otros Gastos o Gastos Diferidos. Aplica solo
-     * al formulario Andes - Diario Contable (customform 115); el CS es quien
+     * al formulario Andes - Diario Contable (customform 273); el CS es quien
      * filtra por formulario antes de llamar a esta función.
      *
      * @param {Object} context - Contexto validateLine del Client Script

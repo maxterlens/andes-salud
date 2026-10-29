@@ -291,9 +291,9 @@ define([
             _resolverNombresUbicacion(origenesConConflicto);
         }
 
-        log.error('ResolucionStockLimitadoHandler._evaluarConflictosActivos',
+        /*log.error('ResolucionStockLimitadoHandler._evaluarConflictosActivos',
             `Orígenes con conflicto: ${origenesConConflicto.length}`
-        );
+        );*/
 
         return origenesConConflicto;
     };
@@ -393,17 +393,17 @@ define([
                 if (!conflictoFresco) {
                     // El conflicto ya no existe con los mismos términos (se resolvió automáticamente
                     // entretanto, o el stock cambió) — se omite esta línea y se deja constancia en logs.
-                    log.error('ResolucionStockLimitadoHandler._procesarConfirmacion',
+                    /*log.error('ResolucionStockLimitadoHandler._procesarConfirmacion',
                         `[${key}] Ítem ${l.itemInternalId}: el conflicto ya no está vigente. Línea omitida.`
-                    );
+                    );*/
                     return;
                 }
 
                 const destinoFresco = conflictoFresco.destinos.find(d => String(d.locationTo) === l.locationTo);
                 if (!destinoFresco) {
-                    log.error('ResolucionStockLimitadoHandler._procesarConfirmacion',
+                    /*log.error('ResolucionStockLimitadoHandler._procesarConfirmacion',
                         `[${key}] Ítem ${l.itemInternalId}: destino ${l.locationTo} ya no compite por este ítem. Línea omitida.`
-                    );
+                    );*/
                     return;
                 }
 
@@ -445,12 +445,12 @@ define([
                     deploymentId: MR_DEPLOYMENT_ID
                 }).submit();
             } catch (e) {
-                log.error('ResolucionStockLimitadoHandler._procesarConfirmacion',
+                /*log.error('ResolucionStockLimitadoHandler._procesarConfirmacion',
                     `No se pudo disparar de inmediato el Map/Reduce de creación de OT ` +
                     `(${e.name}: ${e.message}). Las resoluciones quedaron guardadas como ` +
                     `"Pendiente de Creación de OT" y se procesarán en cuanto termine la ` +
                     `ejecución en curso de ese mismo proceso.`
-                );
+                );*/
             }
         }
 

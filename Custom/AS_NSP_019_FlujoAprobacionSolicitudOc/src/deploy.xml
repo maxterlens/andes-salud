@@ -6,7 +6,10 @@
         <path>~/FileCabinet/*</path>
     </files>
     <objects>
-        <!--<path>~/Objects/noobject/*</path>-->
+        <path>~/Objects/record/*</path>
+        <path>~/Objects/newtemplate/*</path>
+        <path>~/Objects/scripts/*</path>
+        <path>~/Objects/workflow/*</path>
     </objects>
     <translationimports>
         <path>~/Translations/*</path>
