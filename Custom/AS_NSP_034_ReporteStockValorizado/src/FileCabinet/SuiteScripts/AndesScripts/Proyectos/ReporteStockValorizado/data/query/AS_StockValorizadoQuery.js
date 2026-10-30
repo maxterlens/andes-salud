@@ -6,22 +6,29 @@
  *                                   + ubicacion. No se corre aqui: la corre NetSuite
  *                                   como SuiteQLTask (AS_StockValorizadoHandler), que
  *                                   no tiene el limite de filas de runSuiteQL.
+ *              obtenerUbicaciones → las ubicaciones activas con su subsidiaria,
+ *                                   para el filtro del formulario.
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.0.0
+ * @version 1.1.0
+ *
+ * CHANGELOG v1.1.0:
+ * - [FEAT] Filtro opcional por ubicacion y obtenerUbicaciones.
+ * - [FIX]  Sin filtro de cuentas fijas: tl.isinventoryaffecting ya deja
+ *          solo el lado de inventario.
  *
  */
-define(['../../constants/AS_StockValorizadoConstants'],
-    (CONSTANTES) => {
+define(['N/query', '../../constants/AS_StockValorizadoConstants'],
+    (query, CONSTANTES) => {
 
     // ─────────────────────────────────────────────────────────────────────────
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Los mismos criterios del dataset "prueba auditoria stock" (custdataset179),
-     * validados contra el informe nativo al 30/09/2026: 1.202.166.305 de valor.
+     * Los criterios del dataset "prueba auditoria stock" (custdataset179) sin su filtro de cuentas;
+     * con ese filtro cuadro contra el informe nativo al 30/09/2026: 1.202.166.305 de valor.
      *
      * La suma va en la subconsulta por ids: BUILTIN.DF no se puede usar junto
      * a un GROUP BY ("Busqueda invalida o no compatible"), asi que los nombres se
@@ -30,9 +37,12 @@ define(['../../constants/AS_StockValorizadoConstants'],
      * Quedan fuera las combinaciones con cantidad y valor en cero (ubicaciones que
      * se vaciaron): con ellas el archivo pasa de 10 mil a 24 mil filas sin saldo.
      *
-     * Parametros: [subsidiaria, fecha de corte DD/MM/AAAA].
+     * Parametros: [subsidiaria, fecha de corte DD/MM/AAAA, ...ubicaciones]. Sin
+     * ubicaciones elegidas no se filtra: trae todas las de la subsidiaria.
      */
-    function armarConsultaStock() {
+    function armarConsultaStock(ubicaciones) {
+        const filtroUbicacion = ubicaciones.length ? ' AND tl.location IN (' + ubicaciones.map(() => '?').join(', ') + ')' : '';
+
         return 'SELECT i.upccode AS codigo_upc,'
              + ' i.itemid AS articulo,'
              + ' BUILTIN.DF(stock.ubicacion) AS ubicacion,'
@@ -56,11 +66,11 @@ define(['../../constants/AS_StockValorizadoConstants'],
              + '   JOIN item i ON i.id = tl.item'
              + '   WHERE tl.subsidiary = ?'
              + "   AND t.trandate <= TO_DATE(?, 'DD/MM/YYYY')"
+             + filtroUbicacion
              + '   AND tal.accountingbook = ' + CONSTANTES.LIBRO_CONTABLE
              + "   AND tal.posting = 'T'"
              + "   AND tl.isinventoryaffecting = 'T'"
              + "   AND i.isinactive = 'F'"
-             + '   AND tal.account IN (' + CONSTANTES.CUENTAS_INVENTARIO.join(', ') + ')'
              + '   GROUP BY tl.item, tl.location'
              + '   HAVING SUM(tl.quantity) <> 0 OR SUM(tal.amount) <> 0'
              + ' ) stock'
@@ -68,7 +78,20 @@ define(['../../constants/AS_StockValorizadoConstants'],
              + ' ORDER BY i.itemid, BUILTIN.DF(stock.ubicacion)';
     }
 
+    function obtenerUbicaciones() {
+        const filas = query.runSuiteQL({
+            query : 'SELECT l.id, l.fullname AS nombre, l.subsidiary AS subsidiaria'
+                  + ' FROM location l'
+                  + ' WHERE l.isinactive = ?'
+                  + ' ORDER BY l.fullname',
+            params: ['F'],
+        }).asMappedResults();
+
+        return filas.map((fila) => ({ subsidiaria: String(fila.subsidiaria), id: String(fila.id), nombre: fila.nombre }));
+    }
+
     return {
         armarConsultaStock: armarConsultaStock,
+        obtenerUbicaciones: obtenerUbicaciones,
     };
 });

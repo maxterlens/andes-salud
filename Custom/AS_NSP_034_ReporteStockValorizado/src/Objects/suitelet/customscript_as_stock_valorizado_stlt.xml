@@ -1,5 +1,5 @@
 <suitelet scriptid="customscript_as_stock_valorizado_stlt">
-  <description>Pantalla del Reporte de Stock Valorizado: subsidiaria, fecha de corte e historial de reportes con sus enlaces de descarga.</description>
+  <description>Pantalla del Reporte de Stock Valorizado: subsidiaria, ubicacion, fecha de corte e historial de reportes con sus enlaces de descarga.</description>
   <isinactive>F</isinactive>
   <name>AS Stock Valorizado STLT</name>
   <notifyadmins>F</notifyadmins>

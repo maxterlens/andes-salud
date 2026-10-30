@@ -1,21 +1,31 @@
 /**
  * AS_NSP_035 — Reporte de Stock Valorizado
  * @description Valores fijos del modulo: scripts y sus parametros, el record del
- *              historial, los campos del formulario, las cuentas de inventario y
- *              las columnas del Excel.
+ *              historial, los campos del formulario y las columnas del Excel.
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.0.0
+ * @version 1.2.0
+ *
+ * CHANGELOG v1.2.0:
+ * - [FEAT] Aviso y limite de tiempo para el reporte en proceso.
+ *
+ * CHANGELOG v1.1.0:
+ * - [FEAT] Campo Ubicacion en el formulario, en el historial y en el log.
+ * - [FIX]  Se quitan SUBSIDIARIA_DEFECTO y CUENTAS_INVENTARIO: nada fijo.
  *
  */
 define([], () => {
 
     const FORMULARIO = {
         TITULO          : 'Reporte de Stock Valorizado',
+        CLIENT_SCRIPT   : '/SuiteScripts/AndesScripts/Proyectos/ReporteStockValorizado/AS_StockValorizado_CS_2.1.js',
         BOTON_GENERAR   : 'Generar reporte',
+        UBICACION_TODAS : 'Todas',
         SOLICITUD_TITULO: 'Reporte en proceso',
         SOLICITUD_TEXTO : 'El reporte se está generando. Cuando termine aparece en el historial con sus enlaces de descarga: use Actualizar para verlo.',
+        OCUPADO_TITULO  : 'Hay un reporte en proceso',
+        OCUPADO_TEXTO   : 'Ya se está generando un reporte. Espere a que termine y vuelva a pedir el suyo: use Actualizar para ver el historial.',
     };
 
     const GRUPOS = {
@@ -23,8 +33,10 @@ define([], () => {
     };
 
     const CAMPOS = {
-        SUBSIDIARIA: 'custpage_subsidiaria',
-        FECHA_CORTE: 'custpage_fecha_corte',
+        SUBSIDIARIA     : 'custpage_subsidiaria',
+        UBICACION       : 'custpage_ubicacion',
+        UBICACIONES_DATA: 'custpage_ubicaciones_data',
+        FECHA_CORTE     : 'custpage_fecha_corte',
     };
 
     const SUBLISTA = {
@@ -33,6 +45,7 @@ define([], () => {
             FECHA      : 'custpage_col_fecha',
             USUARIO    : 'custpage_col_usuario',
             SUBSIDIARIA: 'custpage_col_subsidiaria',
+            UBICACION  : 'custpage_col_ubicacion',
             FECHA_CORTE: 'custpage_col_fecha_corte',
             ESTADO     : 'custpage_col_estado',
             EXCEL      : 'custpage_col_excel',
@@ -43,6 +56,7 @@ define([], () => {
 
     const URL = {
         SOLICITADO: 'solicitado',
+        OCUPADO   : 'ocupado',
     };
 
     const SCRIPTS = {
@@ -60,6 +74,7 @@ define([], () => {
         TIPO   : 'customrecord_as_stock_valorizado',
         CAMPOS : {
             SUBSIDIARIA: 'custrecord_as_stock_val_subsidiaria',
+            UBICACIONES: 'custrecord_as_stock_val_ubicaciones',
             FECHA_CORTE: 'custrecord_as_stock_val_fecha_corte',
             ESTADO     : 'custrecord_as_stock_val_estado',
             URL_EXCEL  : 'custrecord_as_stock_val_url_excel',
@@ -71,14 +86,11 @@ define([], () => {
             COMPLETADO: 'Completado',
             ERROR     : 'Error',
         },
-        HISTORIAL_MAXIMO: 50,
+        HISTORIAL_MAXIMO  : 50,
+        MINUTOS_EN_PROCESO: 30,
     };
 
-    const SUBSIDIARIA_DEFECTO = '5';
-
     const LIBRO_CONTABLE = 1;
-    
-    const CUENTAS_INVENTARIO = [213, 490, 491, 492, 495, 498];
 
     const EXCEL = {
         HOJA               : 'Stock valorizado',
@@ -96,9 +108,7 @@ define([], () => {
         SCRIPTS            : SCRIPTS,
         PARAMETROS         : PARAMETROS,
         LOG                : LOG,
-        SUBSIDIARIA_DEFECTO: SUBSIDIARIA_DEFECTO,
         LIBRO_CONTABLE     : LIBRO_CONTABLE,
-        CUENTAS_INVENTARIO : CUENTAS_INVENTARIO,
         EXCEL              : EXCEL,
     };
 });

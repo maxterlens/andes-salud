@@ -9,7 +9,10 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.0.0
+ * @version 1.1.0
+ *
+ * CHANGELOG v1.1.0:
+ * - [FEAT] El log guarda las ubicaciones del reporte.
  *
  */
 define(['N/record', '../../constants/AS_StockValorizadoConstants'],
@@ -19,11 +22,12 @@ define(['N/record', '../../constants/AS_StockValorizadoConstants'],
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    function crearLog(subsidiaria, fechaCorte) {
+    function crearLog(subsidiaria, ubicaciones, fechaCorte) {
         const campos   = CONSTANTES.LOG.CAMPOS;
         const registro = record.create({ type: CONSTANTES.LOG.TIPO });
 
         registro.setValue({ fieldId: campos.SUBSIDIARIA, value: subsidiaria });
+        registro.setValue({ fieldId: campos.UBICACIONES, value: ubicaciones });
         registro.setValue({ fieldId: campos.FECHA_CORTE, value: fechaCorte });
         registro.setValue({ fieldId: campos.ESTADO,      value: CONSTANTES.LOG.ESTADOS.EN_PROCESO });
 
