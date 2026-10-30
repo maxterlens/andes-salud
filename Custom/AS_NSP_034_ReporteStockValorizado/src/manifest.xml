@@ -1,0 +1,12 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>AS_NSP_035_ReporteStockValorizado</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="true">SERVERSIDESCRIPTING</feature>
+      <feature required="true">CUSTOMRECORDS</feature>
+      <feature required="true">SUBSIDIARIES</feature>
+      <feature required="false">CRM</feature>
+    </features>
+  </dependencies>
+</manifest>

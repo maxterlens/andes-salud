@@ -1,0 +1,2 @@
+AS_NSP_035 - Reporte de Stock Valorizado
+Carpeta de los reportes generados (Excel y CSV). Su id va en el parametro "Carpeta de reportes" del despliegue AS Stock Valorizado STLT.

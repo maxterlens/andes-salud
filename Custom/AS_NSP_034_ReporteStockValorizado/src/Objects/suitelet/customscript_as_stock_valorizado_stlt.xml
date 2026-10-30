@@ -1,0 +1,61 @@
+<suitelet scriptid="customscript_as_stock_valorizado_stlt">
+  <description>Pantalla del Reporte de Stock Valorizado: subsidiaria, fecha de corte e historial de reportes con sus enlaces de descarga.</description>
+  <isinactive>F</isinactive>
+  <name>AS Stock Valorizado STLT</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/AndesScripts/Proyectos/ReporteStockValorizado/AS_StockValorizado_STLT_2.1.js]</scriptfile>
+  <scriptcustomfields>
+    <scriptcustomfield scriptid="custscript_as_stock_val_carpeta">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Id de la carpeta del File Cabinet donde quedan el CSV y el Excel de cada reporte</description>
+      <displayheight></displayheight>
+      <displaytype>NORMAL</displaytype>
+      <displaywidth></displaywidth>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>INTEGER</fieldtype>
+      <help></help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Carpeta de reportes</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+  </scriptcustomfields>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_stock_valorizado_stlt">
+      <allemployees>F</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>F</allroles>
+      <audslctrole>ADMINISTRATOR</audslctrole>
+      <custscript_as_stock_val_carpeta>5732</custscript_as_stock_val_carpeta>
+      <eventtype></eventtype>
+      <isdeployed>T</isdeployed>
+      <isonline>F</isonline>
+      <loglevel>AUDIT</loglevel>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>RELEASED</status>
+      <title>AS Stock Valorizado STLT</title>
+      <links>
+        <link>
+          <linkcategory>BASICTRANSACTIONSINVENTORY</linkcategory>
+          <linklabel>Reporte de stock valorizado</linklabel>
+        </link>
+      </links>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>
