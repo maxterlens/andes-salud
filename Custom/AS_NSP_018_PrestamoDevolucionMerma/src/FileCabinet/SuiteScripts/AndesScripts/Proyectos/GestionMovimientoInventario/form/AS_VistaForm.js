@@ -40,12 +40,24 @@ define(['N/ui/serverWidget', 'N/ui/message', '../constants/AS_MovimientoInventar
         if (esPrestamoALaClinica) {
             form.getField({ id: 'custrecord_as_mov_ubicacion' })
                 .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-            form.getField({ id: 'custrecord_as_mov_entidad_receptora' }).label = 'Entidad Emisora del Prestamo';
         }
         if (esDevolucionALaClinica) {
             form.getField({ id: 'custrecord_as_mov_ubicacion_dest' })
                 .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
-            form.getField({ id: 'custrecord_as_mov_entidad_receptora' }).label = 'Entidad Emisora del Prestamo';
+        }
+        if (esPrestamoALaClinica || esDevolucionALaClinica) {
+            if (registro.getValue({ fieldId: 'custrecord_as_mov_entidad_emisora' })) {
+                form.getField({ id: 'custrecord_as_mov_entidad_receptora' })
+                    .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+                form.getField({ id: 'custrecord_as_mov_entidad_emisora' }).label = 'Entidad Emisora del Prestamo';
+            } else {
+                form.getField({ id: 'custrecord_as_mov_entidad_emisora' })
+                    .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
+                form.getField({ id: 'custrecord_as_mov_entidad_receptora' }).label = 'Entidad Emisora del Prestamo';
+            }
+        } else {
+            form.getField({ id: 'custrecord_as_mov_entidad_emisora' })
+                .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         }
 
         if (tipo !== CONSTANTES.TIPOS.MERMA) {

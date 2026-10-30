@@ -125,6 +125,15 @@
           <sameRowAsPrevious>F</sameRowAsPrevious>
         </field>
         <field>
+          <id>[scriptid=customrecord_as_movimiento_inventario.custrecord_as_mov_entidad_emisora]</id>
+          <label>Entidad Emisora</label>
+          <visible>T</visible>
+          <mandatory>F</mandatory>
+          <displayType>NORMAL</displayType>
+          <columnBreak>F</columnBreak>
+          <sameRowAsPrevious>F</sameRowAsPrevious>
+        </field>
+        <field>
           <id>[scriptid=customrecord_as_movimiento_inventario.custrecord_as_mov_ubicacion]</id>
           <label>Ubicacion Origen</label>
           <visible>T</visible>

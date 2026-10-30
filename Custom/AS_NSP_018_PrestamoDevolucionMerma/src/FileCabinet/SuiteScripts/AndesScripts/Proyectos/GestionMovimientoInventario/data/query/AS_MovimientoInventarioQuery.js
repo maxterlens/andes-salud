@@ -175,13 +175,19 @@ define(['N/query', '../../constants/AS_MovimientoInventarioConstants', '../../ut
      * prestamos (destino) en A la Clinica y el origen en De la Clinica.
      */
     function obtenerPrestamosPendientes(esALaClinica) {
+        const campoEntidad = esALaClinica
+                           ? 'NVL(m.custrecord_as_mov_entidad_emisora, m.custrecord_as_mov_entidad_receptora)'
+                           : 'm.custrecord_as_mov_entidad_receptora';
+        const nombreEntidad = esALaClinica
+                            ? 'NVL(BUILTIN.DF(m.custrecord_as_mov_entidad_emisora), BUILTIN.DF(m.custrecord_as_mov_entidad_receptora))'
+                            : 'BUILTIN.DF(m.custrecord_as_mov_entidad_receptora)';
         const filas = query.runSuiteQL({
             query: [
                 'SELECT m.id AS id,',
                 '       m.name AS nombre,',
                 '       m.custrecord_as_mov_subsidiaria AS subsidiaria,',
-                '       m.custrecord_as_mov_entidad_receptora AS identidad,',
-                '       BUILTIN.DF(m.custrecord_as_mov_entidad_receptora) AS entidad,',
+                '       ' + campoEntidad + ' AS identidad,',
+                '       ' + nombreEntidad + ' AS entidad,',
                 '       l.name AS ubicacion,',
                 '       SUM(d.custrecord_as_mov_det_cant_pendiente) AS pendiente',
                 'FROM customrecord_as_movimiento_inventario m',
@@ -195,7 +201,7 @@ define(['N/query', '../../constants/AS_MovimientoInventarioConstants', '../../ut
                 '  AND e.name IN (?, ?)',
                 '  AND NVL(m.custrecord_as_mov_a_la_clinica, \'F\') = ?',
                 'GROUP BY m.id, m.name, m.custrecord_as_mov_subsidiaria,',
-                '         m.custrecord_as_mov_entidad_receptora, BUILTIN.DF(m.custrecord_as_mov_entidad_receptora), l.name',
+                '         ' + campoEntidad + ', ' + nombreEntidad + ', l.name',
                 'HAVING SUM(d.custrecord_as_mov_det_cant_pendiente) > 0',
                 'ORDER BY m.name',
             ].join(' '),

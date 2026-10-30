@@ -122,11 +122,13 @@ define(['N/ui/serverWidget', '../constants/AS_MovimientoInventarioConstants'],
         const prestamo = datos.prestamo;
         campos.campoSubsidiaria.defaultValue = prestamo.getValue({ fieldId: 'custrecord_as_mov_subsidiaria' });
         campos.campoServicio.defaultValue = prestamo.getValue({ fieldId: 'custrecord_as_mov_servicio' });
-        const entidadDelPrestamo = prestamo.getValue({ fieldId: 'custrecord_as_mov_entidad_receptora' });
+        const campoEntidadPrestamo = datos.esALaClinica && prestamo.getValue({ fieldId: 'custrecord_as_mov_entidad_emisora' })
+                                   ? 'custrecord_as_mov_entidad_emisora' : 'custrecord_as_mov_entidad_receptora';
+        const entidadDelPrestamo = prestamo.getValue({ fieldId: campoEntidadPrestamo });
         if (entidadDelPrestamo) {
             campos.campoEntidad.addSelectOption({
                 value: entidadDelPrestamo,
-                text : prestamo.getText({ fieldId: 'custrecord_as_mov_entidad_receptora' }),
+                text : prestamo.getText({ fieldId: campoEntidadPrestamo }),
             });
             campos.campoEntidad.defaultValue = entidadDelPrestamo;
         }

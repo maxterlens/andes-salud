@@ -1,0 +1,3989 @@
+{
+  "esquema": "andes-documentacion/1",
+  "proyecto": {
+    "carpeta": "AS_NSP_018_PrestamoDevolucionMerma",
+    "modulo": "Registro de Solicitud de Inventario"
+  },
+  "casos_negocio": {
+    "titulo": "Casos de Negocio — Registro de Solicitud de Inventario",
+    "ficha": {
+      "estado": "Borrador",
+      "key_user": "Cristian Espinoza",
+      "aprobado_por": "—"
+    },
+    "control_versiones": [
+      {
+        "version": "0.1",
+        "fecha": "01/10/2026",
+        "procesos_afectados": "Préstamo, Devolución y Merma de material de farmacia",
+        "tipo_cambio": "Nuevo",
+        "descripcion": "Este documento presenta las reglas de negocio del Registro de Solicitud de Inventario: el préstamo de material de farmacia a instituciones externas, su devolución y la merma, tal como funcionan hoy en NetSuite. Cada solicitud se guarda primero en estado Pendiente de Procesar, sin mover inventario, y al procesarla el sistema genera el movimiento de inventario.",
+        "autor": "Víctor Raúl Huaman Simeon"
+      },
+      {
+        "version": "0.2",
+        "fecha": "07/10/2026",
+        "procesos_afectados": "Préstamo y Devolución A la Clínica; numeración de las solicitudes",
+        "tipo_cambio": "Mejora",
+        "descripcion": "Se agregan las reglas del sentido A la Clínica, en que otra institución le presta material a Andes: el préstamo entra a la bodega de préstamos con un ajuste de inventario y su devolución sale con otro ajuste. Las solicitudes nuevas se numeran por tipo (PRE#, DEV#, MER#). Se corrige el nombre del campo que muestra el ajuste de la merma.",
+        "autor": "Víctor Raúl Huaman Simeon"
+      },
+      {
+        "version": "0.3",
+        "fecha": "22/10/2026",
+        "procesos_afectados": "Devolución; Préstamo A la Clínica; comprobante; menú de configuración",
+        "tipo_cambio": "Mejora",
+        "descripcion": "En la devolución, si el lote del préstamo ya no tiene en la bodega de préstamos todo lo que se devuelve, el sistema completa la cantidad con otros lotes del mismo artículo y solo rechaza la devolución si entre todos no alcanza; cada línea muestra los lotes devueltos con su cantidad. En el préstamo A la Clínica el lote pasa a ser obligatorio en todas las líneas. El comprobante de préstamo y de devolución muestra el sentido del préstamo. Las opciones del menú de configuración pasan a llamarse Entidades Asociadas por Subsidiaria y Cuentas por Tipo de Movimiento.",
+        "autor": "Víctor Raúl Huaman Simeon"
+      }
+    ],
+    "reglas": [
+      {
+        "codigo": "RN-001",
+        "etapa": "Registro de préstamo",
+        "regla": "Préstamo en una subsidiaria que tiene bodega de préstamos configurada",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema completa `Ubicacion Destino` con la bodega de préstamos de la subsidiaria.",
+          "La bodega de préstamos no aparece en la lista `Ubicacion Origen`."
+        ],
+        "estado_final": "Destino asignado automáticamente",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-002",
+        "etapa": "Registro de préstamo",
+        "regla": "Préstamo en una subsidiaria sin bodega de préstamos configurada",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema deja `Ubicacion Destino` vacía. Como es un campo obligatorio, NetSuite no deja guardar la solicitud."
+        ],
+        "estado_final": "Préstamo no guardado",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-003",
+        "etapa": "Registro de préstamo",
+        "regla": "Elegir la entidad receptora de un préstamo",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema muestra en `Entidad Receptora del Prestamo` solo las entidades activas cargadas para la subsidiaria en Entidades Asociadas por Subsidiaria."
+        ],
+        "estado_final": "Entidad elegida de la lista autorizada",
+        "version": "0.3",
+        "estado": "Modificada",
+        "motivo": "La opción del menú se llama Entidades Asociadas por Subsidiaria",
+        "fecha_act": "22/10/2026"
+      },
+      {
+        "codigo": "RN-004",
+        "etapa": "Registro de préstamo",
+        "regla": "Préstamo sin entidad receptora",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema no guarda la solicitud y pide completar `Entidad Receptora del Prestamo`, que es obligatoria."
+        ],
+        "estado_final": "Préstamo no guardado",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-005",
+        "etapa": "Registro de préstamo",
+        "regla": "Guardar un préstamo completo, con entidad receptora y artículos con stock",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema crea la solicitud sin mover inventario y muestra los botones `Procesar Prestamo`, `Anular Movimiento` e `Imprimir Comprobante`."
+        ],
+        "estado_final": "Préstamo en Pendiente de Procesar",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-046",
+        "etapa": "Registro de préstamo",
+        "regla": "Marcar `A la Clinica` en un préstamo nuevo",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema recarga el formulario: el grupo pasa a llamarse «2. Destino», no muestra `Ubicacion Origen`, la entidad pasa a llamarse `Entidad Emisora del Prestamo` y pide `Cuenta de Ajuste` como obligatoria.",
+          "En los artículos, `Lote` se escribe a mano y es obligatorio, y no se muestra `Disponible`."
+        ],
+        "estado_final": "Formulario de préstamo A la Clínica",
+        "version": "0.3",
+        "estado": "Modificada",
+        "motivo": "El lote pasa a ser obligatorio en todas las líneas",
+        "fecha_act": "22/10/2026"
+      },
+      {
+        "codigo": "RN-047",
+        "etapa": "Registro de préstamo",
+        "regla": "Préstamo A la Clínica en una subsidiaria con cuentas cargadas para merma y para préstamo",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema muestra en `Cuenta de Ajuste` solo las cuentas activas de la subsidiaria cargadas en Cuentas por Tipo de Movimiento con `Tipo de Solicitud` `Prestamo`."
+        ],
+        "estado_final": "Cuenta elegida de la lista autorizada",
+        "version": "0.3",
+        "estado": "Modificada",
+        "motivo": "La opción del menú se llama Cuentas por Tipo de Movimiento",
+        "fecha_act": "22/10/2026"
+      },
+      {
+        "codigo": "RN-048",
+        "etapa": "Registro de préstamo",
+        "regla": "Préstamo A la Clínica: agregar un artículo sin escribir el lote",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema no acepta la línea y pide completar `Lote`, que es obligatorio en todas las líneas del préstamo A la Clínica, tenga o no el artículo control de lotes."
+        ],
+        "estado_final": "Línea no agregada",
+        "version": "0.3",
+        "estado": "Modificada",
+        "motivo": "El formulario exige el lote en todas las líneas, al agregarlas y no recién al guardar",
+        "fecha_act": "22/10/2026"
+      },
+      {
+        "codigo": "RN-054",
+        "etapa": "Numeración de solicitudes",
+        "regla": "Guardar solicitudes nuevas de préstamo, devolución y merma",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema numera cada solicitud según su tipo y en forma correlativa dentro de cada tipo: `PRE#000001`, `DEV#000001`, `MER#000001`.",
+          "El número aparece arriba de la solicitud, en la lista y en el comprobante. Las solicitudes registradas antes conservan su número `MOV#`."
+        ],
+        "estado_final": "Solicitud numerada por tipo",
+        "version": "0.2",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "07/10/2026"
+      },
+      {
+        "codigo": "RN-006",
+        "etapa": "Ingreso de artículos en préstamo y merma",
+        "regla": "Elegir un artículo antes de elegir la ubicación de origen",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema muestra «Selecciona primero la Ubicacion Origen para ver el stock disponible.»"
+        ],
+        "estado_final": "Línea sin datos de stock",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-007",
+        "etapa": "Ingreso de artículos en préstamo y merma",
+        "regla": "Elegir un artículo con la ubicación de origen ya elegida",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema completa `Unidad` y `Disponible`, y la lista `Lote` muestra cada lote disponible como «[artículo] - [lote] (hay [N])».",
+          "Al elegir un lote, `Disponible` pasa a mostrar la cantidad de ese lote."
+        ],
+        "estado_final": "Línea con el stock visible",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-008",
+        "etapa": "Ingreso de artículos en préstamo y merma",
+        "regla": "Con el lote ya elegido (por ejemplo, 17 unidades), se escribe una cantidad mayor (20)",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema ajusta la cantidad a lo que hay del lote y muestra «No hay tanto del lote [lote]: quedan 17. Se ajusta a 17.»"
+        ],
+        "estado_final": "Cantidad ajustada a lo que hay del lote",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-009",
+        "etapa": "Ingreso de artículos en préstamo y merma",
+        "regla": "Sin lote elegido, se escribe una cantidad mayor a `Disponible` y se presiona `Guardar Solicitud`",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema no ajusta la cantidad. Al guardar muestra «La linea [n] pide [cantidad] y solo hay [disponible].» y no guarda."
+        ],
+        "estado_final": "Solicitud no guardada",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-010",
+        "etapa": "Ingreso de artículos en préstamo y merma",
+        "regla": "Cantidad con más de 2 decimales, por ejemplo 0,666",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema redondea la cantidad a 2 decimales: queda 0,67."
+        ],
+        "estado_final": "Cantidad con 2 decimales",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-011",
+        "etapa": "Ingreso de artículos en préstamo y merma",
+        "regla": "Presionar `Guardar Solicitud` sin artículos",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema muestra «Agrega al menos un articulo al detalle antes de guardar. Recuerda confirmar la linea con el boton Add.» y no guarda."
+        ],
+        "estado_final": "Solicitud no guardada",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-012",
+        "etapa": "Ingreso de artículos en préstamo y merma",
+        "regla": "Guardar con un artículo en cantidad 0",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema no deja guardar la solicitud con una cantidad en 0."
+        ],
+        "estado_final": "Solicitud no guardada",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-013",
+        "etapa": "Ingreso de artículos en préstamo y merma",
+        "regla": "Artículo con un lote en estado `Bloqueado`, `En Inspección` o `Damaged` en la ubicación",
+        "rol": "Sistema (automático)",
+        "resultado_esperado": [
+          "El sistema no muestra ese lote en la lista `Lote` y no lo usa al procesar."
+        ],
+        "estado_final": "Lote excluido",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-014",
+        "etapa": "Procesamiento de préstamo",
+        "regla": "Procesar un préstamo con stock suficiente, con el lote elegido",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema genera un traslado de inventario desde la ubicación de origen hasta la bodega de préstamos, con el lote elegido.",
+          "Completa `Traslado Generado`, `Procesado por` y `Fecha de Proceso`."
+        ],
+        "estado_final": "Préstamo en Pendiente de Devolucion, traslado generado",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-015",
+        "etapa": "Procesamiento de préstamo",
+        "regla": "Procesar un préstamo de un artículo con lotes en el que no se eligió lote, por más de lo que tiene un solo lote",
+        "rol": "Sistema (automático)",
+        "resultado_esperado": [
+          "El sistema asigna los lotes disponibles por su cuenta y, si un lote no alcanza, completa la cantidad con otro. El traslado generado muestra los lotes usados."
+        ],
+        "estado_final": "Préstamo en Pendiente de Devolucion, lotes asignados por el sistema",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-016",
+        "etapa": "Procesamiento de préstamo",
+        "regla": "Presionar `Procesar Prestamo` dos veces seguidas",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema deshabilita el botón al primer clic y muestra el aviso «Procesando el movimiento»."
+        ],
+        "estado_final": "Un solo traslado generado",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-017",
+        "etapa": "Procesamiento de préstamo",
+        "regla": "Dos préstamos guardados del mismo artículo y lote, cada uno por todo lo que hay del lote: se procesa el primero y después el segundo",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema procesa el primero. En el segundo muestra «No hay stock suficiente en [ubicación]: [artículo] lote [lote] (presta [N], hay 0)» y no genera el traslado."
+        ],
+        "estado_final": "Segundo préstamo en Pendiente de Procesar, sin traslado",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-049",
+        "etapa": "Procesamiento de préstamo",
+        "regla": "Procesar un préstamo A la Clínica",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema genera un ajuste de inventario que suma el material en la bodega de préstamos, con el lote escrito, contra la cuenta elegida. No valida stock.",
+          "Completa `Ajuste Generado`, `Procesado por` y `Fecha de Proceso`."
+        ],
+        "estado_final": "Préstamo en Pendiente de Devolucion, ajuste generado",
+        "version": "0.2",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "07/10/2026"
+      },
+      {
+        "codigo": "RN-018",
+        "etapa": "Registro de devolución",
+        "regla": "Registrar una devolución en una subsidiaria con préstamos pendientes",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema muestra en `Prestamo Relacionado` solo los préstamos de la subsidiaria del sentido marcado (`De la Clinica` o `A la Clinica`) que tienen cantidad pendiente (`Pendiente de Devolucion` o `Devuelto Parcial`), con el formato «[número] - [entidad] - [ubicación] - pendiente [N]»."
+        ],
+        "estado_final": "Lista de préstamos con pendiente",
+        "version": "0.2",
+        "estado": "Modificada",
+        "motivo": "Los préstamos se filtran también por el sentido de la devolución",
+        "fecha_act": "07/10/2026"
+      },
+      {
+        "codigo": "RN-019",
+        "etapa": "Registro de devolución",
+        "regla": "Filtrar los préstamos por entidad receptora antes de elegir el préstamo",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema muestra en `Entidad Receptora` solo las entidades con préstamos pendientes en la subsidiaria. Con una elegida, `Prestamo Relacionado` muestra solo sus préstamos.",
+          "Con el filtro vacío muestra todos, y los préstamos registrados sin entidad aparecen como «SIN ENTIDAD»."
+        ],
+        "estado_final": "Préstamos filtrados",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-020",
+        "etapa": "Registro de devolución",
+        "regla": "Elegir el préstamo que se devuelve",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema recarga la pantalla con la subsidiaria, el servicio y la entidad del préstamo, `Ubicacion Origen` en la bodega de préstamos y `Ubicacion Destino` en la ubicación de donde salió el material, sin poder cambiarlos.",
+          "Cada artículo muestra `Prestada`, `Devuelta`, `Pendiente` y `Cantidad a Devolver`, cargada con lo pendiente."
+        ],
+        "estado_final": "Datos heredados del préstamo",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-050",
+        "etapa": "Registro de devolución",
+        "regla": "Marcar `A la Clinica` en una devolución nueva",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema muestra en `Prestamo Relacionado` solo los préstamos A la Clínica con cantidad pendiente, con la bodega de préstamos como ubicación."
+        ],
+        "estado_final": "Lista de préstamos A la Clínica con pendiente",
+        "version": "0.2",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "07/10/2026"
+      },
+      {
+        "codigo": "RN-051",
+        "etapa": "Registro de devolución",
+        "regla": "Elegir un préstamo A la Clínica",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema no muestra `Ubicacion Destino`, la entidad pasa a llamarse `Entidad Emisora del Prestamo` y muestra la `Cuenta de Ajuste` del préstamo sin poder cambiarla.",
+          "Los checks `De la Clinica` y `A la Clinica` quedan bloqueados."
+        ],
+        "estado_final": "Datos heredados del préstamo A la Clínica",
+        "version": "0.2",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "07/10/2026"
+      },
+      {
+        "codigo": "RN-021",
+        "etapa": "Registro de devolución",
+        "regla": "`Cantidad a Devolver` mayor que lo pendiente de la línea",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema ajusta la cantidad a lo pendiente y muestra «No se puede devolver mas de lo pendiente de esta linea: quedan [N]. Se ajusta a [N].»"
+        ],
+        "estado_final": "Cantidad ajustada a lo pendiente",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-022",
+        "etapa": "Registro de devolución",
+        "regla": "`Cantidad a Devolver` negativa",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema deja la cantidad en 0 y muestra «La cantidad a devolver no puede ser negativa.»"
+        ],
+        "estado_final": "Cantidad en 0",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-023",
+        "etapa": "Registro de devolución",
+        "regla": "Devolución con todas las cantidades en 0",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema muestra «Indica cuanto vas a devolver: al menos un articulo tiene que llevar una cantidad mayor que cero.» y no guarda."
+        ],
+        "estado_final": "Devolución no guardada",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-024",
+        "etapa": "Procesamiento de devolución",
+        "regla": "Procesar una devolución por parte de lo pendiente del préstamo",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema genera un traslado de inventario desde la bodega de préstamos hasta la ubicación de donde salió el material, con los mismos lotes del préstamo, y muestra el lote en cada línea de la devolución.",
+          "Descuenta lo devuelto en `Devuelta` y `Pendiente` del préstamo."
+        ],
+        "estado_final": "Devolución en Procesado; préstamo en Devuelto Parcial",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-025",
+        "etapa": "Procesamiento de devolución",
+        "regla": "Procesar la devolución que completa todo lo pendiente del préstamo",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema genera el traslado de vuelta y deja el préstamo con todo su pendiente en 0. El préstamo deja de aparecer en `Prestamo Relacionado`."
+        ],
+        "estado_final": "Devolución en Procesado; préstamo en Devuelto Total",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-026",
+        "etapa": "Procesamiento de devolución",
+        "regla": "Préstamo de un mismo artículo en dos líneas, lote A x5 y lote B x5: una devolución con 5 en la línea del lote A y 2 en la del lote B, y después otra con 3 en la línea del lote B",
+        "rol": "Sistema (automático)",
+        "resultado_esperado": [
+          "El sistema devuelve los mismos lotes que salieron: la primera devolución lleva A x5 y B x2; la segunda, B x3."
+        ],
+        "estado_final": "Préstamo en Devuelto Total",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-027",
+        "etapa": "Procesamiento de devolución",
+        "regla": "Préstamo de dos artículos en el que se devuelve completo solo uno",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema deja el préstamo en `Devuelto Parcial`. Pasa a `Devuelto Total` recién cuando todos los artículos quedan con pendiente 0."
+        ],
+        "estado_final": "Préstamo en Devuelto Parcial",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-028",
+        "etapa": "Procesamiento de devolución",
+        "regla": "Dos devoluciones de 6 guardadas sobre un préstamo de 10: se procesa la primera y después la segunda",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema procesa la primera. En la segunda muestra «No se puede devolver mas de lo pendiente: [artículo] (devuelve 6, pendiente 4)» y no genera el traslado."
+        ],
+        "estado_final": "Primera en Procesado; segunda en Pendiente de Procesar",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-029",
+        "etapa": "Procesamiento de devolución",
+        "regla": "Dos devoluciones guardadas por todo lo pendiente del mismo préstamo: se procesa la primera y se abre la segunda",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema muestra el aviso «Esta devolucion ya no se puede procesar», no muestra `Procesar Devolucion` ni `Imprimir Comprobante`, y deja `Anular Movimiento` disponible."
+        ],
+        "estado_final": "Segunda devolución sin procesar, lista para anular",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-052",
+        "etapa": "Procesamiento de devolución",
+        "regla": "Procesar una devolución A la Clínica con stock en la bodega de préstamos",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema genera un ajuste de inventario que descuenta el material de la bodega de préstamos, con el lote del préstamo y contra la cuenta del préstamo, y muestra en cada línea de la devolución el lote devuelto con su cantidad.",
+          "Descuenta lo devuelto en `Devuelta` y `Pendiente` del préstamo."
+        ],
+        "estado_final": "Devolución en Procesado; préstamo en Devuelto Parcial o Devuelto Total",
+        "version": "0.3",
+        "estado": "Modificada",
+        "motivo": "La línea muestra el lote con la cantidad devuelta, y si el lote no alcanza se completa con otros lotes",
+        "fecha_act": "22/10/2026"
+      },
+      {
+        "codigo": "RN-053",
+        "etapa": "Procesamiento de devolución",
+        "regla": "Procesar una devolución cuando en la bodega de préstamos, sumando todos los lotes del artículo, no hay lo que se devuelve",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema muestra «No hay stock suficiente en [ubicación]: [artículo] (devuelve [N], hay [M])» y no genera el traslado ni el ajuste."
+        ],
+        "estado_final": "Devolución en Pendiente de Procesar, sin traslado ni ajuste",
+        "version": "0.3",
+        "estado": "Modificada",
+        "motivo": "Aplica a los dos sentidos y solo cuando ningún otro lote del artículo cubre la diferencia",
+        "fecha_act": "22/10/2026"
+      },
+      {
+        "codigo": "RN-055",
+        "etapa": "Procesamiento de devolución",
+        "regla": "Procesar una devolución cuando el lote del préstamo ya no tiene en la bodega de préstamos todo lo que se devuelve, pero otros lotes del mismo artículo sí",
+        "rol": "Sistema (automático)",
+        "resultado_esperado": [
+          "El sistema toma primero lo que queda del lote del préstamo y completa la diferencia con otros lotes del artículo en la bodega, en el mismo orden automático que usa cuando no se elige lote.",
+          "Cada línea de la devolución muestra los lotes devueltos con su cantidad, por ejemplo «LOTE-A (3)» y «LOTE-B (2)», separados por una barra vertical."
+        ],
+        "estado_final": "Devolución en Procesado; préstamo en Devuelto Parcial o Devuelto Total",
+        "version": "0.3",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "22/10/2026"
+      },
+      {
+        "codigo": "RN-030",
+        "etapa": "Registro de merma",
+        "regla": "Registrar una merma",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema no muestra `Ubicacion Destino` ni `Entidad Receptora`, y pide `Motivo de la Baja` y `Cuenta de Ajuste` como obligatorios."
+        ],
+        "estado_final": "Formulario de merma",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-031",
+        "etapa": "Registro de merma",
+        "regla": "Merma sin motivo de baja",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema no guarda y pide completar `Motivo de la Baja`."
+        ],
+        "estado_final": "Merma no guardada",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-032",
+        "etapa": "Registro de merma",
+        "regla": "Merma en una subsidiaria con cuentas de merma activas e inactivas",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema muestra en `Cuenta de Ajuste` solo las cuentas activas cargadas para la subsidiaria en Cuentas por Tipo de Movimiento, con `Tipo de Solicitud` `Merma` o vacío."
+        ],
+        "estado_final": "Cuenta elegida de la lista autorizada",
+        "version": "0.3",
+        "estado": "Modificada",
+        "motivo": "La opción del menú se llama Cuentas por Tipo de Movimiento",
+        "fecha_act": "22/10/2026"
+      },
+      {
+        "codigo": "RN-033",
+        "etapa": "Registro de merma",
+        "regla": "Merma en una subsidiaria sin cuentas de merma activas",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema deja `Cuenta de Ajuste` vacía. Como es obligatoria, no deja guardar."
+        ],
+        "estado_final": "Merma no guardada",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-034",
+        "etapa": "Procesamiento de merma",
+        "regla": "Procesar una merma con stock suficiente",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema genera un ajuste de inventario que descuenta el material de la misma ubicación, contra la cuenta elegida.",
+          "`Ajuste Generado` muestra el ajuste."
+        ],
+        "estado_final": "Merma en Procesado, material fuera del inventario",
+        "version": "0.2",
+        "estado": "Modificada",
+        "motivo": "El campo se llama Ajuste Generado en la merma, no Traslado Generado",
+        "fecha_act": "07/10/2026"
+      },
+      {
+        "codigo": "RN-035",
+        "etapa": "Procesamiento de merma",
+        "regla": "Dos mermas guardadas del mismo artículo y lote, cada una por todo lo que hay del lote: se procesa la primera y después la segunda",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema procesa la primera. En la segunda muestra «No hay stock suficiente en [ubicación]: [artículo] lote [lote] (da de baja [N], hay 0)» y no genera el ajuste."
+        ],
+        "estado_final": "Segunda merma en Pendiente de Procesar, sin ajuste",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-036",
+        "etapa": "Corrección y anulación",
+        "regla": "Editar un préstamo o una merma en `Pendiente de Procesar`",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema abre la edición y guarda con `Actualizar Solicitud` los cambios de fecha, responsable, comentarios y artículos (en la merma y en el préstamo A la Clínica, también la cuenta de ajuste).",
+          "Tipo, sentido (`De la Clinica` / `A la Clinica`), subsidiaria, servicio, ubicaciones, entidad y motivo aparecen bloqueados."
+        ],
+        "estado_final": "Solicitud corregida, sigue en Pendiente de Procesar",
+        "version": "0.2",
+        "estado": "Modificada",
+        "motivo": "Se agregan el sentido y la cuenta del préstamo A la Clínica",
+        "fecha_act": "07/10/2026"
+      },
+      {
+        "codigo": "RN-037",
+        "etapa": "Corrección y anulación",
+        "regla": "Editar una solicitud que ya no está en `Pendiente de Procesar`",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema no muestra el botón `Editar` en la solicitud.",
+          "Si se usa `Editar` desde la lista, vuelve a la solicitud con el aviso «Este movimiento ya no se puede editar» y el texto «El movimiento esta en estado [estado]. Solo se puede editar mientras esta en Pendiente de Procesar.»"
+        ],
+        "estado_final": "Solicitud sin cambios",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-038",
+        "etapa": "Corrección y anulación",
+        "regla": "Presionar `Anular Movimiento` en una solicitud `Pendiente de Procesar` y cancelar la confirmación",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema pregunta «Se anulara el movimiento. Confirma?» y, al cancelar, no hace nada."
+        ],
+        "estado_final": "Solicitud sin cambios",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-039",
+        "etapa": "Corrección y anulación",
+        "regla": "Presionar `Anular Movimiento` en una solicitud `Pendiente de Procesar` y aceptar la confirmación",
+        "rol": "QF CASPM o Administrator",
+        "resultado_esperado": [
+          "El sistema cambia el estado sin mover inventario y quita los botones de procesar, editar y anular. Se puede seguir consultando e imprimiendo."
+        ],
+        "estado_final": "Solicitud en Anulado",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-040",
+        "etapa": "Consulta e impresión",
+        "regla": "Presionar `Imprimir Comprobante` en un préstamo, una devolución, una merma o una solicitud anulada",
+        "rol": "Cualquier rol",
+        "resultado_esperado": [
+          "El sistema abre el comprobante en PDF con la plantilla del tipo de solicitud.",
+          "En el préstamo y la devolución muestra el sentido del préstamo. En el préstamo A la Clínica la entidad aparece como «Entidad emisora del prestamo» y no se muestra la ubicación de origen."
+        ],
+        "estado_final": "Comprobante generado",
+        "version": "0.3",
+        "estado": "Modificada",
+        "motivo": "El comprobante muestra el sentido del préstamo",
+        "fecha_act": "22/10/2026"
+      },
+      {
+        "codigo": "RN-041",
+        "etapa": "Consulta e impresión",
+        "regla": "Abrir una solicitud con un rol distinto de QF CASPM y Administrator",
+        "rol": "Rol de consulta",
+        "resultado_esperado": [
+          "El sistema muestra la solicitud sin el botón `Editar`, sin las opciones de eliminar y copiar, y sin botones de proceso ni de anulación."
+        ],
+        "estado_final": "Solo lectura",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-042",
+        "etapa": "Consulta e impresión",
+        "regla": "Crear una solicitud con un rol distinto de QF CASPM y Administrator",
+        "rol": "Rol de consulta",
+        "resultado_esperado": [
+          "El sistema muestra la pantalla «Movimiento de Inventario - Solo Consulta» con el aviso «Tu rol es de solo consulta»."
+        ],
+        "estado_final": "Solicitud no creada",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-043",
+        "etapa": "Configuración",
+        "regla": "Marcar como inactiva una entidad receptora que tiene un préstamo pendiente",
+        "rol": "Administrator",
+        "resultado_esperado": [
+          "El sistema deja de ofrecer esa entidad al registrar préstamos.",
+          "El préstamo pendiente de esa entidad sigue apareciendo para devolver."
+        ],
+        "estado_final": "Entidad inactiva, préstamos ya hechos sin cambios",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-044",
+        "etapa": "Configuración",
+        "regla": "Marcar como inactiva una cuenta de merma",
+        "rol": "Administrator",
+        "resultado_esperado": [
+          "El sistema deja de ofrecer esa cuenta en `Cuenta de Ajuste` para esa subsidiaria."
+        ],
+        "estado_final": "Cuenta inactiva",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      },
+      {
+        "codigo": "RN-045",
+        "etapa": "Configuración",
+        "regla": "Cambiar la bodega de préstamos de una subsidiaria a otra ubicación",
+        "rol": "Administrator",
+        "resultado_esperado": [
+          "El sistema usa la bodega nueva como destino de los préstamos que se registren desde ese momento.",
+          "Las devoluciones de préstamos ya procesados salen de la bodega que quedó guardada en cada préstamo."
+        ],
+        "estado_final": "Cambio no retroactivo, préstamos previos sin modificación",
+        "version": "0.1",
+        "estado": "Vigente",
+        "motivo": "",
+        "fecha_act": "01/10/2026"
+      }
+    ],
+    "pendientes": [
+      {
+        "id": "P-01",
+        "pregunta": "¿Existe el requerimiento original (correo, card o acta) y de qué fecha es?",
+        "responde": "Desarrollo",
+        "respuesta": ""
+      },
+      {
+        "id": "P-02",
+        "pregunta": "¿Quién es el key user del proceso?",
+        "responde": "Desarrollo",
+        "respuesta": "Cristian Espinoza"
+      },
+      {
+        "id": "P-03",
+        "pregunta": "¿Solo QF CASPM y Administrator deben registrar y procesar? ¿QF CASCH (Chillán) también?",
+        "responde": "Key user",
+        "respuesta": ""
+      },
+      {
+        "id": "P-04",
+        "pregunta": "¿Qué roles usan el registro solo para consultar, y quién mantiene la configuración?",
+        "responde": "Key user",
+        "respuesta": ""
+      },
+      {
+        "id": "P-05",
+        "pregunta": "Cuando no se elige lote, ¿debe salir primero el que vence antes (FEFO)?",
+        "responde": "Key user",
+        "respuesta": ""
+      },
+      {
+        "id": "P-06",
+        "pregunta": "¿Hace falta poder revertir una devolución o una merma ya procesada?",
+        "responde": "Key user",
+        "respuesta": ""
+      },
+      {
+        "id": "P-07",
+        "pregunta": "¿Los préstamos entre servicios de la misma clínica deben registrarse aquí?",
+        "responde": "Key user",
+        "respuesta": ""
+      },
+      {
+        "id": "P-08",
+        "pregunta": "¿Los préstamos que otra institución le hace a Andes quedan fuera de esta versión?",
+        "responde": "Key user",
+        "respuesta": "Entraron en la versión 0.2 como sentido A la Clínica"
+      },
+      {
+        "id": "P-09",
+        "pregunta": "¿Alcanza con 2 decimales en las cantidades?",
+        "responde": "Key user",
+        "respuesta": ""
+      },
+      {
+        "id": "P-10",
+        "pregunta": "¿Los motivos de baja Vencimiento, Deterioro, Cuarentena y Otro son los correctos? ¿Otro debe exigir comentario?",
+        "responde": "Key user",
+        "respuesta": ""
+      },
+      {
+        "id": "P-11",
+        "pregunta": "¿Qué registros concretos del ambiente de pruebas se usan para las pruebas?",
+        "responde": "Desarrollo",
+        "respuesta": ""
+      },
+      {
+        "id": "P-13",
+        "pregunta": "¿Qué subsidiarias usan el registro?",
+        "responde": "Key user",
+        "respuesta": ""
+      }
+    ]
+  },
+  "comportamiento": {
+    "titulo": "Comportamiento del Sistema — Registro de Solicitud de Inventario",
+    "ficha": {
+      "version": "0.3",
+      "fecha": "22/10/2026"
+    },
+    "como_funciona": {
+      "bloques": [
+        {
+          "tipo": "parrafo",
+          "texto": "Se entra por `Transacciones > Gestion de Movimientos > Solicitudes de Inventario`. Cada solicitud es un préstamo, una devolución o una merma. Al guardarla con `Guardar Solicitud` recibe su número según el tipo (`PRE#000001`, `DEV#000001`, `MER#000001`) y queda `Pendiente de Procesar`, sin mover inventario. Después se procesa con el botón de su tipo, y recién ahí el sistema valida y genera el movimiento de inventario. Mientras está `Pendiente de Procesar` se puede corregir o anular; una vez procesada ya no se edita y queda como registro."
+        },
+        {
+          "tipo": "parrafo",
+          "texto": "El préstamo y la devolución tienen un sentido. **De la Clínica**: Andes presta material a otra institución, y se mueve con un traslado de inventario. **A la Clínica**: otra institución le presta material a Andes, y entra o sale con un ajuste de inventario. La devolución siempre tiene el mismo sentido que su préstamo. La merma no tiene sentido."
+        }
+      ],
+      "estados": [
+        {
+          "estado": "`Pendiente de Procesar`",
+          "significa": "La solicitud está guardada y todavía no movió inventario",
+          "se_puede": "Editar, `Anular Movimiento`, procesar e `Imprimir Comprobante`"
+        },
+        {
+          "estado": "`Pendiente de Devolucion`",
+          "significa": "Préstamo procesado: el material está en la bodega de préstamos",
+          "se_puede": "Registrar devoluciones e imprimir"
+        },
+        {
+          "estado": "`Devuelto Parcial`",
+          "significa": "Préstamo con una parte ya devuelta",
+          "se_puede": "Registrar devoluciones por lo que falta e imprimir"
+        },
+        {
+          "estado": "`Devuelto Total`",
+          "significa": "Préstamo devuelto completo",
+          "se_puede": "Consultar e imprimir"
+        },
+        {
+          "estado": "`Procesado`",
+          "significa": "Devolución o merma ejecutada",
+          "se_puede": "Consultar e imprimir"
+        },
+        {
+          "estado": "`Anulado`",
+          "significa": "Solicitud descartada antes de procesar; no movió inventario",
+          "se_puede": "Consultar e imprimir"
+        }
+      ]
+    },
+    "actores": [
+      {
+        "id": "ACT-01",
+        "actor": "QF CASPM",
+        "que_hace": "Registra y procesa préstamos, devoluciones y mermas; corrige, anula, consulta e imprime"
+      },
+      {
+        "id": "ACT-02",
+        "actor": "Administrator",
+        "que_hace": "Lo mismo que QF CASPM, y mantiene la configuración del registro"
+      },
+      {
+        "id": "ACT-03",
+        "actor": "Rol de consulta",
+        "que_hace": "Cualquier otro rol: consulta solicitudes e imprime comprobantes"
+      }
+    ],
+    "glosario": [
+      {
+        "palabra": "Solicitud",
+        "significa": "El registro de un préstamo, una devolución o una merma"
+      },
+      {
+        "palabra": "Número de solicitud",
+        "significa": "El número que el sistema le da al guardarla, según el tipo: `PRE#` préstamo, `DEV#` devolución, `MER#` merma. Las solicitudes registradas antes del 07/10/2026 conservan su número `MOV#`"
+      },
+      {
+        "palabra": "Préstamo",
+        "significa": "Material de farmacia que se presta entre Andes y otra institución y que tiene que volver"
+      },
+      {
+        "palabra": "De la Clínica",
+        "significa": "Sentido del préstamo en que Andes le presta material a otra institución"
+      },
+      {
+        "palabra": "A la Clínica",
+        "significa": "Sentido del préstamo en que otra institución le presta material a Andes"
+      },
+      {
+        "palabra": "Devolución",
+        "significa": "El material de un préstamo que vuelve, completo o en partes"
+      },
+      {
+        "palabra": "Merma",
+        "significa": "Material que se da de baja porque está vencido, deteriorado, en cuarentena u otro motivo"
+      },
+      {
+        "palabra": "Entidad receptora",
+        "significa": "La institución que recibe el material prestado (De la Clínica)"
+      },
+      {
+        "palabra": "Entidad emisora",
+        "significa": "La institución que le presta el material a Andes (A la Clínica)"
+      },
+      {
+        "palabra": "Bodega de préstamos",
+        "significa": "La ubicación de cada subsidiaria donde queda registrado el material prestado mientras dura el préstamo"
+      },
+      {
+        "palabra": "Lote",
+        "significa": "El número que identifica una partida de un artículo"
+      },
+      {
+        "palabra": "Pendiente",
+        "significa": "Lo que falta devolver de un préstamo"
+      },
+      {
+        "palabra": "Procesar",
+        "significa": "El paso que mueve el inventario de verdad"
+      },
+      {
+        "palabra": "Traslado de inventario",
+        "significa": "El movimiento que NetSuite genera al procesar un préstamo o una devolución De la Clínica: pasa el material de una ubicación a otra"
+      },
+      {
+        "palabra": "Ajuste de inventario",
+        "significa": "El movimiento que NetSuite genera al procesar una merma, o un préstamo o una devolución A la Clínica: suma o descuenta material contra una cuenta contable"
+      },
+      {
+        "palabra": "Cuenta de ajuste",
+        "significa": "La cuenta contable donde se registra el ajuste de inventario"
+      }
+    ],
+    "procesos": [
+      {
+        "numero": 1,
+        "nombre": "Préstamo",
+        "flujo": "QF CASPM o Administrator registra el préstamo: elige el sentido, la subsidiaria, el servicio y la ubicación de origen; el sistema asigna como destino la bodega de préstamos; elige la entidad e ingresa artículos, lotes y cantidades. Al procesarlo, De la Clínica valida el stock y genera el traslado hacia la bodega de préstamos; A la Clínica suma el material en la bodega con un ajuste de inventario. En los dos el préstamo queda `Pendiente de Devolucion`.",
+        "casos_uso": [
+          {
+            "id": "CU-01",
+            "nombre": "Registrar préstamo",
+            "relacion": {
+              "tipo": "usa",
+              "ids": [
+                "ACT-01",
+                "ACT-02"
+              ]
+            },
+            "que_hace": "Crea la solicitud de préstamo con sus datos y artículos y le da su número `PRE#`; queda `Pendiente de Procesar`, sin mover inventario"
+          },
+          {
+            "id": "CU-29",
+            "nombre": "Elegir sentido del préstamo",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-01"
+              ]
+            },
+            "que_hace": "Marca `De la Clinica` o `A la Clinica` y el formulario se arma según el sentido. A la Clínica no pide ubicación de origen, la entidad pasa a ser la emisora, pide `Cuenta de Ajuste` y el lote se escribe a mano y es obligatorio"
+          },
+          {
+            "id": "CU-02",
+            "nombre": "Seleccionar subsidiaria",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-01"
+              ]
+            },
+            "que_hace": "Define la subsidiaria de la solicitud; las listas del formulario se cargan solo con lo de esa subsidiaria"
+          },
+          {
+            "id": "CU-03",
+            "nombre": "Seleccionar servicio y ubicación",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-01"
+              ]
+            },
+            "que_hace": "Indica el servicio y la ubicación de donde sale el material"
+          },
+          {
+            "id": "CU-04",
+            "nombre": "Asignar bodega de préstamos como destino",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-01"
+              ]
+            },
+            "que_hace": "El sistema completa el destino con la bodega de préstamos de la subsidiaria"
+          },
+          {
+            "id": "CU-05",
+            "nombre": "Seleccionar entidad receptora",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-01"
+              ]
+            },
+            "que_hace": "Elige la institución del préstamo, solo entre las activas autorizadas para la subsidiaria; es obligatoria"
+          },
+          {
+            "id": "CU-06",
+            "nombre": "Ingresar artículos, lotes y cantidades",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-01"
+              ]
+            },
+            "que_hace": "Agrega cada artículo, el lote cuando aplica y la cantidad; el sistema muestra lo disponible. Con lote, si se pide más de lo que hay se ajusta solo; sin lote, no deja guardar"
+          },
+          {
+            "id": "CU-07",
+            "nombre": "Procesar préstamo",
+            "relacion": {
+              "tipo": "usa",
+              "ids": [
+                "ACT-01",
+                "ACT-02"
+              ]
+            },
+            "que_hace": "Ejecuta el préstamo con `Procesar Prestamo`; queda `Pendiente de Devolucion` y el material, en la bodega de préstamos"
+          },
+          {
+            "id": "CU-08",
+            "nombre": "Validar stock",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-07"
+              ]
+            },
+            "que_hace": "Antes de mover, compara lo pedido con lo que hay del lote o del artículo en la ubicación de salida; en la devolución, si el lote del préstamo no alcanza, cuenta también los otros lotes del artículo. Los lotes `Bloqueado`, `En Inspección` o `Damaged` no cuentan. Si falta en una línea, no se mueve nada"
+          },
+          {
+            "id": "CU-09",
+            "nombre": "Generar traslado de inventario",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-07"
+              ]
+            },
+            "que_hace": "Mueve el material con un traslado de inventario: hacia la bodega de préstamos al prestar, de vuelta a la ubicación de origen al devolver"
+          },
+          {
+            "id": "CU-30",
+            "nombre": "Generar ajuste de entrada",
+            "relacion": {
+              "tipo": "extiende",
+              "ids": [
+                "CU-07"
+              ]
+            },
+            "que_hace": "Solo A la Clínica: en vez del traslado, suma el material en la bodega de préstamos con un ajuste de inventario, con el lote escrito y contra la cuenta elegida, sin validar stock"
+          }
+        ]
+      },
+      {
+        "numero": 2,
+        "nombre": "Devolución",
+        "flujo": "QF CASPM o Administrator registra la devolución: elige el sentido, la subsidiaria y el préstamo pendiente, con un filtro opcional por entidad; el sistema hereda del préstamo sus datos y el usuario indica cuánto vuelve. Al procesarla, De la Clínica toma los mismos lotes del préstamo, completa con otros lotes del artículo si alguno ya no alcanza, y genera el traslado de vuelta; A la Clínica descuenta el material de la bodega con un ajuste. En los dos descuenta el pendiente del préstamo.",
+        "casos_uso": [
+          {
+            "id": "CU-11",
+            "nombre": "Registrar devolución",
+            "relacion": {
+              "tipo": "usa",
+              "ids": [
+                "ACT-01",
+                "ACT-02"
+              ]
+            },
+            "que_hace": "Crea la solicitud de devolución de un préstamo y le da su número `DEV#`; queda `Pendiente de Procesar`, sin mover inventario"
+          },
+          {
+            "id": "CU-02",
+            "nombre": "Seleccionar subsidiaria",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-11"
+              ]
+            },
+            "que_hace": "Define la subsidiaria de la solicitud; las listas del formulario se cargan solo con lo de esa subsidiaria"
+          },
+          {
+            "id": "CU-12",
+            "nombre": "Seleccionar préstamo pendiente",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-11"
+              ]
+            },
+            "que_hace": "Según el sentido marcado (`De la Clinica` o `A la Clinica`), muestra los préstamos de la subsidiaria de ese sentido con cantidad pendiente, con su número, entidad, ubicación y pendiente, y toma el elegido"
+          },
+          {
+            "id": "CU-13",
+            "nombre": "Filtrar por entidad receptora",
+            "relacion": {
+              "tipo": "extiende",
+              "ids": [
+                "CU-12"
+              ]
+            },
+            "que_hace": "Opcional: deja solo los préstamos de una entidad; vacío, muestra todos, incluidos los antiguos registrados sin entidad"
+          },
+          {
+            "id": "CU-14",
+            "nombre": "Heredar los datos del préstamo",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-11"
+              ]
+            },
+            "que_hace": "El sistema toma subsidiaria, servicio, entidad y sentido del préstamo y fija el origen en la bodega de préstamos. De la Clínica, el destino es la ubicación de donde salió el material; A la Clínica no hay destino y se usa la cuenta de ajuste del préstamo"
+          },
+          {
+            "id": "CU-15",
+            "nombre": "Ingresar cantidades a devolver",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-11"
+              ]
+            },
+            "que_hace": "Muestra lo prestado, lo devuelto y lo pendiente de cada artículo, con la cantidad a devolver cargada con lo pendiente; no deja devolver más"
+          },
+          {
+            "id": "CU-16",
+            "nombre": "Procesar devolución",
+            "relacion": {
+              "tipo": "usa",
+              "ids": [
+                "ACT-01",
+                "ACT-02"
+              ]
+            },
+            "que_hace": "Ejecuta la devolución con `Procesar Devolucion`; queda `Procesado` y el préstamo, `Devuelto Parcial` o `Devuelto Total`"
+          },
+          {
+            "id": "CU-17",
+            "nombre": "Tomar los lotes del préstamo",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-16"
+              ]
+            },
+            "que_hace": "El sistema devuelve primero los mismos lotes del préstamo: De la Clínica, los que salieron en el traslado, descontando lo que ya volvió; A la Clínica, el lote escrito en el préstamo. Si alguno ya no alcanza en la bodega, completa con otros lotes del mismo artículo"
+          },
+          {
+            "id": "CU-08",
+            "nombre": "Validar stock",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-16"
+              ]
+            },
+            "que_hace": "Antes de mover, compara lo pedido con lo que hay del lote o del artículo en la ubicación de salida; en la devolución, si el lote del préstamo no alcanza, cuenta también los otros lotes del artículo. Los lotes `Bloqueado`, `En Inspección` o `Damaged` no cuentan. Si falta en una línea, no se mueve nada"
+          },
+          {
+            "id": "CU-09",
+            "nombre": "Generar traslado de inventario",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-16"
+              ]
+            },
+            "que_hace": "Mueve el material con un traslado de inventario: hacia la bodega de préstamos al prestar, de vuelta a la ubicación de origen al devolver"
+          },
+          {
+            "id": "CU-31",
+            "nombre": "Generar ajuste de salida de la devolución",
+            "relacion": {
+              "tipo": "extiende",
+              "ids": [
+                "CU-16"
+              ]
+            },
+            "que_hace": "Solo A la Clínica: en vez del traslado, descuenta el material de la bodega de préstamos con un ajuste de inventario contra la cuenta del préstamo"
+          },
+          {
+            "id": "CU-18",
+            "nombre": "Actualizar pendiente del préstamo",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-16"
+              ]
+            },
+            "que_hace": "Resta lo devuelto de cada línea del préstamo; si no queda nada pendiente lo deja `Devuelto Total` y, si queda, `Devuelto Parcial`"
+          }
+        ]
+      },
+      {
+        "numero": 3,
+        "nombre": "Merma",
+        "flujo": "QF CASPM o Administrator registra la merma: selecciona subsidiaria, servicio y ubicación, el motivo de la baja y la cuenta de ajuste, e ingresa artículos, lotes y cantidades. Al procesarla, el sistema valida el stock y genera un ajuste que descuenta el material de la misma ubicación, y la merma queda `Procesado`.",
+        "casos_uso": [
+          {
+            "id": "CU-19",
+            "nombre": "Registrar merma",
+            "relacion": {
+              "tipo": "usa",
+              "ids": [
+                "ACT-01",
+                "ACT-02"
+              ]
+            },
+            "que_hace": "Crea la solicitud de merma con sus datos y artículos y le da su número `MER#`; queda `Pendiente de Procesar`, sin mover inventario"
+          },
+          {
+            "id": "CU-02",
+            "nombre": "Seleccionar subsidiaria",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-19"
+              ]
+            },
+            "que_hace": "Define la subsidiaria de la solicitud; las listas del formulario se cargan solo con lo de esa subsidiaria"
+          },
+          {
+            "id": "CU-03",
+            "nombre": "Seleccionar servicio y ubicación",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-19"
+              ]
+            },
+            "que_hace": "Indica el servicio y la ubicación de donde sale el material"
+          },
+          {
+            "id": "CU-20",
+            "nombre": "Seleccionar motivo de baja",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-19"
+              ]
+            },
+            "que_hace": "Elige el motivo: `Vencimiento`, `Deterioro`, `Cuarentena` u `Otro`"
+          },
+          {
+            "id": "CU-21",
+            "nombre": "Seleccionar cuenta de ajuste",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-19"
+              ]
+            },
+            "que_hace": "Elige la cuenta contable de la merma, solo entre las activas autorizadas para la subsidiaria"
+          },
+          {
+            "id": "CU-06",
+            "nombre": "Ingresar artículos, lotes y cantidades",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-19"
+              ]
+            },
+            "que_hace": "Agrega cada artículo, el lote cuando aplica y la cantidad; el sistema muestra lo disponible. Con lote, si se pide más de lo que hay se ajusta solo; sin lote, no deja guardar"
+          },
+          {
+            "id": "CU-22",
+            "nombre": "Procesar merma",
+            "relacion": {
+              "tipo": "usa",
+              "ids": [
+                "ACT-01",
+                "ACT-02"
+              ]
+            },
+            "que_hace": "Ejecuta la merma con `Procesar Merma`; queda `Procesado` y el material sale del inventario"
+          },
+          {
+            "id": "CU-08",
+            "nombre": "Validar stock",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-22"
+              ]
+            },
+            "que_hace": "Antes de mover, compara lo pedido con lo que hay del lote o del artículo en la ubicación de salida; en la devolución, si el lote del préstamo no alcanza, cuenta también los otros lotes del artículo. Los lotes `Bloqueado`, `En Inspección` o `Damaged` no cuentan. Si falta en una línea, no se mueve nada"
+          },
+          {
+            "id": "CU-23",
+            "nombre": "Generar ajuste de inventario",
+            "relacion": {
+              "tipo": "incluido_en",
+              "ids": [
+                "CU-22"
+              ]
+            },
+            "que_hace": "Descuenta el material de la misma ubicación contra la cuenta elegida"
+          }
+        ]
+      },
+      {
+        "numero": 4,
+        "nombre": "Corrección, consulta y configuración",
+        "flujo": "Antes de procesar, QF CASPM o Administrator puede corregir o anular cualquier solicitud; una vez procesada, ya no se edita. Cualquier rol consulta las solicitudes e imprime su comprobante. Administrator, además, configura por subsidiaria las entidades, las cuentas de ajuste y la bodega de préstamos, que alimentan las listas del registro.",
+        "casos_uso": [
+          {
+            "id": "CU-10",
+            "nombre": "Corregir o anular solicitud",
+            "relacion": {
+              "tipo": "usa",
+              "ids": [
+                "ACT-01",
+                "ACT-02"
+              ]
+            },
+            "que_hace": "Solo mientras está `Pendiente de Procesar`: permite corregir fecha, responsable, comentarios y artículos, o anular la solicitud sin mover inventario. El sentido no se cambia"
+          },
+          {
+            "id": "CU-24",
+            "nombre": "Consultar solicitudes",
+            "relacion": {
+              "tipo": "usa",
+              "ids": [
+                "ACT-01",
+                "ACT-02",
+                "ACT-03"
+              ]
+            },
+            "que_hace": "Busca y abre solicitudes: estado, artículos, lotes y movimiento de inventario generado. Un rol de consulta solo puede verlas"
+          },
+          {
+            "id": "CU-25",
+            "nombre": "Imprimir comprobante",
+            "relacion": {
+              "tipo": "usa",
+              "ids": [
+                "ACT-01",
+                "ACT-02",
+                "ACT-03"
+              ]
+            },
+            "que_hace": "Genera el PDF con la plantilla del tipo de solicitud, en cualquier estado, incluso anulada"
+          },
+          {
+            "id": "CU-26",
+            "nombre": "Configurar entidades asociadas por subsidiaria",
+            "relacion": {
+              "tipo": "usa",
+              "ids": [
+                "ACT-02"
+              ]
+            },
+            "que_hace": "Registra las instituciones con las que presta cada subsidiaria; una entidad inactiva deja de aparecer al prestar"
+          },
+          {
+            "id": "CU-27",
+            "nombre": "Configurar cuentas por tipo de movimiento",
+            "relacion": {
+              "tipo": "usa",
+              "ids": [
+                "ACT-02"
+              ]
+            },
+            "que_hace": "Registra las cuentas contables autorizadas en cada subsidiaria y para qué tipo de solicitud: la merma o el préstamo A la Clínica; una cuenta inactiva deja de aparecer"
+          },
+          {
+            "id": "CU-28",
+            "nombre": "Configurar bodega de préstamos",
+            "relacion": {
+              "tipo": "usa",
+              "ids": [
+                "ACT-02"
+              ]
+            },
+            "que_hace": "Marca una ubicación por subsidiaria como bodega de préstamos, que el sistema usa como destino al prestar"
+          }
+        ]
+      }
+    ]
+  },
+  "guia_usuario": {
+    "titulo": "Guía de usuario — Registro de Solicitud de Inventario",
+    "ficha": {
+      "version": "0.3",
+      "fecha": "22/10/2026"
+    },
+    "secciones": [
+      {
+        "clave": "para_que_sirve",
+        "titulo": "Para qué sirve",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "El Registro de Solicitud de Inventario permite registrar y procesar tres tipos de solicitud desde una sola pantalla: préstamos de material de farmacia, sus devoluciones y mermas."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "El préstamo y la devolución tienen un **sentido**, que se elige con los checks **De la Clinica** y **A la Clinica**:"
+          },
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "Tipo y sentido",
+              "Qué representa",
+              "Resultado al procesar",
+              "Estado final inmediato"
+            ],
+            "filas": [
+              [
+                "Préstamo De la Clínica",
+                "Andes le presta material a otra institución",
+                "Traslado desde el origen hacia la bodega de préstamos",
+                "`Pendiente de Devolucion`"
+              ],
+              [
+                "Préstamo A la Clínica",
+                "Otra institución le presta material a Andes",
+                "Ajuste de inventario que suma el material en la bodega de préstamos",
+                "`Pendiente de Devolucion`"
+              ],
+              [
+                "Devolución De la Clínica",
+                "Vuelve a Andes lo que prestó",
+                "Traslado desde la bodega de préstamos hacia el origen del préstamo",
+                "`Procesado`"
+              ],
+              [
+                "Devolución A la Clínica",
+                "Andes devuelve lo que le prestaron",
+                "Ajuste de inventario que descuenta el material de la bodega de préstamos",
+                "`Procesado`"
+              ],
+              [
+                "Merma",
+                "Material que se da de baja",
+                "Ajuste de inventario negativo en la misma ubicación",
+                "`Procesado`"
+              ]
+            ]
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "Los cinco casos tienen comprobante PDF."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "El formulario cambia según el **Tipo de Movimiento** y el sentido. Esos dos datos definen los campos, productos y acciones que verá el usuario."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "Cada solicitud pasa por dos pasos: primero se guarda y queda `Pendiente de Procesar`, sin mover inventario; después se procesa con el botón de su tipo, y recién ahí se genera el movimiento de inventario."
+          }
+        ]
+      },
+      {
+        "clave": "alcance",
+        "titulo": "Alcance",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "El registro cubre:"
+          },
+          {
+            "tipo": "lista",
+            "items": [
+              "Préstamos de uno o varios artículos, con o sin lote, en los dos sentidos, siempre asociados a una entidad.",
+              "Devoluciones totales o parciales vinculadas a un préstamo pendiente del mismo sentido, con búsqueda del préstamo por entidad.",
+              "Varias devoluciones para un préstamo, mientras exista cantidad pendiente.",
+              "Cantidades con decimales, con un máximo de 2 decimales, en todos los tipos de solicitud.",
+              "Mermas por vencimiento, deterioro, cuarentena u otro motivo.",
+              "Selección controlada de la cuenta contable según la subsidiaria y el tipo de solicitud.",
+              "Validación de stock antes de crear la transacción de inventario, cuando el material sale de Andes.",
+              "Numeración de cada solicitud según su tipo: `PRE#`, `DEV#` y `MER#`.",
+              "Bloqueo del botón durante el procesamiento para evitar varios clics.",
+              "Corrección y anulación de una solicitud mientras está `Pendiente de Procesar`.",
+              "Comprobante PDF para todos los tipos de solicitud."
+            ]
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "No permite editar una solicitud ya procesada ni revertir una devolución o Merma ya procesada."
+          }
+        ]
+      },
+      {
+        "clave": "quien_lo_usa",
+        "titulo": "Quién lo usa",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "Cualquier usuario puede consultar solicitudes y descargar comprobantes. Para crear, editar, procesar o anular se requiere uno de los roles autorizados."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "Actualmente están autorizados los roles `Administrator` (id interno `3`) y `QF CASPM` (id interno `1371`). Un rol distinto ve las solicitudes en modo consulta."
+          }
+        ]
+      },
+      {
+        "clave": "donde_se_usa",
+        "titulo": "Dónde se usa",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "Todo el registro está en un mismo menú:"
+          },
+          {
+            "tipo": "codigo",
+            "texto": "Transacciones > Gestion de Movimientos"
+          },
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "Opción del menú",
+              "Para qué se usa"
+            ],
+            "filas": [
+              [
+                "**Solicitudes de Inventario**",
+                "Registrar, consultar, procesar e imprimir préstamos, devoluciones y mermas"
+              ],
+              [
+                "**Entidades Asociadas por Subsidiaria**",
+                "Cargar las instituciones con las que cada subsidiaria puede prestar"
+              ],
+              [
+                "**Cuentas por Tipo de Movimiento**",
+                "Cargar las cuentas contables permitidas para la Merma y para el Préstamo A la Clínica de cada subsidiaria"
+              ]
+            ]
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "Si NetSuite está en inglés, el menú aparece como `Transactions > Gestion de Movimientos`."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "El formulario de registro se llama **Registro de Solicitud de Inventario**, y el de corrección, **Edicion de Solicitud de Inventario**. Al abrir una solicitud guardada, NetSuite muestra arriba su número, y debajo la cabecera, el detalle, el estado y las acciones disponibles."
+          }
+        ]
+      },
+      {
+        "clave": "requisitos_previos",
+        "titulo": "Requisitos previos",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "Antes de operar, deben estar configurados:"
+          },
+          {
+            "tipo": "pasos",
+            "items": [
+              {
+                "texto": "Las ubicaciones y su relación con la subsidiaria."
+              },
+              {
+                "texto": "Una sola bodega de préstamos por subsidiaria."
+              },
+              {
+                "texto": "La disponibilidad de inventario y los lotes correspondientes."
+              },
+              {
+                "texto": "Las entidades permitidas para la subsidiaria. Sin ellas no se puede guardar un Préstamo, porque la entidad es obligatoria."
+              },
+              {
+                "texto": "Para Merma, al menos una cuenta activa para la subsidiaria en **Cuentas por Tipo de Movimiento**, con **Tipo de Solicitud** `Merma` o vacío. Sin ella **Cuenta de Ajuste** queda vacía y la Merma no se puede guardar."
+              },
+              {
+                "texto": "Para Préstamo A la Clínica, al menos una cuenta activa para la subsidiaria en **Cuentas por Tipo de Movimiento** con **Tipo de Solicitud** `Prestamo`."
+              },
+              {
+                "texto": "Un rol autorizado para guardar y procesar."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "clave": "configuracion_funcional",
+        "titulo": "Configuración funcional",
+        "bloques": [],
+        "subsecciones": [
+          {
+            "titulo": "Bodega de préstamos",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Ruta:"
+              },
+              {
+                "tipo": "codigo",
+                "texto": "Listas > Contabilidad > Ubicaciones > editar la ubicación"
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "En inglés: `Lists > Accounting > Locations`."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "En cada subsidiaria debe existir una sola ubicación con:"
+              },
+              {
+                "tipo": "lista",
+                "items": [
+                  "**AS Bodega de Prestamos y Devoluciones**: marcado.",
+                  "**Make Inventory Available**: desmarcado."
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Esa ubicación recibe los préstamos y es el origen de sus devoluciones, en los dos sentidos. Si falta, **Ubicación Destino** queda vacía y no se puede guardar el préstamo."
+              }
+            ]
+          },
+          {
+            "titulo": "Relación subsidiaria y ubicación",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Cada ubicación utilizada debe tener asignada la subsidiaria correspondiente. Una ubicación sin esa relación no aparece en el formulario."
+              }
+            ]
+          },
+          {
+            "titulo": "Entidades asociadas por subsidiaria",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Ruta:"
+              },
+              {
+                "tipo": "codigo",
+                "texto": "Transacciones > Gestion de Movimientos > Entidades Asociadas por Subsidiaria > Nuevo"
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "El registro se llama **AS Entidad por Subsidiaria**:"
+              },
+              {
+                "tipo": "tabla",
+                "columnas": [
+                  "Campo",
+                  "Uso"
+                ],
+                "filas": [
+                  [
+                    "Subsidiaria",
+                    "La subsidiaria que presta o recibe el préstamo"
+                  ],
+                  [
+                    "Entidad",
+                    "La institución del préstamo"
+                  ],
+                  [
+                    "Inactivo",
+                    "Al marcarlo, la entidad deja de aparecer al registrar un préstamo"
+                  ]
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Registrar una fila por pareja **Subsidiaria + Entidad**: la entidad es la institución (un cliente de NetSuite) con la que esa subsidiaria hace préstamos. La misma lista sirve para los dos sentidos: en De la Clínica la entidad recibe el material; en A la Clínica, lo presta. La entidad es **obligatoria en el préstamo**: si la subsidiaria no tiene filas activas, el selector queda vacío y no se puede guardar ningún préstamo."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Para dejar de prestar con una entidad, se marca la fila como inactiva. Sus préstamos ya registrados siguen apareciendo en Devolución mientras tengan pendiente."
+              }
+            ]
+          },
+          {
+            "titulo": "Cuentas por tipo de movimiento",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Ruta:"
+              },
+              {
+                "tipo": "codigo",
+                "texto": "Transacciones > Gestion de Movimientos > Cuentas por Tipo de Movimiento > Nuevo"
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "El registro se llama **AS Cuenta Tipo Movimiento Solicitud**:"
+              },
+              {
+                "tipo": "tabla",
+                "columnas": [
+                  "Campo",
+                  "Uso"
+                ],
+                "filas": [
+                  [
+                    "Subsidiaria",
+                    "Define en qué subsidiaria estará disponible la cuenta"
+                  ],
+                  [
+                    "Cuenta Contable",
+                    "Cuenta que aparecerá en **Cuenta de Ajuste**"
+                  ],
+                  [
+                    "Tipo de Solicitud",
+                    "Para qué solicitud se ofrece la cuenta: `Merma` o `Prestamo`. Vacío cuenta como Merma"
+                  ],
+                  [
+                    "Inactivo",
+                    "Al marcarlo, la relación deja de aparecer en el formulario"
+                  ]
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "La regla funcional es:"
+              },
+              {
+                "tipo": "codigo",
+                "texto": "Subsidiaria + Tipo de Solicitud + configuración activa = cuentas disponibles en Cuenta de Ajuste"
+              },
+              {
+                "tipo": "tabla",
+                "columnas": [
+                  "Solicitud",
+                  "Cuentas que aparecen"
+                ],
+                "filas": [
+                  [
+                    "Merma",
+                    "Las de la subsidiaria con **Tipo de Solicitud** `Merma` o vacío"
+                  ],
+                  [
+                    "Préstamo A la Clínica",
+                    "Las de la subsidiaria con **Tipo de Solicitud** `Prestamo`"
+                  ],
+                  [
+                    "Devolución A la Clínica",
+                    "No se elige: usa la cuenta guardada en el préstamo"
+                  ]
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Ejemplo: Puerto Montt + `5113001 Costo medicamentos e insumos`. Es un ejemplo operativo; la cuenta disponible depende de las filas activas en NetSuite."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Para cambiar una cuenta no se modifica el código. Se inactiva la relación anterior y se crea o activa la nueva relación para la subsidiaria."
+              }
+            ]
+          },
+          {
+            "titulo": "Numeración de las solicitudes",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Cada tipo de solicitud tiene su propio número correlativo:"
+              },
+              {
+                "tipo": "tabla",
+                "columnas": [
+                  "Tipo",
+                  "Número"
+                ],
+                "filas": [
+                  [
+                    "Préstamo",
+                    "`PRE#000001`, `PRE#000002`…"
+                  ],
+                  [
+                    "Devolución",
+                    "`DEV#000001`, `DEV#000002`…"
+                  ],
+                  [
+                    "Merma",
+                    "`MER#000001`, `MER#000002`…"
+                  ]
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "El contador vive en el registro **AS Movimiento Inventario Correlativo** (`Personalización > Listas, registros y campos > Tipos de registro`), una fila por tipo. La primera solicitud de cada tipo crea su fila sola, así que no hace falta cargarla. Si se quiere continuar desde otro número, se edita **Último número** en la fila del tipo."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Las solicitudes registradas antes del 07/10/2026 conservan su número `MOV#`."
+              }
+            ]
+          },
+          {
+            "titulo": "Listas del registro",
+            "bloques": [
+              {
+                "tipo": "tabla",
+                "columnas": [
+                  "Lista",
+                  "Valores actuales",
+                  "Regla de mantenimiento"
+                ],
+                "filas": [
+                  [
+                    "Tipo de Movimiento",
+                    "`Prestamo`, `Devolucion`, `Merma`",
+                    "No renombrar; el sistema compara estos textos"
+                  ],
+                  [
+                    "Estado de Movimiento",
+                    "`Pendiente de Procesar`, `Pendiente de Devolucion`, `Devuelto Parcial`, `Devuelto Total`, `Procesado`, `Anulado`",
+                    "No renombrar"
+                  ],
+                  [
+                    "Motivo de Baja",
+                    "`Vencimiento`, `Deterioro`, `Cuarentena`, `Otro`",
+                    "Se pueden agregar otros motivos"
+                  ]
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Los nombres de Tipo y Estado están intencionalmente sin tilde. Cambiarlos rompe las reglas del registro."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "clave": "pendiente_configurar",
+        "titulo": "Pendiente de configurar en NetSuite",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "El despliegue crea los registros y las listas, pero **no carga los datos**. Antes de operar en una cuenta, cada subsidiaria que use el registro necesita esto:"
+          },
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "Qué configurar",
+              "Dónde",
+              "Qué cargar",
+              "Si falta"
+            ],
+            "filas": [
+              [
+                "Bodega de préstamos",
+                "`Listas > Contabilidad > Ubicaciones`",
+                "Una sola ubicación por subsidiaria con **AS Bodega de Prestamos y Devoluciones** marcado y *Make Inventory Available* desmarcado",
+                "**Ubicación Destino** queda vacía y no se puede guardar un Préstamo"
+              ],
+              [
+                "Subsidiaria de cada ubicación",
+                "`Listas > Contabilidad > Ubicaciones`",
+                "La subsidiaria correspondiente en cada ubicación de origen y en la bodega de préstamos",
+                "La ubicación no aparece en el formulario"
+              ],
+              [
+                "Entidades asociadas por subsidiaria",
+                "`Transacciones > Gestion de Movimientos > Entidades Asociadas por Subsidiaria`",
+                "Una fila por **Subsidiaria + Entidad** para cada institución con la que se presta",
+                "No se puede guardar un Préstamo"
+              ],
+              [
+                "Cuentas para Merma",
+                "`Transacciones > Gestion de Movimientos > Cuentas por Tipo de Movimiento`",
+                "Al menos una fila activa por **Subsidiaria + Cuenta Contable**, con **Tipo de Solicitud** `Merma` o vacío",
+                "**Cuenta de Ajuste** queda vacía y no se puede guardar una Merma"
+              ],
+              [
+                "Cuentas para Préstamo A la Clínica",
+                "`Transacciones > Gestion de Movimientos > Cuentas por Tipo de Movimiento`",
+                "Al menos una fila activa por **Subsidiaria + Cuenta Contable**, con **Tipo de Solicitud** `Prestamo`",
+                "**Cuenta de Ajuste** queda vacía y no se puede guardar un Préstamo A la Clínica"
+              ],
+              [
+                "Motivos de baja",
+                "Lista **Motivo de Baja**",
+                "Viene con `Vencimiento`, `Deterioro`, `Cuarentena` y `Otro`; se pueden agregar otros",
+                "—"
+              ],
+              [
+                "Roles autorizados",
+                "Configuración del registro",
+                "Verificar que los roles internos `3` y `1371` sean `Administrator` y `QF CASPM` en la cuenta",
+                "Un rol distinto podría registrar o no poder hacerlo"
+              ]
+            ]
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "La numeración no necesita configuración: el contador de cada tipo se crea solo."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "Después de configurar, probar una solicitud de cada tipo y sentido en Sandbox antes del despliegue productivo."
+          }
+        ]
+      },
+      {
+        "clave": "como_usarlo",
+        "titulo": "Cómo usarlo",
+        "bloques": [],
+        "subsecciones": [
+          {
+            "titulo": "Crear un Préstamo De la Clínica",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Andes le presta material a otra institución."
+              },
+              {
+                "tipo": "pasos",
+                "items": [
+                  {
+                    "texto": "Ingresar a **Transacciones > Gestion de Movimientos > Solicitudes de Inventario**, crear una nueva y seleccionar `Prestamo`."
+                  },
+                  {
+                    "texto": "Dejar marcado **De la Clinica**, que es el sentido que viene por defecto."
+                  },
+                  {
+                    "texto": "Elegir la subsidiaria, el servicio y la ubicación de origen."
+                  },
+                  {
+                    "texto": "Verificar la ubicación de destino. El sistema propone la bodega de préstamos de la subsidiaria."
+                  },
+                  {
+                    "texto": "Elegir la **Entidad Receptora del Prestamo**: la institución a la que se entrega el material. Es obligatoria y es el dato que después permite saber quién tiene el material."
+                  },
+                  {
+                    "texto": "Completar fecha, responsable y comentarios. El **Responsable del Prestamo** es la persona de Andes que entrega el material; la entidad es quien lo recibe."
+                  },
+                  {
+                    "texto": "Agregar los artículos, lote cuando aplique y cantidad prestada."
+                  },
+                  {
+                    "texto": "Presionar **Guardar Solicitud**. La solicitud recibe su número, por ejemplo `PRE#000004`."
+                  },
+                  {
+                    "texto": "Revisar el registro y presionar **Procesar Prestamo**."
+                  }
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Al procesar se crea un `Inventory Transfer` desde el origen hacia la bodega de préstamos. La solicitud queda en `Pendiente de Devolucion` y **Traslado Generado** muestra el traslado."
+              }
+            ]
+          },
+          {
+            "titulo": "Crear un Préstamo A la Clínica",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Otra institución le presta material a Andes."
+              },
+              {
+                "tipo": "pasos",
+                "items": [
+                  {
+                    "texto": "Crear una solicitud nueva, seleccionar `Prestamo` y marcar **A la Clinica**. El formulario se recarga para ese sentido."
+                  },
+                  {
+                    "texto": "Elegir la subsidiaria y el servicio. No se pide ubicación de origen: el material llega de afuera."
+                  },
+                  {
+                    "texto": "Verificar la ubicación de destino: la bodega de préstamos de la subsidiaria."
+                  },
+                  {
+                    "texto": "Elegir la **Entidad Emisora del Prestamo**: la institución que le presta a Andes."
+                  },
+                  {
+                    "texto": "Elegir la **Cuenta de Ajuste**. Solo aparecen las cuentas cargadas para préstamo en la subsidiaria."
+                  },
+                  {
+                    "texto": "Completar fecha, responsable y comentarios."
+                  },
+                  {
+                    "texto": "Agregar los artículos, la cantidad y el **Lote**, que se escribe a mano tal como viene en el material. Es obligatorio en todas las líneas: NetSuite no acepta la línea sin lote."
+                  },
+                  {
+                    "texto": "Presionar **Guardar Solicitud** y después **Procesar Prestamo**."
+                  }
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Al procesar se crea un `Inventory Adjustment` que suma el material en la bodega de préstamos, con el lote escrito y contra la cuenta elegida. No se valida stock, porque el material entra. La solicitud queda en `Pendiente de Devolucion` y **Ajuste Generado** muestra el ajuste."
+              }
+            ]
+          },
+          {
+            "titulo": "Crear una Devolución",
+            "bloques": [
+              {
+                "tipo": "pasos",
+                "items": [
+                  {
+                    "texto": "Seleccionar `Devolucion` y marcar el mismo sentido del préstamo que se devuelve: **De la Clinica** o **A la Clinica**."
+                  },
+                  {
+                    "texto": "Elegir primero la subsidiaria."
+                  },
+                  {
+                    "texto": "Opcional: elegir la entidad para ver solo los préstamos de esa institución. Se llama **Entidad Receptora** en De la Clínica y **Entidad Emisora del Prestamo** en A la Clínica. La lista muestra únicamente entidades con préstamos pendientes en la subsidiaria. Si se deja vacía, se ven todos los préstamos pendientes."
+                  },
+                  {
+                    "texto": "Seleccionar el **Prestamo Relacionado**. La lista muestra solo los préstamos del sentido marcado. Cada opción muestra el número del préstamo, la entidad, la ubicación y cuánto queda pendiente:",
+                    "bloques": [
+                      {
+                        "tipo": "codigo",
+                        "texto": "PRE#000004 - HOSPITAL XX - CARDIOLOGIA CEM CASPM - pendiente 10"
+                      },
+                      {
+                        "tipo": "parrafo",
+                        "texto": "Los préstamos registrados antes del 07/10/2026 se ven con su número `MOV#`, y los que se registraron antes de que la entidad fuera obligatoria aparecen como `SIN ENTIDAD`."
+                      }
+                    ]
+                  },
+                  {
+                    "texto": "Completar fecha, responsable y comentarios."
+                  },
+                  {
+                    "texto": "Indicar la cantidad que vuelve en cada línea. Viene precargada con el pendiente; puede ser menor, pero nunca mayor."
+                  },
+                  {
+                    "texto": "Presionar **Guardar Solicitud**."
+                  },
+                  {
+                    "texto": "Revisar el registro y presionar **Procesar Devolucion**."
+                  }
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Al elegir el préstamo, la devolución hereda sus datos y los checks del sentido quedan bloqueados."
+              },
+              {
+                "tipo": "tabla",
+                "columnas": [
+                  "Sentido",
+                  "Qué hereda",
+                  "Qué crea al procesar"
+                ],
+                "filas": [
+                  [
+                    "De la Clínica",
+                    "Origen en la bodega de préstamos y destino en la ubicación de donde salió el material",
+                    "Un traslado inverso, con los mismos lotes que salieron en el préstamo; si alguno ya no alcanza en la bodega, completa con otros lotes del artículo"
+                  ],
+                  [
+                    "A la Clínica",
+                    "Origen en la bodega de préstamos, sin destino, y la **Cuenta de Ajuste** del préstamo",
+                    "Un ajuste que descuenta el material de la bodega, con el lote del préstamo; si ya no alcanza, completa con otros lotes del artículo"
+                  ]
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Si el lote del préstamo ya no tiene en la bodega de préstamos todo lo que se devuelve, el sistema completa la cantidad con otros lotes del mismo artículo y solo rechaza la devolución si entre todos no alcanza. Al procesar, cada línea de la devolución muestra los lotes devueltos con su cantidad, por ejemplo `LOTE-A (3)` y `LOTE-B (2)`, separados por una barra vertical."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "En los dos casos, el préstamo pasa a `Devuelto Parcial` o `Devuelto Total`."
+              }
+            ]
+          },
+          {
+            "titulo": "Crear una Merma",
+            "bloques": [
+              {
+                "tipo": "pasos",
+                "items": [
+                  {
+                    "texto": "Seleccionar `Merma`. La Merma no tiene sentido."
+                  },
+                  {
+                    "texto": "Elegir la subsidiaria. **Cuenta de Ajuste** mostrará únicamente las cuentas activas configuradas para la Merma en esa subsidiaria."
+                  },
+                  {
+                    "texto": "Completar ubicación de la Merma, servicio y fecha."
+                  },
+                  {
+                    "texto": "Elegir el motivo: `Vencimiento`, `Deterioro`, `Cuarentena` u `Otro`."
+                  },
+                  {
+                    "texto": "Elegir la cuenta de ajuste, responsable y comentarios."
+                  },
+                  {
+                    "texto": "Agregar los artículos, lote cuando aplique y cantidad a dar de baja."
+                  },
+                  {
+                    "texto": "Presionar **Guardar Solicitud**."
+                  },
+                  {
+                    "texto": "Revisar el registro y presionar **Procesar Merma**."
+                  }
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Al procesar se crea un `Inventory Adjustment` con cantidades negativas en la ubicación elegida, usando la cuenta contable guardada. La solicitud queda en `Procesado` y **Ajuste Generado** muestra el ajuste."
+              }
+            ]
+          },
+          {
+            "titulo": "Cantidades con decimales",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Todos los tipos aceptan cantidades con decimales, con un máximo de **2 decimales**:"
+              },
+              {
+                "tipo": "tabla",
+                "columnas": [
+                  "Situación",
+                  "Qué hace el formulario"
+                ],
+                "filas": [
+                  [
+                    "Se escribe `1,25` o `3,4`",
+                    "Se mantiene igual"
+                  ],
+                  [
+                    "Se escribe `0,666`",
+                    "Se redondea a `0,67`"
+                  ],
+                  [
+                    "Con un lote elegido, la cantidad supera lo que hay de ese lote",
+                    "Avisa con «No hay tanto del lote …» y la ajusta a lo que hay, cortado a 2 decimales hacia abajo: `7,566666` queda en `7,56`"
+                  ],
+                  [
+                    "Sin lote elegido, la cantidad supera lo disponible",
+                    "No la ajusta: al presionar **Guardar Solicitud** avisa «La linea [n] pide [cantidad] y solo hay [disponible].» y no guarda"
+                  ],
+                  [
+                    "En una devolución, la cantidad supera lo pendiente",
+                    "Avisa y la ajusta al pendiente, cortado a 2 decimales hacia abajo"
+                  ],
+                  [
+                    "Cantidad a Devolver precargada",
+                    "Se muestra el pendiente cortado a 2 decimales: `0,43333` queda en `0,43`"
+                  ]
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "El ajuste hacia abajo evita pedir más de lo que existe. Por eso, un saldo con más de 2 decimales no se puede mover completo: de `7,566666` se pueden prestar o dar de baja como máximo `7,56`."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "En el Préstamo A la Clínica no se compara contra lo disponible: el material todavía no está en Andes."
+              }
+            ]
+          },
+          {
+            "titulo": "Corregir una solicitud",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Una solicitud se puede corregir solo mientras está en `Pendiente de Procesar`:"
+              },
+              {
+                "tipo": "pasos",
+                "items": [
+                  {
+                    "texto": "Abrir la solicitud y presionar **Editar**, o usar **Editar** desde la lista."
+                  },
+                  {
+                    "texto": "Corregir la fecha, el responsable, los comentarios o los artículos. En una Merma y en un Préstamo A la Clínica también se puede cambiar la cuenta de ajuste."
+                  },
+                  {
+                    "texto": "Presionar **Actualizar Solicitud**."
+                  }
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "El tipo, el sentido, la subsidiaria, el servicio, las ubicaciones, la entidad, el motivo de la Merma y el préstamo relacionado de una Devolución aparecen bloqueados. Si alguno de esos datos está mal, se anula la solicitud y se registra una nueva."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Una solicitud procesada ya no se edita: el botón **Editar** no aparece y, si se usa **Editar** desde la lista, NetSuite vuelve a la solicitud con el aviso **Este movimiento ya no se puede editar**."
+              }
+            ]
+          },
+          {
+            "titulo": "Imprimir un comprobante",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Abrir la solicitud y presionar **Imprimir Comprobante**. El registro selecciona automáticamente la plantilla de Préstamo, Devolución o Merma."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "En el préstamo y la devolución, el comprobante muestra el **Sentido del prestamo**. En un Préstamo A la Clínica la entidad aparece como **Entidad emisora del prestamo** y no se muestra la ubicación de origen."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "El comprobante puede imprimirse antes o después del procesamiento, incluso si la solicitud fue anulada. En una devolución sin saldo pendiente el botón puede no mostrarse."
+              }
+            ]
+          },
+          {
+            "titulo": "Anular una solicitud",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "La acción **Anular Movimiento** está disponible mientras el registro se encuentre en `Pendiente de Procesar`. Pide confirmación con «Se anulara el movimiento. Confirma?». La anulación cambia el estado a `Anulado`; no revierte una transacción de inventario ya creada."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "clave": "que_ocurre",
+        "titulo": "Qué ocurre durante el proceso",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "Al presionar un botón de procesamiento, este queda deshabilitado y se muestra el aviso **Procesando el movimiento**. No se debe cerrar ni recargar la página."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "El botón es uno solo por tipo: **Procesar Prestamo**, **Procesar Devolucion** o **Procesar Merma**. El sistema decide si genera un traslado o un ajuste según el sentido guardado en la solicitud, no según el botón."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "El servidor vuelve a validar el estado antes de crear una transacción. Esta segunda validación evita generar otra transacción si el usuario hace doble clic o repite la URL."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "También se verifica:"
+          },
+          {
+            "tipo": "lista",
+            "items": [
+              "Que exista detalle y que las cantidades sean mayores que cero.",
+              "Que haya stock suficiente para el artículo o lote, cuando el material sale de una ubicación de Andes.",
+              "Que una devolución no exceda la cantidad pendiente.",
+              "Que la solicitud siga en `Pendiente de Procesar`."
+            ]
+          }
+        ]
+      },
+      {
+        "clave": "restricciones",
+        "titulo": "Restricciones",
+        "bloques": [
+          {
+            "tipo": "lista",
+            "items": [
+              "Una solicitud solo se edita mientras está en `Pendiente de Procesar`.",
+              "Al editar no se cambian el tipo, el sentido, la subsidiaria, el servicio, las ubicaciones ni la entidad: si están mal, se anula y se registra otra solicitud.",
+              "La devolución tiene el mismo sentido que su préstamo y usa primero el lote que entró o salió en el préstamo; si ya no alcanza, completa con otros lotes del artículo.",
+              "El préstamo mueve la cantidad completa registrada; no existe entrega parcial al procesar.",
+              "Una devolución procesada no tiene reverso automático.",
+              "La Merma reduce inventario en la misma ubicación; no utiliza ubicación destino.",
+              "El Préstamo De la Clínica valida la cantidad disponible en el origen. El Préstamo A la Clínica no valida stock: el material entra.",
+              "Las devoluciones validan que el material siga en la bodega de préstamos.",
+              "Los estados `Bloqueado`, `En Inspección` y `Damaged` no se utilizan para asignar lotes.",
+              "Sin lote elegido, y al completar una devolución con otros lotes, el orden automático usa la última modificación del balance; no es FEFO.",
+              "Las cantidades admiten como máximo 2 decimales. Un saldo con más decimales no se puede mover completo.",
+              "En el Préstamo A la Clínica el lote es obligatorio en todas las líneas, también en los artículos sin control de lotes.",
+              "La entidad debe ser un cliente de NetSuite cargado en la lista de la subsidiaria. Un préstamo entre servicios internos de la misma clínica no tiene una entidad que lo represente.",
+              "El filtro por entidad de la Devolución solo muestra entidades con préstamos pendientes; los préstamos antiguos sin entidad se encuentran dejando el filtro vacío."
+            ]
+          }
+        ]
+      },
+      {
+        "clave": "errores",
+        "titulo": "Errores y solución",
+        "bloques": [
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "Mensaje o síntoma",
+              "Significado",
+              "Acción recomendada"
+            ],
+            "filas": [
+              [
+                "`AS_ROL_NO_AUTORIZADO`",
+                "El rol no puede escribir",
+                "Solicitar un rol autorizado"
+              ],
+              [
+                "`AS_MOVIMIENTO_SIN_DETALLE`",
+                "No hay productos",
+                "Agregar al menos una línea"
+              ],
+              [
+                "`AS_CANTIDAD_INVALIDA`",
+                "Existe una cantidad cero o negativa",
+                "Corregir la cantidad"
+              ],
+              [
+                "`AS_DEVOLUCION_SIN_CANTIDAD`",
+                "Todas las cantidades devueltas son cero",
+                "Ingresar una cantidad en una línea"
+              ],
+              [
+                "NetSuite no acepta la línea y marca **Lote**",
+                "En un Préstamo A la Clínica el lote es obligatorio en todas las líneas",
+                "Escribir el lote tal como viene en el material"
+              ],
+              [
+                "`AS_MOVIMIENTO_YA_PROCESADO`",
+                "La solicitud ya cambió de estado",
+                "Refrescar y revisar la transacción generada"
+              ],
+              [
+                "`AS_STOCK_INSUFICIENTE`",
+                "No alcanza el stock del artículo o lote; en una devolución, ni sumando los otros lotes del artículo en la bodega",
+                "Revisar ubicación, lote y cantidad"
+              ],
+              [
+                "`AS_DEVOLUCION_EXCEDE_PENDIENTE`",
+                "La devolución supera el pendiente",
+                "Reducir la cantidad"
+              ],
+              [
+                "`AS_MOVIMIENTO_NO_EDITABLE`",
+                "Se intentó guardar cambios sobre una solicitud que ya no está en `Pendiente de Procesar`",
+                "No se edita: si hay un error, registrar una solicitud nueva"
+              ],
+              [
+                "**Este movimiento ya no se puede editar**",
+                "Se intentó editar una solicitud que ya no está en `Pendiente de Procesar`",
+                "No se edita: si hay un error, registrar una solicitud nueva"
+              ],
+              [
+                "«La linea [n] pide [cantidad] y solo hay [disponible].»",
+                "Sin lote elegido, la cantidad supera lo disponible",
+                "Bajar la cantidad o elegir un lote"
+              ],
+              [
+                "Cuenta de Ajuste vacía en una Merma",
+                "No hay relación activa para la subsidiaria con Tipo de Solicitud `Merma` o vacío",
+                "Crear o activar una fila en **Gestion de Movimientos > Cuentas por Tipo de Movimiento**"
+              ],
+              [
+                "Cuenta de Ajuste vacía en un Préstamo A la Clínica",
+                "No hay relación activa para la subsidiaria con Tipo de Solicitud `Prestamo`",
+                "Crear o activar esa fila en **Gestion de Movimientos > Cuentas por Tipo de Movimiento**"
+              ],
+              [
+                "Ubicación Destino vacía",
+                "Falta la bodega de préstamos",
+                "Marcar una ubicación para la subsidiaria"
+              ],
+              [
+                "El Préstamo no se guarda y marca la entidad",
+                "El campo es obligatorio",
+                "Elegir la entidad"
+              ],
+              [
+                "La entidad del Préstamo sin opciones",
+                "La subsidiaria no tiene filas activas en **AS Entidad por Subsidiaria**",
+                "Cargar las entidades en **Gestion de Movimientos > Entidades Asociadas por Subsidiaria**"
+              ],
+              [
+                "La entidad aparece bloqueada al editar",
+                "La entidad no se cambia en una corrección",
+                "Anular y registrar un préstamo nuevo con la entidad correcta"
+              ],
+              [
+                "Un préstamo no aparece en **Prestamo Relacionado**",
+                "Está marcado el otro sentido, o el préstamo ya no tiene pendiente",
+                "Marcar el sentido del préstamo; si ya fue devuelto completo, no hay nada que devolver"
+              ],
+              [
+                "Una entidad no aparece en el filtro de Devolución",
+                "No tiene préstamos pendientes en la subsidiaria",
+                "Revisar el préstamo; si ya fue devuelto completo, no hay nada que devolver"
+              ],
+              [
+                "Un préstamo muestra `SIN ENTIDAD`",
+                "Se registró antes de que la entidad fuera obligatoria",
+                "Dejar el filtro vacío para encontrarlo"
+              ],
+              [
+                "La cantidad cambió sola al escribirla",
+                "Tenía más de 2 decimales o superaba lo que hay del lote o lo pendiente",
+                "Revisar el valor ajustado"
+              ],
+              [
+                "Lote vacío en una devolución pendiente",
+                "El lote se asigna al procesar",
+                "Procesar y volver a revisar"
+              ],
+              [
+                "Una línea de la devolución muestra varios lotes",
+                "El lote del préstamo no alcanzaba en la bodega y se completó con otros lotes del artículo",
+                "No requiere acción"
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "clave": "resultado_esperado",
+        "titulo": "Resultado esperado",
+        "bloques": [
+          {
+            "tipo": "lista",
+            "items": [
+              "Un Préstamo De la Clínica procesado tiene un `Inventory Transfer`, queda en `Pendiente de Devolucion`, el material se encuentra en la bodega de préstamos y el registro indica a qué entidad se prestó.",
+              "Un Préstamo A la Clínica procesado tiene un `Inventory Adjustment` positivo en la bodega de préstamos, con el lote escrito, y queda en `Pendiente de Devolucion`.",
+              "Una Devolución procesada tiene un traslado inverso (De la Clínica) o un ajuste negativo (A la Clínica), queda en `Procesado` y disminuye el pendiente del préstamo relacionado.",
+              "Una Merma procesada tiene un `Inventory Adjustment` negativo, usa la cuenta configurada y queda en `Procesado`.",
+              "Cada solicitud tiene su número por tipo (`PRE#`, `DEV#`, `MER#`), su comprobante PDF y la referencia a la transacción generada."
+            ]
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "Para préstamos abiertos, el saldo físico de la bodega de préstamos debe coincidir con la suma de las cantidades pendientes, en los dos sentidos. Una diferencia indica un movimiento manual fuera del registro o un proceso incompleto."
+          }
+        ]
+      }
+    ]
+  },
+  "documento_tecnico": {
+    "titulo": "Documento técnico — AS_NSP_018 Préstamo, Devolución y Merma",
+    "ficha": {
+      "version": "0.3",
+      "fecha": "22/10/2026"
+    },
+    "secciones": [
+      {
+        "titulo": "Objetivo técnico",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "Custom record de cabecera + detalle que representa una solicitud de inventario: un Préstamo, una Devolución o una Merma. Al procesarla genera la transacción nativa: un **Inventory Transfer** en el Préstamo y la Devolución De la Clínica, y un **Inventory Adjustment** en la Merma (negativo), el Préstamo A la Clínica (positivo) y la Devolución A la Clínica (negativo)."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "La captura **no** usa el formulario nativo del custom record: el User Event redirige `CREATE`, `COPY` y `EDIT` a un Suitelet propio, porque el detalle es un child record y NetSuite no lo pinta junto a la cabecera."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "El sentido se guarda en los checks `custrecord_as_mov_de_la_clinica` y `custrecord_as_mov_a_la_clinica`. Hay un solo botón Procesar por tipo; el handler de ese tipo lee el check del registro y decide si genera traslado o ajuste. El número de cada solicitud es un correlativo por tipo (`PRE#`, `DEV#`, `MER#`) que se guarda en el `name` de la cabecera."
+          }
+        ],
+        "subsecciones": [
+          {
+            "titulo": "El modelo de la bodega de préstamos",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "No es una bodega espejo. Es **una sola Location por subsidiaria**, marcada con el checkbox `custrecord_as_es_bodega_prestamo`, que representa todo el material que está fuera de la clínica sin distinguir de qué farmacia salió ni a quién se prestó. El help del propio campo lo fija: *\"Debe haber una sola marcada por subsidiaria\"*, y el Client Script (`cargarUbicacionesDeSubsidiaria`) toma la primera que encuentra con `filter(...)[0]`, así que una segunda marcada quedaría ignorada en silencio."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Funciona como una ubicación \"exterior\": el stock sigue siendo de la subsidiaria y por eso sigue trazado por artículo y lote, pero con *Make Inventory Available* apagado no cuenta como disponible. **El saldo de esa Location es el pendiente de devolución del módulo**, y por eso el pendiente no se administra: se refleja."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Como la bodega no distingue a quién se prestó, ese dato vive en la cabecera: `custrecord_as_mov_entidad_receptora`. Es obligatorio al registrar un Préstamo y es el filtro para buscar el préstamo en una Devolución."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Los dos sentidos usan la misma bodega. De la Clínica, el material entra a ella con el traslado del préstamo y sale con el traslado de la devolución. A la Clínica, entra con el ajuste positivo del préstamo y sale con el ajuste negativo de la devolución. En los dos, el saldo de la bodega es lo que falta devolver."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "titulo": "Arquitectura",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "Es el módulo de referencia del método de capas del repositorio (Fuente: CLAUDE.md): entry points sueltos en la raíz del módulo, un handler por proceso en `handler/`, una pantalla por archivo en `form/`, todo lo que habla con NetSuite en `data/` separado por mecanismo (`query/`, `search/`, `record/`), y `constants/`, `utils/` y `templates/`. No hay `services/`, repositories ni carpeta común."
+          },
+          {
+            "tipo": "codigo",
+            "texto": "AS_MovimientoInventario_CS_2.1.js   combos y botones de las dos pantallas\n        │ op=...\n        ▼\nAS_MovimientoInventario_STLT_2.1.js ──► handler/ Registro · Prestamo · Devolucion · Merma · Comprobante\nAS_MovimientoInventario_UE_2.1.js   ──► handler/ Vista\nAS_ConsultaStock_STLT_2.1.js        ──► handler/ ConsultaStock\n                                          │\n                                          ├──► form/   pantallas y PDF\n                                          └──► data/   query · search · record  ──►  N/query · N/search · N/record"
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "Un handler nunca llama a otro handler ni usa `N/query`, `N/search` o `N/record`: lo que comparten baja a `data/`. Los archivos de `data/record/` usan `query/` y `search/` (el traslado y el ajuste le piden a `obtenerAsignacionesLotes` de qué lotes sale cada línea). `constants/` no importa nada y lo importan todos."
+          }
+        ]
+      },
+      {
+        "titulo": "Estructura de archivos",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "Todo bajo `src/FileCabinet/SuiteScripts/AndesScripts/Proyectos/GestionMovimientoInventario/`."
+          },
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "Archivo",
+              "Responsabilidad"
+            ],
+            "filas": [
+              [
+                "`AS_MovimientoInventario_STLT_2.1.js`",
+                "Entry del Suitelet. Reparte cada `op` a su handler, valida el permiso de las operaciones que escriben y en el `catch` emite el único `MOVIMIENTO ERROR`"
+              ],
+              [
+                "`AS_MovimientoInventario_UE_2.1.js`",
+                "Entry del User Event: `beforeLoad` y `beforeSubmit` van a `AS_VistaHandler`"
+              ],
+              [
+                "`AS_MovimientoInventario_CS_2.1.js`",
+                "Client Script de la captura (recargas, combos por subsidiaria, stock, redondeo y topes) y de los botones del registro"
+              ],
+              [
+                "`AS_ConsultaStock_STLT_2.1.js` / `AS_ConsultaStock_CS_2.1.js`",
+                "Entry y Client Script de la consulta de stock, herramienta de solo lectura para desarrollo y QA"
+              ],
+              [
+                "`handler/AS_RegistroHandler.js`",
+                "Control de rol, guardar, anular, stock para la pantalla (`op=disponible`) y mostrar el formulario"
+              ],
+              [
+                "`handler/AS_PrestamoHandler.js`",
+                "Procesar el Préstamo: traslado a la bodega (De la Clínica) o ajuste de entrada (A la Clínica)"
+              ],
+              [
+                "`handler/AS_DevolucionHandler.js`",
+                "Procesar la Devolución: traslado de vuelta o ajuste de salida, descuento del pendiente y estado del préstamo"
+              ],
+              [
+                "`handler/AS_MermaHandler.js`",
+                "Procesar la Merma: valida el stock y crea el ajuste negativo"
+              ],
+              [
+                "`handler/AS_ComprobanteHandler.js`",
+                "Lee lo que imprime el comprobante y se lo pasa a `AS_ComprobanteForm`"
+              ],
+              [
+                "`handler/AS_VistaHandler.js`",
+                "User Event: redirige la creación y la edición al Suitelet, arma la vista y bloquea la edición fuera de `Pendiente de Procesar`"
+              ],
+              [
+                "`handler/AS_ConsultaStockHandler.js`",
+                "Lee ubicaciones y artículos con stock para la consulta"
+              ],
+              [
+                "`form/AS_MovimientoInventarioFormMain.js`",
+                "Main del formulario de captura: cabecera común, JSON para el CS, detalle de salida y modo edición"
+              ],
+              [
+                "`form/AS_MovimientoInventarioFormPrestamo.js` · `FormDevolucion.js` · `FormMerma.js`",
+                "Lo propio de cada tipo en la captura, incluido el ajuste A la Clínica"
+              ],
+              [
+                "`form/AS_VistaForm.js`",
+                "El registro en modo ver: etiquetas y campos por tipo y sentido, tab Detalle y botones"
+              ],
+              [
+                "`form/AS_ComprobanteForm.js`",
+                "Arma el payload del PDF y lo renderiza con la plantilla del tipo"
+              ],
+              [
+                "`form/AS_ConsultaStockForm.js`",
+                "Pantalla de la consulta de stock"
+              ],
+              [
+                "`data/query/AS_MovimientoInventarioQuery.js`",
+                "Todas las consultas SuiteQL: stock, lotes, faltantes, asignación de lotes, préstamos pendientes, combos y correlativo"
+              ],
+              [
+                "`data/search/AS_MovimientoInventarioSearch.js`",
+                "Todas las búsquedas `N/search`, incluido `lookupFields`: líneas, estados, listas, artículos con lote y número de transacción"
+              ],
+              [
+                "`data/record/AS_SolicitudRecord.js`",
+                "La cabecera y las líneas de la solicitud"
+              ],
+              [
+                "`data/record/AS_TrasladoRecord.js`",
+                "El Inventory Transfer, y la lectura de los lotes del traslado de un préstamo"
+              ],
+              [
+                "`data/record/AS_AjusteRecord.js`",
+                "El Inventory Adjustment de entrada y de salida"
+              ],
+              [
+                "`data/record/AS_CorrelativoRecord.js`",
+                "Reserva el número `PRE#`, `DEV#`, `MER#`"
+              ],
+              [
+                "`constants/AS_MovimientoInventarioConstants.js`",
+                "Tipos, sentidos, estados, etiquetas, records, operaciones, rutas, roles autorizados"
+              ],
+              [
+                "`utils/AS_MovimientoInventarioUtils.js`",
+                "`redondearCantidad`: redondeo interno a 8 decimales"
+              ],
+              [
+                "`templates/AS_ComprobantePrestamo.ftl` · `AS_ComprobanteDevolucion.ftl` · `AS_ComprobanteMerma.ftl`",
+                "Plantillas del comprobante"
+              ]
+            ]
+          }
+        ],
+        "subsecciones": [
+          {
+            "titulo": "Residuo en el File Cabinet",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "La reorganización del 07/10/2026 movió y renombró archivos. SDF sube los nuevos pero no borra los anteriores (Fuente: CLAUDE.md). En cada cuenta donde se había desplegado una versión anterior hay que borrar a mano, dentro de `Proyectos/GestionMovimientoInventario/`, lo que queda en la columna **Anterior**. No se verificó en la cuenta si ya se borró."
+              },
+              {
+                "tipo": "tabla",
+                "columnas": [
+                  "Anterior",
+                  "Reemplazado por"
+                ],
+                "filas": [
+                  [
+                    "Carpeta `handlers/` completa, incluidos los nombres sin prefijo (`MovimientoInventarioForm.js`, `MovimientoInventarioHandler.js`, `PrestamoHandler.js`, `DevolucionHandler.js`, `ImpresionHandler.js`…)",
+                    "`handler/` y `form/`"
+                  ],
+                  [
+                    "Carpeta `repositories/` completa",
+                    "`data/query/`, `data/search/` y `data/record/`"
+                  ],
+                  [
+                    "Carpeta `ui/` completa",
+                    "`form/`"
+                  ],
+                  [
+                    "Carpeta `lib/` (`AS_MovimientoInventarioConstants.js`, `MovimientoInventarioConstants.js`)",
+                    "`constants/AS_MovimientoInventarioConstants.js`"
+                  ],
+                  [
+                    "`templates/AS.FTL.PrestamoPDF.ftl`, `AS.FTL.DevolucionPDF.ftl`, `AS.FTL.MermaPDF.ftl`",
+                    "`templates/AS_Comprobante<Tipo>.ftl`"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "titulo": "Flujo de ejecución",
+        "bloques": [],
+        "subsecciones": [
+          {
+            "titulo": "Guardado (POST al Suitelet) — los tres tipos",
+            "bloques": [
+              {
+                "tipo": "codigo",
+                "texto": "STLT onRequest → validarPermisoEscritura() → AS_RegistroHandler.guardarMovimiento\n    cargarSolicitud(): movimiento que se edita, tipo, prestamo de una devolucion nueva\n    rehaceDetalle = !movimiento || !custrecord_as_mov_transfer\n    resolverSentido(): de un registro guardado o del prestamo sale del registro;\n                       de uno nuevo, de los checks       → AS_SENTIDO_INVALIDO si no es uno solo\n    obtenerLineasGuardado(): cantidades con format.parse FLOAT\n    validarDetalle(): sin lineas / cantidad <= 0 / devolucion toda en cero /\n                      lote en Prestamo A la Clinica para articulos con control de lotes\n    edicion → actualizarCabecera(): fecha, responsable, comentarios, sentido, cuenta si lleva;\n              si rehaceDetalle, eliminarLineasMovimiento()\n    alta    → crearCabecera(): reservarCorrelativo() + crearMovimiento() en Pendiente de Procesar;\n              la devolucion hereda subsidiaria, servicio, ubicaciones y, A la Clinica, la cuenta\n    guardarLineas(): crearLineaDetalle() o crearLineaDevolucion(); una devolucion en 0 no se guarda\n    log MOVIMIENTO REGISTRADO → redirect al registro"
+              },
+              {
+                "tipo": "advertencia",
+                "texto": "**El guardado no es transaccional.** Reserva el número, crea la cabecera y después las líneas. Si una línea falla queda una cabecera huérfana sin detalle y el número consumido. Se tapó el disparador conocido (cantidad ≤ 0) validando antes de crear, pero la estructura sigue igual."
+              }
+            ]
+          },
+          {
+            "titulo": "Préstamo — `op=procesar_prestamo`",
+            "bloques": [
+              {
+                "tipo": "codigo",
+                "texto": "AS_PrestamoHandler.procesarPrestamo\n    cargarPrestamo(): el check A la Clinica decide queGenera = ajuste | traslado\n    estado != Pendiente de Procesar                 → AS_MOVIMIENTO_YA_PROCESADO\n    obtenerLineasMovimiento()\n    De la Clinica → crearTrasladoABodega()\n        obtenerFaltantes(): con lote contra ese lote, sin lote contra el disponible\n                                                    → AS_STOCK_INSUFICIENTE\n        AS_TrasladoRecord.crearTraslado(origen → bodega), lotes de obtenerAsignacionesLotes\n    A la Clinica  → crearAjusteDeEntrada()\n        AS_AjusteRecord.crearAjusteEntrada(): adjustqtyby positivo en la bodega,\n        receiptinventorynumber = lote escrito, contra la Cuenta de Ajuste; no valida stock\n    marcarPendienteDeDevolucion(): transaccion, Pendiente de Devolucion, procesadoPor, fecha\n    log MOVIMIENTO PROCESADO"
+              }
+            ]
+          },
+          {
+            "titulo": "Devolución — `op=procesar_devolucion`",
+            "bloques": [
+              {
+                "tipo": "codigo",
+                "texto": "AS_DevolucionHandler.procesarDevolucion\n    cargarDevolucion(): sentido heredado del prestamo\n    estado != Pendiente de Procesar                 → AS_MOVIMIENTO_YA_PROCESADO\n    cargarLineas(): lineas de la devolucion y del prestamo, indexadas por id\n    cantidad > pendiente de su linea del prestamo   → AS_DEVOLUCION_EXCEDE_PENDIENTE\n    De la Clinica → crearTrasladoDeVuelta()\n        asignarLotesDelPrestamo(): lotes del traslado del prestamo, saltando lo ya devuelto\n        validarStock() → obtenerFaltantesConLotes()  → AS_STOCK_INSUFICIENTE\n        AS_TrasladoRecord.crearTraslado(bodega → origen del prestamo)\n    A la Clinica  → crearAjusteDeSalida()\n        linea.lote = lote de la linea del prestamo\n        validarStock() → obtenerFaltantesConLotes()  → AS_STOCK_INSUFICIENTE\n        AS_AjusteRecord.crearAjusteSalida(): adjustqtyby negativo en la bodega, cuenta del prestamo\n    descontarPendientes(): escribe los lotes tomados en la linea, suma devuelta y resta pendiente\n    cerrarDevolucion(): devolucion Procesado; prestamo Devuelto Total si every(pendiente === 0),\n                        si no Devuelto Parcial\n    log MOVIMIENTO PROCESADO"
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "`obtenerFaltantesConLotes` reparte cada línea entre los lotes que hay en la bodega: primero los preferidos (los lotes heredados del traslado del préstamo, o el lote escrito en el préstamo A la Clínica) y lo que falte, de los otros lotes del artículo en el orden de `obtenerLotesPorArticulo`. Deja en `linea.lotes` lo tomado y solo devuelve como faltante la línea que no se cubre ni sumando todos los lotes. Lleva un saldo por artículo y lote, así dos líneas del mismo artículo no cuentan dos veces el mismo stock. Un artículo sin lotes en la ubicación se mide contra su disponible."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Después, `obtenerAsignacionesLotes` usa esos `linea.lotes` tal cual para el inventory detail, y `descontarPendientes` escribe en `custrecord_as_mov_det_lote` cada lote con su cantidad, como `LOTE-A (3)`, unidos por una barra vertical; sin lotes, queda el lote del préstamo."
+              }
+            ]
+          },
+          {
+            "titulo": "Merma — `op=procesar_merma`",
+            "bloques": [
+              {
+                "tipo": "codigo",
+                "texto": "AS_MermaHandler.procesarMerma\n    estado != Pendiente de Procesar                 → AS_MOVIMIENTO_YA_PROCESADO\n    obtenerLineasMovimiento()\n    obtenerFaltantes(): con lote contra ese lote, sin lote contra el disponible\n                                                    → AS_STOCK_INSUFICIENTE\n    AS_AjusteRecord.crearAjusteSalida(): adjustqtyby negativo en la misma ubicacion, Cuenta de Ajuste\n    marcarProcesada(): transaccion, Procesado, ubicacionDestino = la misma ubicacion, usuario, fecha\n    log MOVIMIENTO PROCESADO"
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "La Merma no crea traslado ni pendiente. El identificador del `Inventory Adjustment` se guarda en `custrecord_as_mov_transfer`, el mismo campo de los traslados; su etiqueta en el record es `Transaccion Generada` y la vista la cambia a `Ajuste Generado` o `Traslado Generado` según el tipo y el sentido."
+              }
+            ]
+          },
+          {
+            "titulo": "Impresión — `op=imprimir`",
+            "bloques": [
+              {
+                "tipo": "codigo",
+                "texto": "AS_ComprobanteHandler.imprimirComprobante\n    cabecera, lineas y, en una Devolucion, lo prestado en cada linea del prestamo\n    AS_ComprobanteForm.construirComprobante()\n        payload { cabecera, lineas, totales }, alias jsonString, & escapado\n        render.create() + templateContent del FTL segun el tipo\n    response.renderPdf()"
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Motor propio, **no** el de `APIGlobales/ImpresionPDF`, para no compartir archivos con 2WIN_SOLICITUD_CONSUMO. Préstamo, Devolución y Merma tienen una plantilla independiente. La cabecera del payload lleva `sentido` (`A la Clinica`, `De la Clinica` o vacío): la plantilla del préstamo y la de la devolución lo muestran, y la del préstamo cambia la etiqueta de la entidad a emisora en A la Clínica y oculta el origen vacío."
+              }
+            ]
+          },
+          {
+            "titulo": "Vista del registro — User Event",
+            "bloques": [
+              {
+                "tipo": "codigo",
+                "texto": "beforeLoad → AS_VistaHandler.construirVista\n    CREATE / COPY                         → Suitelet\n    EDIT en Pendiente de Procesar         → Suitelet con movimiento=id\n    EDIT en otro estado                   → vuelve al registro con as_no_editable=T (aviso)\n    rol no autorizado que intenta escribir → Suitelet (aviso de solo consulta)\n    VIEW → leerDatosVista() → AS_VistaForm.ajustarVista(): etiquetas, campos ocultos,\n           tab Detalle y botones\nbeforeSubmit → AS_VistaHandler.validarEdicion\n    escritura con rol no autorizado        → AS_ROL_NO_AUTORIZADO\n    EDIT fuera de Pendiente de Procesar    → AS_MOVIMIENTO_NO_EDITABLE"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "titulo": "Componentes",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "**Suitelet `customscript_as_stlt_movimiento_inv`** — entry point `onRequest`. Las operaciones se resuelven por el parámetro `op`; un POST es siempre el guardado:"
+          },
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "`op`",
+              "Handler",
+              "Escribe"
+            ],
+            "filas": [
+              [
+                "*(POST)*",
+                "`AS_RegistroHandler.guardarMovimiento`",
+                "Sí"
+              ],
+              [
+                "`anular`",
+                "`AS_RegistroHandler.anularMovimiento`",
+                "Sí"
+              ],
+              [
+                "`procesar_prestamo`",
+                "`AS_PrestamoHandler.procesarPrestamo`",
+                "Sí"
+              ],
+              [
+                "`procesar_devolucion`",
+                "`AS_DevolucionHandler.procesarDevolucion`",
+                "Sí"
+              ],
+              [
+                "`procesar_merma`",
+                "`AS_MermaHandler.procesarMerma`",
+                "Sí"
+              ],
+              [
+                "`disponible`",
+                "`AS_RegistroHandler.consultarDisponible` (JSON)",
+                "No"
+              ],
+              [
+                "`imprimir`",
+                "`AS_ComprobanteHandler.imprimirComprobante` (PDF)",
+                "No"
+              ],
+              [
+                "*(GET sin op)*",
+                "`AS_RegistroHandler.mostrarFormulario`",
+                "No"
+              ]
+            ]
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "Las cinco que escriben pasan antes por `validarPermisoEscritura()`. `mostrarFormulario` le muestra a un rol no autorizado la pantalla «Movimiento de Inventario - Solo Consulta» en vez del formulario."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**User Event `customscript_as_ue_movimiento_inv`** — `beforeLoad` y `beforeSubmit`, los dos resueltos por `AS_VistaHandler`."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Formulario de captura** — `AS_MovimientoInventarioFormMain.construirFormulario` se lee como índice: grupos, cabecera común, JSON oculto `custpage_ubicaciones_data` para el CS, la parte del tipo, el detalle, el modo edición, el ajuste A la Clínica y el botón `Guardar Solicitud` / `Actualizar Solicitud`. En una devolución sin préstamo elegido no hay botón de guardar."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Client Script** — `pageInit` fija los checks según `custpage_sentido`. `fieldChanged` recarga el formulario al cambiar tipo, sentido o préstamo, con `setWindowChanged(window, false)` para que el navegador no pregunte si se abandona la página; consulta `op=disponible` al elegir artículo; filtra ubicaciones, entidades, cuentas y préstamos por subsidiaria desde `custpage_ubicaciones_data`, y redondea y topea las cantidades. `saveRecord` valida el detalle, las cantidades y el disponible."
+          },
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "Función",
+              "Qué hace"
+            ],
+            "filas": [
+              [
+                "`redondearCantidad`",
+                "Al escribir Cantidad o Cantidad a Devolver, deja el valor en 2 decimales con `Math.round(cantidad * 100) / 100`, con `ignoreFieldChange: true`"
+              ],
+              [
+                "`topearCantidadPrestada` / `topearCantidadADevolver`",
+                "Si la cantidad supera lo que hay del lote elegido o el pendiente, la ajusta a ese máximo truncado a 2 decimales. Sin lote elegido no topea"
+              ],
+              [
+                "`cargarUbicacionesDeSubsidiaria`",
+                "Llena origen y destino con las ubicaciones de la subsidiaria; en un préstamo, el destino solo ofrece la bodega y la preselecciona, y el origen la excluye"
+              ],
+              [
+                "`cargarEntidadesConPendientes`",
+                "En Devolución, llena el filtro de entidad con las entidades de los préstamos pendientes de la subsidiaria, sin repetir"
+              ],
+              [
+                "`cargarPrestamosDeSubsidiaria`",
+                "Llena Préstamo Relacionado con los pendientes de la subsidiaria y, si hay entidad elegida, solo los de esa entidad"
+              ],
+              [
+                "`procesarMovimiento`",
+                "Común a los tres botones Procesar: deshabilita el botón, muestra «Procesando el movimiento» y llama a la `op` del tipo"
+              ]
+            ]
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Consulta de stock `customscript_as_stlt_consulta_stock`** — filtros de subsidiaria y ubicación y la lista de artículos con `quantityavailable > 0`, con un tope de `CONSULTA_STOCK.TOPE_ARTICULOS` (200). No escribe ni valida permiso."
+          }
+        ]
+      },
+      {
+        "titulo": "Objetos de NetSuite",
+        "bloques": [
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "Objeto",
+              "Script ID",
+              "Nombre en NetSuite"
+            ],
+            "filas": [
+              [
+                "Suitelet",
+                "`customscript_as_stlt_movimiento_inv` / `customdeploy_as_stlt_movimiento_inv`",
+                "AS Registro Movimiento Inventario STLT"
+              ],
+              [
+                "Suitelet auxiliar de stock",
+                "`customscript_as_stlt_consulta_stock` / `customdeploy_as_stlt_consulta_stock`",
+                "AS Consulta Stock por Ubicacion STLT"
+              ],
+              [
+                "User Event",
+                "`customscript_as_ue_movimiento_inv` / `customdeploy_as_ue_movimiento_inv`",
+                "AS Movimiento Inventario UE"
+              ],
+              [
+                "Cabecera",
+                "`customrecord_as_movimiento_inventario`",
+                "AS Solicitud de Inventario"
+              ],
+              [
+                "Detalle",
+                "`customrecord_as_mov_inventario_det`",
+                "AS Solicitud de Inventario Detalle"
+              ],
+              [
+                "Correlativo por tipo",
+                "`customrecord_as_mov_correlativo`",
+                "AS Movimiento Inventario Correlativo"
+              ],
+              [
+                "Entidades por subsidiaria",
+                "`customrecord_as_receptor_subsidiaria`",
+                "AS Entidad por Subsidiaria"
+              ],
+              [
+                "Cuentas por tipo de solicitud",
+                "`customrecord_as_cuenta_merma_subsidiaria`",
+                "AS Cuenta Tipo Movimiento Solicitud"
+              ],
+              [
+                "Checkbox en Location",
+                "`custrecord_as_es_bodega_prestamo` (`rectype -103`)",
+                "AS Bodega de Prestamos y Devoluciones"
+              ],
+              [
+                "Formulario",
+                "`custform_as_movimiento_inventario`",
+                "AS Movimiento de Inventario"
+              ],
+              [
+                "Menú",
+                "`custcentercategory_as_gestion_movimientos`",
+                "Gestion de Movimientos"
+              ],
+              [
+                "Listas",
+                "`customlist_as_tipo_movimiento`, `customlist_as_estado_movimiento`, `customlist_as_motivo_baja`",
+                "AS Tipo de Movimiento, AS Estado de Movimiento, AS Motivo de Baja"
+              ]
+            ]
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Suitelet:** `allemployees T`, `allroles F`, `runasrole ADMINISTRATOR`, `status RELEASED`, `loglevel DEBUG`. **Suitelet auxiliar de stock:** audiencia `ADMINISTRATOR`, `runasrole ADMINISTRATOR`, `status RELEASED`, `loglevel DEBUG`. **User Event:** sobre `customrecord_as_movimiento_inventario`, `executioncontext USERINTERFACE`, `allroles T`, `allemployees T`, `runasrole ADMINISTRATOR`, `loglevel DEBUG`."
+          },
+          {
+            "tipo": "advertencia",
+            "texto": "`runasrole = ADMINISTRATOR` **no tapa el rol real**: `runtime.getCurrentUser().role` devuelve el rol del usuario logueado. El runasrole solo cambia con qué permisos se ejecuta."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Formulario:** en `custform_as_movimiento_inventario` el campo `Correlativo del Tipo` está oculto, porque el número ya es el `name` del registro, y `Estado` va debajo de `Tipo de Movimiento`."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Menú:** `custcentercategory_as_gestion_movimientos` crea **Gestion de Movimientos** en el centro `BASIC`, pestaña `BASICCENTERTRANSACTIONS` (Transacciones), con tres links `LIST`:"
+          },
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "`linklabel`",
+              "`linkobject`"
+            ],
+            "filas": [
+              [
+                "`Solicitudes de Inventario`",
+                "`customrecord_as_movimiento_inventario`"
+              ],
+              [
+                "`Entidades Asociadas por Subsidiaria`",
+                "`customrecord_as_receptor_subsidiaria`"
+              ],
+              [
+                "`Cuentas por Tipo de Movimiento`",
+                "`customrecord_as_cuenta_merma_subsidiaria`"
+              ]
+            ]
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "Los custom records no declaran `<links>` propios: el menú vive solo en la categoría."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Features del manifest:** `SERVERSIDESCRIPTING`, `CUSTOMRECORDS`, `SUBSIDIARIES`, `UNITSOFMEASURE`, `LOCATIONS`, `DEPARTMENTS` como requeridas; `MULTILANGUAGE`, `MATRIXITEMS`, `CUSTOMSEGMENTS`, `EXTREMELIST`, `MAILMERGE` como opcionales."
+          }
+        ]
+      },
+      {
+        "titulo": "Datos utilizados",
+        "bloques": [
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "Field",
+              "Rol"
+            ],
+            "filas": [
+              [
+                "`name` de la cabecera",
+                "El número de la solicitud (`PRE#000001`). Las solicitudes anteriores al 07/10/2026 conservan su `MOV#`"
+              ],
+              [
+                "`custrecord_as_mov_correlativo`",
+                "Copia del mismo número, oculta en el formulario"
+              ],
+              [
+                "`custrecord_as_mov_de_la_clinica` / `custrecord_as_mov_a_la_clinica`",
+                "El sentido. Lo lee cada handler para decidir traslado o ajuste; la devolución lo hereda del préstamo"
+              ],
+              [
+                "`custrecord_as_mov_estado`",
+                "**Marca principal de que el proceso ya se ejecutó.** Es lo que corta el doble proceso"
+              ],
+              [
+                "`custrecord_as_mov_transfer`",
+                "Referencia a la transacción generada: Inventory Transfer o Inventory Adjustment. Su presencia bloquea el detalle"
+              ],
+              [
+                "`custrecord_as_mov_cuenta_ajuste`",
+                "Cuenta del ajuste: Merma y Préstamo A la Clínica la eligen; la Devolución A la Clínica copia la del préstamo"
+              ],
+              [
+                "`custrecord_as_mov_ubicacion_dest`",
+                "Destino del préstamo. **El origen de la devolución sale de acá**, no del checkbox"
+              ],
+              [
+                "`custrecord_as_mov_det_linea_ref`",
+                "Apunta de la línea de devolución a la línea de préstamo. **Nunca cuadrar por artículo**: con el mismo artículo en dos líneas descuenta de más"
+              ],
+              [
+                "`custrecord_as_mov_det_cant_pendiente`",
+                "Nace igual a la cantidad prestada, no en cero"
+              ],
+              [
+                "`custrecord_as_mov_det_cantidad`, `custrecord_as_mov_det_cant_devuelta`, `custrecord_as_mov_det_cant_pendiente`",
+                "`FLOAT` con `minvalue 0`. Antes eran `INTEGER` y la cantidad tenía `minvalue 1`, que rechazaba `0,5`"
+              ],
+              [
+                "`custrecord_as_mov_entidad_receptora`",
+                "Entidad del préstamo (`selectrecordtype -2`): receptora De la Clínica, emisora A la Clínica. `ismandatory F` en el record: la obligatoriedad en Préstamo la pone el formulario"
+              ],
+              [
+                "`custrecord_as_recep_subsidiaria` / `custrecord_as_recep_entidad`",
+                "Subsidiaria y entidad de cada fila activa de `customrecord_as_receptor_subsidiaria`"
+              ],
+              [
+                "`custrecord_as_mov_det_lote`",
+                "TEXT. En préstamo y merma, el **nombre** del lote elegido o escrito; el id se resuelve al procesar. En la devolución procesada, los lotes devueltos con su cantidad, como `LOTE-A (3)`, unidos por una barra vertical"
+              ],
+              [
+                "`custrecord_as_es_bodega_prestamo`",
+                "Checkbox en Location que identifica la bodega de préstamos de la subsidiaria"
+              ],
+              [
+                "`custrecord_as_cuenta_merma_subsidiaria` / `custrecord_as_cuenta_merma_cuenta`",
+                "Subsidiaria y cuenta contable de una fila del maestro de cuentas"
+              ],
+              [
+                "`custrecord_as_cuenta_merma_tipo`",
+                "Tipo de solicitud de la cuenta (`customlist_as_tipo_movimiento`). Vacío cuenta como Merma"
+              ],
+              [
+                "`custrecord_as_mov_corr_tipo` / `custrecord_as_mov_corr_ultimo`",
+                "Tipo y último número usado de cada fila del correlativo"
+              ]
+            ]
+          }
+        ],
+        "subsecciones": [
+          {
+            "titulo": "Valores de lista, exactos",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "El código compara por **nombre**, y los valores están **sin tilde**:"
+              },
+              {
+                "tipo": "lista",
+                "items": [
+                  "Tipos: `Prestamo`, `Devolucion`, `Merma`",
+                  "Estados: `Pendiente de Procesar`, `Pendiente de Devolucion`, `Devuelto Parcial`, `Devuelto Total`, `Procesado`, `Anulado`",
+                  "Motivos iniciales de baja: `Vencimiento`, `Deterioro`, `Cuarentena`, `Otro`"
+                ]
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "Agregarle una tilde a cualquiera de estos valores en NetSuite rompe el módulo."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "titulo": "Lógica de negocio",
+        "bloques": [
+          {
+            "tipo": "lista",
+            "items": [
+              "**Prestar y mover son el mismo acto.** Si se prestan 5, el traslado o el ajuste mueve 5. No existe entrega parcial.",
+              "**El pendiente no se administra**: es el reflejo del saldo de la bodega de préstamos.",
+              "**Devuelto Total se calcula con `every(pendiente === 0)`**, nunca con la suma total, que se compensa entre líneas.",
+              "**La devolución no elige lote**: De la Clínica reconstruye el plan del traslado del préstamo y consume en orden, salteando lo ya devuelto; A la Clínica toma el lote escrito en la línea del préstamo. Si ese lote ya no alcanza en la bodega, `obtenerFaltantesConLotes` completa con otros lotes del artículo.",
+              "**El origen de una devolución sale del destino del préstamo**, no del checkbox: mover el check no debe romper préstamos ya hechos.",
+              "**Prestada se muestra en la devolución y Pendiente no** en el comprobante y la vista: Prestada es inmutable, Pendiente se mueve con cada devolución posterior.",
+              "**El sentido de un registro guardado no se cambia**: `resolverSentido` lo toma del registro o del préstamo y pisa los checks del request. En uno nuevo, Préstamo y Devolución exigen exactamente un check (`AS_SENTIDO_INVALIDO`).",
+              "**La cuenta no se consulta desde el plan completo de cuentas**: `obtenerCuentasAjuste` lee solo filas activas de `customrecord_as_cuenta_merma_subsidiaria`; la Merma ve las de su tipo y las sin tipo, el Préstamo A la Clínica solo las de su tipo, y el Client Script las filtra por la subsidiaria.",
+              "**La Merma se procesa en la misma ubicación**: crea cantidades negativas, queda `Procesado` y no genera saldo pendiente.",
+              "**La entidad es obligatoria solo en Préstamo**: `campoEntidad.isMandatory = true` en `AS_MovimientoInventarioFormPrestamo.armarCampos`. En Merma el campo se oculta.",
+              "**En Devolución, antes de elegir el préstamo, la entidad es un filtro opcional**: `AS_MovimientoInventarioFormDevolucion.armarCampos` la mueve delante de `custpage_prestamo_ref` con `form.insertField`. Sus opciones salen de los préstamos pendientes, no de `customrecord_as_receptor_subsidiaria`, así nunca deja el combo de préstamos vacío. Al elegir el préstamo la pantalla se recarga y la entidad queda heredada e `INLINE`.",
+              "**El lote del Préstamo A la Clínica es obligatorio en dos niveles**: la columna `custpage_col_lote` es `isMandatory` en `armarDetalleSalida` para todas las líneas, y `validarDetalle` lo exige en el servidor para los artículos con control de lotes (`AS_LOTE_OBLIGATORIO`).",
+              "**Las cantidades que escribe el usuario van con 2 decimales como máximo**: redondeo al escribir, tope truncado hacia abajo, y la Cantidad a Devolver se precarga con el pendiente truncado (`Math.floor(Math.round(linea.pendiente * 1000000) / 10000) / 100`).",
+              "**Los cálculos internos redondean a 8 decimales** con `UTILS.redondearCantidad`: devuelto y pendiente en `descontarPendientes`, los saldos de `asignarLotesDelPrestamo` y `obtenerFaltantesConLotes`, y el `porAsignar` de `elegirAsignaciones`.",
+              "**El número se reserva antes de crear la cabecera**: `reservarCorrelativo` crea la fila del tipo si no existe, suma uno y reintenta hasta `CORRELATIVO.REINTENTOS` (5) veces si otro usuario la guardó en el medio (`RCRD_HAS_BEEN_CHANGED`)."
+            ]
+          }
+        ],
+        "subsecciones": [
+          {
+            "titulo": "Botones — `agregarBotones` en `AS_VistaForm`, orden exacto",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "El orden importa: hay un `return` en el medio."
+              },
+              {
+                "tipo": "codigo",
+                "texto": "1. Nuevo Movimiento     si rolAutorizado (cualquier estado, incluido Anulado)\n2. Imprimir Comprobante si tipo IN (Prestamo, Devolucion, Merma) y no es devolucionSinPendiente\n                        → NO depende del rol ni del estado. Se imprime hasta un Anulado\n3. return               si !rolAutorizado o estado == Anulado\n4. Anular Movimiento    si estado == Pendiente de Procesar\n5. Procesar Prestamo    si tipo == Prestamo y estado == Pendiente de Procesar\n6. Procesar Devolucion  si tipo == Devolucion, estado == Pendiente de Procesar y no es devolucionSinPendiente\n7. Procesar Merma       si tipo == Merma y estado == Pendiente de Procesar"
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "`devolucionSinPendiente` lo calcula `AS_VistaHandler.leerDatosVista` con un `lookupFields` sobre el préstamo relacionado, solo para una devolución en `Pendiente de Procesar`: es verdadero si el préstamo ya quedó `Devuelto Total`. En ese caso muestra el aviso «Esta devolucion ya no se puede procesar» y quita también el botón Editar. Un rol no autorizado pierde además Eliminar y Copiar."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "titulo": "Consultas",
+        "bloques": [],
+        "subsecciones": [
+          {
+            "titulo": "N/search",
+            "bloques": [
+              {
+                "tipo": "tabla",
+                "columnas": [
+                  "Función de `AS_MovimientoInventarioSearch`",
+                  "Fuente",
+                  "Filtros",
+                  "Dato",
+                  "Uso"
+                ],
+                "filas": [
+                  [
+                    "`obtenerLineasMovimiento`",
+                    "`customrecord_as_mov_inventario_det`",
+                    "`custrecord_as_mov_det_ref anyof id`",
+                    "artículo, unidad, lote, cantidad, devuelta, pendiente, línea de préstamo",
+                    "Todo el módulo. Es la consulta más usada"
+                  ],
+                  [
+                    "`obtenerEstadoMovimiento`",
+                    "lookupFields sobre la cabecera",
+                    "por id",
+                    "texto del estado",
+                    "Saber si el préstamo de una devolución ya quedó Devuelto Total, sin cargar el record"
+                  ],
+                  [
+                    "`obtenerIdEstado`",
+                    "`customlist_as_estado_movimiento`",
+                    "`name is <nombre>`",
+                    "id interno",
+                    "Traducir nombre → id. **Por eso los ids de las listas pueden diferir entre cuentas sin romper nada**"
+                  ],
+                  [
+                    "`obtenerTiposMovimiento` / `obtenerMotivosBaja`",
+                    "la customlist",
+                    "ninguno",
+                    "id + nombre",
+                    "Combos de Tipo y Motivo, y el nombre del tipo elegido"
+                  ],
+                  [
+                    "`obtenerArticulosConLote`",
+                    "`item`",
+                    "`internalid anyof`, `islotitem is T`",
+                    "id",
+                    "Lote obligatorio del Préstamo A la Clínica en el servidor"
+                  ],
+                  [
+                    "`obtenerNumeroTransaccion`",
+                    "lookupFields sobre `inventorytransfer` o `inventoryadjustment`",
+                    "por id recién guardado",
+                    "`tranid`",
+                    "El número legible para el log"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "titulo": "SuiteQL",
+            "bloques": [
+              {
+                "tipo": "tabla",
+                "columnas": [
+                  "Función de `AS_MovimientoInventarioQuery`",
+                  "Fuente",
+                  "Filtros",
+                  "Dato",
+                  "Uso"
+                ],
+                "filas": [
+                  [
+                    "`obtenerLotesPorArticulo`",
+                    "`InventoryBalance` + `InventoryNumberLocation`",
+                    "item, location, ambos `quantityonhand > 0`, estado NOT IN (Bloqueado, En Inspección, Damaged); `ORDER BY ib.lastmodifieddate ASC`",
+                    "lote, nombre, bin, en mano",
+                    "Combo Lote, validación por lote y orden de asignación"
+                  ],
+                  [
+                    "`obtenerStockPorArticulo`",
+                    "`item` LEFT JOIN `AggregateItemLocation`",
+                    "`i.id IN (...)`, location",
+                    "unidad, disponible, en mano",
+                    "Columna Disponible y validación sin lote"
+                  ],
+                  [
+                    "`obtenerFaltantes`",
+                    "las dos anteriores",
+                    "—",
+                    "líneas que piden más de lo que hay",
+                    "Préstamo De la Clínica y Merma"
+                  ],
+                  [
+                    "`obtenerFaltantesConLotes`",
+                    "las dos anteriores",
+                    "—",
+                    "líneas no cubiertas y `linea.lotes` tomados",
+                    "Devolución, en los dos sentidos"
+                  ],
+                  [
+                    "`obtenerAsignacionesLotes`",
+                    "`obtenerLotesPorArticulo`",
+                    "—",
+                    "`linea.asignaciones`: lote, bin y cantidad",
+                    "Inventory detail del traslado y del ajuste de salida"
+                  ],
+                  [
+                    "`obtenerPrestamosPendientes`",
+                    "cabecera + detalle + las dos customlists + location",
+                    "tipo = Prestamo, estado IN (Pendiente de Devolucion, Devuelto Parcial), sentido pedido, `HAVING SUM(pendiente) > 0`",
+                    "id, nombre, subsidiaria, id y nombre de la entidad, ubicación, pendiente",
+                    "Combo Préstamo Relacionado y filtro de entidad de la Devolución. **Une por nombre contra las listas para no depender de ids internos**. La ubicación es la bodega en A la Clínica y el origen en De la Clínica. Sin entidad devuelve `idEntidad ''` y `entidad 'SIN ENTIDAD'`"
+                  ],
+                  [
+                    "`obtenerCuentasAjuste`",
+                    "`customrecord_as_cuenta_merma_subsidiaria`",
+                    "`isinactive = F`, tipo (y tipo vacío en Merma)",
+                    "subsidiaria, cuenta y nombre",
+                    "Combo Cuenta de Ajuste, filtrado por subsidiaria en el cliente"
+                  ],
+                  [
+                    "`obtenerEntidadesPorSubsidiaria`",
+                    "`customrecord_as_receptor_subsidiaria`",
+                    "`isinactive = F`",
+                    "subsidiaria, entidad, nombre",
+                    "Combo de entidad del Préstamo"
+                  ],
+                  [
+                    "`obtenerUbicacionesPorSubsidiaria`",
+                    "`location` + `LocationSubsidiaryMap`",
+                    "`isinactive = F`",
+                    "subsidiaria, id, nombre, es bodega préstamo",
+                    "Combos de ubicación, filtrados en el cliente, y la consulta de stock"
+                  ],
+                  [
+                    "`obtenerArticulosConStock`",
+                    "`AggregateItemLocation` + `item`",
+                    "location, `quantityavailable > 0`, `FETCH FIRST <tope>`",
+                    "id, SKU, unidad, en mano, disponible",
+                    "Consulta de stock"
+                  ],
+                  [
+                    "`obtenerFilaCorrelativo`",
+                    "`customrecord_as_mov_correlativo`",
+                    "tipo, `isinactive = F`",
+                    "id de la fila",
+                    "Reservar el número"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "titulo": "N/record de lectura",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "`AS_TrasladoRecord.obtenerLotesDelTraslado` carga el `inventorytransfer` del préstamo y recorre su inventory detail: devuelve por artículo los lotes y cantidades en el orden en que salieron. Lee y no escribe, pero queda en `record/` porque el detalle de un traslado solo se recorre cargando el record. (Fuente: comentario en AS_TrasladoRecord.js)"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "titulo": "Hardcodes",
+        "bloques": [
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "Dónde",
+              "Valor",
+              "Riesgo"
+            ],
+            "filas": [
+              [
+                "`Constants`",
+                "`ROLES_AUTORIZADOS = [3, 1371]`",
+                "Ids internos. Si en Producción el 1371 fuera otro rol, **falla abierto**: escribe sin error y sin log"
+              ],
+              [
+                "`AS_MovimientoInventarioQuery.obtenerLotesPorArticulo`",
+                "`'Bloqueado'`, `'En Inspección'`, `'Damaged'`",
+                "Nombres de Inventory Status. Si se renombran en NetSuite, dejan de excluirse"
+              ],
+              [
+                "`AS_MovimientoInventarioQuery.obtenerLotesPorArticulo`",
+                "`ORDER BY ib.lastmodifieddate ASC`",
+                "**No es antigüedad ni vencimiento**, aunque los comentarios del archivo digan «del mas antiguo al mas nuevo». Es el orden de la asignación sin lote y del completado de la devolución. El precedente de Andes (`2win_dao_numero_inventario.js`) usa FEFO"
+              ],
+              [
+                "`Constants`",
+                "los seis nombres de estado y los tres de tipo",
+                "El código compara por nombre. Renombrar un valor rompe el módulo"
+              ],
+              [
+                "`Constants`",
+                "`CORRELATIVO.PREFIJOS` (`PRE#`, `DEV#`, `MER#`), `DIGITOS 6`, `REINTENTOS 5`",
+                "Un tipo nuevo sin prefijo no se puede guardar (`AS_MOVIMIENTO_SIN_CORRELATIVO`)"
+              ],
+              [
+                "`Constants`",
+                "`CLIENT_SCRIPT`, `CONSULTA_STOCK.CLIENT_SCRIPT` y las tres rutas de `PLANTILLAS`",
+                "Rutas absolutas del File Cabinet. Mover la carpeta las rompe"
+              ],
+              [
+                "`Constants`",
+                "`CONSULTA_STOCK.TOPE_ARTICULOS = 200`",
+                "Máximo de filas de la consulta de stock"
+              ],
+              [
+                "`Objects`",
+                "`selectrecordtype -2` en la entidad",
+                "Inferido: `-3` Vendedor y `-4` Employee están confirmados en el repo, `-2` no. Falta validar en NetSuite"
+              ],
+              [
+                "`AS_MovimientoInventario_CS_2.1.js`, `AS_MovimientoInventarioFormDevolucion.js`",
+                "`100` en el redondeo y el truncado",
+                "Fija el máximo de 2 decimales de la entrada. Cambiar la precisión exige tocar los tres puntos del CS y el del Form"
+              ],
+              [
+                "`AS_MovimientoInventarioUtils.redondearCantidad`",
+                "`100000000`",
+                "Precisión interna de 8 decimales. Tiene que ser mayor que la de los saldos de lote de la cuenta, que llegan con 6"
+              ],
+              [
+                "`AS_MovimientoInventarioQuery.obtenerPrestamosPendientes`",
+                "`'SIN ENTIDAD'`",
+                "Texto que ve el usuario para préstamos sin entidad"
+              ],
+              [
+                "Handlers",
+                "`'PRESTAMO '`, `'DEVOLUCION '`, `'MERMA '` + número",
+                "Memo de la transacción generada"
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "titulo": "Configuración",
+        "bloques": [],
+        "subsecciones": [
+          {
+            "titulo": "Configurable",
+            "bloques": [
+              {
+                "tipo": "tabla",
+                "columnas": [
+                  "Configuración",
+                  "Efecto si falta"
+                ],
+                "filas": [
+                  [
+                    "Checkbox `custrecord_as_es_bodega_prestamo` en una Location",
+                    "El combo Ubicación Destino queda vacío y no se puede guardar un préstamo, en ningún sentido"
+                  ],
+                  [
+                    "**Make Inventory Available apagado** en esa bodega",
+                    "Si se enciende, el material prestado vuelve a contar como stock usable"
+                  ],
+                  [
+                    "Filas en `customrecord_as_receptor_subsidiaria` (menú **Entidades Asociadas por Subsidiaria**)",
+                    "El combo de entidad del Préstamo sale vacío y **no se puede guardar ningún Préstamo** de esa subsidiaria, porque el campo es obligatorio"
+                  ],
+                  [
+                    "Filas activas en `customrecord_as_cuenta_merma_subsidiaria` (menú **Cuentas por Tipo de Movimiento**) con tipo `Merma` o vacío",
+                    "Cuenta de Ajuste queda vacía y no se puede guardar una Merma para esa subsidiaria"
+                  ],
+                  [
+                    "Filas activas en el mismo maestro con tipo `Prestamo`",
+                    "Cuenta de Ajuste queda vacía y no se puede guardar un Préstamo A la Clínica"
+                  ],
+                  [
+                    "`LocationSubsidiaryMap`",
+                    "Una ubicación sin subsidiaria no aparece en ningún combo"
+                  ],
+                  [
+                    "Valores de `customlist_as_motivo_baja`",
+                    "Incluye Vencimiento, Deterioro, Cuarentena y Otro; se pueden agregar valores"
+                  ],
+                  [
+                    "Fila de `customrecord_as_mov_correlativo` por tipo",
+                    "Se crea sola con la primera solicitud del tipo; editando `Último número` se continúa desde otro número"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "titulo": "Requiere código",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Los roles autorizados, los nombres de tipo y estado, los prefijos del correlativo, los estados de inventario excluidos, el orden de asignación de lotes, el layout de los PDF y cualquier cosa de la tabla de Hardcodes."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "titulo": "Despliegue",
+        "bloques": [
+          {
+            "tipo": "codigo",
+            "texto": "cd andes-salud/Custom/AS_NSP_018_PrestamoDevolucionMerma\nsuitecloud project:validate --server\nsuitecloud project:deploy"
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "`project.json` fija `defaultAuthId: \"AndesSaludQa\"`: un `project:deploy` sin argumentos va a **QA**, no a producción."
+          },
+          {
+            "tipo": "advertencia",
+            "texto": "**SDF no borra links de menú que dejaron de declararse.** Si aparecen entradas duplicadas en el menú, se eliminan a mano desde el subtab **Links** del centro correspondiente."
+          },
+          {
+            "tipo": "advertencia",
+            "texto": "Después del primer despliegue de esta versión en una cuenta que tenía la anterior, borrar a mano el residuo de **Estructura de archivos → Residuo en el File Cabinet**. Mientras siga ahí no se ejecuta, pero confunde al buscar."
+          }
+        ]
+      },
+      {
+        "titulo": "Restricciones técnicas",
+        "bloques": [
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "Restricción",
+              "Detalle"
+            ],
+            "filas": [
+              [
+                "**Una bodega por subsidiaria**",
+                "El CS toma `filter(...)[0]`. Una segunda Location marcada se ignora sin aviso"
+              ],
+              [
+                "**Solo interfaz de usuario**",
+                "El User Event es `USERINTERFACE`: no corre en importación CSV ni Web Services"
+              ],
+              [
+                "**Sin reverso**",
+                "Una devolución o una merma procesada no se puede revertir desde el módulo"
+              ],
+              [
+                "**Sin entrega parcial**",
+                "El traslado o el ajuste mueve exactamente lo registrado"
+              ],
+              [
+                "**El lote de la devolución puede cambiar**",
+                "Primero vuelve el lote del préstamo; si ya no alcanza en la bodega, el resto sale de otros lotes del artículo. Ya no se garantiza que vuelva exactamente el lote que salió"
+              ],
+              [
+                "**Guardado no transaccional**",
+                "Número, cabecera y líneas se crean por separado"
+              ],
+              [
+                "**Cuenta obligatoria en Merma y Préstamo A la Clínica**",
+                "Debe existir una configuración activa del tipo para la subsidiaria y quedar guardada en la cabecera"
+              ],
+              [
+                "**Entidad obligatoria solo en pantalla**",
+                "La pone el formulario; el record tiene `ismandatory F`. Un registro creado por otra vía puede quedar sin entidad"
+              ],
+              [
+                "**2 decimales solo en el cliente**",
+                "El redondeo es del Client Script. El handler no rechaza más decimales"
+              ],
+              [
+                "**Saldos con más de 2 decimales**",
+                "Por el truncado, de `7,566666` se mueven como máximo `7,56`; el resto queda en la ubicación"
+              ],
+              [
+                "**Anular no valida estado en el servidor**",
+                "`anularMovimiento` deja `Anulado` sin mirar el estado; el botón solo aparece en `Pendiente de Procesar`, pero la URL con `op=anular` anula cualquier solicitud y no revierte la transacción"
+              ]
+            ]
+          }
+        ]
+      },
+      {
+        "titulo": "Manejo de errores",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "Errores que lanza el módulo, todos con `notifyOff: true`:"
+          },
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "Error",
+              "Dónde"
+            ],
+            "filas": [
+              [
+                "`AS_ROL_NO_AUTORIZADO`",
+                "`AS_RegistroHandler.validarPermisoEscritura` y `AS_VistaHandler.validarEdicion`"
+              ],
+              [
+                "`AS_SENTIDO_INVALIDO`",
+                "`AS_RegistroHandler.resolverSentido`"
+              ],
+              [
+                "`AS_MOVIMIENTO_SIN_DETALLE`, `AS_DEVOLUCION_SIN_CANTIDAD`, `AS_CANTIDAD_INVALIDA`, `AS_LOTE_OBLIGATORIO`",
+                "`AS_RegistroHandler.validarDetalle`"
+              ],
+              [
+                "`AS_MOVIMIENTO_SIN_CORRELATIVO`",
+                "`AS_CorrelativoRecord.crearFilaCorrelativo`"
+              ],
+              [
+                "`AS_MOVIMIENTO_YA_PROCESADO`",
+                "`validarPendienteDeProcesar` de los tres handlers de proceso"
+              ],
+              [
+                "`AS_STOCK_INSUFICIENTE`",
+                "`validarStock` de los tres handlers de proceso"
+              ],
+              [
+                "`AS_DEVOLUCION_EXCEDE_PENDIENTE`",
+                "`AS_DevolucionHandler.validarNoExcedePendiente`"
+              ],
+              [
+                "`AS_MOVIMIENTO_NO_EDITABLE`",
+                "`AS_VistaHandler.validarEdicion`"
+              ]
+            ]
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Los handlers no loguean errores**: lanzan y el entry point registra. Un handler nuevo queda cubierto solo."
+          }
+        ]
+      },
+      {
+        "titulo": "Logs y diagnóstico",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "El flujo de movimientos usa tres títulos y la herramienta auxiliar usa uno adicional:"
+          },
+          {
+            "tipo": "tabla",
+            "columnas": [
+              "Título",
+              "Nivel",
+              "Dónde",
+              "Contenido"
+            ],
+            "filas": [
+              [
+                "`MOVIMIENTO REGISTRADO`",
+                "audit",
+                "`AS_RegistroHandler.guardarMovimiento`",
+                "id, tipo, origen, destino, artículos con cantidades"
+              ],
+              [
+                "`MOVIMIENTO PROCESADO`",
+                "audit",
+                "handlers de Préstamo, Devolución y Merma",
+                "id, tipo, artículos, transacción (número e id), usuario; en la devolución, cómo queda el préstamo"
+              ],
+              [
+                "`MOVIMIENTO ERROR`",
+                "error",
+                "los dos entry points del flujo (Suitelet y User Event)",
+                "id, operación, motivo"
+              ],
+              [
+                "`CONSULTA STOCK ERROR`",
+                "error",
+                "`AS_ConsultaStock_STLT_2.1.js`",
+                "ubicación y motivo"
+              ]
+            ]
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "Los deployments SDF están en `loglevel DEBUG`. Para Producción conviene evaluar `AUDIT` en los scripts operativos; con AUDIT el log queda en una línea por operación, que es el diseño buscado."
+          }
+        ],
+        "subsecciones": [
+          {
+            "titulo": "Troubleshooting",
+            "bloques": [
+              {
+                "tipo": "tabla",
+                "columnas": [
+                  "Síntoma",
+                  "Causa"
+                ],
+                "filas": [
+                  [
+                    "Un movimiento de Merma no tiene botón para procesar",
+                    "Debe estar en `Pendiente de Procesar` y el usuario debe tener un rol autorizado"
+                  ],
+                  [
+                    "Cuenta de Ajuste vacía",
+                    "No existen filas activas en `AS Cuenta Tipo Movimiento Solicitud` para la subsidiaria y el tipo (`Merma` o vacío para Merma, `Prestamo` para Préstamo A la Clínica)"
+                  ],
+                  [
+                    "Combo Ubicación Destino vacío en un préstamo",
+                    "La subsidiaria no tiene ninguna Location con el checkbox"
+                  ],
+                  [
+                    "`AS_STOCK_INSUFICIENTE` con stock a la vista",
+                    "El préstamo mira *disponible*; la devolución mira *en mano* en la bodega. Con lote, valida **por lote**; la devolución suma los otros lotes del artículo antes de rechazar"
+                  ],
+                  [
+                    "El traslado se guarda sin inventory detail",
+                    "El artículo no maneja lotes, o todos sus lotes están en estado excluido"
+                  ],
+                  [
+                    "Un movimiento no se puede abrir",
+                    "Cabecera sin líneas (guardado a medias). Ya cubierto: `obtenerStockPorArticulo` devuelve vacío en vez de armar un `IN ()` inválido"
+                  ],
+                  [
+                    "Columna Lote vacía en una devolución",
+                    "El lote se sella **al procesar**"
+                  ],
+                  [
+                    "Alerta que se repite sin fin en el cliente",
+                    "Escribir desde `fieldChanged` el mismo campo que lo disparó. Por eso el cero se corta en `saveRecord`"
+                  ],
+                  [
+                    "El título del PDF no aparece",
+                    "`font-weight` numérico en el FTL"
+                  ],
+                  [
+                    "Tres entradas en el menú en vez de una",
+                    "SDF no borra links que dejaron de declararse"
+                  ],
+                  [
+                    "La línea de una devolución muestra varios lotes",
+                    "El lote del préstamo no alcanzaba en la bodega y `obtenerFaltantesConLotes` completó con otros"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "titulo": "Dependencias",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "**Internas:** ninguna en tiempo de ejecución. El módulo no importa nada de `APIGlobales/`."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**De NetSuite:** `N/record`, `N/search`, `N/query`, `N/render`, `N/runtime`, `N/redirect`, `N/error`, `N/file`, `N/format`, `N/https`, `N/url`, `N/currentRecord`, `N/ui/serverWidget`, `N/ui/message`."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Del entorno:** los tipos de transacción nativos `inventorytransfer` e `inventoryadjustment`, y la funcionalidad de lotes."
+          }
+        ]
+      },
+      {
+        "titulo": "Riesgos de modificación",
+        "bloques": [
+          {
+            "tipo": "parrafo",
+            "texto": "**Renombrar un valor de `customlist_as_tipo_movimiento` o `customlist_as_estado_movimiento`** rompe el módulo entero: todas las comparaciones son por nombre."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Cambiar `ROLES_AUTORIZADOS`** sin verificar los ids en la cuenta destino falla abierto: si el id no corresponde al rol esperado, el usuario escribe igual y no queda rastro."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Tocar `custrecord_as_mov_det_linea_ref` o cuadrar por artículo** en vez de por línea rompe el descuento cuando el mismo artículo aparece en dos líneas de un préstamo."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Mover la carpeta del proyecto** rompe `CLIENT_SCRIPT` y las tres rutas de plantilla, que son absolutas."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Cambiar el checkbox de bodega a otra Location** no afecta préstamos ya procesados — la devolución usa el destino guardado en el préstamo — pero sí cambia el destino de los préstamos nuevos de esa subsidiaria."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Tocar el inventory detail del ajuste de salida**: si NetSuite ya asignó el detalle por su cuenta, `crearAjusteSalida` lo respeta; volver a asignarlo duplica la cantidad y el registro no guarda. La ubicación va en la línea y no en la cabecera, y la cantidad de cada lote va negativa. (Fuente: comentario en AS_AjusteRecord.js)"
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Cambiar `obtenerLotesPorArticulo`** cambia a la vez el combo Lote, la validación por lote, la asignación sin lote y el completado de la devolución: todos usan esa consulta y su orden."
+          },
+          {
+            "tipo": "parrafo",
+            "texto": "**Agregar un tipo de movimiento** exige su prefijo en `CORRELATIVO.PREFIJOS`; sin él, el guardado falla con `AS_MOVIMIENTO_SIN_CORRELATIVO`."
+          }
+        ]
+      },
+      {
+        "titulo": "Decisiones de implementación",
+        "bloques": [],
+        "subsecciones": [
+          {
+            "titulo": "Suitelet propio en vez del formulario nativo",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "El detalle es un child record y NetSuite no lo pinta junto a la cabecera en el formulario estándar. El User Event redirige `CREATE` y `EDIT` al Suitelet, que arma cabecera y detalle en una sola pantalla."
+              }
+            ]
+          },
+          {
+            "titulo": "Capas sin `services/`",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Entry → handler → form / data, con la lógica de negocio en el handler de cada proceso y `data/` dividido en `query/`, `search/` y un archivo por record que se crea. Es el método del repositorio y el 018 es su referencia de módulo completo. (Fuente: CLAUDE.md)"
+              }
+            ]
+          },
+          {
+            "titulo": "Un botón Procesar por tipo",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "El botón no elige si se genera traslado o ajuste: el handler lee el check del registro y decide. Así no se puede pedir por URL una operación que no corresponde al sentido guardado. (Fuente: comentario en AS_MovimientoInventario_CS_2.1.js)"
+              }
+            ]
+          },
+          {
+            "titulo": "El control de rol por lista blanca en el código",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "`ROLES_AUTORIZADOS = [3, 1371]` por id interno, verificado con `runtime.getCurrentUser().role`. El `runasrole = ADMINISTRATOR` de los deployments no interfiere: solo cambia los permisos de ejecución, no el rol reportado. Se comprobó contra el precedente de Solicitud de Consumo. (Fuente: documentación previa del proyecto)"
+              }
+            ]
+          },
+          {
+            "titulo": "El pendiente se refleja, no se administra",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "No hay un proceso que abra o cierre el pendiente: sale de restar lo devuelto a lo prestado, línea por línea, y su contraparte física es el saldo de la bodega de préstamos. Por eso *Devuelto Total* se calcula con `every(pendiente === 0)` y no con la suma, que se compensaría entre líneas."
+              }
+            ]
+          },
+          {
+            "titulo": "Devolución con otros lotes del artículo",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Desde la versión 0.3 la devolución ya no se rechaza si el lote del préstamo no tiene en la bodega todo lo que se devuelve: `obtenerFaltantesConLotes` toma primero ese lote y completa con otros del mismo artículo, y solo falla si entre todos no alcanza. Reemplaza a `validarLotesEnBodega`, que exigía el lote exacto. Motivo original no documentado."
+              }
+            ]
+          },
+          {
+            "titulo": "Los joins de listas van por nombre, no por id",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "`obtenerPrestamosPendientes` y `obtenerIdEstado` traducen nombre → id en tiempo de ejecución. Así los ids internos de las customlists pueden diferir entre QA y Producción sin romper nada. El precio es que renombrar un valor sí rompe."
+              }
+            ]
+          },
+          {
+            "titulo": "Número por tipo en el `name`",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "El custom record no numera solo por tipo, así que `AS_CorrelativoRecord` reserva el número y la cabecera lo guarda en su `name`. (Fuente: comentario en AS_SolicitudRecord.js) Las solicitudes registradas antes conservan su `MOV#`."
+              }
+            ]
+          },
+          {
+            "titulo": "Motor de PDF propio",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "No usa `APIGlobales/ImpresionPDF` para no compartir archivos con 2WIN_SOLICITUD_CONSUMO. Mismo contrato de payload que AS_NSP_008 (alias `jsonString`, `&` escapado), pero copiado."
+              },
+              {
+                "tipo": "advertencia",
+                "texto": "BFO no resuelve fuentes con `font-weight` numérico y **descarta el texto sin avisar**. Usar `bold` y `<span style=\"font-size: Npt;\">` inline. `linklabel` de un link de menú admite **máximo 30 caracteres**."
+              }
+            ]
+          },
+          {
+            "titulo": "Cantidades decimales",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "Los campos de cantidad del detalle pasaron de `INTEGER` a `FLOAT`, igual que las columnas Disponible, Cantidad y Cantidad a Devolver del Suitelet."
+              },
+              {
+                "tipo": "lista",
+                "items": [
+                  "**`format.parse` en vez de `Number()` al leer el request.** Las subsidiarias están en `es_ES`: el campo FLOAT del Suitelet envía `'0,5'` y `Number('0,5')` da `NaN`. (Fuente: decisión registrada al implementar, 2026-09-17)",
+                  "**2 decimales en la entrada por decisión funcional.** Primero se probó rechazar el valor con `validateField`; se reemplazó por redondear al escribir. (Fuente: decisión registrada al implementar, 2026-09-17)",
+                  "**El tope trunca, no redondea**, porque redondear `7,566666` a `7,57` pasaría el stock. El `Math.round` interno absorbe el error binario: `0,29 * 100` da `28,999…` y un `floor` directo lo bajaría a `0,28`.",
+                  "**La precarga se trunca en el servidor** porque el redondeo del Client Script solo corre cuando el usuario edita el campo; el valor precargado no pasaba por ahí.",
+                  "**8 decimales internos, no 5.** Con 5, `0,3 - 0,1 - 0,2` ya quedaba en cero, pero los saldos de lote llegan con 6 decimales por conversión de unidad y el reparto perdía el último dígito: la suma del inventory detail no cuadraba con la línea. Sin ningún redondeo, el residuo binario dejaba el préstamo sin llegar nunca a `Devuelto Total`."
+                ]
+              }
+            ]
+          },
+          {
+            "titulo": "Entidad obligatoria y filtro en Devolución",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "La bodega de préstamos es una sola por subsidiaria, así que su saldo dice cuánto hay afuera pero no quién lo tiene. Por eso la entidad es obligatoria al prestar y es el filtro para encontrar el préstamo al devolver. (Fuente: decisión funcional, 2026-09-18)"
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "El filtro se arma desde los préstamos pendientes y no desde la lista blanca, para no ofrecer una entidad sin nada que devolver. Es opcional, para que los préstamos anteriores a la obligatoriedad, que no tienen entidad, sigan siendo alcanzables."
+              }
+            ]
+          },
+          {
+            "titulo": "Estados de inventario excluidos",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "`Bloqueado`, `En Inspección`, `Damaged` no se asignan al traslado. Mismo criterio que `2win_dao_assign_inv_details.js`."
+              }
+            ]
+          },
+          {
+            "titulo": "Maestro de cuentas por tipo de movimiento",
+            "bloques": [
+              {
+                "tipo": "parrafo",
+                "texto": "`customrecord_as_cuenta_merma_subsidiaria` (**AS Cuenta Tipo Movimiento Solicitud**) evita exponer todas las cuentas contables en el formulario. Cada fila relaciona `custrecord_as_cuenta_merma_subsidiaria` con `custrecord_as_cuenta_merma_cuenta` y, con `custrecord_as_cuenta_merma_tipo`, dice si la cuenta es para la Merma o para el Préstamo A la Clínica. El estado activo/inactivo es el campo estándar `isinactive`; `obtenerCuentasAjuste()` solo devuelve filas con `isinactive = F`. El scriptid conserva `merma` del primer uso."
+              },
+              {
+                "tipo": "parrafo",
+                "texto": "No se hardcodea la cuenta `5113001` ni ninguna subsidiaria. Puerto Montt + `5113001 Costo medicamentos e insumos` es un ejemplo de datos de configuración, no una regla del código."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "titulo": "Pendientes o deuda técnica",
+        "bloques": [
+          {
+            "tipo": "lista",
+            "items": [
+              "**Reverso de devolución procesada** — no existe.",
+              "**FEFO** — el orden de lote cuando el usuario no elige uno, y al completar una devolución, es `ORDER BY ib.lastmodifieddate ASC`, que no es ni antigüedad ni vencimiento.",
+              "**Guardado no transaccional** — cabecera huérfana y número consumido si falla una línea.",
+              "**Anular sin validar estado en el servidor** — `op=anular` por URL deja `Anulado` una solicitud ya procesada sin revertir su transacción.",
+              "**Lote obligatorio en todas las líneas del Préstamo A la Clínica** — la columna es `isMandatory` para cualquier artículo, y `crearAjusteEntrada` escribe inventory detail siempre que la línea tenga lote. No se verificó qué hace NetSuite con un artículo sin control de lotes en ese caso.",
+              "**`linklabel` de 35 caracteres** — `Entidades Asociadas por Subsidiaria` supera el máximo de 30 registrado en Decisiones (Motor de PDF propio). No se verificó si la cuenta lo aceptó al desplegar.",
+              "**Residuo en el File Cabinet** — las carpetas `handlers/`, `repositories/`, `ui/`, `lib/` y las plantillas `AS.FTL.*` de las versiones anteriores, por borrar a mano en cada cuenta.",
+              "**Textos desactualizados** — el aviso de solo consulta indica «Movimientos de Inventario > Buscar» y el menú dice `Solicitudes de Inventario`; el comentario de las tres plantillas FTL nombra `AS_MovimientoInventarioImpresionHandler`, que ya no existe; los comentarios de `AS_MovimientoInventarioQuery` describen el orden de lotes como «del mas antiguo al mas nuevo».",
+              "**QF CASCH (1566)** — fuera de `ROLES_AUTORIZADOS`. Falta validar en NetSuite si el módulo se usa en Chillán.",
+              "**`selectrecordtype -2`** en la entidad — inferido, falta validar en NetSuite.",
+              "**`loglevel DEBUG`** en los deployments — evaluar AUDIT para los scripts operativos en Producción.",
+              "**Préstamos entre servicios internos** — la entidad es un cliente de NetSuite; un préstamo a otro servicio de la misma clínica no tiene cómo registrarse con el campo obligatorio.",
+              "**Validación de 2 decimales en el servidor** — solo existe en el Client Script.",
+              "**Datos de prueba en QA con más de 2 decimales** — movimientos grabados antes del límite (por ejemplo MOV#000004, pendiente `0,43333`) no pueden llegar a `Devuelto Total` con el truncado. Conviene anularlos.",
+              "**Duplicidad en el maestro de cuentas** — el Custom Record no impone unicidad sobre subsidiaria + cuenta + tipo; filas repetidas se ocultan en el selector por el `SELECT DISTINCT`, pero conviene evitar duplicarlas para mantener el maestro limpio."
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

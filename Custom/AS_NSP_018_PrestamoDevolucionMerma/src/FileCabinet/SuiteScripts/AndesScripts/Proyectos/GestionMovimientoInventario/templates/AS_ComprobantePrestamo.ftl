@@ -168,7 +168,7 @@
 </tr>
 <#if doc.cabecera.traslado?has_content>
 <tr>
-<td class="label">Traslado generado</td>
+<td class="label"><#if doc.cabecera.sentido == 'A la Clinica'>Ajuste generado<#else>Traslado generado</#if></td>
 <td class="value">${doc.cabecera.traslado}</td>
 </tr>
 </#if>

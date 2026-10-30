@@ -148,7 +148,7 @@
 </tr>
 <#if doc.cabecera.entidad?has_content>
 <tr>
-<td class="label">Entidad receptora</td>
+<td class="label"><#if doc.cabecera.sentido == 'A la Clinica'>Entidad emisora del prestamo<#else>Entidad receptora</#if></td>
 <td class="value">${doc.cabecera.entidad}</td>
 </tr>
 </#if>
@@ -156,10 +156,12 @@
 <td class="label">Ubicacion origen</td>
 <td class="value">${doc.cabecera.origen}</td>
 </tr>
+<#if doc.cabecera.destino?has_content>
 <tr>
 <td class="label">Ubicacion destino</td>
 <td class="value">${doc.cabecera.destino}</td>
 </tr>
+</#if>
 <tr>
 <td class="label">Responsable de la devolucion</td>
 <td class="value">${doc.cabecera.responsable}</td>
@@ -170,7 +172,7 @@
 </tr>
 <#if doc.cabecera.traslado?has_content>
 <tr>
-<td class="label">Traslado generado</td>
+<td class="label"><#if doc.cabecera.sentido == 'A la Clinica'>Ajuste generado<#else>Traslado generado</#if></td>
 <td class="value">${doc.cabecera.traslado}</td>
 </tr>
 </#if>

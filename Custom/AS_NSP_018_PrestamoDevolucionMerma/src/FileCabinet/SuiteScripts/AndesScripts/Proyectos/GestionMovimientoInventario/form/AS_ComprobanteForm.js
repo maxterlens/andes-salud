@@ -37,6 +37,9 @@ define(['N/render', 'N/file', '../constants/AS_MovimientoInventarioConstants'],
     }
 
     function armarDocumento(movimiento, lineas, prestadaPorLinea) {
+        const campoEntidad = movimiento.getValue({ fieldId: 'custrecord_as_mov_a_la_clinica' })
+                           && movimiento.getValue({ fieldId: 'custrecord_as_mov_entidad_emisora' })
+                           ? 'custrecord_as_mov_entidad_emisora' : 'custrecord_as_mov_entidad_receptora';
         const totales = lineas.reduce((acumulado, linea) => ({
             cantidad : acumulado.cantidad + linea.cantidad,
             devuelta : acumulado.devuelta + linea.devuelta,
@@ -50,7 +53,7 @@ define(['N/render', 'N/file', '../constants/AS_MovimientoInventarioConstants'],
                 fecha      : movimiento.getText({ fieldId: 'custrecord_as_mov_fecha' }),
                 subsidiaria: movimiento.getText({ fieldId: 'custrecord_as_mov_subsidiaria' }),
                 servicio   : movimiento.getText({ fieldId: 'custrecord_as_mov_servicio' }),
-                entidad    : movimiento.getText({ fieldId: 'custrecord_as_mov_entidad_receptora' }) || '',
+                entidad    : movimiento.getText({ fieldId: campoEntidad }) || '',
                 origen     : movimiento.getText({ fieldId: 'custrecord_as_mov_ubicacion' }),
                 destino    : movimiento.getText({ fieldId: 'custrecord_as_mov_ubicacion_dest' }),
                 responsable: movimiento.getText({ fieldId: 'custrecord_as_mov_usuario_resp' }),

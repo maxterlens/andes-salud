@@ -352,11 +352,13 @@ define(['N/ui/serverWidget', 'N/ui/message', '../constants/AS_MovimientoInventar
     function aplicarModoEdicionSalida(form, datos) {
         const movimiento = datos.movimiento;
         const campos = datos.campos;
-        const entidadGuardada = movimiento.getValue({ fieldId: 'custrecord_as_mov_entidad_receptora' });
+        const campoEntidadGuardada = datos.esALaClinica && movimiento.getValue({ fieldId: 'custrecord_as_mov_entidad_emisora' })
+                                   ? 'custrecord_as_mov_entidad_emisora' : 'custrecord_as_mov_entidad_receptora';
+        const entidadGuardada = movimiento.getValue({ fieldId: campoEntidadGuardada });
         if (entidadGuardada) {
             campos.campoEntidad.addSelectOption({
                 value: entidadGuardada,
-                text : movimiento.getText({ fieldId: 'custrecord_as_mov_entidad_receptora' }),
+                text : movimiento.getText({ fieldId: campoEntidadGuardada }),
             });
             campos.campoEntidad.defaultValue = entidadGuardada;
         }

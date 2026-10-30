@@ -35,7 +35,8 @@ define(['N/record', '../../constants/AS_MovimientoInventarioConstants', '../sear
         cabecera.setValue({ fieldId: 'custrecord_as_mov_motivo',            value: datos.motivo });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_cuenta_ajuste',     value: datos.cuentaAjuste });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_prestamo_ref',      value: datos.prestamoRelacionado });
-        cabecera.setValue({ fieldId: 'custrecord_as_mov_entidad_receptora', value: datos.entidadReceptora });
+        if (datos.entidadReceptora) cabecera.setValue({ fieldId: 'custrecord_as_mov_entidad_receptora', value: datos.entidadReceptora });
+        if (datos.entidadEmisora) cabecera.setValue({ fieldId: 'custrecord_as_mov_entidad_emisora', value: datos.entidadEmisora });
         cabecera.setValue({ fieldId: 'custrecord_as_mov_comentarios',       value: datos.comentarios });
         cabecera.setText({ fieldId: 'custrecord_as_mov_fecha', text: datos.fecha });
 
