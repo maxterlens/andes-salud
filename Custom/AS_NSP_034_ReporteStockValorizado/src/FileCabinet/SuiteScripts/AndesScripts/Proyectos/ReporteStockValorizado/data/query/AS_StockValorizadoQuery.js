@@ -11,12 +11,16 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.1.0
+ * @version 1.2.0
+ *
+ * CHANGELOG v1.2.0:
+ * - [FIX]  El valor suma todo lo que pasa por la cuenta de activo del articulo: los
+ *          ajustes de costo de ventas vienen con isinventoryaffecting = F y se
+ *          perdian. La cantidad sigue saliendo solo de las lineas que mueven stock.
+ * - [FIX]  Se incluyen los articulos inactivos, como en el informe nativo.
  *
  * CHANGELOG v1.1.0:
  * - [FEAT] Filtro opcional por ubicacion y obtenerUbicaciones.
- * - [FIX]  Sin filtro de cuentas fijas: tl.isinventoryaffecting ya deja
- *          solo el lado de inventario.
  *
  */
 define(['N/query', '../../constants/AS_StockValorizadoConstants'],
@@ -27,8 +31,11 @@ define(['N/query', '../../constants/AS_StockValorizadoConstants'],
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Los criterios del dataset "prueba auditoria stock" (custdataset179) sin su filtro de cuentas;
-     * con ese filtro cuadro contra el informe nativo al 30/09/2026: 1.202.166.305 de valor.
+     * El valor sale de la cuenta de activo de cada articulo (i.assetaccount) y no
+     * de isinventoryaffecting: al recibir, NetSuite corrige el costo de lo despachado sin stock con una linea
+     * en Fármacos que no mueve cantidad (ej. RA-7164, Ajuste de costo de ventas).
+     * Con esas lineas la suma de QA da el valor del informe nativo al 30/10/2026:
+     * 1.187.690.084.
      *
      * La suma va en la subconsulta por ids: BUILTIN.DF no se puede usar junto
      * a un GROUP BY ("Busqueda invalida o no compatible"), asi que los nombres se
@@ -55,7 +62,7 @@ define(['N/query', '../../constants/AS_StockValorizadoConstants'],
              + ' FROM ('
              + '   SELECT tl.item AS articulo,'
              + '   tl.location AS ubicacion,'
-             + '   SUM(tl.quantity) AS cantidad,'
+             + "   SUM(CASE WHEN tl.isinventoryaffecting = 'T' THEN tl.quantity ELSE 0 END) AS cantidad,"
              + '   SUM(tal.amount) AS importe,'
              + "   MAX(CASE WHEN t.type IN ('ItemShip', 'CustInvc', 'InvAdjst') AND tl.quantity < 0 THEN t.trandate END) AS consumo,"
              + "   MAX(CASE WHEN t.type = 'ItemRcpt' AND t.entity IS NOT NULL THEN t.trandate"
@@ -68,11 +75,10 @@ define(['N/query', '../../constants/AS_StockValorizadoConstants'],
              + "   AND t.trandate <= TO_DATE(?, 'DD/MM/YYYY')"
              + filtroUbicacion
              + '   AND tal.accountingbook = ' + CONSTANTES.LIBRO_CONTABLE
+             + '   AND tal.account = i.assetaccount'
              + "   AND tal.posting = 'T'"
-             + "   AND tl.isinventoryaffecting = 'T'"
-             + "   AND i.isinactive = 'F'"
              + '   GROUP BY tl.item, tl.location'
-             + '   HAVING SUM(tl.quantity) <> 0 OR SUM(tal.amount) <> 0'
+             + "   HAVING SUM(CASE WHEN tl.isinventoryaffecting = 'T' THEN tl.quantity ELSE 0 END) <> 0 OR SUM(tal.amount) <> 0"
              + ' ) stock'
              + ' JOIN item i ON i.id = stock.articulo'
              + ' ORDER BY i.itemid, BUILTIN.DF(stock.ubicacion)';
