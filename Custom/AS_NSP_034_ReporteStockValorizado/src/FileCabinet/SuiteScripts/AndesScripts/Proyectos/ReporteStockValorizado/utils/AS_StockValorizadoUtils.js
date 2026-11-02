@@ -13,10 +13,6 @@ define([], () => {
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * El CSV que escribe NetSuite pone entre comillas los valores con coma (un
-     * articulo "JERINGA 3ML, 21G") y duplica las comillas internas.
-     */
     function separarLineaCsv(linea) {
         const columnas    = [];
         let actual        = '';

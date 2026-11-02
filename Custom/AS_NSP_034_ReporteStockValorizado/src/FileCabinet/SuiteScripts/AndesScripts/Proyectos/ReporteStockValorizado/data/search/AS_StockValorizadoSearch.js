@@ -10,12 +10,6 @@
  * @author Andes Salud
  * @version 1.2.0
  *
- * CHANGELOG v1.2.0:
- * - [FEAT] existeReporteEnProceso.
- *
- * CHANGELOG v1.1.0:
- * - [FEAT] El historial trae las ubicaciones de cada reporte.
- *
  */
 define(['N/search', '../../constants/AS_StockValorizadoConstants'],
     (search, CONSTANTES) => {
@@ -56,10 +50,6 @@ define(['N/search', '../../constants/AS_StockValorizadoConstants'],
         }));
     }
 
-    /**
-     * Solo cuenta lo pedido hace menos de MINUTOS_EN_PROCESO: un reporte que
-     * NetSuite corto sin avisar se queda En proceso y no puede bloquear para siempre.
-     */
     function existeReporteEnProceso() {
         const resultados = search.create({
             type   : CONSTANTES.LOG.TIPO,

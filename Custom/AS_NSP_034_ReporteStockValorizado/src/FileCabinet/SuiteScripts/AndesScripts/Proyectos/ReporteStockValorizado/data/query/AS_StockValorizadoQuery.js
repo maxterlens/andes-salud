@@ -13,15 +13,6 @@
  * @author Andes Salud
  * @version 1.2.0
  *
- * CHANGELOG v1.2.0:
- * - [FIX]  El valor suma todo lo que pasa por la cuenta de activo del articulo: los
- *          ajustes de costo de ventas vienen con isinventoryaffecting = F y se
- *          perdian. La cantidad sigue saliendo solo de las lineas que mueven stock.
- * - [FIX]  Se incluyen los articulos inactivos, como en el informe nativo.
- *
- * CHANGELOG v1.1.0:
- * - [FEAT] Filtro opcional por ubicacion y obtenerUbicaciones.
- *
  */
 define(['N/query', '../../constants/AS_StockValorizadoConstants'],
     (query, CONSTANTES) => {
@@ -30,23 +21,6 @@ define(['N/query', '../../constants/AS_StockValorizadoConstants'],
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * El valor sale de la cuenta de activo de cada articulo (i.assetaccount) y no
-     * de isinventoryaffecting: al recibir, NetSuite corrige el costo de lo despachado sin stock con una linea
-     * en Fármacos que no mueve cantidad (ej. RA-7164, Ajuste de costo de ventas).
-     * Con esas lineas la suma de QA da el valor del informe nativo al 30/10/2026:
-     * 1.187.690.084.
-     *
-     * La suma va en la subconsulta por ids: BUILTIN.DF no se puede usar junto
-     * a un GROUP BY ("Busqueda invalida o no compatible"), asi que los nombres se
-     * resuelven afuera, ya agrupado.
-     *
-     * Quedan fuera las combinaciones con cantidad y valor en cero (ubicaciones que
-     * se vaciaron): con ellas el archivo pasa de 10 mil a 24 mil filas sin saldo.
-     *
-     * Parametros: [subsidiaria, fecha de corte DD/MM/AAAA, ...ubicaciones]. Sin
-     * ubicaciones elegidas no se filtra: trae todas las de la subsidiaria.
-     */
     function armarConsultaStock(ubicaciones) {
         const filtroUbicacion = ubicaciones.length ? ' AND tl.location IN (' + ubicaciones.map(() => '?').join(', ') + ')' : '';
 

@@ -8,8 +8,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.0.0
- *
+ * @version 1.1.0
  */
 define(['../data/record/AS_ArchivoRecord', '../data/record/AS_StockValorizadoLogRecord'],
     (archivoRecord, stockValorizadoLogRecord) => {
@@ -18,10 +17,6 @@ define(['../data/record/AS_ArchivoRecord', '../data/record/AS_StockValorizadoLog
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Si la consulta fallo, NetSuite igual lanza este script con el CSV vacio:
-     * sin filas no hay reporte que entregar.
-     */
     function generarExcel(logId, csvId) {
         try {
             const csv = archivoRecord.leerCsv(csvId);
@@ -29,7 +24,7 @@ define(['../data/record/AS_ArchivoRecord', '../data/record/AS_StockValorizadoLog
                 stockValorizadoLogRecord.marcarError(logId, 'La consulta no devolvio filas');
                 return;
             }
-            const urlExcel = archivoRecord.crearExcel(csv.nombre.replace(/\.csv$/i, '.xls'), csv.carpeta, csv.filas);
+            const urlExcel = archivoRecord.crearExcel(csv.nombre.replace(/\.csv$/i, '.xls'), csv.carpeta, csv.encabezados, csv.filas);
             stockValorizadoLogRecord.marcarCompletado(logId, urlExcel, csv.url);
 
             log.audit({

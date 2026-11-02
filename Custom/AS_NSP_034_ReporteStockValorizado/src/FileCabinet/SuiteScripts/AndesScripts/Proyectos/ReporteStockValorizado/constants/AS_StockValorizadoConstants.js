@@ -5,14 +5,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.2.0
- *
- * CHANGELOG v1.2.0:
- * - [FEAT] Aviso y limite de tiempo para el reporte en proceso.
- *
- * CHANGELOG v1.1.0:
- * - [FEAT] Campo Ubicacion en el formulario, en el historial y en el log.
- * - [FIX]  Se quitan SUBSIDIARIA_DEFECTO y CUENTAS_INVENTARIO: nada fijo.
+ * @version 1.3.0
  *
  */
 define([], () => {
@@ -93,10 +86,18 @@ define([], () => {
     const LIBRO_CONTABLE = 1;
 
     const EXCEL = {
-        HOJA               : 'Stock valorizado',
-        ENCABEZADOS        : ['Código de existencia', 'Descripción', 'Ubicación', 'Familia WMS', 'Cantidad',
-                              'Valorización individual', 'Valorización total', 'Fecha de último consumo', 'Fecha de compra'],
-        COLUMNAS_NUMERICAS : [4, 5, 6],
+        HOJA    : 'Stock valorizado',
+        COLUMNAS: [
+            { campo: 'codigo_upc',              titulo: 'Código de existencia',    numerica: false },
+            { campo: 'articulo',                titulo: 'Descripción',             numerica: false },
+            { campo: 'ubicacion',               titulo: 'Ubicación',               numerica: false },
+            { campo: 'familia_wms',             titulo: 'Familia WMS',             numerica: false },
+            { campo: 'cantidad',                titulo: 'Cantidad',                numerica: true },
+            { campo: 'valorizacion_individual', titulo: 'Valorización individual', numerica: true },
+            { campo: 'valorizacion_total',      titulo: 'Valorización total',      numerica: true },
+            { campo: 'fecha_ultimo_consumo',    titulo: 'Fecha de último consumo', numerica: false },
+            { campo: 'fecha_compra',            titulo: 'Fecha de compra',         numerica: false },
+        ],
     };
 
     return {

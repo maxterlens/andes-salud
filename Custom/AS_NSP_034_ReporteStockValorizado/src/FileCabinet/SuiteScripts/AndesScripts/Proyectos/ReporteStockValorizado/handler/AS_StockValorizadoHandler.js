@@ -17,15 +17,6 @@
  * @author Andes Salud
  * @version 1.3.0
  *
- * CHANGELOG v1.3.0:
- * - [FEAT] No lanza un reporte mientras otro se esta generando.
- *
- * CHANGELOG v1.2.0:
- * - [FIX]  Ubicacion llega como un solo valor, ya no como seleccion multiple.
- *
- * CHANGELOG v1.1.0:
- * - [FEAT] Lee las ubicaciones del formulario y filtra el reporte por ellas.
- *
  */
 define(['N/task', 'N/redirect', 'N/runtime', 'N/format', '../form/AS_StockValorizadoForm',
         '../data/query/AS_StockValorizadoQuery', '../data/search/AS_StockValorizadoSearch',
@@ -89,10 +80,6 @@ define(['N/task', 'N/redirect', 'N/runtime', 'N/format', '../form/AS_StockValori
         };
     }
 
-    /**
-     * El Scheduled Script va como dependencia de la consulta: NetSuite lo lanza
-     * cuando el CSV ya esta escrito, con el log y el CSV que tiene que completar.
-     */
     function lanzarConsulta(subsidiaria, ubicaciones, fechaTexto, logId, csvId) {
         const tareaExcel = task.create({ taskType: task.TaskType.SCHEDULED_SCRIPT });
         tareaExcel.scriptId     = CONSTANTES.SCRIPTS.GENERACION.ID;

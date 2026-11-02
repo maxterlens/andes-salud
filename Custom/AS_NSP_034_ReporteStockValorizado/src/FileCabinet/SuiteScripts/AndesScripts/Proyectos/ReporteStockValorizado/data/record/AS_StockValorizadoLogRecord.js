@@ -11,9 +11,6 @@
  * @author Andes Salud
  * @version 1.1.0
  *
- * CHANGELOG v1.1.0:
- * - [FEAT] El log guarda las ubicaciones del reporte.
- *
  */
 define(['N/record', '../../constants/AS_StockValorizadoConstants'],
     (record, CONSTANTES) => {

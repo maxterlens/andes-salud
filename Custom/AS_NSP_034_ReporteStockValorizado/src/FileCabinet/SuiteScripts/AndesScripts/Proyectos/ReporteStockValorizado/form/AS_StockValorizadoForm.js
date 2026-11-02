@@ -9,15 +9,6 @@
  * @author Andes Salud
  * @version 1.3.0
  *
- * CHANGELOG v1.3.0:
- * - [FEAT] Aviso cuando ya hay un reporte en proceso.
- *
- * CHANGELOG v1.2.0:
- * - [FIX]  Ubicacion pasa de lista multiple a lista desplegable.
- *
- * CHANGELOG v1.1.0:
- * - [FEAT] Campo Ubicacion y columna en el historial.
- * - [FIX]  La subsidiaria ya no viene fija en Puerto Montt.
  *
  */
 define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_StockValorizadoConstants'],
@@ -48,10 +39,6 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_StockV
     // Secundarias
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Ubicacion nace sin opciones: las pone el client script segun la subsidiaria,
-     * sacandolas del JSON oculto.
-     */
     function agregarFiltros(form, ubicaciones) {
         const grupo = CONSTANTES.GRUPOS.FILTROS;
 
@@ -88,10 +75,6 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_StockV
         campoFechaCorte.defaultValue = format.format({ value: new Date(), type: format.Type.DATE });
     }
 
-    /**
-     * NetSuite no acepta un valor vacio en setSublistValue: los enlaces y el error
-     * se escriben solo si el reporte los tiene.
-     */
     function agregarHistorial(form, historial) {
         const columnas = CONSTANTES.SUBLISTA.COLUMNAS;
 
