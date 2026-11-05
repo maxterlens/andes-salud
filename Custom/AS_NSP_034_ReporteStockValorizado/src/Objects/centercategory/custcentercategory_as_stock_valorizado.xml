@@ -1,0 +1,13 @@
+<centercategory scriptid="custcentercategory_as_stock_valorizado">
+  <center>BASIC</center>
+  <centertab>BASICCENTERREPORTS</centertab>
+  <label>Informes Andes Salud</label>
+  <links>
+    <link>
+      <linkobject>[scriptid=customscript_as_stock_valorizado_stlt.customdeploy_as_stock_valorizado_stlt]</linkobject>
+      <linktasktype>SCRIPT</linktasktype>
+      <linklabel>Informe de existencias</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

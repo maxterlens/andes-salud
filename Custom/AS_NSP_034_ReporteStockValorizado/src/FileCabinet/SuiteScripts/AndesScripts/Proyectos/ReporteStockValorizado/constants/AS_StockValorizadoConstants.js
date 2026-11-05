@@ -5,13 +5,14 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.3.0
+ * @version 1.5.0
+ *
  *
  */
 define([], () => {
 
     const FORMULARIO = {
-        TITULO          : 'Reporte de Stock Valorizado',
+        TITULO          : 'Informe de existencias',
         CLIENT_SCRIPT   : '/SuiteScripts/AndesScripts/Proyectos/ReporteStockValorizado/AS_StockValorizado_CS_2.1.js',
         BOTON_GENERAR   : 'Generar reporte',
         UBICACION_TODAS : 'Todas',
@@ -85,6 +86,8 @@ define([], () => {
 
     const LIBRO_CONTABLE = 1;
 
+    const UBICACION_EXCLUIDA = 'OLD';
+
     const EXCEL = {
         HOJA    : 'Stock valorizado',
         COLUMNAS: [
@@ -110,6 +113,7 @@ define([], () => {
         PARAMETROS         : PARAMETROS,
         LOG                : LOG,
         LIBRO_CONTABLE     : LIBRO_CONTABLE,
+        UBICACION_EXCLUIDA : UBICACION_EXCLUIDA,
         EXCEL              : EXCEL,
     };
 });

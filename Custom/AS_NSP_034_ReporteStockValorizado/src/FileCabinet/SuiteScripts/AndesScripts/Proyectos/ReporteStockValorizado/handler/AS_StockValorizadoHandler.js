@@ -15,7 +15,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.3.0
+ * @version 1.4.0
  *
  */
 define(['N/task', 'N/redirect', 'N/runtime', 'N/format', '../form/AS_StockValorizadoForm',
@@ -88,7 +88,7 @@ define(['N/task', 'N/redirect', 'N/runtime', 'N/format', '../form/AS_StockValori
 
         const tareaConsulta = task.create({ taskType: task.TaskType.SUITE_QL });
         tareaConsulta.query  = stockValorizadoQuery.armarConsultaStock(ubicaciones);
-        tareaConsulta.params = [Number(subsidiaria), fechaTexto].concat(ubicaciones.map(Number));
+        tareaConsulta.params = [Number(subsidiaria), fechaTexto].concat(ubicaciones.map(Number), [Number(subsidiaria), fechaTexto]);
         tareaConsulta.fileId = csvId;
         tareaConsulta.addInboundDependency(tareaExcel);
         tareaConsulta.submit();
