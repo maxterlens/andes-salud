@@ -12,10 +12,14 @@
  *              Articulos
  *                - obtenerArticulosPorId: los articulos activos cuyo id
  *                  interno esta en la lista.
+ *              Recuento
+ *                - obtenerCantidadesRecuento: por articulo, su nombre, la
+ *                  cantidad del recuento, la de instantanea, la ajustada y la
+ *                  tarifa.
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.4.0
+ * @version 1.5.0
  *
  */
 define(['N/query'], (query) => {
@@ -80,10 +84,34 @@ define(['N/query'], (query) => {
         return articulos;
     }
 
+    function obtenerCantidadesRecuento(recuentoId) {
+        const filas = query.runSuiteQL({
+            query : 'SELECT BUILTIN.DF(tl.item) AS nombre, tl.quantity, tl.rate'
+                  + ' FROM transactionline tl'
+                  + " WHERE tl.transaction = ? AND tl.mainline = 'F' AND tl.item IS NOT NULL"
+                  + ' ORDER BY tl.linesequencenumber',
+            params: [recuentoId],
+        }).asMappedResults();
+        const cantidades = [];
+
+        for (let fila = 0; fila < filas.length; fila += 3) {
+            cantidades.push({
+                nombre     : filas[fila].nombre,
+                recuento   : filas[fila].quantity,
+                instantanea: filas[fila + 1].quantity,
+                ajustada   : filas[fila + 2].quantity,
+                tarifa     : filas[fila].rate,
+            });
+        }
+
+        return cantidades;
+    }
+
     return {
-        obtenerCuentasRecuento: obtenerCuentasRecuento,
-        obtenerUbicaciones    : obtenerUbicaciones,
-        obtenerUbicacion      : obtenerUbicacion,
-        obtenerArticulosPorId : obtenerArticulosPorId,
+        obtenerCuentasRecuento   : obtenerCuentasRecuento,
+        obtenerUbicaciones       : obtenerUbicaciones,
+        obtenerUbicacion         : obtenerUbicacion,
+        obtenerArticulosPorId    : obtenerArticulosPorId,
+        obtenerCantidadesRecuento: obtenerCantidadesRecuento,
     };
 });

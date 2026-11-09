@@ -5,7 +5,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.8.0
+ * @version 1.9.0
  *
  */
 define([], () => {
@@ -53,9 +53,16 @@ define([], () => {
         TIPO                       : 'inventorycount',
         CAMPO_CARGA                : 'custbody_as_rec_inv_carga',
         ACCION_COMENZAR            : 'startcount',
+        ESTADO_INICIADO            : 'B',
         ESTADO_PENDIENTE_APROBACION: 'C',
         BOTON_APROBAR              : 'approve',
         BOTON_RECHAZAR             : 'reject',
+    };
+
+    const IMPORTES = {
+        FICHA      : 'custpage_as_rec_inv_importes_ficha',
+        FICHA_LABEL: 'Importes del recuento',
+        CAMPO      : 'custpage_as_rec_inv_importes',
     };
 
     const ROLES_AUTORIZADOS = [3, 1455];
@@ -76,6 +83,7 @@ define([], () => {
         BOTONES          : BOTONES,
         OPERACIONES      : OPERACIONES,
         RECUENTO         : RECUENTO,
+        IMPORTES         : IMPORTES,
         ROLES_AUTORIZADOS: ROLES_AUTORIZADOS,
         SUBLISTA         : SUBLISTA,
     };
