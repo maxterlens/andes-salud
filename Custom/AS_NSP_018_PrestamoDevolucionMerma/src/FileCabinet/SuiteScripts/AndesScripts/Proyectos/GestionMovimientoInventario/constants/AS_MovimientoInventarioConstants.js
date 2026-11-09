@@ -129,6 +129,9 @@ define([], () => {
     };
 
     const ROLES_AUTORIZADOS = [3, 1371];
+    
+    //Esto para puerto montt Ohño
+    const UBICACION_ORIGEN_PRESTAMO = '609';
 
     return {
         TIPOS      : TIPOS,
@@ -154,6 +157,8 @@ define([], () => {
         PLANTILLAS   : PLANTILLAS,
 
         CONSULTA_STOCK: CONSULTA_STOCK,
+
+        UBICACION_ORIGEN_PRESTAMO: UBICACION_ORIGEN_PRESTAMO,
 
         LOGS             : LOGS,
         ROLES_AUTORIZADOS: ROLES_AUTORIZADOS,

@@ -570,8 +570,13 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './constants/AS_M
                 return;
             }
 
-            if (!datos.esALaClinica && (!datos.esPrestamo || !ubicacion.esBodegaPrestamo)) {
+            if (!datos.esALaClinica && !datos.esPrestamo) {
                 campoFrom.insertSelectOption({ value: ubicacion.id, text: ubicacion.nombre });
+            }
+
+            if (!datos.esALaClinica && datos.esPrestamo && String(ubicacion.id) === CONSTANTES.UBICACION_ORIGEN_PRESTAMO) {
+                campoFrom.insertSelectOption({ value: ubicacion.id, text: ubicacion.nombre });
+                registroActual.setValue({ fieldId: 'custpage_ubicacion', value: ubicacion.id });
             }
 
             if (datos.esMerma) {
