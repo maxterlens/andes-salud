@@ -14,8 +14,9 @@ define(['./handlers/AS_AsientoContableHandler', 'N/error', 'N/log', 'N/runtime']
         if (runtime.executionContext !== runtime.ContextType.CSV_IMPORT) return;
 
         try {
-            const { internos, externos } = AsientoContableHandler.validar(context.newRecord);
-            const errores = [...internos, ...externos];
+            // avisosSaldo (deuda sin saldo vigente) no rechaza la linea del CSV: en la UI es un aviso que deja guardar.
+            const { internos, externos, alertasSaldo } = AsientoContableHandler.validar(context.newRecord);
+            const errores = [...internos, ...externos, ...alertasSaldo];
             if (errores.length === 0) return;
 
             throw error.create({

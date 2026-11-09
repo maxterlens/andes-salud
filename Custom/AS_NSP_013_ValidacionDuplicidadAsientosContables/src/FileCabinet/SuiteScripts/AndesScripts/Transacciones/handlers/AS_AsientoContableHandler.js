@@ -3,83 +3,170 @@
  * @NModuleScope SameAccount
  * @file AS_AsientoContableHandler.js
  * @description Validación de duplicidad del Asiento Diario.
+ *
+ * CHANGELOG:
+ * - [FEAT] validarAsiento: punto de entrada del Suitelet. Recibe las lineas leidas por el CS y
+ *          devuelve campos faltantes y duplicidad, para que el CS no gaste unidades de gobernanza.
+ * - [FIX]  El tipo de cuenta y la exencion de duplicidad se resuelven en UNA busqueda por asiento
+ *          (obtenerDatosCuentas) en vez de un lookupFields por linea y una busqueda de todas las exentas.
+ * - [REFAC] leerLineasRegistro separa la lectura de lineas de la validacion; la comparten el UE y el CS.
+ * - [FEAT] validarSaldos: en las cuentas marcadas como exentas de duplicidad, avisa cuando el asiento
+ *          rebaja mas que el saldo historico de subsidiaria + cuenta + entidad + folio (INC-96 / MEJ-15).
+ * - [FIX]  buscarLineasExistentes pasa de N/search (un OR por folio, tope de 4.000 resultados en each)
+ *          a SuiteQL paginado en lotes de folios, para soportar asientos de ~10.000 lineas.
+ * - [FIX]  validar (UE, CSV) tambien devuelve alertasSaldo: el saldo excedido bloquea el guardado.
+ * - [FIX]  El saldo historico compara el folio como texto tal cual (sin UPPER/TRIM/mayusculas): el folio es
+ *          numerico y la cuenta y la entidad van por id. Evita falsos bloqueos y consulta menos.
+ * - [FIX]  leerLineasRegistro separa la subsidiaria por tipo de asiento: el intercompania (advintercompanyjournalentry)
+ *          usa la de cada linea (linesubsidiary); el asiento normal usa la de la cabecera.
+ * - [FIX]  El mensaje de saldo excedido explica que no se puede guardar y muestra saldo, rebaja y saldo resultante.
+ * - [FIX]  El saldo historico filtra el libro contable principal (accountingbook = 1), como el reporte de AS_NSP_014.
+ * - [FEAT] Los mensajes de saldo y duplicidad muestran en negrita la cuenta, la entidad y el folio.
+ * - [FEAT] validarSaldos separa excedidos (saldo positivo superado, bloquea) de sinSaldo (la deuda no existe,
+ *          es 0 o esta en negativo: avisa "no tiene saldo vigente" y deja guardar). validar y validarAsiento
+ *          devuelven avisosSaldo; el UE (CSV) no rechaza por avisosSaldo.
+ * - [FIX]  La rebaja es siempre el Haber y el cargo el Debe, en todas las cuentas exentas: se quita
+ *          TIPOS_CUENTA_ACREEDORA (la CxP se rebajaba con el Debe y la contrapartida en Debito saltaba como rebaja).
+ * - [FEAT] limitarMensajes: cada lista devuelta al CS se corta en MAXIMO_MENSAJES con "... y N mas".
+ * - [FIX]  El filtro de folio va sin UPPER/TRIM sobre la columna: anulaba el indice y el Suitelet
+ *          pasaba el tiempo maximo de requestSuitelet (SSS_REQUEST_TIME_EXCEEDED).
  */
-define(['N/search', 'N/log'], (search, log) => {
+define(['N/search', 'N/query', 'N/log'], (search, query, log) => {
+
+    // Oracle acepta hasta 1.000 valores en un IN: los folios se consultan en lotes de ese tamano.
+    const TAMANO_LOTE_IN = 1000;
+    const MAXIMO_MENSAJES = 50;
+
+    // Libro contable principal, igual que el Reporte Analitico (AS_NSP_014): sin el filtro, un asiento con
+    // varios libros cuenta cada linea una vez por libro y el saldo sale duplicado.
+    const LIBRO_CONTABLE = 1;
 
     const validar = (journal) => {
-        const lineas = obtenerLineasControl(journal);
-        if (!lineas.length) return { internos: [], externos: [] };
+        const lineas = leerLineasRegistro(journal);
+        const datosCuentas = obtenerDatosCuentas(lineas.map((linea) => linea.cuenta));
+
+        const { internos, externos } = validarLineas(lineas, journal.id, datosCuentas);
+        const { excedidos, sinSaldo } = validarSaldos(lineas, journal.id, datosCuentas);
+
+        return { internos, externos, alertasSaldo: excedidos, avisosSaldo: sinSaldo };
+    };
+
+    /**
+     * Valida un asiento a partir de las lineas que lee el Client Script (leerLineasRegistro).
+     * Si validarCampos viene en true y falta algun campo obligatorio, devuelve solo eso y no
+     * busca duplicidad: el usuario corrige primero y recien despues se revisa la identidad.
+     *
+     * Ademas de la duplicidad, revisa el saldo historico de las cuentas exentas (validarSaldos):
+     * si el asiento rebaja mas que un saldo positivo, el CS bloquea el guardado (alertasSaldo); si la
+     * deuda no tiene saldo vigente, solo avisa y deja guardar (avisosSaldo).
+     *
+     * @param {Object} datos - { journalId, validarCampos, lineas }
+     * @returns {{camposFaltantes: string[], internos: string[], externos: string[], alertasSaldo: string[], avisosSaldo: string[]}}
+     */
+    const validarAsiento = (datos) => {
+        const datosCuentas = obtenerDatosCuentas(datos.lineas.map((linea) => linea.cuenta));
+        const camposFaltantes = datos.validarCampos ? validarCamposLineas(datos.lineas, datosCuentas) : [];
+
+        if (camposFaltantes.length) return { camposFaltantes: limitarMensajes(camposFaltantes), internos: [], externos: [], alertasSaldo: [], avisosSaldo: [] };
+
+        const { internos, externos } = validarLineas(datos.lineas, datos.journalId, datosCuentas);
+        const { excedidos, sinSaldo } = validarSaldos(datos.lineas, datos.journalId, datosCuentas);
 
         return {
-            internos: duplicidadInterna(lineas),
-            externos: duplicidadExterna(lineas, journal.id)
+            camposFaltantes: [],
+            internos:     limitarMensajes(internos),
+            externos:     limitarMensajes(externos),
+            alertasSaldo: limitarMensajes(excedidos),
+            avisosSaldo:  limitarMensajes(sinSaldo)
         };
     };
 
-    const obtenerCuentasExentas = () => {
-        const exentas = new Set();
-
-        search.create({
-            type: 'account',
-            filters: [['custrecord_as_cuenta_exenta_dup', search.Operator.IS, 'T']],
-            columns: ['internalid']
-        }).run().each((resultado) => {
-            exentas.add(resultado.getValue({ name: 'internalid' }));
-            return true;
-        });
-
-        return exentas;
+    const limitarMensajes = (mensajes) => {
+        if (mensajes.length <= MAXIMO_MENSAJES) return mensajes;
+        return mensajes.slice(0, MAXIMO_MENSAJES).concat(`... y ${mensajes.length - MAXIMO_MENSAJES} más.`);
     };
 
-    const obtenerLineasControl = (journal) => {
+    const leerLineasRegistro = (journal) => {
+        const esIntercompania = journal.type === 'advintercompanyjournalentry';
         const subsidiariaCabecera = journal.getValue({ fieldId: 'subsidiary' });
         const cantidad = journal.getLineCount({ sublistId: 'line' });
-        const cuentasExentas = obtenerCuentasExentas();
         const lineas = [];
-        let exoneradas = 0;
 
         for (let i = 0; i < cantidad; i++) {
-            const cuenta = journal.getSublistValue({ sublistId: 'line', fieldId: 'account', line: i });
-            const entidad = journal.getSublistValue({ sublistId: 'line', fieldId: 'entity', line: i });
-            const folio = journal.getSublistValue({ sublistId: 'line', fieldId: 'custcol_2w_folio', line: i });
             const debe = journal.getSublistValue({ sublistId: 'line', fieldId: 'debit', line: i });
-            const subsidiaria = journal.getSublistValue({ sublistId: 'line', fieldId: 'linesubsidiary', line: i }) || subsidiariaCabecera;
-
-            if (!cuenta || !entidad || !folio) continue;
-
-            if (cuentasExentas.has(String(cuenta))) {
-                exoneradas++;
-                continue;
-            }
+            const haber = journal.getSublistValue({ sublistId: 'line', fieldId: 'credit', line: i });
 
             lineas.push({
                 numero: i + 1,
-                subsidiaria,
-                cuenta,
-                entidad,
-                folio,
-                movimiento: debe ? 'debit' : 'credit'
-            });
-        }
-
-        if (exoneradas) {
-            log.audit({
-                title: 'Lineas exoneradas del control de duplicidad',
-                details: `${exoneradas} de ${cantidad} lineas, por cuenta marcada como exenta de duplicidad`
+                subsidiaria: esIntercompania ? journal.getSublistValue({ sublistId: 'line', fieldId: 'linesubsidiary', line: i }) : subsidiariaCabecera,
+                cuenta: journal.getSublistValue({ sublistId: 'line', fieldId: 'account', line: i }),
+                entidad: journal.getSublistValue({ sublistId: 'line', fieldId: 'entity', line: i }),
+                folio: journal.getSublistValue({ sublistId: 'line', fieldId: 'custcol_2w_folio', line: i }),
+                movimiento: debe ? 'debit' : 'credit',
+                debe: Number(debe) || 0,
+                haber: Number(haber) || 0,
+                fechaDocumento: journal.getSublistValue({ sublistId: 'line', fieldId: 'custcol8', line: i }),
+                fechaVencimiento: journal.getSublistValue({ sublistId: 'line', fieldId: 'custcol2', line: i }),
+                departamento: journal.getSublistValue({ sublistId: 'line', fieldId: 'department', line: i }),
+                nota: journal.getSublistValue({ sublistId: 'line', fieldId: 'memo', line: i })
             });
         }
 
         return lineas;
     };
 
+    /**
+     * Una sola busqueda para todas las cuentas del asiento: devuelve el tipo y si la cuenta
+     * esta marcada como exenta de duplicidad, indexado por id interno de la cuenta.
+     */
+    const obtenerDatosCuentas = (cuentas) => {
+        const ids = Array.from(new Set(cuentas.filter(Boolean).map(String)));
+        const datosCuentas = new Map();
+        if (!ids.length) return datosCuentas;
+
+        search.create({
+            type: 'account',
+            filters: [['internalid', search.Operator.ANYOF, ids]],
+            columns: ['type', 'custrecord_as_cuenta_exenta_dup']
+        }).run().each((resultado) => {
+            const exenta = resultado.getValue({ name: 'custrecord_as_cuenta_exenta_dup' });
+            datosCuentas.set(String(resultado.id), {
+                tipo: resultado.getValue({ name: 'type' }),
+                exenta: exenta === true || exenta === 'T'
+            });
+            return true;
+        });
+
+        return datosCuentas;
+    };
+
+    const validarLineas = (lineas, journalId, datosCuentas) => {
+        const candidatas = lineas.filter((linea) => linea.cuenta && linea.entidad && linea.folio);
+        const lineasControl = candidatas.filter((linea) => !(datosCuentas.get(String(linea.cuenta)) || {}).exenta);
+        const exoneradas = candidatas.length - lineasControl.length;
+
+        if (exoneradas) {
+            log.audit({
+                title: 'Lineas exoneradas del control de duplicidad',
+                details: `${exoneradas} de ${lineas.length} lineas, por cuenta marcada como exenta de duplicidad`
+            });
+        }
+
+        if (!lineasControl.length) return { internos: [], externos: [] };
+
+        return {
+            internos: duplicidadInterna(lineasControl),
+            externos: duplicidadExterna(lineasControl, journalId)
+        };
+    };
+
     const crearClaveDuplicidad = (linea) => {
-        const folioNormalizado = String(linea.folio).trim().toUpperCase();
-        return [linea.subsidiaria, linea.cuenta, linea.entidad, folioNormalizado, linea.movimiento].join('|');
+        return [linea.subsidiaria, linea.cuenta, linea.entidad, normalizarFolio(linea.folio), linea.movimiento].join('|');
     };
 
     const descripcionLinea = (linea) => {
         const debeOHaber = linea.movimiento === 'debit' ? 'Debe' : 'Haber';
-        return `cuenta ${linea.cuenta} / entidad ${linea.entidad} / folio ${linea.folio} en el ${debeOHaber}`;
+        return `cuenta <b>${linea.cuenta}</b> / entidad <b>${linea.entidad}</b> / folio <b>${linea.folio}</b> en el ${debeOHaber}`;
     };
 
     const duplicidadInterna = (lineas) => {
@@ -124,63 +211,199 @@ define(['N/search', 'N/log'], (search, log) => {
         return mensajes;
     };
 
+    /**
+     * Busca en asientos ya guardados las llaves de duplicidad de estas lineas. SuiteQL en lotes de
+     * folios (no un OR por folio): con 10.000 lineas la busqueda N/search reventaba o se cortaba en
+     * los 4.000 resultados de each(). La entidad se compara en memoria con la llave, asi el unico
+     * IN grande es el de folios. Devuelve llave -> { id, numero } del primer asiento encontrado.
+     * El folio se filtra tal cual (tl.custcol_2w_folio IN), sin UPPER/TRIM sobre la columna: la
+     * funcion anula el indice y la consulta pasaba los 45 s de requestSuitelet (QA, asiento 277282).
+     */
     const buscarLineasExistentes = (lineas, journalId) => {
-        const cuentas = Array.from(new Set(lineas.map((linea) => linea.cuenta)));
-        const entidades = Array.from(new Set(lineas.map((linea) => linea.entidad)));
-        const folios = Array.from(new Set(lineas.map((linea) => linea.folio)));
-
-        const filtros = [
-            ['account', search.Operator.ANYOF, cuentas],
-            'AND', ['name', search.Operator.ANYOF, entidades],
-            'AND', filtroFolios(folios)
-        ];
-
-        const subsidiarias = Array.from(new Set(lineas.map((linea) => linea.subsidiaria).filter(Boolean)));
-        if (subsidiarias.length) {
-            filtros.push('AND', ['subsidiary', search.Operator.ANYOF, subsidiarias]);
-        }
-
-        if (journalId) {
-            filtros.push('AND', ['internalid', search.Operator.NONEOF, journalId]);
-        }
-
+        const cuentas = Array.from(new Set(lineas.map((linea) => String(linea.cuenta))));
+        const subsidiarias = Array.from(new Set(lineas.map((linea) => linea.subsidiaria).filter(Boolean).map(String)));
+        const folios = Array.from(new Set(lineas.map((linea) => String(linea.folio).trim())));
         const existentes = new Map();
 
-        search.create({
-            type: search.Type.JOURNAL_ENTRY,
-            filters: filtros,
-            columns: ['internalid', 'tranid', 'subsidiary', 'account', 'name', 'custcol_2w_folio', 'debitamount']
-        }).run().each((resultado) => {
-            const llave = crearClaveDuplicidad({
-                subsidiaria: resultado.getValue({ name: 'subsidiary' }),
-                cuenta: resultado.getValue({ name: 'account' }),
-                entidad: resultado.getValue({ name: 'name' }),
-                folio: resultado.getValue({ name: 'custcol_2w_folio' }),
-                movimiento: resultado.getValue({ name: 'debitamount' }) ? 'debit' : 'credit'
+        dividirEnLotes(folios).forEach((lote) => {
+            const sql = 'SELECT tl.subsidiary AS subsidiaria, tal.account AS cuenta, tl.entity AS entidad,'
+                      + ' UPPER(TRIM(tl.custcol_2w_folio)) AS folio,'
+                      + ' CASE WHEN NVL(tal.debit, 0) > 0 THEN \'debit\' ELSE \'credit\' END AS movimiento,'
+                      + ' MIN(t.id) AS id'
+                      + ' FROM transaction t'
+                      + ' JOIN transactionline tl ON tl.transaction = t.id'
+                      + ' JOIN transactionaccountingline tal ON tal.transaction = tl.transaction AND tal.transactionline = tl.id'
+                      + ' WHERE t.type = \'Journal\''
+                      + ' AND tal.account IN (' + marcadores(cuentas) + ')'
+                      + (subsidiarias.length ? ' AND tl.subsidiary IN (' + marcadores(subsidiarias) + ')' : '')
+                      + ' AND tl.custcol_2w_folio IN (' + marcadores(lote) + ')'
+                      + (journalId ? ' AND t.id <> ?' : '')
+                      + ' GROUP BY tl.subsidiary, tal.account, tl.entity, UPPER(TRIM(tl.custcol_2w_folio)),'
+                      + ' CASE WHEN NVL(tal.debit, 0) > 0 THEN \'debit\' ELSE \'credit\' END';
+            const params = cuentas.concat(subsidiarias, lote, journalId ? [journalId] : []);
+
+            ejecutarConsulta(sql, params).forEach((fila) => {
+                const llave = crearClaveDuplicidad(fila);
+                if (!existentes.has(llave)) existentes.set(llave, { id: fila.id, numero: null });
             });
-
-            if (!existentes.has(llave)) {
-                existentes.set(llave, {
-                    id: resultado.getValue({ name: 'internalid' }),
-                    numero: resultado.getValue({ name: 'tranid' })
-                });
-            }
-
-            return true;
         });
 
+        completarNumerosAsiento(existentes);
         return existentes;
     };
 
-    const filtroFolios = (folios) => {
-        const expresion = [];
+    const completarNumerosAsiento = (existentes) => {
+        const ids = Array.from(new Set(Array.from(existentes.values()).map((asiento) => String(asiento.id))));
+        const numeros = new Map();
 
-        folios.forEach((folio) => {
-            if (expresion.length) expresion.push('OR');
-            expresion.push(['custcol_2w_folio', search.Operator.IS, folio]);
+        dividirEnLotes(ids).forEach((lote) => {
+            ejecutarConsulta('SELECT id, tranid FROM transaction WHERE id IN (' + marcadores(lote) + ')', lote)
+                .forEach((fila) => numeros.set(String(fila.id), fila.tranid));
         });
 
-        return expresion;
+        existentes.forEach((asiento) => { asiento.numero = numeros.get(String(asiento.id)); });
+    };
+
+    // ─── Saldo historico de las cuentas exentas (INC-96 / MEJ-15) ─────────────
+    // La cuenta exenta deja de validar duplicidad y pasa a avisar cuando el asiento rebaja mas
+    // que el saldo de la deuda. La deuda es subsidiaria + cuenta + entidad + folio, la misma
+    // llave que agrupa el Reporte Analitico de Cuentas (AS_NSP_014, _compensarFilas).
+
+    /**
+     * Separa las rebajas que pasan el saldo en dos listas:
+     * - excedidos: la deuda tenia saldo positivo y la rebaja lo supera. Bloquea el guardado.
+     * - sinSaldo: la deuda no tiene saldo vigente (no existe, es 0 o ya esta en negativo). Solo avisa:
+     *   son folios cuyo cargo no esta en NetSuite (saldos migrados o cargados con otro folio).
+     */
+    const validarSaldos = (lineas, journalId, datosCuentas) => {
+        const deudas = agruparDeudasDelAsiento(lineas, datosCuentas);
+        if (!deudas.size) return { excedidos: [], sinSaldo: [] };
+
+        const saldos = buscarSaldosHistoricos(Array.from(deudas.values()), journalId);
+        const excedidos = [];
+        const sinSaldo = [];
+
+        deudas.forEach((deuda, llave) => {
+            if (!deuda.rebaja) return;
+
+            const saldoDisponible = (saldos.get(llave) || 0) + deuda.cargo;
+            const saldoResultante = Math.round((saldoDisponible - deuda.rebaja) * 100) / 100;
+            if (saldoResultante >= 0) return;
+
+            const lineasTexto = `Línea${deuda.numeros.length > 1 ? 's' : ''} ${deuda.numeros.join(', ')}`;
+            const deudaTexto = `El folio <b>${deuda.folio}</b> de la entidad <b>${deuda.entidad}</b> en la cuenta <b>${deuda.cuenta}</b>`;
+
+            if (saldoDisponible > 0) {
+                excedidos.push(
+                    `${lineasTexto}: no se puede guardar, el asiento rebaja más que el saldo. `
+                    + `${deudaTexto} tiene un saldo de ${saldoDisponible}; `
+                    + `este asiento lo rebaja en ${deuda.rebaja} y el saldo quedaría en ${saldoResultante}. `
+                    + `Corrige el monto para que no supere el saldo.`
+                );
+                return;
+            }
+
+            const saldoActualTexto = saldos.has(llave) || deuda.cargo ? `no tiene saldo vigente (saldo ${saldoDisponible})` : 'no existe, no tiene saldo vigente';
+            sinSaldo.push(
+                `${lineasTexto}: ${deudaTexto} ${saldoActualTexto}; `
+                + `este asiento lo rebaja en ${deuda.rebaja} y el saldo quedaría en ${saldoResultante}.`
+            );
+        });
+
+        return { excedidos, sinSaldo };
+    };
+
+    /**
+     * Junta las lineas del asiento por deuda, solo en cuentas exentas y con entidad y folio.
+     * En todas las cuentas el Debe carga la deuda y el Haber la rebaja (sin importar el tipo de
+     * cuenta), y suma varias lineas de la misma deuda antes de compararlas contra el saldo.
+     */
+    const agruparDeudasDelAsiento = (lineas, datosCuentas) => {
+        const deudas = new Map();
+
+        lineas.forEach((linea) => {
+            const datosCuenta = datosCuentas.get(String(linea.cuenta));
+            if (!datosCuenta || !datosCuenta.exenta || !linea.entidad || !linea.folio) return;
+
+            const llave = crearClaveDeuda(linea);
+            if (!deudas.has(llave)) {
+                deudas.set(llave, {
+                    subsidiaria: linea.subsidiaria,
+                    cuenta: linea.cuenta,
+                    entidad: linea.entidad,
+                    folio: String(linea.folio),
+                    cargo: 0,
+                    rebaja: 0,
+                    numeros: []
+                });
+            }
+
+            const deuda = deudas.get(llave);
+            deuda.cargo += linea.debe;
+            deuda.rebaja += linea.haber;
+            deuda.numeros.push(linea.numero);
+        });
+
+        return deudas;
+    };
+
+    /**
+     * Saldo historico contabilizado de cada deuda, sin contar el asiento que se esta guardando.
+     * Agrupa en la base: vuelve una fila por deuda, no las lineas del historial. Todos los tipos
+     * de transaccion cuentan (Journal, CustPymt, VendBill), igual que el reporte de AS_NSP_014.
+     */
+    const buscarSaldosHistoricos = (deudas, journalId) => {
+        const cuentas = Array.from(new Set(deudas.map((deuda) => String(deuda.cuenta))));
+        const subsidiarias = Array.from(new Set(deudas.map((deuda) => deuda.subsidiaria).filter(Boolean).map(String)));
+        const folios = Array.from(new Set(deudas.map((deuda) => deuda.folio)));
+        const saldos = new Map();
+
+        dividirEnLotes(folios).forEach((lote) => {
+            const sql = 'SELECT tl.subsidiary AS subsidiaria, tal.account AS cuenta, tl.entity AS entidad,'
+                      + ' tl.custcol_2w_folio AS folio,'
+                      + ' SUM(NVL(tal.debit, 0)) AS debe, SUM(NVL(tal.credit, 0)) AS haber'
+                      + ' FROM transactionaccountingline tal'
+                      + ' JOIN transactionline tl ON tl.transaction = tal.transaction AND tl.id = tal.transactionline'
+                      + ' WHERE tal.posting = \'T\''
+                      + ' AND tal.accountingbook = ' + LIBRO_CONTABLE
+                      + ' AND tal.account IN (' + marcadores(cuentas) + ')'
+                      + (subsidiarias.length ? ' AND tl.subsidiary IN (' + marcadores(subsidiarias) + ')' : '')
+                      + ' AND tl.custcol_2w_folio IN (' + marcadores(lote) + ')'
+                      + (journalId ? ' AND tal.transaction <> ?' : '')
+                      + ' GROUP BY tl.subsidiary, tal.account, tl.entity, tl.custcol_2w_folio';
+            const params = cuentas.concat(subsidiarias, lote, journalId ? [journalId] : []);
+
+            ejecutarConsulta(sql, params).forEach((fila) => {
+                saldos.set(crearClaveDeuda(fila), (Number(fila.debe) || 0) - (Number(fila.haber) || 0));
+            });
+        });
+
+        return saldos;
+    };
+
+    const crearClaveDeuda = (linea) => {
+        return [linea.subsidiaria, linea.cuenta, linea.entidad, String(linea.folio)].join('|');
+    };
+
+    const normalizarFolio = (folio) => String(folio).trim().toUpperCase();
+
+    const dividirEnLotes = (valores) => {
+        const lotes = [];
+        for (let i = 0; i < valores.length; i += TAMANO_LOTE_IN) lotes.push(valores.slice(i, i + TAMANO_LOTE_IN));
+        return lotes;
+    };
+
+    const marcadores = (valores) => valores.map(() => '?').join(', ');
+
+    const ejecutarConsulta = (sql, params) => {
+        const resultados = [];
+        const paginado = query.runSuiteQLPaged({ query: sql, params, pageSize: 1000 });
+
+        paginado.pageRanges.forEach((rango) => {
+            paginado.fetch({ index: rango.index }).data.asMappedResults().forEach((fila) => resultados.push(fila));
+        });
+
+        return resultados;
     };
 
     // ─── Campos obligatorios por tipo de cuenta (form 273) ─────────────────────
@@ -199,17 +422,7 @@ define(['N/search', 'N/log'], (search, log) => {
      * entre sí. Devuelve null si está todo completo, o un array con los
      * nombres de los campos faltantes.
      */
-    const camposFaltantesAsiento = (cuenta, valores) => {
-        let tipoCuenta = null;
-        if (cuenta) {
-            const resultado = search.lookupFields({
-                type: 'account',
-                id: cuenta,
-                columns: ['type']
-            });
-            tipoCuenta = resultado.type && resultado.type[0] && resultado.type[0].value;
-        }
-
+    const camposFaltantesAsiento = (tipoCuenta, valores) => {
         const faltantes = [];
 
         if (tipoCuenta && TIPOS_CUENTA_OBLIGAN_FOLIO.includes(tipoCuenta) && !valores.Folio) {
@@ -256,7 +469,8 @@ define(['N/search', 'N/log'], (search, log) => {
             Nota: currentRecord.getCurrentSublistValue({ sublistId: 'line', fieldId: 'memo' })
         };
 
-        const faltantes = camposFaltantesAsiento(cuenta, valores);
+        const tipoCuenta = (obtenerDatosCuentas([cuenta]).get(String(cuenta)) || {}).tipo;
+        const faltantes = camposFaltantesAsiento(tipoCuenta, valores);
         if (!faltantes) return true;
 
         dialog.alert({
@@ -270,46 +484,37 @@ define(['N/search', 'N/log'], (search, log) => {
      * Resguardo para saveRecord: recorre todas las líneas del Diario ya
      * confirmadas (no solo la que se está editando) y valida lo mismo que
      * validarCamposObligatoriosLinea. Cubre casos que no disparan validateLine.
+     * Corre en el Suitelet, con los tipos de cuenta resueltos en una sola busqueda.
      *
-     * @param {Object} currentRecord
-     * @param {Object} dialog - Módulo N/ui/dialog, inyectado por el CS
-     * @returns {boolean} false si alguna línea tiene campos faltantes, true si no
+     * @returns {string[]} un mensaje por cada línea con campos faltantes
      */
-    const validarTodasLasLineasCamposObligatorios = (currentRecord, dialog) => {
-        const cantidad = currentRecord.getLineCount({ sublistId: 'line' });
+    const validarCamposLineas = (lineas, datosCuentas) => {
         const mensajes = [];
 
-        for (let i = 0; i < cantidad; i++) {
-            const cuenta = currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'account', line: i });
+        lineas.forEach((linea) => {
             const valores = {
-                Folio: currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'custcol_2w_folio', line: i }),
-                'Fecha de Documento': currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'custcol8', line: i }),
-                'Fecha de Vencimiento': currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'custcol2', line: i }),
-                Nombre: currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'entity', line: i }),
-                Departamento: currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'department', line: i }),
-                Nota: currentRecord.getSublistValue({ sublistId: 'line', fieldId: 'memo', line: i })
+                Folio: linea.folio,
+                'Fecha de Documento': linea.fechaDocumento,
+                'Fecha de Vencimiento': linea.fechaVencimiento,
+                Nombre: linea.entidad,
+                Departamento: linea.departamento,
+                Nota: linea.nota
             };
 
-            const faltantes = camposFaltantesAsiento(cuenta, valores);
+            const tipoCuenta = (datosCuentas.get(String(linea.cuenta)) || {}).tipo;
+            const faltantes = camposFaltantesAsiento(tipoCuenta, valores);
             if (faltantes) {
-                mensajes.push(`Línea ${i + 1}: Seleccione un valor para los campos de ${faltantes.join(', ')}.`);
+                mensajes.push(`Línea ${linea.numero}: Seleccione un valor para los campos de ${faltantes.join(', ')}.`);
             }
-        }
+        });
 
-        if (mensajes.length) {
-            dialog.alert({
-                title: 'Campos requeridos',
-                message: mensajes.join('<br>')
-            });
-            return false;
-        }
-
-        return true;
+        return mensajes;
     };
 
     return {
         validar,
-        validarCamposObligatoriosLinea,
-        validarTodasLasLineasCamposObligatorios
+        validarAsiento,
+        leerLineasRegistro,
+        validarCamposObligatoriosLinea
     };
 });

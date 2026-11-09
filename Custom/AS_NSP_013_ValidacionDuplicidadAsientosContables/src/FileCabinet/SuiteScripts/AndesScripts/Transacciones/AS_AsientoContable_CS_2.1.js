@@ -11,20 +11,18 @@
  *              Ver también la sección "Campos obligatorios por tipo de cuenta" para el
  *              validateLine y el resguardo en saveRecord (independientes de la duplicidad).
  */
-define(['./handlers/AS_AsientoContableHandler', 'N/ui/dialog', 'N/log'], (AsientoContableHandler, dialog, log) => {
+define(['./handlers/AS_AsientoContableHandler', 'N/ui/dialog', 'N/https', 'N/log'], (AsientoContableHandler, dialog, https, log) => {
 
-    // Id confirmado del botón "Guardar" en esta cuenta: es un input type="submit" del
-    // widget "multibutton" de NetSuite (name="multibutton_submitter"), cuyo onclick llama
-    // a getNLMultiButtonByName('multibutton_submitter').onMainButtonClick(this) — por eso
-    // .click() funciona bien acá: dispara ese mismo onclick, que es el que hace todo el
-    // trabajo real de guardado (a diferencia de un form.submit() directo, que lo saltearía).
-    // Los demás quedan de fallback por si en otro tipo de formulario cambia el id.
+
     const IDS_BOTON_GUARDAR = ['btn_multibutton_submitter', 'spanEDIT_bottom', 'spanEDIT', 'spanSAVE_bottom', 'spanSAVE'];
 
     // Formulario Andes - Diario Contable: unico donde aplica la regla de campos obligatorios.
     const FORMULARIO_DIARIO_CONTABLE = 273;
 
-    let continuarConDuplicidadInterna = false;
+    const SCRIPT_ID_VALIDACION = 'customscript_as_val_dup_asiento_stlt';
+    const DEPLOY_ID_VALIDACION = 'customdeploy_as_val_dup_asiento_stlt';
+
+    let continuarTrasConfirmar = false;
 
     const clickBotonGuardarNativo = () => {
         for (const id of IDS_BOTON_GUARDAR) {
@@ -38,6 +36,23 @@ define(['./handlers/AS_AsientoContableHandler', 'N/ui/dialog', 'N/log'], (Asient
             }
         }
         return false;
+    };
+
+    const consultarValidacion = (currentRecord, validarCampos) => {
+        const respuesta = https.requestSuitelet({
+            scriptId    : SCRIPT_ID_VALIDACION,
+            deploymentId: DEPLOY_ID_VALIDACION,
+            headers     : { 'Content-Type': 'application/json' },
+            body        : JSON.stringify({
+                journalId: currentRecord.id,
+                validarCampos,
+                lineas: AsientoContableHandler.leerLineasRegistro(currentRecord)
+            })
+        });
+
+        if (respuesta.code !== 200) throw new Error('Suitelet de validacion respondio ' + respuesta.code + ': ' + respuesta.body);
+
+        return JSON.parse(respuesta.body);
     };
 
     const validateLine = (context) => {
@@ -54,30 +69,45 @@ define(['./handlers/AS_AsientoContableHandler', 'N/ui/dialog', 'N/log'], (Asient
         try {
             const currentRecord = context.currentRecord;
 
-            const customForm = Number(currentRecord.getValue({ fieldId: 'customform' }));
-            if (customForm === FORMULARIO_DIARIO_CONTABLE && !AsientoContableHandler.validarTodasLasLineasCamposObligatorios(currentRecord, dialog)) {
-                return false;
-            }
-
-            if (continuarConDuplicidadInterna) {
-                continuarConDuplicidadInterna = false;
+            if (continuarTrasConfirmar) {
+                continuarTrasConfirmar = false;
                 return true;
             }
 
-            const { internos, externos } = AsientoContableHandler.validar(currentRecord);
+            const customForm = Number(currentRecord.getValue({ fieldId: 'customform' }));
+            const { camposFaltantes, internos, externos, alertasSaldo, avisosSaldo } = consultarValidacion(currentRecord, customForm === FORMULARIO_DIARIO_CONTABLE);
 
-            if (externos.length) {
+            if (camposFaltantes.length) {
                 dialog.alert({
-                    title: 'Duplicidad de Asiento Contable',
-                    message: externos.concat(internos).join('<br><br>')
+                    title: 'Campos requeridos',
+                    message: camposFaltantes.join('<br>')
                 });
                 return false;
             }
 
-            if (internos.length) {
+            if (alertasSaldo.length) {
+                dialog.alert({
+                    title: 'Saldo excedido',
+                    message: alertasSaldo.concat(externos).join('<br><br>')
+                });
+                return false;
+            }
+
+            if (externos.length) {
+                dialog.alert({
+                    title: 'Duplicidad de Asiento Contable',
+                    message: externos.join('<br><br>')
+                });
+                return false;
+            }
+
+            const avisos = avisosSaldo.concat(internos);
+            if (avisos.length) {
+                const titulo = avisosSaldo.length ? 'Sin saldo vigente' : 'Posible duplicidad en este asiento';
+
                 dialog.confirm({
-                    title: 'Posible duplicidad en este asiento',
-                    message: internos.join('<br><br>') + '<br><br>¿Deseas continuar de todas formas?',
+                    title: titulo,
+                    message: avisos.join('<br><br>') + '<br><br>¿Deseas continuar de todas formas?',
                     buttons: [
                         { label: 'Guardar de todas formas', value: true },
                         { label: 'Cancelar', value: false }
@@ -85,11 +115,11 @@ define(['./handlers/AS_AsientoContableHandler', 'N/ui/dialog', 'N/log'], (Asient
                 }).then((confirmado) => {
                     if (!confirmado) return;
 
-                    continuarConDuplicidadInterna = true;
+                    continuarTrasConfirmar = true;
                     const disparado = clickBotonGuardarNativo();
 
                     if (!disparado) {
-                        continuarConDuplicidadInterna = false;
+                        continuarTrasConfirmar = false;
                         log.error({
                             title: 'CS saveRecord - reintento tras confirm',
                             details: 'No se encontró el botón nativo de Guardar en el DOM (revisar IDS_BOTON_GUARDAR).'
