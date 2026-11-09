@@ -4,32 +4,6 @@
  * @file AS_AsientoContableHandler.js
  * @description Validación de duplicidad del Asiento Diario.
  *
- * CHANGELOG:
- * - [FEAT] validarAsiento: punto de entrada del Suitelet. Recibe las lineas leidas por el CS y
- *          devuelve campos faltantes y duplicidad, para que el CS no gaste unidades de gobernanza.
- * - [FIX]  El tipo de cuenta y la exencion de duplicidad se resuelven en UNA busqueda por asiento
- *          (obtenerDatosCuentas) en vez de un lookupFields por linea y una busqueda de todas las exentas.
- * - [REFAC] leerLineasRegistro separa la lectura de lineas de la validacion; la comparten el UE y el CS.
- * - [FEAT] validarSaldos: en las cuentas marcadas como exentas de duplicidad, avisa cuando el asiento
- *          rebaja mas que el saldo historico de subsidiaria + cuenta + entidad + folio (INC-96 / MEJ-15).
- * - [FIX]  buscarLineasExistentes pasa de N/search (un OR por folio, tope de 4.000 resultados en each)
- *          a SuiteQL paginado en lotes de folios, para soportar asientos de ~10.000 lineas.
- * - [FIX]  validar (UE, CSV) tambien devuelve alertasSaldo: el saldo excedido bloquea el guardado.
- * - [FIX]  El saldo historico compara el folio como texto tal cual (sin UPPER/TRIM/mayusculas): el folio es
- *          numerico y la cuenta y la entidad van por id. Evita falsos bloqueos y consulta menos.
- * - [FIX]  leerLineasRegistro separa la subsidiaria por tipo de asiento: el intercompania (advintercompanyjournalentry)
- *          usa la de cada linea (linesubsidiary); el asiento normal usa la de la cabecera.
- * - [FIX]  El mensaje de saldo excedido explica que no se puede guardar y muestra saldo, rebaja y saldo resultante.
- * - [FIX]  El saldo historico filtra el libro contable principal (accountingbook = 1), como el reporte de AS_NSP_014.
- * - [FEAT] Los mensajes de saldo y duplicidad muestran en negrita la cuenta, la entidad y el folio.
- * - [FEAT] validarSaldos separa excedidos (saldo positivo superado, bloquea) de sinSaldo (la deuda no existe,
- *          es 0 o esta en negativo: avisa "no tiene saldo vigente" y deja guardar). validar y validarAsiento
- *          devuelven avisosSaldo; el UE (CSV) no rechaza por avisosSaldo.
- * - [FIX]  La rebaja es siempre el Haber y el cargo el Debe, en todas las cuentas exentas: se quita
- *          TIPOS_CUENTA_ACREEDORA (la CxP se rebajaba con el Debe y la contrapartida en Debito saltaba como rebaja).
- * - [FEAT] limitarMensajes: cada lista devuelta al CS se corta en MAXIMO_MENSAJES con "... y N mas".
- * - [FIX]  El filtro de folio va sin UPPER/TRIM sobre la columna: anulaba el indice y el Suitelet
- *          pasaba el tiempo maximo de requestSuitelet (SSS_REQUEST_TIME_EXCEEDED).
  */
 define(['N/search', 'N/query', 'N/log'], (search, query, log) => {
 
@@ -264,17 +238,6 @@ define(['N/search', 'N/query', 'N/log'], (search, query, log) => {
         existentes.forEach((asiento) => { asiento.numero = numeros.get(String(asiento.id)); });
     };
 
-    // ─── Saldo historico de las cuentas exentas (INC-96 / MEJ-15) ─────────────
-    // La cuenta exenta deja de validar duplicidad y pasa a avisar cuando el asiento rebaja mas
-    // que el saldo de la deuda. La deuda es subsidiaria + cuenta + entidad + folio, la misma
-    // llave que agrupa el Reporte Analitico de Cuentas (AS_NSP_014, _compensarFilas).
-
-    /**
-     * Separa las rebajas que pasan el saldo en dos listas:
-     * - excedidos: la deuda tenia saldo positivo y la rebaja lo supera. Bloquea el guardado.
-     * - sinSaldo: la deuda no tiene saldo vigente (no existe, es 0 o ya esta en negativo). Solo avisa:
-     *   son folios cuyo cargo no esta en NetSuite (saldos migrados o cargados con otro folio).
-     */
     const validarSaldos = (lineas, journalId, datosCuentas) => {
         const deudas = agruparDeudasDelAsiento(lineas, datosCuentas);
         if (!deudas.size) return { excedidos: [], sinSaldo: [] };
