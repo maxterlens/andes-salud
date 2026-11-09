@@ -32,13 +32,17 @@ define(['N/query', '../../constants/AS_StockValorizadoConstants'],
      * Los ? van en el orden en que aparecen: primero los del stock (subsidiaria,
      * fecha, ubicaciones) y despues los de la compra (subsidiaria, fecha). El
      * handler arma los parametros en ese mismo orden.
+     *
+     * La cantidad sale como texto, con todos sus decimales: como numero, el CSV
+     * del SuiteQLTask la dejaba en 2 y los kits de laboratorio que se consumen
+     * por fraccion (0,975) salian 0,98. El Excel la vuelve a numero.
      */
     function armarConsultaStock(ubicaciones) {
         return 'SELECT i.upccode AS codigo_upc,'
              + ' i.itemid AS articulo,'
              + ' BUILTIN.DF(stock.ubicacion) AS ubicacion,'
              + ' BUILTIN.DF(i.custitem_wmsse_itemfamily) AS familia_wms,'
-             + ' stock.cantidad AS cantidad,'
+             + ' TO_CHAR(stock.cantidad) AS cantidad,'
              + ' CASE WHEN stock.cantidad <> 0 THEN ROUND(stock.importe / stock.cantidad, 2) END AS valorizacion_individual,'
              + ' stock.importe AS valorizacion_total,'
              + " TO_CHAR(stock.consumo, 'DD/MM/YYYY') AS fecha_ultimo_consumo,"
