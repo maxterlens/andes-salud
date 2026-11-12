@@ -1,0 +1,15 @@
+<manifest projecttype="ACCOUNTCUSTOMIZATION">
+  <projectname>AS_NSP_036_NominaReembolso</projectname>
+  <frameworkversion>1.0</frameworkversion>
+  <dependencies>
+    <features>
+      <feature required="true">SERVERSIDESCRIPTING</feature>
+      <feature required="true">CUSTOMRECORDS</feature>
+      <feature required="true">ACCOUNTING</feature>
+      <feature required="true">SUBSIDIARIES</feature>
+    </features>
+    <objects>
+      <object>customrecord_2w_codigos_bancos_chile</object>
+    </objects>
+  </dependencies>
+</manifest>
