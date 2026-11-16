@@ -1,0 +1,25 @@
+<suitelet scriptid="customscript_2win_sl_eliminacion_caja_ma">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>2Win - Eliminación Masiva de Caja</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/andes_recaudaciones/suitelets/2win_sl_eliminacion_caja_masiva.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_sl_eliminacion_caja_ma">
+      <allemployees>T</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
+      <eventtype></eventtype>
+      <isdeployed>T</isdeployed>
+      <isonline>F</isonline>
+      <loglevel>DEBUG</loglevel>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>RELEASED</status>
+      <title>2Win - Eliminación Masiva de Caja</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>

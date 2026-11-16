@@ -1,14 +1,35 @@
 /**
  * @NApiVersion 2.1
  */
-define(["N/record", "N/log"], function (record, nLog) {
+define(["N/error", "N/record", "N/log", "N/search"], function (nError, record, nLog, search) {
     function createPayment(data) {
         try {
-            nLog.debug("PaymentDAO", data);
+            nLog.debug("PaymentDAO - parametro", data);
+            if (!Array.isArray(data.invoicesToPay) || !data.invoicesToPay.length) {
+                throw new Error("No se puede crear el pago: no se informaron documentos destino");
+            }
+            data.invoicesToPay.forEach((documento, indice) => {
+                if (!documento || documento.id == null || String(documento.id).trim() === "" ||
+                    !Number.isSafeInteger(Number(documento.id)) || Number(documento.id) <= 0) {
+                    throw new Error(`No se puede crear el pago: documento destino ${indice + 1} sin ID interno válido. Revisar la factura referenciada y el estado preparado. Clave: ${data.processKey || "sin clave"}`);
+                }
+            });
+            // Aislar ids de invoice y journal para lineas apply y credit
+            let idsInvoices = data.invoicesToPay.map((inv) => String(inv.id)).join(",");
+            let idsJournals = data.journalEntriesPago.map(String).join(",");
+
             const newRecord = record.create({
                 type: record.Type.CUSTOMER_PAYMENT,
-                isDynamic: true
+                isDynamic: true,
+                // Valores por defecto para reducir el numero de lineas en sublistas apply y credit
+                defaultValues: {
+                    entity: data.customerId,
+                    subsidiary: data.subsidiaria,
+                    invoices: idsInvoices,
+                    credits: idsJournals
+                }
             });
+            if (data.processKey) newRecord.setValue({ fieldId: "custbody_2win_as_rec_fact_key", value: data.processKey });
 
             newRecord.setValue({ fieldId: "customer", value: data.customerId });
             newRecord.setValue({ fieldId: "subsidiary", value: data.invoicesToPay[0]?.subsidiaria || data.subsidiaria }); // Subsidiaria
@@ -30,8 +51,9 @@ define(["N/record", "N/log"], function (record, nLog) {
             if (data.razonSocialCaja) newRecord.setValue({ fieldId: "custbodyrazonsocialcaja", value: data.razonSocialCaja });
             if (data.numeroMovimiento) newRecord.setValue({ fieldId: "custbodynumeromovimiento", value: data.numeroMovimiento });
 
-            // Aplicacion a facturas
             if (data.invoicesToPay && data.invoicesToPay.length > 0) {
+                // Aplicacion a facturas
+                let pagosAplicados = 0;
                 const lineCount = newRecord.getLineCount({ sublistId: "apply" });
                 for (let i = 0; i < lineCount; i++) {
                     const docId = newRecord.getSublistValue({ sublistId: "apply", fieldId: "doc", line: i });
@@ -43,7 +65,13 @@ define(["N/record", "N/log"], function (record, nLog) {
                         if (invoiceToPay.amount) newRecord.setCurrentSublistValue({ sublistId: "apply", fieldId: "amount", value: invoiceToPay.amount });
 
                         newRecord.commitLine({ sublistId: "apply" });
+                        pagosAplicados += invoiceToPay.amount;
                     }
+                }
+
+                // Validar si ya se iteraron todas las lineas y no se aplico una factura
+                if (pagosAplicados === 0) {
+                    nLog.error("PaymentDAO - createPayment", `Se aplicaron 0 Facturas del total de: ${data.invoicesToPay.length} Facturas por aplicar para el pago de cliente: ${data.customerId} y subsidiaria: ${data.subsidiaria}`);
                 }
             }
             if (data.journalEntriesPago && data.journalEntriesPago.length > 0) {
@@ -66,7 +94,14 @@ define(["N/record", "N/log"], function (record, nLog) {
             return newId;
         } catch (e) {
             nLog.error("PaymentDAO Error", e);
-            throw e;
+            if (data.memo && data.customerId) {
+                throw nError.create({
+                    name: "CUSTOM_ERROR",
+                    message: "Error: " + e.message + ", en creacion " + data.memo + " para cliente id " + data.customerId
+                });
+            } else {
+                throw e;
+            }
         }
     }
 

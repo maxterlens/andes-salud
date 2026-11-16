@@ -1,0 +1,31 @@
+<suitelet scriptid="customscript_2win_sl_eliminacion_caja">
+  <description>Permite eliminar transacciones creadas por el flujo de caja de recaudación</description>
+  <isinactive>F</isinactive>
+  <name>2Win - Eliminación de Caja</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/andes_recaudaciones/suitelets/2win_sl_eliminacion_caja.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_sl_eliminacion_caja">
+      <allemployees>T</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
+      <eventtype></eventtype>
+      <isdeployed>T</isdeployed>
+      <isonline>F</isonline>
+      <loglevel>ERROR</loglevel>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>RELEASED</status>
+      <title>2Win - Eliminación de Caja</title>
+      <links>
+        <link>
+          <linkcategory>BASICREPORTSCUSTOM</linkcategory>
+          <linklabel>2Win - Eliminación de Caja</linklabel>
+        </link>
+      </links>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>

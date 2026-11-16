@@ -2,9 +2,9 @@
  * @NApiVersion 2.1
  */
 define(["N/record", "N/search", "N/log", "N/query", "./SalesOrderDAO"], function (record, search, nLog, query, SalesOrderDAO) {
-    function createCreditMemo(data) {
+    function createCreditMemo(data, opciones) {
         try {
-            nLog.debug("createCreditMemo", data);
+            // nLog.debug("createCreditMemo", data);
             let newRecord;
 
             // Buscar orden de venta para obtener campos adicionales
@@ -12,7 +12,27 @@ define(["N/record", "N/search", "N/log", "N/query", "./SalesOrderDAO"], function
             if (data.customerId && data.cuentaPaciente) {
                 salesOrderFields = SalesOrderDAO.getSalesOrderFields(data.customerId, data.razonSocialCobro, data.cuentaPaciente);
             }
-            if (data.esAnticipo === "N") {
+            if (opciones && opciones.registroTransformado) {
+                // Exclusivo de RMA por lotes: conservar las lineas nativas y reutilizar cabecera/guardado.
+                // Conservar valores heredados correctos sin volver a disparar sourcing de cabecera.
+                newRecord = opciones.registroTransformado;
+                if (newRecord.type !== record.Type.CREDIT_MEMO || !newRecord.isDynamic || data.esAnticipo === "N") {
+                    throw new Error("Registro transformado incompatible con NC por lotes");
+                }
+                if (String(newRecord.getValue({ fieldId: "customform" })) !== String(163)) {
+                    newRecord.setValue({ fieldId: "customform", value: 163 });
+                }
+                if (String(newRecord.getValue({ fieldId: "entity" })) !== String(data.customerId)) {
+                    newRecord.setValue({ fieldId: "entity", value: data.customerId });
+                }
+                if (String(newRecord.getValue({ fieldId: "subsidiary" })) !== String(data.razonSocialCobro)) {
+                    newRecord.setValue({ fieldId: "subsidiary", value: data.razonSocialCobro });
+                }
+                newRecord.setValue({ fieldId: "memo", value: data.memo || "" });
+                if (data.account && String(newRecord.getValue({ fieldId: "account" })) !== String(data.account)) {
+                    newRecord.setValue({ fieldId: "account", value: data.account });
+                }
+            } else if (data.esAnticipo === "N") {
                 nLog.debug("Creando NC a partir de factura", `Folio de referencia: ${data.folioRef}`);
                 const invoiceId = getInvoiceIdByFolio(data.folioRef);
 
@@ -80,6 +100,7 @@ define(["N/record", "N/search", "N/log", "N/query", "./SalesOrderDAO"], function
                 if (data.account) newRecord.setValue({ fieldId: "account", value: data.account });
             }
             newRecord.setValue({ fieldId: "trandate", value: new Date(data.fechaTransaccion) });
+            if (data.processKey) newRecord.setValue({ fieldId: "custbody_2win_as_rec_fact_key", value: data.processKey });
             newRecord.setValue({ fieldId: "custbody_2wintipodtesii", value: 4 });
             newRecord.setValue({ fieldId: "custbody_2win_created_from_income_flow", value: true });
             // Campos adicionales del CSV para notas de crédito
@@ -186,7 +207,7 @@ define(["N/record", "N/search", "N/log", "N/query", "./SalesOrderDAO"], function
             if (data.razonSocialCaja) newRecord.setValue({ fieldId: "custbodyrazonsocialcaja", value: data.razonSocialCaja });
             if (data.numeroMovimiento) newRecord.setValue({ fieldId: "custbodynumeromovimiento", value: data.numeroMovimiento });
 
-            if (data.items && data.items.length > 0) {
+            if (!(opciones && opciones.registroTransformado) && data.items && data.items.length > 0) {
                 data.items.forEach((item) => {
                     newRecord.selectNewLine({ sublistId: "item" });
                     newRecord.setCurrentSublistValue({ sublistId: "item", fieldId: "item", value: item.item });
@@ -201,7 +222,7 @@ define(["N/record", "N/search", "N/log", "N/query", "./SalesOrderDAO"], function
 
                     newRecord.commitLine({ sublistId: "item" });
                 });
-            } else if (data.montoTotal > 0 && data.esAnticipo === "S") {
+            } else if (!(opciones && opciones.registroTransformado) && data.montoTotal > 0 && data.esAnticipo === "S") {
                 // Items
                 newRecord.selectNewLine({ sublistId: "item" });
                 newRecord.setCurrentSublistValue({ sublistId: "item", fieldId: "item", value: data.creditoItem });
@@ -233,6 +254,7 @@ define(["N/record", "N/search", "N/log", "N/query", "./SalesOrderDAO"], function
                 newRecord.setValue({ fieldId: "custbody_cod_ref", value: data.codRef });
             }
 
+            if (opciones && opciones.registroTransformado) opciones.validarAntesGuardar(newRecord);
             const newId = newRecord.save({ enableSourcing: false, ignoreMandatoryFields: true });
             nLog.audit("CreditMemoDAO", `NC creada: ${newId}`);
             return newId;

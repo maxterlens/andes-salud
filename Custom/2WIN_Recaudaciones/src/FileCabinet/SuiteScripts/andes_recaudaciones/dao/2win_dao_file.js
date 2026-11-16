@@ -16,7 +16,7 @@ define(["N/file", "N/log", "N/search"], function (file, nLog, search) {
      */
     function crearArchivo(datosArchivo) {
         try {
-            nLog.debug("crearArchivo - datosArchivo", datosArchivo);
+            // nLog.debug("crearArchivo - datosArchivo", datosArchivo);
 
             // Validar datos requeridos
             if (!datosArchivo.nombre) {
@@ -89,7 +89,7 @@ define(["N/file", "N/log", "N/search"], function (file, nLog, search) {
      */
     function cargarArchivo(fileId) {
         try {
-            nLog.debug("cargarArchivo - fileId", fileId);
+            // nLog.debug("cargarArchivo - fileId", fileId);
 
             // Validar ID de archivo
             if (!fileId) {
@@ -144,7 +144,7 @@ define(["N/file", "N/log", "N/search"], function (file, nLog, search) {
      */
     function actualizarArchivo(datosArchivo) {
         try {
-            nLog.debug("actualizarArchivo - datosArchivo", datosArchivo);
+            // nLog.debug("actualizarArchivo - datosArchivo", datosArchivo);
 
             // Validar ID de archivo
             if (!datosArchivo.id) {

@@ -288,7 +288,8 @@ define([
                         id: boleta.id,
                         subsidiaria: boleta.subsidiary,
                         folio: boleta.custbody_2winfolioacepta,
-                        monto: boleta.amount
+                        // monto: boleta.amount
+                        amount: boleta.amount
                     });
                 });
 
@@ -423,7 +424,8 @@ define([
                             id: invoiceId,
                             subsidiaria: subsidiariaId,
                             folio: boleta.folioBoleta,
-                            monto: boleta.montoTotal,
+                            // monto: boleta.montoTotal,
+                            amount: boleta.montoTotal,
                             boletaNula: boletaNula
                         });
                     } else {
@@ -562,7 +564,8 @@ define([
                             id: invoiceId,
                             subsidiaria: invoiceSubsidiariaId,
                             folio: boleta.folioBoleta,
-                            monto: boleta.montoTotal,
+                            // monto: boleta.montoTotal,
+                            amount: boleta.montoTotal,
                             boletaNula: boletaNula
                         });
                     }

@@ -4,11 +4,12 @@
 define(["N/record", "N/log", "N/search", "N/query"], function (record, nLog, search, query) {
     function createJournalEntry(data) {
         try {
-            nLog.debug("JournalData", data);
+            // nLog.debug("JournalData", data);
             const newRecord = record.create({
                 type: record.Type.JOURNAL_ENTRY,
                 isDynamic: true
             });
+            if (data.processKey) newRecord.setValue({ fieldId: "custbody_2win_as_rec_fact_key", value: data.processKey });
             const tipoDeDiario = data.tipoDeDiario;
             newRecord.setValue({ fieldId: "trandate", value: new Date(data.fechaTransaccion) });
             newRecord.setValue({ fieldId: "subsidiary", value: data.subsidiaria || 1 });
@@ -185,7 +186,7 @@ define(["N/record", "N/log", "N/search", "N/query"], function (record, nLog, sea
             // 4. Construcción de la Query
             // AN-275 - Agregar filtro para reconocer valor adicional en campo memo Forma Pago NC -%
             // SOP-545 - Se agrega filtro Bonos Bonificación Adicional - (Consolidado)
-            // AN-286 - Se agrega filtro Bonos Normales - (Consolidado) y se incluye filtro recordtype = 'journalentry'
+            // AN-286 - Se agrega filtro Bonos Normales - (Consolidado) y se incluye filtro recordtype = 'journalentry' y recordtype = 'advintercompanyjournalentry'
             let sql = `
                 SELECT DISTINCT
                     t.id,
@@ -207,8 +208,10 @@ define(["N/record", "N/log", "N/search", "N/query"], function (record, nLog, sea
                         OR t.memo LIKE 'Forma Pago -%'
                         OR t.memo LIKE 'Forma Pago NC -%'
                     )
-                    AND t.recordtype = 'journalentry'
-                    AND t.custbody_2win_created_from_income_flow = 'T'
+                    AND (
+                        t.recordtype = 'journalentry' 
+                        OR t.recordtype = 'advintercompanyjournalentry'
+                    )
                     AND t.isreversal = 'F'
                     AND t.reversaldate IS NULL
                     AND tl.custcol_2w_folio IN (${placeholders})
@@ -224,19 +227,40 @@ define(["N/record", "N/log", "N/search", "N/query"], function (record, nLog, sea
                 })
                 .asMappedResults(); // Recuerda: las llaves del JSON resultante vendrán siempre en minúsculas.
 
-            nLog.debug("getJournalEntriesByFolio - results", {
-                extension: results.length,
-                results: results
-            });
+            //nLog.debug("getJournalEntriesByFolio - results", { extension: results.length, results: results });
 
             return results;
         } catch (e) {
-            nLog.error("getJournalEntriesByFolio Error", e);
+            if (!data || data.registrarError !== false) nLog.error("getJournalEntriesByFolio Error", e);
             throw e;
         }
     }
 
+    // Reutiliza los filtros existentes. Divide los lotes cuando el resultado puede estar truncado.
+    function getJournalEntriesByFolioEnLotes(data) {
+        const folios = [...new Set(data.folios || [])];
+        const MAX_FOLIOS = 500;
+        const MAX_RESULTADOS = 5000;
+        var consultas = 0;
+        function consultar(lote) {
+            consultas++;
+            const resultados = getJournalEntriesByFolio({ folios: lote, registrarError: false });
+            if (resultados.length < MAX_RESULTADOS) return resultados;
+            if (lote.length === 1) {
+                throw new Error(`La búsqueda del folio ${lote[0]} alcanzó ${MAX_RESULTADOS} resultados; no se puede asegurar que los asientos estén completos`);
+            }
+            const mitad = Math.ceil(lote.length / 2);
+            return consultar(lote.slice(0, mitad)).concat(consultar(lote.slice(mitad)));
+        }
+        var asientos = [];
+        for (var inicio = 0; inicio < folios.length; inicio += MAX_FOLIOS) {
+            asientos = asientos.concat(consultar(folios.slice(inicio, inicio + MAX_FOLIOS)));
+        }
+        return { asientos: asientos, consultas: consultas };
+    }
+
     return {
+        getJournalEntriesByFolioEnLotes: getJournalEntriesByFolioEnLotes,
         createJournalEntry: createJournalEntry,
         createIntercompanyJournalEntry: createIntercompanyJournalEntry,
         getJournalEntriesByFolio: getJournalEntriesByFolio

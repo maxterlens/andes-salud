@@ -3,7 +3,7 @@
  * @NApiVersion 2.1
  * @NModuleScope SameAccount
  */
-define(["N/record", "N/search", "N/task", "N/log"], function (record, search, task, nLog) {
+define(["N/record", "N/search", "N/task", "N/log", "../libs/2win_lib_recaudaciones_fact_lotes"], function (record, search, task, nLog, libLotes) {
     /**
      * Estados de la cola
      */
@@ -74,6 +74,9 @@ define(["N/record", "N/search", "N/task", "N/log"], function (record, search, ta
                 value: 0
             });
 
+            if (datos.planVersion) recordCola.setValue({
+                fieldId: "custrecord_2w_as_fplan_version", value: datos.planVersion
+            });
             const idCola = recordCola.save();
             nLog.audit("crearRegistroCola - exito", `Registro de cola creado: ${idCola}`);
 
@@ -110,6 +113,19 @@ define(["N/record", "N/search", "N/task", "N/log"], function (record, search, ta
             nLog.error("verificarMapReduceActivo - error", error);
             throw error;
         }
+    }
+
+    function hayFlujoEnProceso(flujo) {
+        const resultados = search.create({
+            type: "customrecord_2w_as_cola_procesamiento",
+            filters: [
+                ["custrecord_2w_as_estado_cola", "is", ESTADO_COLA.EN_PROCESO],
+                "AND",
+                ["custrecord_2w_as_flujo", "is", flujo]
+            ],
+            columns: ["internalid"]
+        }).run().getRange({ start: 0, end: 1 });
+        return resultados.length > 0;
     }
 
     /**
@@ -294,7 +310,7 @@ define(["N/record", "N/search", "N/task", "N/log"], function (record, search, ta
             params[datosCola.parameterName] = idArchivo;
 
             const mapReduceTask = task.create({
-                taskType: task.TaskType.MAP_REDUCE,
+                taskType: datosCola.scriptId === libLotes.SCRIPT_PROGRAMADO ? task.TaskType.SCHEDULED_SCRIPT : task.TaskType.MAP_REDUCE,
                 scriptId: datosCola.scriptId,
                 deploymentId: datosCola.deploymentId,
                 params: params
@@ -318,6 +334,8 @@ define(["N/record", "N/search", "N/task", "N/log"], function (record, search, ta
         obtenerSiguientePendiente: obtenerSiguientePendiente,
         actualizarEstadoCola: actualizarEstadoCola,
         actualizarEstadoEIntentos: actualizarEstadoEIntentos,
-        ejecutarMapReduce: ejecutarMapReduce
+        ejecutarMapReduce: ejecutarMapReduce,
+        obtenerIdArchivo: obtenerIdArchivo,
+        hayFlujoEnProceso: hayFlujoEnProceso
     };
 });

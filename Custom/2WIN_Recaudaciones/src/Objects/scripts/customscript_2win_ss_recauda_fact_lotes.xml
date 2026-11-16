@@ -1,0 +1,70 @@
+<scheduledscript scriptid="customscript_2win_ss_recauda_fact_lotes">
+  <description>Scheduled con cola padre/hijos, tres intentos por tarea y supervisor periódico.</description>
+  <isinactive>F</isinactive>
+  <name>Procesador Masivo Recauda Fact. Lotes SS</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/andes_recaudaciones/scheduled/2win_ss_recaudaciones_fact_lotes.js]</scriptfile>
+  <scriptcustomfields>
+    <scriptcustomfield scriptid="custscript_2w_as_ss_fac_lotes_archivo">
+      <accesslevel>2</accesslevel>
+      <aidescription></aidescription>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description></description>
+      <displayheight></displayheight>
+      <displaytype>NORMAL</displaytype>
+      <displaywidth></displaywidth>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>TEXT</fieldtype>
+      <help></help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Archivo de facturación por lotes</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+  </scriptcustomfields>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_ss_recauda_fact_sup">
+      <custscript_2w_as_ss_fac_lotes_archivo></custscript_2w_as_ss_fac_lotes_archivo>
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <status>SCHEDULED</status>
+      <title>Supervisor Recauda Fact. Lotes SS</title>
+      <recurrence>
+        <daily>
+          <everyxdays>1</everyxdays>
+          <repeat>PT15M</repeat>
+          <startdate>2026-11-05</startdate>
+          <starttime>16:00:00Z</starttime>
+        </daily>
+      </recurrence>
+    </scriptdeployment>
+    <scriptdeployment scriptid="customdeploy_2win_ss_recauda_fact_lotes">
+      <custscript_2w_as_ss_fac_lotes_archivo></custscript_2w_as_ss_fac_lotes_archivo>
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <status>NOTSCHEDULED</status>
+      <title>Procesador Masivo Recauda Fact. Lotes SS</title>
+      <recurrence>
+        <single>
+          <repeat></repeat>
+          <startdate>2026-11-05</startdate>
+          <starttime>21:00:00Z</starttime>
+        </single>
+      </recurrence>
+    </scriptdeployment>
+  </scriptdeployments>
+</scheduledscript>

@@ -1,0 +1,22 @@
+<restlet scriptid="customscript_rl_recaudacione_f_caja">
+  <description></description>
+  <isinactive>F</isinactive>
+  <name>Recaudaciones - Flujo Caja</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/andes_recaudaciones/interfaces/2win_rl_recaudaciones_caja.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_rl_recaudacione_f_caja">
+      <allemployees>T</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <status>RELEASED</status>
+      <title>Recaudaciones - Flujo Caja</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</restlet>

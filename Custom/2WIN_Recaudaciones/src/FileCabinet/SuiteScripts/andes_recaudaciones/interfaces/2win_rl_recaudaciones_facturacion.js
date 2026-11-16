@@ -2,7 +2,7 @@
  *@NApiVersion 2.1
  *@NScriptType Restlet
  */
-define(["N/log", "../domain/2win_dom_operaciones_masivas"], function (nLog, { OperacionMasiva }) {
+define(["N/log", "../domain/2win_dom_cola_recaudaciones_fact_lotes"], function (nLog, domCola) {
     /**
      * Procesa request POST para crear nuevas recaudaciones
      * @param {Object} request - Objeto de request HTTP
@@ -28,17 +28,7 @@ define(["N/log", "../domain/2win_dom_operaciones_masivas"], function (nLog, { Op
                 };
             }
             
-            const operacion = new OperacionMasiva({
-                nombre: "Recaudaciones Flujo Facturacion",
-                tipoMensaje: "SEND^RECAUDACION^FACTURACION",
-                scriptIdMapReduce: "customscript_2win_mr_recaudaciones_fac",
-                deploymentIdMapReduce: "customdeploy_2win_mr_recaudaciones_fac",
-                folderId: "./Recaudaciones Facturacion",
-                mapReduceParameter: "custscript_2w_as_datos_recaudaciones_fac",
-                tipoFlujo: "FACTURACION"
-            });
-            context.tipoOperacion = "crear";
-            const respuesta = operacion.procesar(context);
+            const respuesta = domCola.recibir(context);
             nLog.debug("_post - respuesta", respuesta);
             return respuesta || {};
         } catch (err) {

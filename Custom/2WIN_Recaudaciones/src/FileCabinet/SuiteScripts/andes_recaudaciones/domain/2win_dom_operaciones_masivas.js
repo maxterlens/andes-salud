@@ -151,7 +151,8 @@ define([
                 nLog.debug(`${this.nombre} - registroColaCreado`, { idCola, datosCola });
 
                 // Verificar si hay un Map/Reduce activo
-                const tieneMapReduceActivo = daoCola.verificarMapReduceActivo(this.deploymentIdMapReduce);
+                const tieneMapReduceActivo = daoCola.verificarMapReduceActivo(this.deploymentIdMapReduce)
+                    || (this.tipoFlujo === "FACTURACION" && daoCola.hayFlujoEnProceso(daoCola.FLUJO.FACTURACION));
                 nLog.debug(`${this.nombre} - tieneMapReduceActivo`, tieneMapReduceActivo);
 
                 let taskId = null;

@@ -13,12 +13,8 @@ define(["N/https", "N/log", "N/encode"], function (https, nLog, encode) {
      */
     function ejecutarPeticion(tipo, url, token, body) {
         try {
-            nLog.audit("ejecutarPeticion - parametros", {
-                tipo: tipo,
-                url: url,
-                token: token,
-                body: body ? body : "sin body"
-            });
+            // nLog.audit("ejecutarPeticion - parametros", { tipo: tipo, url: url });
+            // No registrar el token ni el contenido completo de la petición.
 
             // Construir cabecera
             let cabecera = {
@@ -61,7 +57,7 @@ define(["N/https", "N/log", "N/encode"], function (https, nLog, encode) {
                 });
             }
 
-            nLog.audit("ejecutarPeticion - respuesta", respuesta);
+            nLog.audit("ejecutarPeticion - respuesta", { tipo: tipo, url: url, codigo: respuesta.code });
 
             // // Evaluar codigo de respuesta
             // if (respuesta.code !== 400) {
@@ -117,7 +113,7 @@ define(["N/https", "N/log", "N/encode"], function (https, nLog, encode) {
         if (!accessToken) {
             throw new Error("La respuesta del token no contiene un access_token.");
         }
-        nLog.debug("generarToken - accessToken", accessToken);
+        // No registrar el token de acceso.
         return accessToken;
     }
 
@@ -130,7 +126,7 @@ define(["N/https", "N/log", "N/encode"], function (https, nLog, encode) {
      */
     function ejecutarPeticionAutenticada(tipo, url, body) {
         try {
-            nLog.audit("Inicio PeticionAutenticada", `Iniciando petición autenticada: ${tipo} a ${url}`);
+            // nLog.audit("Inicio PeticionAutenticada", `Iniciando petición autenticada: ${tipo} a ${url}`);
 
             // Paso 1: Generar el token de autenticación.
             const token = generarToken();
@@ -138,7 +134,7 @@ define(["N/https", "N/log", "N/encode"], function (https, nLog, encode) {
             // Paso 2: Ejecutar la petición principal con el token obtenido.
             const respuesta = ejecutarPeticion(tipo, url, token, body);
 
-            nLog.audit("ejecutarPeticionAutenticada - respuesta final", respuesta);
+            // La respuesta ya se registra con su código en ejecutarPeticion.
 
             return respuesta;
         } catch (error) {

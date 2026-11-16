@@ -1,0 +1,60 @@
+<mapreducescript scriptid="customscript_2win_mr_eliminacion">
+  <description>MapReduce para eliminación masiva de transacciones de caja, facturación y prefacturas</description>
+  <isinactive>F</isinactive>
+  <name>MapReduce Eliminación Transacciones</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/andes_recaudaciones/map_reduce/2win_mr_eliminacion.js]</scriptfile>
+  <scriptcustomfields>
+    <scriptcustomfield scriptid="custscript_2w_mr_eliminacion_cache_id">
+      <accesslevel>2</accesslevel>
+      <aidescription></aidescription>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>ID del cache que contiene los registros a eliminar</description>
+      <displayheight></displayheight>
+      <displaytype>NORMAL</displaytype>
+      <displaywidth></displaywidth>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>CLOBTEXT</fieldtype>
+      <help>ID único del cache con los datos de transacciones a eliminar</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Cache ID Eliminación</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+  </scriptcustomfields>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_2win_mr_eliminacion">
+      <buffersize>1</buffersize>
+      <concurrencylimit>1</concurrencylimit>
+      <custscript_2w_mr_eliminacion_cache_id></custscript_2w_mr_eliminacion_cache_id>
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <queueallstagesatonce>T</queueallstagesatonce>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>NOTSCHEDULED</status>
+      <title>MapReduce Eliminación Transacciones</title>
+      <yieldaftermins>60</yieldaftermins>
+      <recurrence>
+        <single>
+          <repeat></repeat>
+          <startdate>2026-01-29</startdate>
+          <starttime>00:00:00Z</starttime>
+        </single>
+      </recurrence>
+    </scriptdeployment>
+  </scriptdeployments>
+</mapreducescript>
