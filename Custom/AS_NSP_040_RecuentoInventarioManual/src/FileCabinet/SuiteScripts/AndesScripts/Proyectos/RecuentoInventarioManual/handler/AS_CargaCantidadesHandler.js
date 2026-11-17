@@ -1,91 +1,76 @@
 /**
  * AS_NSP_040 — Recuento de Inventario Manual
- * @description Proceso del boton Cargar CSV del recuento: sube las cantidades
- *              contadas por lote y las escribe en el recuento.
+ * @description Proceso de la pantalla Cargar CSV: sube las cantidades contadas
+ *              por lote y las manda a escribir en el recuento.
  *
- *              agregarBoton      → con el recuento Iniciado, el boton en la vista
- *                                  (UE).
- *              mostrarFormulario → la pantalla para elegir el archivo (GET).
- *              cargarCantidades  → lee el CSV, valida cada fila, escribe la
- *                                  Cantidad del recuento y el detalle por lote
- *                                  y vuelve al recuento (POST).
+ *              mostrarFormulario → la pantalla para elegir el recuento y el
+ *                                  archivo (GET).
+ *              cargarCantidades  → lee el CSV, valida cada fila, deja las
+ *                                  cantidades en la cola, lanza el Scheduled si
+ *                                  esta libre y lleva al usuario a la solicitud
+ *                                  (POST).
  *
- *              El CSV es el TXT de Descargar TXT con RECUENTO lleno:
- *              ID;ARTICULO;RECUENTO;UBICACION;LOTE, una fila por lote. Una fila
- *              con RECUENTO vacio no se toca. ARTICULO es solo para leerlo.
- *              Si una fila no pasa la validacion no se carga nada, como en el
- *              AS_NSP_032. Si NetSuite rechaza el guardado, la pantalla muestra
- *              su mensaje.
+ *              Las cantidades no se escriben aqui: guardar un recuento de 2.703
+ *              articulos tardo entre 10 y 15 minutos en QA. Lo hace
+ *              AS_ColaHandler desde el Scheduled, y el usuario puede cerrar la
+ *              pagina. Dos cargas del mismo recuento no chocan: la cola las
+ *              procesa en orden y la segunda solo pisa los articulos que trae.
  *
- * CHANGELOG v1.2.1 (2026-11-16):
- * - [FIX] La conversion del archivo a texto y pasarAMayusculasSinEspaciosExtra
- *         pasan a AS_RecuentoInventarioManualUtils.
- *
- * CHANGELOG v1.2.0 (2026-11-16):
- * - [FEAT] El LOTE es libre: puede ser uno nuevo (prueba1) para estandarizar el
- *          nombre; no se compara con la instantanea ni con el stock.
- *
- * CHANGELOG v1.1.0 (2026-11-16):
- * - [FEAT] CSV de 5 columnas con ubicacion y lote: valida ID, ubicacion, cantidad
- *          y lote, y suma los lotes de cada articulo. Se quita el lote fijo.
- *
- * CHANGELOG v1.0.0 (2026-11-15):
- * - [FEAT] agregarBoton, mostrarFormulario y cargarCantidades, version de prueba.
+ *              El CSV trae UBICACION;ID;ARTICULO;RECUENTO;LOTE, una fila por
+ *              lote. Una fila con RECUENTO vacio deja el articulo vacio en el
+ *              recuento (sin cantidad ni lotes): vacio es "no se conto", no 0, y
+ *              no pide LOTE. Un articulo que no viene en el CSV no se toca.
+ *              ARTICULO es solo para leerlo. Si una fila no pasa la validacion
+ *              no se carga nada, como en el AS_NSP_032. Si NetSuite rechaza el
+ *              guardado, la solicitud queda en Error con su mensaje.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.2.1
+ * @version 1.7.0
  */
 define(['N/redirect', '../form/AS_CargaCantidadesForm', '../data/query/AS_RecuentoInventarioManualQuery',
-        '../data/record/AS_RecuentoInventarioRecord', '../utils/AS_RecuentoInventarioManualUtils',
+        '../data/record/AS_ColaRecord', '../utils/AS_RecuentoInventarioManualUtils',
         '../constants/AS_RecuentoInventarioManualConstants'],
-    (redirect, cargaCantidadesForm, recuentoInventarioManualQuery, recuentoInventarioRecord, UTILS, CONSTANTES) => {
+    (redirect, cargaCantidadesForm, recuentoInventarioManualQuery, colaRecord, UTILS, CONSTANTES) => {
 
     // ─────────────────────────────────────────────────────────────────────────
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    function agregarBoton(form, recuento) {
-        if (recuento.getValue({ fieldId: 'statuskey' }) !== CONSTANTES.RECUENTO.ESTADO_INICIADO) return;
-        cargaCantidadesForm.agregarBoton(form);
-    }
-
-    function mostrarFormulario(context, recuentoId) {
-        context.response.writePage(cargaCantidadesForm.construirFormulario(recuentoId));
+    function mostrarFormulario(context) {
+        responderConFormulario(context, '');
     }
 
     function cargarCantidades(context, recuentoId) {
         const contenido = leerArchivo(context.request);
-        if (!contenido) return responderConError(context, recuentoId, CONSTANTES.CARGA.SIN_ARCHIVO);
+        if (!contenido) return responderConFormulario(context, recuentoId, CONSTANTES.CARGA.SIN_ARCHIVO);
         const filas = leerFilas(contenido);
-        if (!filas.length) return responderConError(context, recuentoId, CONSTANTES.CARGA.SIN_FILAS);
+        if (!filas.length) return responderConFormulario(context, recuentoId, CONSTANTES.CARGA.SIN_FILAS);
         const ubicacion = recuentoInventarioManualQuery.obtenerUbicacionRecuento(recuentoId);
         const articulos = recuentoInventarioManualQuery.obtenerCantidadesRecuento(recuentoId).map((cantidad) => cantidad.id);
         const errores   = filas.map((fila) => validarFila(fila, ubicacion, articulos)).filter((error) => error);
-        if (errores.length) return responderConError(context, recuentoId, errores.join('<br>'));
-        let actualizadas;
-        try {
-            actualizadas = recuentoInventarioRecord.actualizarCantidades(recuentoId, agruparPorArticulo(filas));
-        } catch (fallo) {
-            if (fallo.name !== 'USER_ERROR') throw fallo;
-            return responderConError(context, recuentoId, fallo.message);
-        }
+        if (errores.length) return responderConFormulario(context, recuentoId, errores.join('<br>'));
+        const cantidades  = agruparPorArticulo(filas);
+        const solicitudId = colaRecord.crearSolicitud(CONSTANTES.COLA.TIPOS.CARGA, { recuento: recuentoId, datos: { cantidades: cantidades } });
+        UTILS.lanzarScheduledSiEstaLibre(CONSTANTES.COLA.PROCESADOR, CONSTANTES.COLA.DEPLOYMENT);
 
         log.audit({
-            title  : 'RECUENTO INVENTARIO CANTIDADES CARGADAS',
-            details: 'recuento: ' + recuentoId + ' | filas: ' + filas.length + ' | lineas actualizadas: ' + actualizadas,
+            title  : 'RECUENTO INVENTARIO CARGA ENVIADA',
+            details: 'solicitud: ' + solicitudId + ' | recuento: ' + recuentoId + ' | filas: ' + filas.length
+                   + ' | articulos: ' + Object.keys(cantidades).length,
         });
 
-        redirect.toRecord({ type: CONSTANTES.RECUENTO.TIPO, id: recuentoId });
+        redirect.toRecord({ type: CONSTANTES.COLA.TIPO, id: solicitudId });
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Secundarias
     // ─────────────────────────────────────────────────────────────────────────
 
-    function responderConError(context, recuentoId, mensaje) {
-        context.response.writePage(cargaCantidadesForm.construirFormulario(recuentoId, mensaje));
+    function responderConFormulario(context, recuentoId, alerta) {
+        const recuentos = recuentoInventarioManualQuery.obtenerRecuentosIniciados();
+        context.response.writePage(cargaCantidadesForm.construirFormulario(recuentoId, recuentos, alerta));
     }
 
     function leerArchivo(request) {
@@ -94,10 +79,6 @@ define(['N/redirect', '../form/AS_CargaCantidadesForm', '../data/query/AS_Recuen
         return UTILS.convertirArchivoATexto(archivo);
     }
 
-    /**
-     * Las filas con RECUENTO, saltando el encabezado. Excel en es_ES puede
-     * guardar la cantidad con coma decimal: se pasa a punto antes de convertirla.
-     */
     function leerFilas(contenido) {
         const separador = contenido.indexOf(';') >= 0 ? ';' : ',';
 
@@ -106,14 +87,14 @@ define(['N/redirect', '../form/AS_CargaCantidadesForm', '../data/query/AS_Recuen
                 const columnas = fila.split(separador);
                 return {
                     numero   : posicion + 1,
-                    id       : (columnas[0] || '').trim(),
-                    recuento : (columnas[2] || '').trim().replace(',', '.'),
-                    ubicacion: (columnas[3] || '').trim(),
+                    ubicacion: (columnas[0] || '').trim(),
+                    id       : (columnas[1] || '').trim(),
+                    recuento : (columnas[3] || '').trim().replace(',', '.'),
                     lote     : (columnas[4] || '').trim(),
                 };
             })
             .slice(1)
-            .filter((fila) => fila.id && fila.recuento !== '');
+            .filter((fila) => fila.id);
     }
 
     function validarFila(fila, ubicacion, articulos) {
@@ -122,20 +103,21 @@ define(['N/redirect', '../form/AS_CargaCantidadesForm', '../data/query/AS_Recuen
         if (UTILS.pasarAMayusculasSinEspaciosExtra(fila.ubicacion) !== UTILS.pasarAMayusculasSinEspaciosExtra(ubicacion)) {
             return prefijo + 'la ubicacion "' + fila.ubicacion + '" no es la del recuento (' + ubicacion + ')';
         }
+        if (fila.recuento === '') return '';
         if (isNaN(Number(fila.recuento)) || Number(fila.recuento) < 0) return prefijo + 'el RECUENTO "' + fila.recuento + '" no es una cantidad valida';
         if (!fila.lote) return prefijo + 'falta el LOTE';
         return '';
     }
 
-    /**
-     * { idArticulo: { total, lotes: [{ lote, cantidad }] } }: la linea del
-     * recuento lleva el total y su detalle un lote por fila.
-     */
     function agruparPorArticulo(filas) {
         const cantidades = {};
 
         filas.forEach((fila) => {
-            if (!cantidades[fila.id]) cantidades[fila.id] = { total: 0, lotes: [] };
+            if (fila.recuento === '') {
+                if (!cantidades[fila.id]) cantidades[fila.id] = { total: null, lotes: [] };
+                return;
+            }
+            if (!cantidades[fila.id] || cantidades[fila.id].total === null) cantidades[fila.id] = { total: 0, lotes: [] };
             cantidades[fila.id].total += Number(fila.recuento);
             cantidades[fila.id].lotes.push({ lote: fila.lote, cantidad: Number(fila.recuento) });
         });
@@ -144,7 +126,6 @@ define(['N/redirect', '../form/AS_CargaCantidadesForm', '../data/query/AS_Recuen
     }
 
     return {
-        agregarBoton     : agregarBoton,
         mostrarFormulario: mostrarFormulario,
         cargarCantidades : cargarCantidades,
     };

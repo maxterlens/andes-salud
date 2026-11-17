@@ -7,13 +7,6 @@
  *              Va como HTML en una ficha propia: la sublista Articulos del
  *              recuento no dibuja columnas personalizadas (probado en QA con
  *              custcol, 2026-10-22).
- *
- * CHANGELOG v1.0.1 (2026-11-16):
- * - [FIX] formatearMoneda pasa a AS_RecuentoInventarioManualUtils.
- *
- * CHANGELOG v1.0.0 (2026-11-15):
- * - [FEAT] Pasa del AS_NSP_032 al AS_NSP_040 sin cambios de logica: el 032 se retira.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
@@ -44,12 +37,6 @@ define(['N/ui/serverWidget', '../utils/AS_RecuentoInventarioManualUtils', '../co
     // Secundarias
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Imita la sublista nativa Articulos: cabeceras en mayusculas chicas y
-     * grises, sin fondo, y filas separadas por una linea clara. En Iniciado
-     * Instantanea y Variacion van en blanco: NetSuite calcula la variacion al
-     * completar.
-     */
     function armarTabla(lineas, totales, iniciado) {
         const cabecera = 'font-size:8pt;font-weight:normal;color:#666;text-transform:uppercase;'
                        + 'padding:6px 8px;border-bottom:1px solid #ccc;white-space:nowrap;';

@@ -8,35 +8,16 @@
  *                                          ubicacion elegida, la lista de sus
  *                                          articulos para marcar.
  *                custpage_recuento       → boton Descargar TXT: baja el archivo.
- *                custpage_recuento_carga → boton Cargar CSV: la pantalla para
- *                                          subir el archivo.
- *                custpage_generacion     → el aviso de la generacion pregunta
- *                                          si ya termino (responde JSON).
+ *                custpage_carga          → boton Cargar CSV de esta pantalla:
+ *                                          la pantalla de carga, para elegir
+ *                                          el recuento.
  *              POST
- *                sin parametros          → Generar recuento: manda a crear el
- *                                          recuento al Scheduled con los
- *                                          articulos marcados.
- *                custpage_recuento_carga → Cargar: escribe las cantidades del
- *                                          CSV en el recuento.
- *
- * CHANGELOG v1.3.0 (2026-11-16):
- * - [FEAT] GET con custpage_generacion y custpage_tarea: estado de la generacion.
- *
- * CHANGELOG v1.2.2 (2026-11-16):
- * - [FIX] Cabecera: Generar recuento ahora va al Scheduled. El ruteo no cambia.
- *
- * CHANGELOG v1.2.1 (2026-11-16):
- * - [FIX] onRequest ordenado: un bloque GET y uno POST, cada caso con llaves;
- *         los parametros en obtenerParametros.
- *
- * CHANGELOG v1.2.0 (2026-11-15):
- * - [FEAT] custpage_recuento_carga: pantalla y carga de cantidades por CSV.
- *
- * CHANGELOG v1.1.0 (2026-11-15):
- * - [FEAT] GET con custpage_recuento: descarga el TXT del recuento.
- *
- * CHANGELOG v1.0.0 (2026-11-15):
- * - [FEAT] Mostrar la pantalla y generar el recuento.
+ *                sin parametros          → Generar recuento: deja la solicitud
+ *                                          de generacion en la cola y lleva a
+ *                                          ella.
+ *                custpage_recuento_carga → Cargar: valida el CSV, deja la
+ *                                          solicitud de carga en la cola y
+ *                                          lleva a ella.
  *
  * @NApiVersion 2.1
  * @NScriptType Suitelet
@@ -44,7 +25,7 @@
  * @scriptid     customscript_as_rec_inv_man_stlt
  * @deploymentid customdeploy_as_rec_inv_man_stlt
  * @author Andes Salud
- * @version 1.3.0
+ * @version 1.6.0
  */
 define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRecuentoHandler',
         './handler/AS_CargaCantidadesHandler', './constants/AS_RecuentoInventarioManualConstants'],
@@ -57,10 +38,8 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
             if (context.request.method === 'GET') {
                 if (parametros.recuentoId) {
                     archivoRecuentoHandler.descargarArchivo(context, parametros.recuentoId);
-                } else if (parametros.recuentoCargaId) {
-                    cargaCantidadesHandler.mostrarFormulario(context, parametros.recuentoCargaId);
-                } else if (parametros.codigo) {
-                    recuentoInventarioManualHandler.consultarGeneracion(context, parametros.codigo, parametros.tareaId);
+                } else if (parametros.carga) {
+                    cargaCantidadesHandler.mostrarFormulario(context);
                 } else {
                     recuentoInventarioManualHandler.mostrarFormulario(context);
                 }
@@ -87,8 +66,7 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
         return {
             recuentoId     : context.request.parameters[CONSTANTES.CAMPOS.RECUENTO],
             recuentoCargaId: context.request.parameters[CONSTANTES.CAMPOS.RECUENTO_CARGA],
-            codigo         : context.request.parameters[CONSTANTES.CAMPOS.GENERACION],
-            tareaId        : context.request.parameters[CONSTANTES.CAMPOS.TAREA],
+            carga          : context.request.parameters[CONSTANTES.CAMPOS.CARGA],
         };
     }
 

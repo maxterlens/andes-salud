@@ -4,48 +4,10 @@
  *              del formulario, el recuento nativo, la ficha de importes, los
  *              roles que aprueban, el boton y el archivo TXT y los textos.
  *
- * CHANGELOG v1.6.0 (2026-11-16):
- * - [FEAT] TXT con el formato de la pistola: 14 columnas separadas por coma,
- *          PRO_CORREL,PRO_CODIGO,COD_BARRA,...,Cantidad.
- *
- * CHANGELOG v1.5.0 (2026-11-16):
- * - [FEAT] Seguimiento de la generacion: campos del codigo, la tarea, el estado y
- *          el tiempo, textos de cada estado y cada cuanto se consulta.
- *
- * CHANGELOG v1.4.0 (2026-11-16):
- * - [FEAT] Lista de articulos con check y la generacion del recuento en segundo
- *          plano.
- *          Se quitan ARTICULOS_DATA y los textos del articulo repetido.
- *
- * CHANGELOG v1.3.2 (2026-11-16):
- * - [FIX] DETALLE_ESTADO: NetSuite exige el estado de inventario en cada lote
- *         del detalle ("Introduzca valores para: Estado"). ESTADO_INVENTARIO 1 =
- *         Good, el de todo el stock en QA.
- *
- * CHANGELOG v1.3.1 (2026-11-16):
- * - [FIX] El detalle del recuento usa la sublista inventorydetail y el lote va en
- *         inventorynumber (no inventoryassignment ni receiptinventorynumber, que
- *         NetSuite ignoraba sin error). Confirmado con el log del 2026-11-16.
- *
- * CHANGELOG v1.3.0 (2026-11-16):
- * - [FEAT] Archivo de 5 columnas ID;ARTICULO;RECUENTO;UBICACION;LOTE, textos de
- *          validacion de la carga. Se quita el lote fijo de prueba.
- *
- * CHANGELOG v1.2.0 (2026-11-15):
- * - [FEAT] Carga de cantidades por CSV: parametros, boton, textos y campos del
- *          detalle del recuento. TXT con ID en vez de AJUSTADA.
- *
- * CHANGELOG v1.1.0 (2026-11-15):
- * - [FEAT] Parametro del recuento, boton Descargar TXT y nombre del archivo.
- *
- * CHANGELOG v1.0.0 (2026-11-15):
- * - [FEAT] Constantes de la pantalla de recuento con articulos agregados a mano.
- * - [FEAT] Estados, botones, importes y roles del UE que viene del AS_NSP_032.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.6.0
+ * @version 1.8.2
  */
 define([], () => {
 
@@ -56,20 +18,7 @@ define([], () => {
         GENERANDO_TEXTO           : 'Se esta enviando el recuento a generar. No cierre ni recargue la pagina.',
         ALERTA_TITULO             : 'No se pudo generar el recuento',
         SIN_ARTICULOS             : 'Marque al menos un articulo.',
-        OCUPADO                   : 'Se esta generando otro recuento. Intente de nuevo en unos minutos.',
-        ENVIADO_TITULO            : 'Generando recuento',
-        ENVIADO_TEXTO             : 'Se esta creando el recuento en segundo plano. Al terminar, esta pagina abre '
-                                  + 'el recuento. Con miles de articulos tarda varios minutos: no recargue la pagina.',
-        FALLO_GENERACION          : 'El recuento no se pudo generar. Revise el log del script AS Recuento '
-                                  + 'Inventario Manual SS.',
-        CODIGO_PREFIJO            : 'AS_REC_INV_',
-        SEGUIMIENTO_SEGUNDOS      : 5,
-        ESTADOS_TAREA             : {
-            PENDING   : 'En cola, esperando turno',
-            PROCESSING: 'Creando el recuento',
-            COMPLETE  : 'Abriendo el recuento',
-            FAILED    : 'Fallo',
-        },
+        GENERACION_PENDIENTE      : 'Ya hay un recuento en cola o generandose para esta ubicacion (solicitud ',
         CLIENT_SCRIPT             : '/SuiteScripts/AndesScripts/Proyectos/RecuentoInventarioManual/AS_RecuentoInventarioManual_CS_2.1.js',
     };
 
@@ -78,42 +27,86 @@ define([], () => {
         DEPLOYMENT: 'customdeploy_as_rec_inv_man_stlt',
     };
 
-    /**
-     * El Scheduled que crea el recuento. Recibe la cabecera y los articulos
-     * marcados en un solo parametro de texto largo, como JSON. Un Scheduled y
-     * no un Map/Reduce: el recuento es un solo registro que se guarda de una
-     * vez, y el reduce de un Map/Reduce corta a los 15 minutos.
-     */
-    const GENERACION = {
-        ID             : 'customscript_as_rec_inv_man_ss',
-        DEPLOYMENT     : 'customdeploy_as_rec_inv_man_ss',
-        PARAMETRO_DATOS: 'custscript_as_rec_inv_man_datos',
-        COLA_OCUPADA   : 'FAILED_TO_SUBMIT_JOB_REQUEST_1',
+    const COLA = {
+        TIPO              : 'customrecord_as_rec_inv_man_cola',
+        CAMPOS            : {
+            TIPO     : 'custrecord_as_rec_inv_man_cola_tipo',
+            ESTADO   : 'custrecord_as_rec_inv_man_cola_estado',
+            RECUENTO : 'custrecord_as_rec_inv_man_cola_recuento',
+            UBICACION: 'custrecord_as_rec_inv_man_cola_ubicacion',
+            DATOS    : 'custrecord_as_rec_inv_man_cola_datos',
+            ERROR    : 'custrecord_as_rec_inv_man_cola_error',
+            TIEMPOS  : 'custrecord_as_rec_inv_man_cola_tiempos',
+            INICIO   : 'custrecord_as_rec_inv_man_cola_inicio',
+            FIN      : 'custrecord_as_rec_inv_man_cola_fin',
+        },
+        TIPOS             : {
+            GENERACION: 'GENERACION',
+            CARGA     : 'CARGA',
+        },
+        TIPOS_LABEL       : {
+            GENERACION: 'Creación de recuento',
+            CARGA     : 'Carga de recuento',
+        },
+        CAMPO_INACTIVO    : 'isinactive',
+        VISTA             : {
+            GRUPO    : 'custpage_grp_cola',
+            TITULO   : 'Historial de Recuento',
+            RECUENTO : 'custpage_cola_recuento',
+            TIPO     : 'custpage_cola_tipo',
+            INICIO   : 'custpage_cola_inicio',
+            FIN      : 'custpage_cola_fin',
+        },
+        ESTADOS           : {
+            PENDIENTE : 'PENDIENTE',
+            PROCESANDO: 'PROCESANDO',
+            LISTO     : 'LISTO',
+            ERROR     : 'ERROR',
+        },
+        PROCESADOR        : 'customscript_as_rec_inv_man_ss',
+        DEPLOYMENT        : 'customdeploy_as_rec_inv_man_ss',
+        UNIDADES_MINIMAS  : 500,
+        MINUTOS_MAXIMOS   : 30,
+        REFRESCO_SEGUNDOS : 15,
+        TITULOS           : {
+            PENDIENTE : 'En cola',
+            PROCESANDO: 'Procesando',
+            LISTO     : 'Listo',
+            ERROR     : 'Error',
+        },
+        TEXTOS            : {
+            PENDIENTE   : 'En cola. Solicitudes antes de esta: ',
+            PROCESANDO  : 'Procesando. Con miles de articulos tarda varios minutos.',
+            LISTO       : 'Listo.',
+            ERROR       : 'No se pudo completar. ',
+            REFRESCO    : 'Esta pagina se actualiza sola mientras la solicitud no termine. Puede cerrarla: '
+                        + 'la solicitud sigue igual.',
+            ABRIR       : 'Abrir el recuento',
+            INTERRUMPIDA: 'El proceso se interrumpio antes de terminar. Revise si el recuento quedo creado '
+                        + 'o con las cantidades antes de volver a enviar.',
+        },
     };
 
     const GRUPOS = {
-        CABECERA  : 'custpage_grp_cabecera',
-        GENERACION: 'custpage_grp_generacion',
+        CABECERA: 'custpage_grp_cabecera',
+        CARGA   : 'custpage_grp_carga',
     };
 
     const CAMPOS = {
-        SUBSIDIARIA     : 'custpage_subsidiaria',
-        UBICACION       : 'custpage_ubicacion',
-        DEPARTAMENTO    : 'custpage_departamento',
-        CLASE           : 'custpage_clase',
-        FECHA           : 'custpage_fecha',
-        CUENTA          : 'custpage_cuenta',
-        NOTA            : 'custpage_nota',
-        CUENTAS_DATA    : 'custpage_cuentas_data',
-        UBICACIONES_DATA: 'custpage_ubicaciones_data',
-        RECUENTO        : 'custpage_recuento',
-        RECUENTO_CARGA  : 'custpage_recuento_carga',
-        ARCHIVO         : 'custpage_archivo',
-        GENERACION      : 'custpage_generacion',
-        TAREA           : 'custpage_tarea',
-        ESTADO          : 'custpage_estado_generacion',
-        TIEMPO          : 'custpage_tiempo_generacion',
-        TOTAL_ARTICULOS : 'custpage_total_articulos',
+        SUBSIDIARIA      : 'custpage_subsidiaria',
+        UBICACION        : 'custpage_ubicacion',
+        DEPARTAMENTO     : 'custpage_departamento',
+        CLASE            : 'custpage_clase',
+        FECHA            : 'custpage_fecha',
+        CUENTA           : 'custpage_cuenta',
+        NOTA             : 'custpage_nota',
+        CUENTAS_DATA     : 'custpage_cuentas_data',
+        UBICACIONES_DATA : 'custpage_ubicaciones_data',
+        RECUENTO         : 'custpage_recuento',
+        RECUENTO_CARGA   : 'custpage_recuento_carga',
+        CARGA            : 'custpage_carga',
+        ARCHIVO          : 'custpage_archivo',
+        REFRESCO         : 'custpage_refresco',
     };
 
     const BOTONES = {
@@ -124,12 +117,13 @@ define([], () => {
     };
 
     const CARGA = {
-        TITULO       : 'Cargar cantidades del recuento',
-        BOTON_CARGAR : 'Cargar',
-        ARCHIVO_LABEL: 'Archivo CSV (ID;ARTICULO;RECUENTO;UBICACION;LOTE)',
-        ALERTA_TITULO: 'No se pudieron cargar las cantidades',
-        SIN_ARCHIVO  : 'Seleccione el archivo CSV',
-        SIN_FILAS    : 'El archivo no trae ninguna fila con RECUENTO',
+        TITULO        : 'Cargar cantidades del recuento',
+        BOTON_CARGAR  : 'Cargar',
+        RECUENTO_LABEL: 'Recuento',
+        ARCHIVO_LABEL : 'Archivo CSV (UBICACION;ID;ARTICULO;RECUENTO;LOTE)',
+        ALERTA_TITULO : 'No se pudieron cargar las cantidades',
+        SIN_ARCHIVO   : 'Seleccione el archivo CSV',
+        SIN_FILAS     : 'El archivo no trae ninguna fila con ID',
     };
 
     const ARCHIVO = {
@@ -178,7 +172,7 @@ define([], () => {
     return {
         FORMULARIO       : FORMULARIO,
         SCRIPT           : SCRIPT,
-        GENERACION       : GENERACION,
+        COLA             : COLA,
         GRUPOS           : GRUPOS,
         CAMPOS           : CAMPOS,
         BOTONES          : BOTONES,

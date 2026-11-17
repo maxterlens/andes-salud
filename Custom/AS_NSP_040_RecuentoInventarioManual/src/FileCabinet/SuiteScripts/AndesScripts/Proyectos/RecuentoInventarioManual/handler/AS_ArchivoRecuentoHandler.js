@@ -17,19 +17,6 @@
  *              Cada clic vuelve a generar el archivo y no se guarda en el File
  *              Cabinet.
  *
- * CHANGELOG v1.3.0 (2026-11-16):
- * - [FEAT] Formato de la pistola; ya no se lee la ubicacion del recuento.
- *
- * CHANGELOG v1.2.0 (2026-11-16):
- * - [FEAT] Una fila por articulo del recuento con LOTE vacio, incluidos los de
- *          stock 0; ya no se leen los lotes del stock.
- *
- * CHANGELOG v1.1.0 (2026-11-16):
- * - [FEAT] Formato de Cargar CSV.
- *
- * CHANGELOG v1.0.0 (2026-11-15):
- * - [FEAT] agregarBoton y descargarArchivo, version de prueba.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud

@@ -8,28 +8,21 @@
  *                                                 a mano.
  *              formatearMoneda                  → un importe con el formato de
  *                                                 moneda del usuario.
- *
- * CHANGELOG v1.0.0 (2026-11-16):
- * - [FEAT] Sale de AS_CargaCantidadesHandler y AS_ImporteRecuentoForm, como el
- *          utils del AS_NSP_032.
+ *              lanzarScheduledSiEstaLibre       → lanza un Scheduled; si ya
+ *                                                 esta corriendo, no hace nada.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.0.0
+ * @version 1.1.0
  */
-define(['N/encode', 'N/format'],
-    (encode, format) => {
+define(['N/encode', 'N/format', 'N/task'],
+    (encode, format, task) => {
 
     // ─────────────────────────────────────────────────────────────────────────
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * En Windows el navegador sube el .csv como "application/vnd.ms-excel":
-     * NetSuite lo toma como binario y getContents lo devuelve en base64. Ahi se
-     * decodifica a texto, como en el AS_NSP_032.
-     */
     function convertirArchivoATexto(archivo) {
         if (archivo.isText) return archivo.getContents();
         return encode.convert({
@@ -50,9 +43,21 @@ define(['N/encode', 'N/format'],
         return format.format({ value: valor, type: format.Type.CURRENCY });
     }
 
+
+    function lanzarScheduledSiEstaLibre(scriptId, deploymentId) {
+        try {
+            task.create({ taskType: task.TaskType.SCHEDULED_SCRIPT, scriptId: scriptId, deploymentId: deploymentId }).submit();
+            return true;
+        } catch (fallo) {
+            if (fallo.name !== 'FAILED_TO_SUBMIT_JOB_REQUEST_1') throw fallo;
+            return false;
+        }
+    }
+
     return {
         convertirArchivoATexto          : convertirArchivoATexto,
         pasarAMayusculasSinEspaciosExtra: pasarAMayusculasSinEspaciosExtra,
         formatearMoneda                 : formatearMoneda,
+        lanzarScheduledSiEstaLibre      : lanzarScheduledSiEstaLibre,
     };
 });

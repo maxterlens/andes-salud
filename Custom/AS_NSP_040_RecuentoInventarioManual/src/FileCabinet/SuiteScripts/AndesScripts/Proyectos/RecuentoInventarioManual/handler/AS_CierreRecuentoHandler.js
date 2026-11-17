@@ -13,9 +13,6 @@
  *              Los botones se buscan por su id de NetSuite, igual en cualquier
  *              idioma.
  *
- * CHANGELOG v1.2.0 (2026-11-15):
- * - [FEAT] Pasa del AS_NSP_032 al AS_NSP_040 sin cambios de logica: el 032 se retira.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud

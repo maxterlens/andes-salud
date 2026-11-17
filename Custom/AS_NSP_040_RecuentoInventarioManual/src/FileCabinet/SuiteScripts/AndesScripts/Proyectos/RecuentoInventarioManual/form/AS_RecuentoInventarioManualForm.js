@@ -4,19 +4,12 @@
  *
  *              construirFormulario se lee como indice: formulario, cabecera y,
  *              con la ubicacion elegida, la lista de articulos para marcar y el
- *              boton Generar recuento.
- *
- * CHANGELOG v1.1.0 (2026-11-16):
- * - [FEAT] La tabla editable pasa a una lista con check por articulo y los
- *          botones nativos Marcar todo / Desmarcar todo.
- *
- * CHANGELOG v1.0.0 (2026-11-15):
- * - [FEAT] Cabecera como el AS_NSP_032 y tabla editable de articulos.
- *
+ *              boton Generar recuento. El boton Cargar CSV abre la pantalla de
+ *              carga, para elegir el recuento.
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.1.0
+ * @version 1.2.0
  */
 define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_RecuentoInventarioManualConstants'],
     (serverWidget, message, format, CONSTANTES) => {
@@ -30,6 +23,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Recuen
 
         form.clientScriptModulePath = CONSTANTES.FORMULARIO.CLIENT_SCRIPT;
         if (alerta) form.addPageInitMessage({ type: message.Type.ERROR, title: CONSTANTES.FORMULARIO.ALERTA_TITULO, message: alerta });
+        form.addButton({ id: CONSTANTES.BOTONES.CSV, label: CONSTANTES.BOTONES.CSV_LABEL, functionName: 'abrirCarga' });
         agregarCabecera(form, cabecera, cuentas, ubicaciones);
         if (!cabecera.ubicacion) return form;
         agregarArticulos(form, articulos, seleccionados);
@@ -129,17 +123,6 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Recuen
         campoNota.defaultValue = cabecera.nota || '';
     }
 
-    /**
-     * Lista (no tabla editable) con un check por articulo: dibujarla no arma un
-     * select por linea, y marcar no consulta nada. Marcar todo es el boton
-     * nativo de la lista. El id del articulo va en una columna oculta para leer
-     * los marcados en el POST.
-     *
-     * seleccionados trae los marcados cuando la pantalla se vuelve a dibujar con
-     * un aviso: se marcan de nuevo para no perderlos. NetSuite no acepta un
-     * valor vacio en setSublistValue: la unidad se escribe solo si el articulo
-     * la tiene.
-     */
     function agregarArticulos(form, articulos, seleccionados) {
         const columnas = CONSTANTES.SUBLISTA.COLUMNAS;
 

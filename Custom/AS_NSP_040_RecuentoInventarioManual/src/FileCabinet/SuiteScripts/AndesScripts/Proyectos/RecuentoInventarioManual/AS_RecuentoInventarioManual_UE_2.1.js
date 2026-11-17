@@ -9,18 +9,9 @@
  *                           solo Contable aprueba o rechaza.
  *                         → en vista, agrega la ficha informativa "Importes del
  *                           recuento" (cantidad x tarifa). En edicion no sale.
- *                         → en vista, agrega el boton Descargar TXT y, con el
- *                           recuento Iniciado, el boton Cargar CSV.
- *
- * CHANGELOG v1.3.0 (2026-11-15):
- * - [FEAT] Boton Cargar CSV con el recuento Iniciado, version de prueba.
- *
- * CHANGELOG v1.2.0 (2026-11-15):
- * - [FEAT] Boton Descargar TXT en la vista, version de prueba.
- *
- * CHANGELOG v1.1.0 (2026-11-15):
- * - [FEAT] Pasa del AS_NSP_032 (AS_RecuentoInventario_UE_2.1.js) al AS_NSP_040 sin
- *          cambios de logica; mismo scriptid customscript_as_rec_inv_cierre_ue.
+ *                         → en vista, agrega el boton Descargar TXT. Las
+ *                           cantidades se cargan desde la pantalla Cargar CSV
+ *                           del Suitelet, no desde el recuento.
  *
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
@@ -28,11 +19,10 @@
  * @scriptid     customscript_as_rec_inv_cierre_ue
  * @deploymentid customdeploy_as_rec_inv_cierre_ue
  * @author Andes Salud
- * @version 1.3.0
+ * @version 1.4.0
  */
-define(['./handler/AS_CierreRecuentoHandler', './handler/AS_ImporteRecuentoHandler', './handler/AS_ArchivoRecuentoHandler',
-        './handler/AS_CargaCantidadesHandler'],
-    (cierreRecuentoHandler, importeRecuentoHandler, archivoRecuentoHandler, cargaCantidadesHandler) => {
+define(['./handler/AS_CierreRecuentoHandler', './handler/AS_ImporteRecuentoHandler', './handler/AS_ArchivoRecuentoHandler'],
+    (cierreRecuentoHandler, importeRecuentoHandler, archivoRecuentoHandler) => {
 
     function beforeLoad(context) {
         try {
@@ -59,15 +49,6 @@ define(['./handler/AS_CierreRecuentoHandler', './handler/AS_ImporteRecuentoHandl
         } catch (fallo) {
             log.error({
                 title  : 'RECUENTO INVENTARIO TXT ERROR',
-                details: 'recuento: ' + context.newRecord.id
-                       + ' | motivo: ' + (fallo.message || fallo),
-            });
-        }
-        try {
-            cargaCantidadesHandler.agregarBoton(context.form, context.newRecord);
-        } catch (fallo) {
-            log.error({
-                title  : 'RECUENTO INVENTARIO CSV ERROR',
                 details: 'recuento: ' + context.newRecord.id
                        + ' | motivo: ' + (fallo.message || fallo),
             });

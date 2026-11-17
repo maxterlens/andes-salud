@@ -6,8 +6,10 @@
  *              y el check AS Recuento Inventario Carga marcado, como el AS_NSP_032.
  *              guardarRecuento: lo guarda; va aparte para medir cada paso.
  *              comenzarRecuento: lo pasa de Abierto a Iniciado.
- *              actualizarCantidades: escribe la Cantidad del recuento y su
+ *              cargarRecuento: lo abre para escribirle las cantidades.
+ *              escribirCantidades: escribe la Cantidad del recuento y su
  *              detalle por lote en las lineas de los articulos recibidos.
+ *              Cargar, escribir y guardar van separados para medir cada paso.
  *
  *              Se crea en modo estandar, no dinamico como el AS_NSP_032: en
  *              dinamico cada linea dispara el sourcing del articulo (unidades,
@@ -15,33 +17,10 @@
  *              se vuelve lento. En estandar NetSuite hace el sourcing de todas
  *              las lineas una sola vez, al guardar.
  *
- * CHANGELOG v1.3.0 (2026-11-16):
- * - [FEAT] El codigo de la pantalla va en el ID externo, para que el seguimiento
- *          encuentre el recuento creado.
- * - [FEAT] crearRecuento se separa en armarRecuento y guardarRecuento, para
- *          medir cuanto tarda el save().
- *
- * CHANGELOG v1.2.2 (2026-11-16):
- * - [FIX] Cada lote del detalle lleva el estado de inventario Good
- *         (CONSTANTES.RECUENTO.ESTADO_INVENTARIO).
- *
- * CHANGELOG v1.2.1 (2026-11-16):
- * - [FIX] El lote se escribe por nombre (setSublistText): inventorynumber del
- *         detalle del recuento puede ser un select de lotes.
- *
- * CHANGELOG v1.2.0 (2026-11-16):
- * - [FEAT] actualizarCantidades escribe un lote por fila del CSV; se quita el lote fijo.
- *
- * CHANGELOG v1.1.0 (2026-11-15):
- * - [FEAT] actualizarCantidades, version de prueba con un solo lote fijo.
- *
- * CHANGELOG v1.0.0 (2026-11-15):
- * - [FEAT] Crear el recuento en modo estandar y dejarlo Iniciado.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.3.0
+ * @version 1.6.0
  */
 define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventarioManualConstants'],
     (record, action, format, CONSTANTES) => {
@@ -50,10 +29,9 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    function armarRecuento(cabecera, articulos, codigo) {
+    function armarRecuento(cabecera, articulos) {
         const recuento = record.create({ type: CONSTANTES.RECUENTO.TIPO });
 
-        recuento.setValue({ fieldId: 'externalid', value: codigo });
         recuento.setValue({ fieldId: 'subsidiary', value: cabecera.subsidiaria });
         recuento.setValue({ fieldId: 'location',   value: cabecera.ubicacion });
         if (cabecera.departamento) recuento.setValue({ fieldId: 'department', value: cabecera.departamento });
@@ -79,36 +57,33 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
         });
     }
 
-    /**
-     * cantidades: { idArticulo: { total, lotes: [{ lote, cantidad }] } }.
-     * La Cantidad del recuento es el total y el detalle lleva un lote por fila.
-     * El detalle se vacia antes de escribir: cargar dos veces el mismo archivo
-     * no suma. Devuelve cuantas lineas se actualizaron.
-     */
-    function actualizarCantidades(recuentoId, cantidades) {
-        const recuento = record.load({ type: CONSTANTES.RECUENTO.TIPO, id: recuentoId });
+    function cargarRecuento(recuentoId) { return record.load({ type: CONSTANTES.RECUENTO.TIPO, id: recuentoId }); }
+
+    function escribirCantidades(recuento, cantidades) {
+        const lineas = recuento.getLineCount({ sublistId: 'item' });
         let actualizadas = 0;
 
-        for (let linea = 0; linea < recuento.getLineCount({ sublistId: 'item' }); linea++) {
+        for (let linea = 0; linea < lineas; linea++) {
             const cantidad = cantidades[String(recuento.getSublistValue({ sublistId: 'item', fieldId: 'item', line: linea }))];
             if (!cantidad) continue;
-            recuento.setSublistValue({ sublistId: 'item', fieldId: CONSTANTES.RECUENTO.CAMPO_CANTIDAD, line: linea, value: cantidad.total });
-            escribirDetalle(recuento.getSublistSubrecord({ sublistId: 'item', fieldId: CONSTANTES.RECUENTO.CAMPO_DETALLE, line: linea }), cantidad.lotes);
+            if (cantidad.total === null) {
+                vaciarLinea(recuento, linea);
+            } else {
+                recuento.setSublistValue({ sublistId: 'item', fieldId: CONSTANTES.RECUENTO.CAMPO_CANTIDAD, line: linea, value: cantidad.total });
+                escribirDetalle(recuento.getSublistSubrecord({ sublistId: 'item', fieldId: CONSTANTES.RECUENTO.CAMPO_DETALLE, line: linea }), cantidad.lotes);
+            }
             actualizadas++;
         }
-        recuento.save();
 
         return actualizadas;
     }
 
-    /**
-     * El detalle del recuento no es como el de las demas transacciones: la
-     * sublista es inventorydetail (no inventoryassignment) y el lote va en
-     * inventorynumber. NetSuite ignora sin error un campo que no existe, y con
-     * el detalle vacio descarta tambien la Cantidad del recuento. Cada lote
-     * exige su estado de inventario: va Good para todos, porque el lote es
-     * libre y puede no existir todavia. Confirmado en QA, 2026-11-16.
-     */
+    function vaciarLinea(recuento, linea) {
+        const detalle = { sublistId: 'item', fieldId: CONSTANTES.RECUENTO.CAMPO_DETALLE, line: linea };
+        recuento.setSublistValue({ sublistId: 'item', fieldId: CONSTANTES.RECUENTO.CAMPO_CANTIDAD, line: linea, value: '' });
+        if (recuento.hasSublistSubrecord(detalle)) recuento.removeSublistSubrecord(detalle);
+    }
+
     function escribirDetalle(detalle, lotes) {
         const sublista = CONSTANTES.RECUENTO.DETALLE_SUBLISTA;
         for (let linea = detalle.getLineCount({ sublistId: sublista }) - 1; linea >= 0; linea--) {
@@ -125,6 +100,7 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
         armarRecuento       : armarRecuento,
         guardarRecuento     : guardarRecuento,
         comenzarRecuento    : comenzarRecuento,
-        actualizarCantidades: actualizarCantidades,
+        cargarRecuento      : cargarRecuento,
+        escribirCantidades  : escribirCantidades,
     };
 });

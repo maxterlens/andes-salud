@@ -12,50 +12,28 @@
  *                - obtenerArticulosUbicacion: los articulos activos que tienen
  *                  o tuvieron stock en la ubicacion, con su unidad y su stock
  *                  (0 si hoy no tienen).
- *                - obtenerRecuentoPorCodigo: el recuento que creo el Scheduled,
- *                  por el codigo que le paso la pantalla.
  *              Recuento
  *                - obtenerCantidadesRecuento: por articulo, su id, su nombre,
  *                  su codigo de barras, la cantidad del recuento, la de
  *                  instantanea, la ajustada y la tarifa.
+ *                - obtenerRecuentosIniciados: los recuentos del modulo que
+ *                  aceptan cantidades, para el select de la carga.
  *                - obtenerUbicacionRecuento: el nombre de la ubicacion del
  *                  recuento.
- *
- * CHANGELOG v1.4.0 (2026-11-16):
- * - [FEAT] obtenerCantidadesRecuento devuelve el codigo de barras (upccode), para
- *          el TXT.
- *
- * CHANGELOG v1.3.1 (2026-11-16):
- * - [FIX] obtenerArticulosUbicacion repetia y se saltaba articulos: runSuiteQLPaged
- *         ordenado por i.itemid (columna del join) devolvia paginas que se pisaban.
- *         RI-MONTT46 salio con 3.000 lineas y solo 1.476 articulos distintos. Ahora
- *         pagina por el id del articulo (a.item > el ultimo) y ordena por nombre al
- *         final.
- * - [FIX] obtenerCantidadesRecuento pagina por linesequencenumber: runSuiteQL
- *         cortaba en 5.000 filas y con mas de 1.666 articulos fallaban los importes
- *         y la validacion del CSV.
- * - [FEAT] obtenerRecuentoPorCodigo, para el seguimiento de la generacion.
- *
- * CHANGELOG v1.3.0 (2026-11-16):
- * - [FEAT] obtenerArticulosUbicacion reemplaza a obtenerArticulosConStock: entran
- *          tambien los articulos en 0 de la ubicacion (aggregateitemlocation).
- *
- * CHANGELOG v1.2.0 (2026-11-16):
- * - [FEAT] obtenerUbicacionRecuento, para el TXT y la carga.
- *
- * CHANGELOG v1.1.0 (2026-11-15):
- * - [FEAT] obtenerCantidadesRecuento devuelve el id del articulo, para el TXT.
- *
- * CHANGELOG v1.0.0 (2026-11-15):
- * - [FEAT] Cuentas, ubicaciones y articulos con stock de la ubicacion.
- * - [FEAT] obtenerCantidadesRecuento, que viene del AS_NSP_032 para la ficha de importes.
+ *              Cola
+ *                - obtenerSolicitudes: las solicitudes en un estado, la mas
+ *                  antigua primero.
+ *                - contarSolicitudesAntes: cuantas Pendientes van antes.
+ *                - obtenerGeneracionEnCurso: la generacion sin terminar de
+ *                  una ubicacion.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.4.0
+ * @version 1.6.0
  */
-define(['N/query'], (query) => {
+define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
+    (query, CONSTANTES) => {
 
     // ─────────────────────────────────────────────────────────────────────────
     // Principales
@@ -87,17 +65,6 @@ define(['N/query'], (query) => {
         return filas.map((fila) => ({ subsidiaria: String(fila.subsidiaria), id: String(fila.id), nombre: fila.nombre }));
     }
 
-    /**
-     * Sale de aggregateitemlocation (una fila por articulo y ubicacion) y no de
-     * inventorybalance, que solo tiene las filas con saldo: asi entran los que
-     * hoy estan en 0. quantityonhand en null es un articulo que nunca tuvo
-     * stock en la ubicacion y queda fuera.
-     *
-     * Se pagina a mano por el id del articulo, de mil en mil: runSuiteQLPaged
-     * ordenado por el nombre repetia y se saltaba filas entre paginas. El id es
-     * unico por ubicacion, asi que cada pagina sigue donde termino la anterior.
-     * El orden por nombre se hace al final, en memoria.
-     */
     function obtenerArticulosUbicacion(ubicacionId) {
         const articulos = [];
         let ultimoId    = 0;
@@ -124,29 +91,6 @@ define(['N/query'], (query) => {
         return articulos.sort((primero, segundo) => primero.nombre.localeCompare(segundo.nombre));
     }
 
-    /**
-     * El Scheduled guarda el codigo en el ID externo del recuento: es la unica
-     * forma de saber cual creo, porque la tarea no devuelve nada.
-     */
-    function obtenerRecuentoPorCodigo(codigo) {
-        const fila = query.runSuiteQL({
-            query : "SELECT t.id FROM transaction t WHERE t.type = 'InvCount' AND t.externalid = ?",
-            params: [codigo],
-        }).asMappedResults()[0];
-
-        return fila ? fila.id : null;
-    }
-
-    /**
-     * El recuento guarda tres filas por articulo en transactionline, en este
-     * orden: recuento, instantanea y ajustada.
-     *
-     * Se pagina a mano por linesequencenumber, de 3.000 en 3.000: runSuiteQL
-     * corta en 5.000 filas sin avisar, y un recuento de 2.703 articulos tiene
-     * 8.109. Cortado, el ultimo articulo quedaba sin sus otras filas ("Cannot
-     * read property 'quantity' of undefined", RI-MONTT52). Las tres filas se
-     * agrupan despues de traerlas todas.
-     */
     function obtenerCantidadesRecuento(recuentoId) {
         const filas = [];
         let ultimaLinea = -1;
@@ -183,9 +127,21 @@ define(['N/query'], (query) => {
         return cantidades;
     }
 
-    /**
-     * El recuento guarda la ubicacion en cada linea, no en la cabecera.
-     */
+    function obtenerRecuentosIniciados() {
+        const filas = query.runSuiteQL({
+            query: 'SELECT t.id, t.tranid AS numero, t.status AS estado, t.custbody_as_rec_inv_carga AS carga'
+                 + ' FROM transaction t'
+                 + " WHERE t.type = 'InvCount'"
+                 + ' ORDER BY t.id DESC'
+                 + ' FETCH FIRST 1000 ROWS ONLY',
+        }).asMappedResults();
+
+        return filas
+            .filter((fila) => fila.estado === 'B' && fila.carga === 'T')
+            .map((fila) => ({ id: String(fila.id), nombre: fila.numero + ' - ' + obtenerUbicacionRecuento(fila.id) }));
+    }
+
+
     function obtenerUbicacionRecuento(recuentoId) {
         const fila = query.runSuiteQL({
             query : 'SELECT BUILTIN.DF(tl.location) AS nombre'
@@ -198,12 +154,50 @@ define(['N/query'], (query) => {
         return fila ? fila.nombre : '';
     }
 
+    function obtenerSolicitudes(estado) {
+        const campos = CONSTANTES.COLA.CAMPOS;
+        const filas  = query.runSuiteQL({
+            query : 'SELECT c.id FROM ' + CONSTANTES.COLA.TIPO + ' c'
+                  + ' WHERE c.' + campos.ESTADO + ' = ?'
+                  + ' ORDER BY c.id',
+            params: [estado],
+        }).asMappedResults();
+
+        return filas.map((fila) => fila.id);
+    }
+
+    function contarSolicitudesAntes(solicitudId) {
+        const fila = query.runSuiteQL({
+            query : 'SELECT COUNT(*) AS total FROM ' + CONSTANTES.COLA.TIPO + ' c'
+                  + ' WHERE c.' + CONSTANTES.COLA.CAMPOS.ESTADO + ' = ? AND c.id < ?',
+            params: [CONSTANTES.COLA.ESTADOS.PENDIENTE, solicitudId],
+        }).asMappedResults()[0];
+
+        return fila.total;
+    }
+
+    function obtenerGeneracionEnCurso(ubicacionId) {
+        const campos  = CONSTANTES.COLA.CAMPOS;
+        const estados = CONSTANTES.COLA.ESTADOS;
+        const fila    = query.runSuiteQL({
+            query : 'SELECT c.id FROM ' + CONSTANTES.COLA.TIPO + ' c'
+                  + ' WHERE c.' + campos.TIPO + ' = ? AND c.' + campos.UBICACION + ' = ?'
+                  + ' AND c.' + campos.ESTADO + ' IN (?, ?)',
+            params: [CONSTANTES.COLA.TIPOS.GENERACION, ubicacionId, estados.PENDIENTE, estados.PROCESANDO],
+        }).asMappedResults()[0];
+
+        return fila ? fila.id : null;
+    }
+
     return {
         obtenerCuentasRecuento   : obtenerCuentasRecuento,
         obtenerUbicaciones       : obtenerUbicaciones,
         obtenerArticulosUbicacion: obtenerArticulosUbicacion,
-        obtenerRecuentoPorCodigo : obtenerRecuentoPorCodigo,
         obtenerCantidadesRecuento: obtenerCantidadesRecuento,
+        obtenerRecuentosIniciados: obtenerRecuentosIniciados,
         obtenerUbicacionRecuento : obtenerUbicacionRecuento,
+        obtenerSolicitudes       : obtenerSolicitudes,
+        contarSolicitudesAntes   : contarSolicitudesAntes,
+        obtenerGeneracionEnCurso : obtenerGeneracionEnCurso,
     };
 });
