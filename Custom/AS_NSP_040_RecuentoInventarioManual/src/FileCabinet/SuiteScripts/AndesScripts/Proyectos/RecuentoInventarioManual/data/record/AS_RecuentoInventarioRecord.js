@@ -20,7 +20,8 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.6.0
+ * @version 1.7.0
+ *
  */
 define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventarioManualConstants'],
     (record, action, format, CONSTANTES) => {
@@ -47,7 +48,7 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
         return recuento;
     }
 
-    function guardarRecuento(recuento) { return recuento.save(); }
+    function guardarRecuento(recuento) { return recuento.save({ disableTriggers: true }); }
 
     function comenzarRecuento(recuentoId) {
         action.execute({

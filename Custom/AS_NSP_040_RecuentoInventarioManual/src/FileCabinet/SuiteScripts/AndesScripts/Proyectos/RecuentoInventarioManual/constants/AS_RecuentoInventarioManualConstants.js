@@ -7,7 +7,11 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.8.2
+ * @version 1.10.0
+ *
+ * CHANGELOG
+ * 1.10.0 [FEAT] CARGA: el select Lote con los lotes configurados.
+ * 1.9.0 [FEAT] CARGA: el CSV sin LOTE en el label y el aviso SIN_LOTE.
  */
 define([], () => {
 
@@ -104,6 +108,7 @@ define([], () => {
         UBICACIONES_DATA : 'custpage_ubicaciones_data',
         RECUENTO         : 'custpage_recuento',
         RECUENTO_CARGA   : 'custpage_recuento_carga',
+        LOTE_CARGA       : 'custpage_lote_carga',
         CARGA            : 'custpage_carga',
         ARCHIVO          : 'custpage_archivo',
         REFRESCO         : 'custpage_refresco',
@@ -120,10 +125,12 @@ define([], () => {
         TITULO        : 'Cargar cantidades del recuento',
         BOTON_CARGAR  : 'Cargar',
         RECUENTO_LABEL: 'Recuento',
-        ARCHIVO_LABEL : 'Archivo CSV (UBICACION;ID;ARTICULO;RECUENTO;LOTE)',
+        LOTE_LABEL    : 'Lote',
+        ARCHIVO_LABEL : 'Archivo CSV (UBICACION;ID;ARTICULO;RECUENTO)',
         ALERTA_TITULO : 'No se pudieron cargar las cantidades',
         SIN_ARCHIVO   : 'Seleccione el archivo CSV',
         SIN_FILAS     : 'El archivo no trae ninguna fila con ID',
+        SIN_LOTE      : 'El lote elegido no esta configurado para la subsidiaria del recuento',
     };
 
     const ARCHIVO = {

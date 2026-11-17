@@ -18,8 +18,13 @@
  *                  instantanea, la ajustada y la tarifa.
  *                - obtenerRecuentosIniciados: los recuentos del modulo que
  *                  aceptan cantidades, para el select de la carga.
- *                - obtenerUbicacionRecuento: el nombre de la ubicacion del
- *                  recuento.
+ *                - obtenerUbicacionRecuento: el id y el nombre de la ubicacion
+ *                  del recuento.
+ *                - obtenerLoteRecuento: el lote elegido en la carga, si esta
+ *                  configurado para la subsidiaria del recuento.
+ *              Lotes
+ *                - obtenerLotesRecuento: los lotes activos de Lote
+ *                  Predeterminado de Recuento.
  *              Cola
  *                - obtenerSolicitudes: las solicitudes en un estado, la mas
  *                  antigua primero.
@@ -30,7 +35,15 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.6.0
+ * @version 1.9.0
+ *
+ * CHANGELOG
+ * 1.9.0 [FEAT] obtenerLotesRecuento para el select Lote de la carga, y
+ *              obtenerLoteRecuento recibe el lote elegido.
+ * 1.8.0 [FEAT] obtenerUbicacionRecuento devuelve { id, nombre }: el CSV trae la
+ *              ubicacion por id interno.
+ * 1.7.0 [FEAT] obtenerLoteRecuento: el lote configurado para la subsidiaria del
+ *              recuento, con el que se cargan las cantidades.
  */
 define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
     (query, CONSTANTES) => {
@@ -138,20 +151,48 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
 
         return filas
             .filter((fila) => fila.estado === 'B' && fila.carga === 'T')
-            .map((fila) => ({ id: String(fila.id), nombre: fila.numero + ' - ' + obtenerUbicacionRecuento(fila.id) }));
+            .map((fila) => ({ id: String(fila.id), nombre: fila.numero + ' - ' + obtenerUbicacionRecuento(fila.id).nombre }));
     }
 
 
     function obtenerUbicacionRecuento(recuentoId) {
         const fila = query.runSuiteQL({
-            query : 'SELECT BUILTIN.DF(tl.location) AS nombre'
+            query : 'SELECT tl.location AS id, BUILTIN.DF(tl.location) AS nombre'
                   + ' FROM transactionline tl'
                   + " WHERE tl.transaction = ? AND tl.mainline = 'F' AND tl.location IS NOT NULL"
                   + ' FETCH FIRST 1 ROWS ONLY',
             params: [recuentoId],
         }).asMappedResults()[0];
 
-        return fila ? fila.nombre : '';
+        return fila ? { id: String(fila.id), nombre: fila.nombre } : { id: '', nombre: '' };
+    }
+
+    /**
+     * Vacio si el lote no es de la subsidiaria del recuento o esta inactivo.
+     */
+    function obtenerLoteRecuento(recuentoId, loteId) {
+        const fila = query.runSuiteQL({
+            query : 'SELECT l.custrecord_as_rec_inv_man_lote_lote AS lote'
+                  + ' FROM transactionline tl'
+                  + ' JOIN customrecord_as_rec_inv_man_lote l ON l.custrecord_as_rec_inv_man_lote_subsid = tl.subsidiary'
+                  + " WHERE tl.transaction = ? AND tl.mainline = 'F' AND l.id = ? AND l.isinactive = 'F'"
+                  + ' FETCH FIRST 1 ROWS ONLY',
+            params: [recuentoId, loteId],
+        }).asMappedResults()[0];
+
+        return fila ? fila.lote : '';
+    }
+
+    function obtenerLotesRecuento() {
+        const filas = query.runSuiteQL({
+            query : 'SELECT l.id, l.custrecord_as_rec_inv_man_lote_lote AS lote'
+                  + ' FROM customrecord_as_rec_inv_man_lote l'
+                  + ' WHERE l.isinactive = ?'
+                  + ' ORDER BY l.custrecord_as_rec_inv_man_lote_lote',
+            params: ['F'],
+        }).asMappedResults();
+
+        return filas.map((fila) => ({ id: String(fila.id), nombre: fila.lote }));
     }
 
     function obtenerSolicitudes(estado) {
@@ -196,6 +237,8 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         obtenerCantidadesRecuento: obtenerCantidadesRecuento,
         obtenerRecuentosIniciados: obtenerRecuentosIniciados,
         obtenerUbicacionRecuento : obtenerUbicacionRecuento,
+        obtenerLoteRecuento      : obtenerLoteRecuento,
+        obtenerLotesRecuento     : obtenerLotesRecuento,
         obtenerSolicitudes       : obtenerSolicitudes,
         contarSolicitudesAntes   : contarSolicitudesAntes,
         obtenerGeneracionEnCurso : obtenerGeneracionEnCurso,

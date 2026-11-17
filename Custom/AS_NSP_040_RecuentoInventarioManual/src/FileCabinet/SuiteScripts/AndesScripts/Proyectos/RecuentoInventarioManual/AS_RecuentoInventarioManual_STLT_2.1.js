@@ -15,9 +15,10 @@
  *                sin parametros          → Generar recuento: deja la solicitud
  *                                          de generacion en la cola y lleva a
  *                                          ella.
- *                custpage_recuento_carga → Cargar: valida el CSV, deja la
- *                                          solicitud de carga en la cola y
- *                                          lleva a ella.
+ *                custpage_recuento_carga → Cargar, con el lote elegido en
+ *                                          custpage_lote_carga: valida el CSV,
+ *                                          deja la solicitud de carga en la
+ *                                          cola y lleva a ella.
  *
  * @NApiVersion 2.1
  * @NScriptType Suitelet
@@ -25,7 +26,10 @@
  * @scriptid     customscript_as_rec_inv_man_stlt
  * @deploymentid customdeploy_as_rec_inv_man_stlt
  * @author Andes Salud
- * @version 1.6.0
+ * @version 1.7.0
+ *
+ * CHANGELOG
+ * 1.7.0 [FEAT] Cargar recibe el lote elegido en la pantalla.
  */
 define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRecuentoHandler',
         './handler/AS_CargaCantidadesHandler', './constants/AS_RecuentoInventarioManualConstants'],
@@ -45,7 +49,7 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
                 }
             } else {
                 if (parametros.recuentoCargaId) {
-                    cargaCantidadesHandler.cargarCantidades(context, parametros.recuentoCargaId);
+                    cargaCantidadesHandler.cargarCantidades(context, parametros.recuentoCargaId, parametros.loteCargaId);
                 } else {
                     recuentoInventarioManualHandler.generarRecuento(context);
                 }
@@ -66,6 +70,7 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
         return {
             recuentoId     : context.request.parameters[CONSTANTES.CAMPOS.RECUENTO],
             recuentoCargaId: context.request.parameters[CONSTANTES.CAMPOS.RECUENTO_CARGA],
+            loteCargaId    : context.request.parameters[CONSTANTES.CAMPOS.LOTE_CARGA],
             carga          : context.request.parameters[CONSTANTES.CAMPOS.CARGA],
         };
     }

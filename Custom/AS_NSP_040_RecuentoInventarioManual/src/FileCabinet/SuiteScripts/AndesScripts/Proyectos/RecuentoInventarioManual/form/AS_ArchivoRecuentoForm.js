@@ -6,11 +6,16 @@
  *              El archivo se crea en memoria para responderlo como descarga:
  *              una fila de encabezado y una fila por articulo del recuento,
  *              separadas por coma. Windows-1252, como los TXT del AS_NSP_036.
+ *              PRO_CORREL lleva el id interno del articulo y COD_BARRA va
+ *              vacio; PRO_CORREL1 sigue con el correlativo de la fila.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.4.0
+ * @version 1.5.0
+ *
+ * CHANGELOG
+ * 1.5.0 [FEAT] PRO_CORREL con el id interno del articulo y COD_BARRA vacio.
  */
 define(['N/file', '../constants/AS_RecuentoInventarioManualConstants'],
     (file, CONSTANTES) => {
@@ -34,7 +39,7 @@ define(['N/file', '../constants/AS_RecuentoInventarioManualConstants'],
         articulos.forEach((articulo, indice) => {
             const correlativo = indice + 1;
             const nombre      = articulo.nombre.replace(/,/g, '.');
-            filas.push([correlativo, articulo.codigoBarra, articulo.codigoBarra, '', '', '', nombre, '',
+            filas.push([articulo.id, articulo.codigoBarra, '', '', '', '', nombre, '',
                         correlativo, '', '', '', '', ''].join(archivo.SEPARADOR));
         });
 

@@ -4,8 +4,6 @@
  *
  *              convertirArchivoATexto           → el contenido de un archivo
  *                                                 subido, como texto.
- *              pasarAMayusculasSinEspaciosExtra → para comparar textos escritos
- *                                                 a mano.
  *              formatearMoneda                  → un importe con el formato de
  *                                                 moneda del usuario.
  *              lanzarScheduledSiEstaLibre       → lanza un Scheduled; si ya
@@ -14,7 +12,11 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.1.0
+ * @version 1.2.0
+ *
+ * CHANGELOG
+ * 1.2.0 [FIX] Se quita pasarAMayusculasSinEspaciosExtra: la ubicacion del CSV
+ *             ya no se compara por nombre.
  */
 define(['N/encode', 'N/format', 'N/task'],
     (encode, format, task) => {
@@ -30,10 +32,6 @@ define(['N/encode', 'N/format', 'N/task'],
             inputEncoding : encode.Encoding.BASE_64,
             outputEncoding: encode.Encoding.UTF_8,
         });
-    }
-
-    function pasarAMayusculasSinEspaciosExtra(texto) {
-        return String(texto || '').trim().replace(/\s+/g, ' ').toUpperCase();
     }
 
     /**
@@ -56,7 +54,6 @@ define(['N/encode', 'N/format', 'N/task'],
 
     return {
         convertirArchivoATexto          : convertirArchivoATexto,
-        pasarAMayusculasSinEspaciosExtra: pasarAMayusculasSinEspaciosExtra,
         formatearMoneda                 : formatearMoneda,
         lanzarScheduledSiEstaLibre      : lanzarScheduledSiEstaLibre,
     };
