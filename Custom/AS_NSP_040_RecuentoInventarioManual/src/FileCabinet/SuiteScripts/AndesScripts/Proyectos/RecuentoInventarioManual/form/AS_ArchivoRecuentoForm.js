@@ -8,17 +8,20 @@
  *              separadas por coma. Windows-1252, como los TXT del AS_NSP_036.
  *              PRO_CORREL lleva el id interno del articulo y COD_BARRA va
  *              vacio; PRO_CORREL1 sigue con el correlativo de la fila.
+ *              El nombre sale como se ve en NetSuite (< en vez de &lt;), con
+ *              las comas cambiadas por punto.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.5.0
+ * @version 1.6.0
  *
  * CHANGELOG
+ * 1.6.0 [FIX] El nombre del articulo sin &lt; &gt; &amp;: sale como en NetSuite.
  * 1.5.0 [FEAT] PRO_CORREL con el id interno del articulo y COD_BARRA vacio.
  */
-define(['N/file', '../constants/AS_RecuentoInventarioManualConstants'],
-    (file, CONSTANTES) => {
+define(['N/file', '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_RecuentoInventarioManualConstants'],
+    (file, UTILS, CONSTANTES) => {
 
     // ─────────────────────────────────────────────────────────────────────────
     // Principales
@@ -38,7 +41,7 @@ define(['N/file', '../constants/AS_RecuentoInventarioManualConstants'],
         const filas   = [archivo.ENCABEZADO.join(archivo.SEPARADOR)];
         articulos.forEach((articulo, indice) => {
             const correlativo = indice + 1;
-            const nombre      = articulo.nombre.replace(/,/g, '.');
+            const nombre      = UTILS.convertirEntidadesHtmlATexto(articulo.nombre).replace(/,/g, '.');
             filas.push([articulo.id, articulo.codigoBarra, '', '', '', '', nombre, '',
                         correlativo, '', '', '', '', ''].join(archivo.SEPARADOR));
         });
