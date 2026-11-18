@@ -3,8 +3,12 @@
  * @description Valores fijos del modulo: ids de los campos, la sublista y los
  *              textos de la pantalla, y los ids de la nomina y su detalle.
  *
+ * CHANGELOG v1.3.0 (2026-11-12):
+ * - [FEAT] NOMINA.MAXIMO_REEMBOLSOS: tope de reembolsos por nomina.
+ * - [REFACTOR] El select Banco ya no usa la lista de bancos de 2WIN: sale de
+ *              las AS Plantilla Banco activas.
+ *
  * CHANGELOG v1.2.0 (2026-11-11):
- * - [FEAT] BANCOS_CHILE: la lista de bancos de 2WIN que usa el select Banco.
  * - [FEAT] VISTA: la ficha Detalle de la nomina con sus reembolsos.
  *
  * CHANGELOG v1.1.0 (2026-11-11):
@@ -18,7 +22,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.2.0
+ * @version 1.3.0
  *
  */
 define([], () => {
@@ -88,9 +92,14 @@ define([], () => {
         LABEL    : 'Reembolsos de la Nomina',
     };
 
+    /**
+     * MAXIMO_REEMBOLSOS: cada linea de detalle cuesta 6 unidades y el Suitelet
+     * tiene 1.000; 150 lineas son 900 y dejan margen a las busquedas.
+     */
     const NOMINA = {
-        TIPO  : 'customrecord_as_nom_reemb',
-        CAMPOS: {
+        TIPO             : 'customrecord_as_nom_reemb',
+        MAXIMO_REEMBOLSOS: 150,
+        CAMPOS           : {
             SUBSIDIARIA : 'custrecord_as_nom_reemb_subsidiaria',
             BANCO       : 'custrecord_as_nom_reemb_banco',
             CUENTA_BANCO: 'custrecord_as_nom_reemb_cuenta_banco',
@@ -113,10 +122,6 @@ define([], () => {
         BANCO          : 'custrecord_2w_acc_banco',
         SUBSIDIARIA    : 'custrecord_2w_empresa_de_cuenta_banco',
         NUMERO_BANCARIO: 'custrecord_2win_numero_cuenta_bancaria',
-    };
-
-    const BANCOS_CHILE = {
-        TIPO: 'customrecord_2w_codigos_bancos_chile',
     };
 
     const REEMBOLSO = {
@@ -156,7 +161,6 @@ define([], () => {
         NOMINA      : NOMINA,
         DETALLE     : DETALLE,
         CUENTA_BANCO: CUENTA_BANCO,
-        BANCOS_CHILE: BANCOS_CHILE,
         REEMBOLSO   : REEMBOLSO,
         PLANTILLA   : PLANTILLA,
         ARCHIVO     : ARCHIVO,

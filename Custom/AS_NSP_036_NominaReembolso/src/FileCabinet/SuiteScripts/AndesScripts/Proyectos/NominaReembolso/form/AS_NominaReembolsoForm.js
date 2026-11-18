@@ -6,13 +6,17 @@
  *              construirFormulario se lee como indice: formulario, cabecera,
  *              datos adicionales, la lista de reembolsos y los botones.
  *
+ *              Banco no usa source: muestra solo los bancos con una AS
+ *              Plantilla Banco activa, para que no se pueda generar una nomina
+ *              sin TXT. Una plantilla nueva suma su banco al select.
+ *
  *              Cuenta Banco no usa source: depende de la Subsidiaria y del
  *              Banco. El form agrega solo las cuentas de la cabecera y la lista
  *              completa viaja en un LONGTEXT oculto en JSON para que el client
  *              script la vuelva a filtrar al cambiar cualquiera de los dos.
  *
- * CHANGELOG v1.1.0 (2026-11-11):
- * - [FEAT] El select Banco toma la lista de CONSTANTES.BANCOS_CHILE.
+ * CHANGELOG v1.2.0 (2026-11-12):
+ * - [FEAT] El select Banco muestra solo los bancos con plantilla activa.
  *
  * CHANGELOG v1.0.0 (2026-11-10):
  * - [FEAT] Pantalla con cabecera, datos adicionales y reembolsos pendientes.
@@ -20,7 +24,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.1.0
+ * @version 1.2.0
  *
  */
 define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_NominaReembolsoConstants'],
@@ -30,7 +34,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Nomina
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    function construirFormulario(cabecera, cuentas, reembolsos, marcados, total, alerta) {
+    function construirFormulario(cabecera, bancos, cuentas, reembolsos, marcados, total, alerta) {
         const form = serverWidget.createForm({ title: CONSTANTES.FORMULARIO.TITULO });
 
         form.clientScriptModulePath = CONSTANTES.FORMULARIO.CLIENT_SCRIPT;
@@ -38,7 +42,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Nomina
         if (reembolsos && !reembolsos.length) {
             form.addPageInitMessage({ type: message.Type.INFORMATION, title: CONSTANTES.FORMULARIO.SIN_REEMBOLSOS, message: CONSTANTES.FORMULARIO.SIN_REEMBOLSOS_TEXTO });
         }
-        agregarCabecera(form, cabecera, cuentas);
+        agregarCabecera(form, cabecera, bancos, cuentas);
         agregarAdicional(form, cabecera, total);
         agregarReembolsos(form, reembolsos || [], marcados);
         agregarOperacion(form);
@@ -53,7 +57,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Nomina
     // Secundarias
     // ─────────────────────────────────────────────────────────────────────────
 
-    function agregarCabecera(form, cabecera, cuentas) {
+    function agregarCabecera(form, cabecera, bancos, cuentas) {
         const grupo = CONSTANTES.GRUPOS.CABECERA;
 
         form.addFieldGroup({ id: grupo, label: '1. Datos de la Nomina' });
@@ -71,10 +75,11 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Nomina
             id       : CONSTANTES.CAMPOS.BANCO,
             type     : serverWidget.FieldType.SELECT,
             label    : 'Banco',
-            source   : CONSTANTES.BANCOS_CHILE.TIPO,
             container: grupo,
         });
-        campoBanco.isMandatory  = true;
+        campoBanco.isMandatory = true;
+        campoBanco.addSelectOption({ value: '', text: '' });
+        bancos.forEach((banco) => campoBanco.addSelectOption({ value: banco.id, text: banco.nombre }));
         campoBanco.defaultValue = cabecera.banco || '';
         const campoCuentaBanco = form.addField({
             id       : CONSTANTES.CAMPOS.CUENTA_BANCO,

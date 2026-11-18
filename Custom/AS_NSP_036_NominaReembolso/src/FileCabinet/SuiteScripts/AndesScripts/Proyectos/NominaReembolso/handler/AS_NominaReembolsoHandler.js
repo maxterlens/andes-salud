@@ -14,13 +14,25 @@
  *              nomina mientras la pantalla estaba abierta se descarta, y el
  *              monto que se guarda es el de esa busqueda, no el del formulario.
  *
+ *              Tope de reembolsos por nomina (NOMINA.MAXIMO_REEMBOLSOS): cada
+ *              linea de detalle es un save propio (6 unidades) y el Suitelet
+ *              tiene 1.000; sin el tope corta a mitad y deja la nomina con
+ *              total y sin parte del detalle. El detalle no va como sublista
+ *              hija de la nomina: con isparent T desde el primer deploy la
+ *              sublista no existe y NetSuite descarta las lineas sin error
+ *              (QA, 2026-11-12, nominas 4 y 5).
+ *
+ * CHANGELOG v1.1.0 (2026-11-12):
+ * - [FEAT] Tope de reembolsos por nomina, con alerta en la pantalla.
+ * - [FEAT] La pantalla recibe los bancos con plantilla para el select Banco.
+ *
  * CHANGELOG v1.0.0 (2026-11-10):
  * - [FEAT] Mostrar, buscar reembolsos y generar la nomina.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.0.0
+ * @version 1.1.0
  *
  */
 define(['N/redirect', '../form/AS_NominaReembolsoForm', '../data/search/AS_NominaReembolsoSearch',
@@ -55,6 +67,11 @@ define(['N/redirect', '../form/AS_NominaReembolsoForm', '../data/search/AS_Nomin
             responderConFormulario(context, cabecera, pendientes, [], 'Los reembolsos marcados ya no estan pendientes: entraron en otra nomina mientras la pantalla estaba abierta.');
             return;
         }
+        if (reembolsos.length > CONSTANTES.NOMINA.MAXIMO_REEMBOLSOS) {
+            responderConFormulario(context, cabecera, pendientes, parametros.marcados, 'Una nomina admite hasta ' + CONSTANTES.NOMINA.MAXIMO_REEMBOLSOS
+                + ' reembolsos y se marcaron ' + reembolsos.length + '. Genere esta con menos y otra con el resto.');
+            return;
+        }
         const total    = sumarMontos(reembolsos);
         const nominaId = nominaReembolsoRecord.crearNomina(cabecera, total);
         nominaReembolsoDetalleRecord.crearDetalles(nominaId, reembolsos);
@@ -73,15 +90,16 @@ define(['N/redirect', '../form/AS_NominaReembolsoForm', '../data/search/AS_Nomin
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Los tres procesos terminan aqui: el select Cuenta Banco necesita la lista
-     * de cuentas cada vez que se dibuja la pantalla. reembolsos en null es que
+     * Los tres procesos terminan aqui: los select Banco y Cuenta Banco
+     * necesitan sus listas cada vez que se dibuja la pantalla. reembolsos en null es que
      * todavia no se busco (la pantalla recien abierta). El total es el de lo
      * que ya venia marcado, al volver con un error.
      */
     function responderConFormulario(context, cabecera, reembolsos, marcados, alerta) {
+        const bancos  = nominaReembolsoSearch.buscarBancosConPlantilla();
         const cuentas = nominaReembolsoSearch.buscarCuentasBanco();
         const total   = sumarMontos((reembolsos || []).filter((reembolso) => marcados.indexOf(reembolso.id) >= 0));
-        context.response.writePage(nominaReembolsoForm.construirFormulario(cabecera, cuentas, reembolsos, marcados, total, alerta));
+        context.response.writePage(nominaReembolsoForm.construirFormulario(cabecera, bancos, cuentas, reembolsos, marcados, total, alerta));
     }
 
     function obtenerParametros(request) {

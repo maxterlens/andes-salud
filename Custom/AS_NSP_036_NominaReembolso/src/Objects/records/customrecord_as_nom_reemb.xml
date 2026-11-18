@@ -33,7 +33,7 @@
   <recordname>AS Nomina Reembolso</recordname>
   <showcreationdate>F</showcreationdate>
   <showcreationdateonlist>F</showcreationdateonlist>
-  <showid>T</showid>
+  <showid>F</showid>
   <showlastmodified>F</showlastmodified>
   <showlastmodifiedonlist>F</showlastmodifiedonlist>
   <shownotes>F</shownotes>

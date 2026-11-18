@@ -11,8 +11,8 @@
     <scriptdeployment scriptid="customdeploy_as_nom_reemb_generar_stlt">
       <allemployees>F</allemployees>
       <allpartners>F</allpartners>
-      <allroles>F</allroles>
-      <audslctrole>ADMINISTRATOR</audslctrole>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
       <eventtype></eventtype>
       <isdeployed>T</isdeployed>
       <isonline>F</isonline>

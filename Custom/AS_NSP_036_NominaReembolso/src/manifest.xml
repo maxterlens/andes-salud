@@ -10,6 +10,7 @@
     </features>
     <objects>
       <object>customrecord_2w_codigos_bancos_chile</object>
+      <object>custcentertab_2w_andes_salud</object>
     </objects>
   </dependencies>
 </manifest>

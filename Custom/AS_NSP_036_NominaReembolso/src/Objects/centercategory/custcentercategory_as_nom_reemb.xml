@@ -1,0 +1,19 @@
+<centercategory scriptid="custcentercategory_as_nom_reemb">
+  <center>BASIC</center>
+  <centertab>[scriptid=custcentertab_2w_andes_salud]</centertab>
+  <label>Emisión de devolución a clientes</label>
+  <links>
+    <link>
+      <linkobject>[scriptid=customscript_as_nom_reemb_generar_stlt.customdeploy_as_nom_reemb_generar_stlt]</linkobject>
+      <linktasktype>SCRIPT</linktasktype>
+      <linklabel>Generar Nómina de Reembolso</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+    <link>
+      <linkobject>[scriptid=customrecord_as_nom_reemb]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <linklabel>Nóminas de Reembolso</linklabel>
+      <shortlist>F</shortlist>
+    </link>
+  </links>
+</centercategory>

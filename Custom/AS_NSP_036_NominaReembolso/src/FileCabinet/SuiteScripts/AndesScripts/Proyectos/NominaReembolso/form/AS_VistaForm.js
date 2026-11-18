@@ -7,8 +7,6 @@
  *              ficha Detalle es la de AS_NSP_018.
  *
  * CHANGELOG v1.2.0 (2026-11-12):
- * - [FEAT] Oculta Inactivo: inactivar la nomina no libera sus reembolsos.
- *
  * CHANGELOG v1.1.0 (2026-11-11):
  * - [FEAT] ajustarVista y la ficha Detalle con los reembolsos.
  *

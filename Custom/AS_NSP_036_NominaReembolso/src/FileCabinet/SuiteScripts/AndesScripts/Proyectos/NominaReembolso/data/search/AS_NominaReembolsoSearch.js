@@ -3,6 +3,8 @@
  * @description Todas las busquedas del modulo (N/search).
  *
  *              Cuentas
+ *                - buscarBancosConPlantilla: los bancos que tienen una AS
+ *                  Plantilla Banco activa, para el select Banco.
  *                - buscarCuentasBanco: las cuentas bancarias activas que tienen
  *                  Banco y Empresa de 2WIN, con los dos valores, para filtrar el
  *                  select Cuenta Banco en la pantalla.
@@ -18,8 +20,9 @@
  *                - buscarNomina: banco y fecha de la nomina.
  *                - buscarPlantilla: la AS Plantilla Banco activa del banco,
  *                  con su FreeMarker.
- *                - buscarPagosNomina: los reembolsos de la nomina con los
- *                  datos bancarios del cliente, sin relleno.
+ *                - buscarReembolsosConCliente: los reembolsos de la nomina
+ *                  (monto y fecha) con los datos bancarios de su cliente, sin
+ *                  relleno.
  *
  *              El cruce reembolso-nomina se lee siempre desde el detalle
  *              (buscarReembolsosDetalle) y nunca con el join inverso desde la
@@ -28,6 +31,19 @@
  *              primer deploy, y devuelve vacio sin error. Caso real: QA,
  *              2026-11-12, al borrar y volver a desplegar los records.
  *
+ * CHANGELOG v1.6.0 (2026-11-13):
+ * - [REFACTOR] buscarPagosNomina pasa a buscarReembolsosConCliente: solo el
+ *              monto y la fecha son del reembolso, lo demas es del cliente.
+ *
+ * CHANGELOG v1.5.0 (2026-11-12):
+ * - [FEAT] buscarBancosConPlantilla.
+ *
+ * CHANGELOG v1.4.0 (2026-11-12):
+ * - [FIX] buscarReembolsos y buscarReembolsosDetalle con runPaged: each()
+ *         corta en 4.000 filas sin avisar y el historico de la cuenta crece.
+ * - [FIX] Pendientes resta el detalle entero en vez de un anyof con todos
+ *         los ids de la cuenta, que con miles de reembolsos no escala.
+ *
  * CHANGELOG v1.3.0 (2026-11-12):
  * - [FIX] Pendientes, ficha Detalle y TXT leen el cruce desde el detalle: el
  *         join inverso desde el reembolso quedaba vacio tras recrear los
@@ -35,12 +51,12 @@
  *
  * CHANGELOG v1.2.0 (2026-11-11):
  * - [FEAT] buscarReembolsosNomina.
- * - [FIX] buscarPagosNomina: el nombre va sin el ID del cliente.
+ * - [FIX] buscarReembolsosConCliente: el nombre va sin el ID del cliente.
  * - [REFACTOR] Pendientes y los de la nomina comparten buscarReembolsos:
  *              solo cambia el filtro.
  *
  * CHANGELOG v1.1.0 (2026-11-11):
- * - [FEAT] buscarNomina, buscarPlantilla y buscarPagosNomina.
+ * - [FEAT] buscarNomina, buscarPlantilla y buscarReembolsosConCliente.
  *
  * CHANGELOG v1.0.0 (2026-11-10):
  * - [FEAT] Cuentas banco y reembolsos pendientes.
@@ -48,7 +64,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.3.0
+ * @version 1.6.0
  *
  */
 define(['N/search', '../../constants/AS_NominaReembolsoConstants'],
@@ -57,6 +73,27 @@ define(['N/search', '../../constants/AS_NominaReembolsoConstants'],
     // ─────────────────────────────────────────────────────────────────────────
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Una plantilla por banco: si hubiera dos activas del mismo banco, el
+     * banco sale una sola vez.
+     */
+    function buscarBancosConPlantilla() {
+        const campos = CONSTANTES.PLANTILLA.CAMPOS;
+        const bancos = [];
+
+        search.create({
+            type   : CONSTANTES.PLANTILLA.TIPO,
+            filters: [['isinactive', 'is', 'F']],
+            columns: [search.createColumn({ name: campos.BANCO, sort: search.Sort.ASC })],
+        }).run().each((resultado) => {
+            const id = resultado.getValue(campos.BANCO);
+            if (!bancos.some((banco) => banco.id === id)) bancos.push({ id: id, nombre: resultado.getText(campos.BANCO) });
+            return true;
+        });
+
+        return bancos;
+    }
 
     function buscarCuentasBanco() {
         const cuenta  = CONSTANTES.CUENTA_BANCO;
@@ -86,8 +123,9 @@ define(['N/search', '../../constants/AS_NominaReembolsoConstants'],
     }
 
     /**
-     * Primero los reembolsos de la cuenta y despues, de una sola vez, cuales
-     * de ellos ya tienen detalle en alguna nomina: esos se sacan.
+     * Los reembolsos de la cuenta menos los que ya tienen detalle en alguna
+     * nomina. Los dos lados crecen con el historico: el detalle se lee entero
+     * en vez de armar un anyof con miles de ids.
      */
     function buscarReembolsosPendientes(subsidiaria, cuentaBanco) {
         const reembolsos = buscarReembolsos([
@@ -97,12 +135,12 @@ define(['N/search', '../../constants/AS_NominaReembolsoConstants'],
             ['account.' + CONSTANTES.CUENTA_BANCO.NUMERO_BANCARIO, 'isnotempty', ''],
         ]);
         if (!reembolsos.length) return reembolsos;
-        const enNomina = buscarReembolsosDetalle([CONSTANTES.DETALLE.CAMPOS.TRANSACCION, 'anyof', reembolsos.map((reembolso) => reembolso.id)]);
-        return reembolsos.filter((reembolso) => enNomina.indexOf(reembolso.id) < 0);
+        const enNomina = new Set(buscarReembolsosDetalle([]));
+        return reembolsos.filter((reembolso) => !enNomina.has(reembolso.id));
     }
 
     function buscarReembolsosNomina(nominaId) {
-        const ids = buscarReembolsosDetalle([CONSTANTES.DETALLE.CAMPOS.NOMINA, 'anyof', nominaId]);
+        const ids = buscarReembolsosDetalle([[CONSTANTES.DETALLE.CAMPOS.NOMINA, 'anyof', nominaId]]);
         if (!ids.length) return [];
         return buscarReembolsos([['internalid', 'anyof', ids]]);
     }
@@ -145,7 +183,9 @@ define(['N/search', '../../constants/AS_NominaReembolsoConstants'],
      * monto va en positivo y sin decimales, la fecha en yyyy-MM-dd para que la
      * plantilla la formatee.
      */
-    function buscarPagosNomina(nominaId) {
+
+    //pago template
+    function buscarReembolsosConCliente(nominaId) {
         const cliente       = CONSTANTES.CLIENTE;
         const columnaNombre = search.createColumn({
             name   : 'formulatext',
@@ -155,7 +195,7 @@ define(['N/search', '../../constants/AS_NominaReembolsoConstants'],
         });
         const columnaMonto  = search.createColumn({ name: 'formulatext', formula: 'TO_CHAR(ABS({amount}))' });
         const columnaFecha  = search.createColumn({ name: 'formulatext', formula: "TO_CHAR({trandate}, 'YYYY-MM-DD')" });
-        const ids           = buscarReembolsosDetalle([CONSTANTES.DETALLE.CAMPOS.NOMINA, 'anyof', nominaId]);
+        const ids           = buscarReembolsosDetalle([[CONSTANTES.DETALLE.CAMPOS.NOMINA, 'anyof', nominaId]]);
         const pagos         = [];
 
         if (!ids.length) return pagos;
@@ -201,12 +241,12 @@ define(['N/search', '../../constants/AS_NominaReembolsoConstants'],
      * Los Reembolsos al cliente con el filtro de quien llama: la pantalla
      * (pendientes) y la vista (los de una nomina) muestran lo mismo. El monto
      * sale negativo en la linea principal (es un egreso del banco): se trae en
-     * positivo, que es lo que se paga.
+     * positivo, que es lo que se paga. runPaged: con los pendientes trae todo
+     * el historico de la cuenta, que pasa de las 4.000 filas de each().
      */
     function buscarReembolsos(filtros) {
         const reembolsos = [];
-
-        search.create({
+        const paginado   = search.create({
             type   : search.Type.TRANSACTION,
             filters: [
                 ['type',     'anyof', CONSTANTES.REEMBOLSO.TIPO], 'AND',
@@ -219,45 +259,52 @@ define(['N/search', '../../constants/AS_NominaReembolsoConstants'],
                 'entity',
                 search.createColumn({ name: 'formulacurrency', formula: 'ABS({amount})' }),
             ],
-        }).run().each((resultado) => {
-            reembolsos.push({
-                id     : resultado.id,
-                numero : resultado.getValue('tranid'),
-                fecha  : resultado.getValue('trandate'),
-                cliente: resultado.getText('entity'),
-                monto  : parseFloat(resultado.getValue({ name: 'formulacurrency' })) || 0,
+        }).runPaged({ pageSize: 1000 });
+
+        paginado.pageRanges.forEach((rango) => {
+            paginado.fetch({ index: rango.index }).data.forEach((resultado) => {
+                reembolsos.push({
+                    id     : resultado.id,
+                    numero : resultado.getValue('tranid'),
+                    fecha  : resultado.getValue('trandate'),
+                    cliente: resultado.getText('entity'),
+                    monto  : parseFloat(resultado.getValue({ name: 'formulacurrency' })) || 0,
+                });
             });
-            return true;
         });
 
         return reembolsos;
     }
 
     /**
-     * Los ids de los reembolsos que tienen detalle, con el filtro de quien
-     * llama: los de una nomina, o cuales de una lista ya estan en alguna.
+     * Los ids de los reembolsos que tienen detalle, con los filtros de quien
+     * llama: los de una nomina, o sin filtro todos los que ya estan en alguna.
+     * runPaged: sin filtro es todo el historico del detalle.
      */
-    function buscarReembolsosDetalle(filtro) {
-        const ids = [];
-
-        search.create({
+    function buscarReembolsosDetalle(filtros) {
+        const ids      = [];
+        const paginado = search.create({
             type   : CONSTANTES.DETALLE.TIPO,
-            filters: [filtro],
+            filters: filtros,
             columns: [CONSTANTES.DETALLE.CAMPOS.TRANSACCION],
-        }).run().each((resultado) => {
-            ids.push(resultado.getValue(CONSTANTES.DETALLE.CAMPOS.TRANSACCION));
-            return true;
+        }).runPaged({ pageSize: 1000 });
+
+        paginado.pageRanges.forEach((rango) => {
+            paginado.fetch({ index: rango.index }).data.forEach((resultado) => {
+                ids.push(resultado.getValue(CONSTANTES.DETALLE.CAMPOS.TRANSACCION));
+            });
         });
 
         return ids;
     }
 
     return {
+        buscarBancosConPlantilla  : buscarBancosConPlantilla,
         buscarCuentasBanco        : buscarCuentasBanco,
         buscarReembolsosPendientes: buscarReembolsosPendientes,
         buscarReembolsosNomina    : buscarReembolsosNomina,
         buscarNomina              : buscarNomina,
         buscarPlantilla           : buscarPlantilla,
-        buscarPagosNomina         : buscarPagosNomina,
+        buscarReembolsosConCliente: buscarReembolsosConCliente,
     };
 });
