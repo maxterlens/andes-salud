@@ -3,10 +3,12 @@
  * @description Entry point del Recuento de inventario. Solo recibe el recuento
  *              y se lo pasa al handler que toca.
  *
- *              beforeLoad → con el recuento en Aprobacion pendiente, oculta
- *                           Aprobar y Rechazar a todo rol que no sea Contable
- *                           (o Administrador). Farmacia cuenta y completa;
- *                           solo Contable aprueba o rechaza.
+ *              beforeLoad → con el recuento en Aprobacion pendiente, cambia
+ *                           el Aprobar nativo por el propio, que aprueba por la
+ *                           cola, y oculta Aprobar y Rechazar a todo rol que no
+ *                           sea Contable (o Administrador). Farmacia cuenta y
+ *                           completa; solo Contable aprueba o rechaza. Con una
+ *                           aprobacion en curso, no deja ninguno de los dos.
  *                         → en vista, agrega la ficha informativa "Importes del
  *                           recuento" (cantidad x tarifa). En edicion no sale.
  *                         → en vista, agrega el boton Descargar TXT. Las
@@ -19,14 +21,17 @@
  * @scriptid     customscript_as_rec_inv_cierre_ue
  * @deploymentid customdeploy_as_rec_inv_cierre_ue
  * @author Andes Salud
- * @version 1.4.0
+ * @version 1.5.0
+ *
+ * CHANGELOG
+ * 1.5.0 [FEAT] Aprobar propio por la cola (prepararAprobacion).
  */
 define(['./handler/AS_CierreRecuentoHandler', './handler/AS_ImporteRecuentoHandler', './handler/AS_ArchivoRecuentoHandler'],
     (cierreRecuentoHandler, importeRecuentoHandler, archivoRecuentoHandler) => {
 
     function beforeLoad(context) {
         try {
-            cierreRecuentoHandler.ocultarAprobarRechazar(context.form, context.newRecord);
+            cierreRecuentoHandler.prepararAprobacion(context.form, context.newRecord);
         } catch (fallo) {
             log.error({
                 title  : 'RECUENTO INVENTARIO CIERRE ERROR',

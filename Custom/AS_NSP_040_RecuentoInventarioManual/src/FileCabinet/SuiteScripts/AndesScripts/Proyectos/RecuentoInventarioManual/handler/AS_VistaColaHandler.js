@@ -16,7 +16,10 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.2.0
+ * @version 1.3.0
+ *
+ * CHANGELOG
+ * 1.3.0 [FEAT] La aprobacion lanza su deployment y cuenta solo su fila.
  */
 define(['../form/AS_ColaForm', '../data/query/AS_RecuentoInventarioManualQuery',
         '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_RecuentoInventarioManualConstants'],
@@ -29,18 +32,35 @@ define(['../form/AS_ColaForm', '../data/query/AS_RecuentoInventarioManualQuery',
     function mostrarEstado(form, solicitud) {
         const campos    = CONSTANTES.COLA.CAMPOS;
         const estado    = solicitud.getValue({ fieldId: campos.ESTADO });
+        const tipo      = solicitud.getValue({ fieldId: campos.TIPO });
         const pendiente = estado === CONSTANTES.COLA.ESTADOS.PENDIENTE;
-        if (pendiente) UTILS.lanzarScheduledSiEstaLibre(CONSTANTES.COLA.PROCESADOR, CONSTANTES.COLA.DEPLOYMENT);
+        const fila      = obtenerFila(tipo);
+        if (pendiente) UTILS.lanzarScheduledSiEstaLibre(CONSTANTES.COLA.PROCESADOR, fila.deploymentId);
 
         colaForm.construirVista(form, {
-            tipo      : solicitud.getValue({ fieldId: campos.TIPO }),
+            tipo      : tipo,
             estado    : estado,
-            antes     : pendiente ? recuentoInventarioManualQuery.contarSolicitudesAntes(solicitud.id) : 0,
+            antes     : pendiente ? recuentoInventarioManualQuery.contarSolicitudesAntes(solicitud.id, fila.tipos) : 0,
             recuentoId: solicitud.getValue({ fieldId: campos.RECUENTO }),
             inicio    : solicitud.getValue({ fieldId: campos.INICIO }),
             fin       : solicitud.getValue({ fieldId: campos.FIN }),
             error     : solicitud.getValue({ fieldId: campos.ERROR }),
         });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Secundarias
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * La aprobacion tiene su propio deployment del Scheduled; generacion y
+     * carga comparten el otro.
+     */
+    function obtenerFila(tipo) {
+        const cola  = CONSTANTES.COLA;
+        const tipos = cola.TIPOS;
+        if (tipo === tipos.APROBACION) return { deploymentId: cola.DEPLOYMENT_APROBACION, tipos: [tipos.APROBACION] };
+        return { deploymentId: cola.DEPLOYMENT, tipos: [tipos.GENERACION, tipos.CARGA] };
     }
 
     return {

@@ -7,9 +7,11 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.10.0
+ * @version 1.11.0
  *
  * CHANGELOG
+ * 1.11.0 [FEAT] Aprobacion por la cola: tipo APROBACION, su deployment, su
+ *               boton y sus textos.
  * 1.10.0 [FEAT] CARGA: el select Lote con los lotes configurados.
  * 1.9.0 [FEAT] CARGA: el CSV sin LOTE en el label y el aviso SIN_LOTE.
  */
@@ -32,8 +34,8 @@ define([], () => {
     };
 
     const COLA = {
-        TIPO              : 'customrecord_as_rec_inv_man_cola',
-        CAMPOS            : {
+        TIPO                 : 'customrecord_as_rec_inv_man_cola',
+        CAMPOS               : {
             TIPO     : 'custrecord_as_rec_inv_man_cola_tipo',
             ESTADO   : 'custrecord_as_rec_inv_man_cola_estado',
             RECUENTO : 'custrecord_as_rec_inv_man_cola_recuento',
@@ -44,16 +46,18 @@ define([], () => {
             INICIO   : 'custrecord_as_rec_inv_man_cola_inicio',
             FIN      : 'custrecord_as_rec_inv_man_cola_fin',
         },
-        TIPOS             : {
+        TIPOS                : {
             GENERACION: 'GENERACION',
             CARGA     : 'CARGA',
+            APROBACION: 'APROBACION',
         },
-        TIPOS_LABEL       : {
+        TIPOS_LABEL          : {
             GENERACION: 'Creación de recuento',
             CARGA     : 'Carga de recuento',
+            APROBACION: 'Aprobación de recuento',
         },
-        CAMPO_INACTIVO    : 'isinactive',
-        VISTA             : {
+        CAMPO_INACTIVO       : 'isinactive',
+        VISTA                : {
             GRUPO    : 'custpage_grp_cola',
             TITULO   : 'Historial de Recuento',
             RECUENTO : 'custpage_cola_recuento',
@@ -61,33 +65,39 @@ define([], () => {
             INICIO   : 'custpage_cola_inicio',
             FIN      : 'custpage_cola_fin',
         },
-        ESTADOS           : {
+        ESTADOS              : {
             PENDIENTE : 'PENDIENTE',
             PROCESANDO: 'PROCESANDO',
             LISTO     : 'LISTO',
             ERROR     : 'ERROR',
         },
-        PROCESADOR        : 'customscript_as_rec_inv_man_ss',
-        DEPLOYMENT        : 'customdeploy_as_rec_inv_man_ss',
-        UNIDADES_MINIMAS  : 500,
-        MINUTOS_MAXIMOS   : 30,
-        REFRESCO_SEGUNDOS : 15,
-        TITULOS           : {
+        PROCESADOR           : 'customscript_as_rec_inv_man_ss',
+        DEPLOYMENT           : 'customdeploy_as_rec_inv_man_ss',
+        DEPLOYMENT_APROBACION: 'customdeploy_as_rec_inv_man_ss_aprob',
+        UNIDADES_MINIMAS     : 500,
+        MINUTOS_MAXIMOS      : 30,
+        REFRESCO_SEGUNDOS    : 15,
+        TITULOS              : {
             PENDIENTE : 'En cola',
             PROCESANDO: 'Procesando',
             LISTO     : 'Listo',
             ERROR     : 'Error',
         },
-        TEXTOS            : {
+        TEXTOS               : {
             PENDIENTE   : 'En cola. Solicitudes antes de esta: ',
             PROCESANDO  : 'Procesando. Con miles de articulos tarda varios minutos.',
+            APROBANDO   : 'Aprobando. NetSuite crea los ajustes de inventario: con miles de lineas tarda '
+                        + 'hasta media hora.',
             LISTO       : 'Listo.',
+            APROBADO    : 'Recuento aprobado. NetSuite creo los ajustes de inventario.',
             ERROR       : 'No se pudo completar. ',
             REFRESCO    : 'Esta pagina se actualiza sola mientras la solicitud no termine. Puede cerrarla: '
                         + 'la solicitud sigue igual.',
             ABRIR       : 'Abrir el recuento',
             INTERRUMPIDA: 'El proceso se interrumpio antes de terminar. Revise si el recuento quedo creado '
                         + 'o con las cantidades antes de volver a enviar.',
+            EN_CURSO    : 'Aprobacion en proceso: no apruebe ni rechace hasta que termine. ',
+            SOLICITUD   : 'Ver la solicitud',
         },
     };
 
@@ -110,15 +120,18 @@ define([], () => {
         RECUENTO_CARGA   : 'custpage_recuento_carga',
         LOTE_CARGA       : 'custpage_lote_carga',
         CARGA            : 'custpage_carga',
+        APROBAR          : 'custpage_aprobar',
         ARCHIVO          : 'custpage_archivo',
         REFRESCO         : 'custpage_refresco',
     };
 
     const BOTONES = {
-        TXT      : 'custpage_as_rec_inv_txt',
-        TXT_LABEL: 'Descargar TXT',
-        CSV      : 'custpage_as_rec_inv_csv',
-        CSV_LABEL: 'Cargar CSV',
+        TXT          : 'custpage_as_rec_inv_txt',
+        TXT_LABEL    : 'Descargar TXT',
+        CSV          : 'custpage_as_rec_inv_csv',
+        CSV_LABEL    : 'Cargar CSV',
+        APROBAR      : 'custpage_as_rec_inv_aprobar',
+        APROBAR_LABEL: 'Aprobar',
     };
 
     const CARGA = {
@@ -144,6 +157,7 @@ define([], () => {
         TIPO                       : 'inventorycount',
         CAMPO_CARGA                : 'custbody_as_rec_inv_carga',
         ACCION_COMENZAR            : 'startcount',
+        ACCION_APROBAR             : 'approve',
         ESTADO_INICIADO            : 'B',
         CAMPO_CANTIDAD             : 'countquantity',
         CAMPO_DETALLE              : 'countdetail',

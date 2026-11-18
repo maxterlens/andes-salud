@@ -11,6 +11,9 @@
  *                custpage_carga          → boton Cargar CSV de esta pantalla:
  *                                          la pantalla de carga, para elegir
  *                                          el recuento.
+ *                custpage_aprobar        → boton Aprobar del recuento: deja la
+ *                                          aprobacion en la cola y lleva a
+ *                                          ella.
  *              POST
  *                sin parametros          → Generar recuento: deja la solicitud
  *                                          de generacion en la cola y lleva a
@@ -26,14 +29,16 @@
  * @scriptid     customscript_as_rec_inv_man_stlt
  * @deploymentid customdeploy_as_rec_inv_man_stlt
  * @author Andes Salud
- * @version 1.7.0
+ * @version 1.8.0
  *
  * CHANGELOG
+ * 1.8.0 [FEAT] Aprobar: deja la aprobacion del recuento en la cola.
  * 1.7.0 [FEAT] Cargar recibe el lote elegido en la pantalla.
  */
 define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRecuentoHandler',
-        './handler/AS_CargaCantidadesHandler', './constants/AS_RecuentoInventarioManualConstants'],
-    (recuentoInventarioManualHandler, archivoRecuentoHandler, cargaCantidadesHandler, CONSTANTES) => {
+        './handler/AS_CargaCantidadesHandler', './handler/AS_AprobacionRecuentoHandler',
+        './constants/AS_RecuentoInventarioManualConstants'],
+    (recuentoInventarioManualHandler, archivoRecuentoHandler, cargaCantidadesHandler, aprobacionRecuentoHandler, CONSTANTES) => {
 
     function onRequest(context) {
         const parametros = obtenerParametros(context);
@@ -44,6 +49,8 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
                     archivoRecuentoHandler.descargarArchivo(context, parametros.recuentoId);
                 } else if (parametros.carga) {
                     cargaCantidadesHandler.mostrarFormulario(context);
+                } else if (parametros.aprobarId) {
+                    aprobacionRecuentoHandler.solicitarAprobacion(parametros.aprobarId);
                 } else {
                     recuentoInventarioManualHandler.mostrarFormulario(context);
                 }
@@ -58,7 +65,7 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
             log.error({
                 title  : 'RECUENTO INVENTARIO MANUAL ERROR',
                 details: 'metodo: ' + context.request.method
-                       + ' | recuento: ' + (parametros.recuentoId || parametros.recuentoCargaId || '')
+                       + ' | recuento: ' + (parametros.recuentoId || parametros.recuentoCargaId || parametros.aprobarId || '')
                        + ' | motivo: ' + (fallo.message || fallo),
             });
 
@@ -72,6 +79,7 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
             recuentoCargaId: context.request.parameters[CONSTANTES.CAMPOS.RECUENTO_CARGA],
             loteCargaId    : context.request.parameters[CONSTANTES.CAMPOS.LOTE_CARGA],
             carga          : context.request.parameters[CONSTANTES.CAMPOS.CARGA],
+            aprobarId      : context.request.parameters[CONSTANTES.CAMPOS.APROBAR],
         };
     }
 

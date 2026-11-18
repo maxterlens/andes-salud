@@ -10,8 +10,7 @@
  *
  *              El TXT tiene el formato de la pistola: correlativo, codigo de
  *              barras y nombre del articulo, con Cantidad vacia para que bodega
- *              la llene. Sin ubicacion ni lote: la pistola solo necesita el
- *              articulo.
+ *              la llene. COD 3 trae el id de la ubicacion del recuento; sin lote.
  *              Un User Event no puede responder un archivo: el beforeLoad solo
  *              dibuja la pagina. Por eso la descarga la hace el Suitelet.
  *              Cada clic vuelve a generar el archivo y no se guarda en el File
@@ -20,7 +19,10 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.3.0
+ * @version 1.4.0
+ *
+ * CHANGELOG
+ * 1.4.0 [FEAT] El TXT lleva el id de la ubicacion del recuento en COD 3.
  */
 define(['../form/AS_ArchivoRecuentoForm', '../data/query/AS_RecuentoInventarioManualQuery'],
     (archivoRecuentoForm, recuentoInventarioManualQuery) => {
@@ -35,7 +37,8 @@ define(['../form/AS_ArchivoRecuentoForm', '../data/query/AS_RecuentoInventarioMa
 
     function descargarArchivo(context, recuentoId) {
         const articulos = recuentoInventarioManualQuery.obtenerCantidadesRecuento(recuentoId);
-        const archivo   = archivoRecuentoForm.construirArchivo(recuentoId, articulos);
+        const ubicacion = recuentoInventarioManualQuery.obtenerUbicacionRecuento(recuentoId);
+        const archivo   = archivoRecuentoForm.construirArchivo(recuentoId, articulos, ubicacion.id);
 
         log.audit({
             title  : 'RECUENTO INVENTARIO TXT DESCARGADO',

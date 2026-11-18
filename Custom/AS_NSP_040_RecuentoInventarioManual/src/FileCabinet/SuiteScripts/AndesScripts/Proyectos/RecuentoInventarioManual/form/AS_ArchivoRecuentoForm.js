@@ -8,15 +8,17 @@
  *              separadas por coma. Windows-1252, como los TXT del AS_NSP_036.
  *              PRO_CORREL lleva el id interno del articulo y COD_BARRA va
  *              vacio; PRO_CORREL1 sigue con el correlativo de la fila.
+ *              COD 3 lleva el id de la ubicacion del recuento en todas las filas.
  *              El nombre sale como se ve en NetSuite (< en vez de &lt;), con
  *              las comas cambiadas por punto.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.6.0
+ * @version 1.7.0
  *
  * CHANGELOG
+ * 1.7.0 [FEAT] COD 3 con el id de la ubicacion del recuento.
  * 1.6.0 [FIX] El nombre del articulo sin &lt; &gt; &amp;: sale como en NetSuite.
  * 1.5.0 [FEAT] PRO_CORREL con el id interno del articulo y COD_BARRA vacio.
  */
@@ -36,13 +38,13 @@ define(['N/file', '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_
         });
     }
 
-    function construirArchivo(recuentoId, articulos) {
+    function construirArchivo(recuentoId, articulos, ubicacionId) {
         const archivo = CONSTANTES.ARCHIVO;
         const filas   = [archivo.ENCABEZADO.join(archivo.SEPARADOR)];
         articulos.forEach((articulo, indice) => {
             const correlativo = indice + 1;
             const nombre      = UTILS.convertirEntidadesHtmlATexto(articulo.nombre).replace(/,/g, '.');
-            filas.push([articulo.id, articulo.codigoBarra, '', '', '', '', nombre, '',
+            filas.push([articulo.id, articulo.codigoBarra, '', ubicacionId, '', '', nombre, '',
                         correlativo, '', '', '', '', ''].join(archivo.SEPARADOR));
         });
 

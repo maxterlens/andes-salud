@@ -11,7 +11,8 @@
  *              Articulos
  *                - obtenerArticulosUbicacion: los articulos activos que tienen
  *                  o tuvieron stock en la ubicacion, con su unidad y su stock
- *                  (0 si hoy no tienen).
+ *                  (0 si hoy no tienen), sin los que tienen cantidad
+ *                  comprometida en la ubicacion.
  *              Recuento
  *                - obtenerCantidadesRecuento: por articulo, su id, su nombre,
  *                  su codigo de barras, la cantidad del recuento, la de
@@ -26,18 +27,26 @@
  *                - obtenerLotesRecuento: los lotes activos de Lote
  *                  Predeterminado de Recuento.
  *              Cola
- *                - obtenerSolicitudes: las solicitudes en un estado, la mas
- *                  antigua primero.
- *                - contarSolicitudesAntes: cuantas Pendientes van antes.
+ *                - obtenerSolicitudes: las solicitudes de unos tipos en un
+ *                  estado, la mas antigua primero.
+ *                - contarSolicitudesAntes: cuantas Pendientes de los mismos
+ *                  tipos van antes.
  *                - obtenerGeneracionEnCurso: la generacion sin terminar de
  *                  una ubicacion.
+ *                - obtenerAprobacionEnCurso: la aprobacion sin terminar de
+ *                  un recuento.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.9.0
+ * @version 1.11.0
  *
  * CHANGELOG
+ * 1.11.0 [FEAT] obtenerSolicitudes y contarSolicitudesAntes por tipos (cada
+ *               deployment del Scheduled atiende los suyos) y
+ *               obtenerAprobacionEnCurso.
+ * 1.10.0 [TEMP] SOLO PRUEBAS, QUITAR: obtenerArticulosUbicacion deja fuera los articulos con cantidad
+ *               comprometida en la ubicacion.
  * 1.9.0 [FEAT] obtenerLotesRecuento para el select Lote de la carga, y
  *              obtenerLoteRecuento recibe el lote elegido.
  * 1.8.0 [FEAT] obtenerUbicacionRecuento devuelve { id, nombre }: el CSV trae la
@@ -78,6 +87,13 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         return filas.map((fila) => ({ subsidiaria: String(fila.subsidiaria), id: String(fila.id), nombre: fila.nombre }));
     }
 
+    /**
+     * TEMPORAL, SOLO PARA PRUEBAS EN QA: quitar antes de pasar a produccion.
+     * Deja fuera los articulos con cantidad comprometida en la ubicacion (una
+     * orden de traslado sin ejecutar, por ejemplo): al aprobar, el recuento
+     * vacia sus lotes para pasarlos al lote configurado, y NetSuite no deja
+     * sacar lo comprometido ("Solo hay N disponibles").
+     */
     function obtenerArticulosUbicacion(ubicacionId) {
         const articulos = [];
         let ultimoId    = 0;
@@ -91,9 +107,11 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
                       + ' JOIN item i ON i.id = a.item'
                       + " WHERE a.location = ? AND i.isinactive = 'F' AND i.itemtype = 'InvtPart'"
                       + ' AND a.quantityonhand IS NOT NULL AND a.item > ?'
+                      + ' AND a.item NOT IN (SELECT tl.item FROM transactionline tl'
+                      + ' WHERE tl.location = ? AND tl.quantitycommitted > 0 AND tl.item IS NOT NULL)'
                       + ' ORDER BY a.item'
                       + ' FETCH FIRST 1000 ROWS ONLY',
-                params: [ubicacionId, ultimoId],
+                params: [ubicacionId, ultimoId, ubicacionId],
             }).asMappedResults();
             pagina.forEach((fila) => {
                 articulos.push({ id: String(fila.id), nombre: fila.nombre, unidad: fila.unidad || '', stock: fila.stock || 0 });
@@ -195,23 +213,26 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         return filas.map((fila) => ({ id: String(fila.id), nombre: fila.lote }));
     }
 
-    function obtenerSolicitudes(estado) {
+    function obtenerSolicitudes(estado, tipos) {
         const campos = CONSTANTES.COLA.CAMPOS;
         const filas  = query.runSuiteQL({
             query : 'SELECT c.id FROM ' + CONSTANTES.COLA.TIPO + ' c'
                   + ' WHERE c.' + campos.ESTADO + ' = ?'
+                  + ' AND c.' + campos.TIPO + ' IN (' + tipos.map(() => '?').join(', ') + ')'
                   + ' ORDER BY c.id',
-            params: [estado],
+            params: [estado].concat(tipos),
         }).asMappedResults();
 
         return filas.map((fila) => fila.id);
     }
 
-    function contarSolicitudesAntes(solicitudId) {
-        const fila = query.runSuiteQL({
+    function contarSolicitudesAntes(solicitudId, tipos) {
+        const campos = CONSTANTES.COLA.CAMPOS;
+        const fila   = query.runSuiteQL({
             query : 'SELECT COUNT(*) AS total FROM ' + CONSTANTES.COLA.TIPO + ' c'
-                  + ' WHERE c.' + CONSTANTES.COLA.CAMPOS.ESTADO + ' = ? AND c.id < ?',
-            params: [CONSTANTES.COLA.ESTADOS.PENDIENTE, solicitudId],
+                  + ' WHERE c.' + campos.ESTADO + ' = ? AND c.id < ?'
+                  + ' AND c.' + campos.TIPO + ' IN (' + tipos.map(() => '?').join(', ') + ')',
+            params: [CONSTANTES.COLA.ESTADOS.PENDIENTE, solicitudId].concat(tipos),
         }).asMappedResults()[0];
 
         return fila.total;
@@ -230,6 +251,19 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         return fila ? fila.id : null;
     }
 
+    function obtenerAprobacionEnCurso(recuentoId) {
+        const campos  = CONSTANTES.COLA.CAMPOS;
+        const estados = CONSTANTES.COLA.ESTADOS;
+        const fila    = query.runSuiteQL({
+            query : 'SELECT c.id FROM ' + CONSTANTES.COLA.TIPO + ' c'
+                  + ' WHERE c.' + campos.TIPO + ' = ? AND c.' + campos.RECUENTO + ' = ?'
+                  + ' AND c.' + campos.ESTADO + ' IN (?, ?)',
+            params: [CONSTANTES.COLA.TIPOS.APROBACION, recuentoId, estados.PENDIENTE, estados.PROCESANDO],
+        }).asMappedResults()[0];
+
+        return fila ? fila.id : null;
+    }
+
     return {
         obtenerCuentasRecuento   : obtenerCuentasRecuento,
         obtenerUbicaciones       : obtenerUbicaciones,
@@ -241,6 +275,7 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         obtenerLotesRecuento     : obtenerLotesRecuento,
         obtenerSolicitudes       : obtenerSolicitudes,
         contarSolicitudesAntes   : contarSolicitudesAntes,
+        obtenerAprobacionEnCurso : obtenerAprobacionEnCurso,
         obtenerGeneracionEnCurso : obtenerGeneracionEnCurso,
     };
 });

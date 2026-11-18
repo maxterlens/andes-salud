@@ -3,7 +3,8 @@
  * @description Entry point del Scheduled que procesa la cola AS Recuento
  *              Inventario Manual Cola. No tiene programacion: lo lanzan el
  *              Suitelet al dejar una solicitud y la vista de una solicitud
- *              Pendiente. Un solo deployment: nunca corren dos a la vez.
+ *              Pendiente. Dos deployments, cada uno con su fila: el de
+ *              aprobaciones y el de generacion y carga (ver AS_ColaHandler).
  *
  * @NApiVersion 2.1
  * @NScriptType ScheduledScript
@@ -11,7 +12,10 @@
  * @scriptid     customscript_as_rec_inv_man_ss
  * @deploymentid customdeploy_as_rec_inv_man_ss
  * @author Andes Salud
- * @version 1.1.0
+ * @version 1.2.0
+ *
+ * CHANGELOG
+ * 1.2.0 [FEAT] Segundo deployment para las aprobaciones.
  */
 define(['./handler/AS_ColaHandler'],
     (colaHandler) => {

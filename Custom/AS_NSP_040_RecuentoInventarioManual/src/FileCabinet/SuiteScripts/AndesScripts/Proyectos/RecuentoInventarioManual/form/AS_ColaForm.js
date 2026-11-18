@@ -9,13 +9,17 @@
  *
  *              Pendiente  → en cola, con cuantas solicitudes van antes.
  *              Procesando → que se esta haciendo y que tarda.
- *              Listo      → el enlace al recuento.
+ *              Listo      → el enlace al recuento; en una aprobacion, que
+ *                           quedo aprobado.
  *              Error      → el mensaje de NetSuite.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.2.0
+ * @version 1.3.0
+ *
+ * CHANGELOG
+ * 1.3.0 [FEAT] Textos de la aprobacion: Aprobando y Recuento aprobado.
  */
 define(['N/ui/serverWidget', 'N/ui/message', 'N/url', 'N/format', '../constants/AS_RecuentoInventarioManualConstants'],
     (serverWidget, message, url, format, CONSTANTES) => {
@@ -50,12 +54,13 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/url', 'N/format', '../constants/
 
     function armarTexto(solicitud) {
         const estados = CONSTANTES.COLA.ESTADOS;
-        const textos  = CONSTANTES.COLA.TEXTOS;
+        const textos     = CONSTANTES.COLA.TEXTOS;
+        const aprobacion = solicitud.tipo === CONSTANTES.COLA.TIPOS.APROBACION;
         if (solicitud.estado === estados.PENDIENTE) return textos.PENDIENTE + solicitud.antes + '.';
-        if (solicitud.estado === estados.PROCESANDO) return textos.PROCESANDO;
+        if (solicitud.estado === estados.PROCESANDO) return aprobacion ? textos.APROBANDO : textos.PROCESANDO;
         if (solicitud.estado === estados.ERROR) return textos.ERROR + solicitud.error;
         const direccion = url.resolveRecord({ recordType: CONSTANTES.RECUENTO.TIPO, recordId: solicitud.recuentoId });
-        return textos.LISTO + ' <a href="' + direccion + '">' + textos.ABRIR + '</a>';
+        return (aprobacion ? textos.APROBADO : textos.LISTO) + ' <a href="' + direccion + '">' + textos.ABRIR + '</a>';
     }
 
     function ocultarCamposDelRecord(form) {

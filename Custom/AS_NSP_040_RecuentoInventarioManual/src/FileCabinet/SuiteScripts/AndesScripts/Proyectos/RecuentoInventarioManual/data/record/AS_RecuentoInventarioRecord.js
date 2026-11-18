@@ -6,6 +6,8 @@
  *              y el check AS Recuento Inventario Carga marcado, como el AS_NSP_032.
  *              guardarRecuento: lo guarda; va aparte para medir cada paso.
  *              comenzarRecuento: lo pasa de Abierto a Iniciado.
+ *              aprobarRecuento: la accion nativa Aprobar; NetSuite crea los
+ *              ajustes de inventario.
  *              cargarRecuento: lo abre para escribirle las cantidades.
  *              escribirCantidades: escribe la Cantidad del recuento y su
  *              detalle por lote en las lineas de los articulos recibidos.
@@ -20,8 +22,10 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.7.0
+ * @version 1.8.0
  *
+ * CHANGELOG
+ * 1.8.0 [FEAT] aprobarRecuento, para la aprobacion por la cola.
  */
 define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventarioManualConstants'],
     (record, action, format, CONSTANTES) => {
@@ -54,6 +58,14 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
         action.execute({
             recordType: CONSTANTES.RECUENTO.TIPO,
             id        : CONSTANTES.RECUENTO.ACCION_COMENZAR,
+            params    : { recordId: recuentoId },
+        });
+    }
+
+    function aprobarRecuento(recuentoId) {
+        action.execute({
+            recordType: CONSTANTES.RECUENTO.TIPO,
+            id        : CONSTANTES.RECUENTO.ACCION_APROBAR,
             params    : { recordId: recuentoId },
         });
     }
@@ -101,6 +113,7 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
         armarRecuento       : armarRecuento,
         guardarRecuento     : guardarRecuento,
         comenzarRecuento    : comenzarRecuento,
+        aprobarRecuento     : aprobarRecuento,
         cargarRecuento      : cargarRecuento,
         escribirCantidades  : escribirCantidades,
     };

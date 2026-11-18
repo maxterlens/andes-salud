@@ -16,6 +16,10 @@
  *                             con el id del recuento y baja el TXT.
  *              abrirCarga   → boton de la pantalla del recuento: abre la
  *                             pantalla de carga para elegir el recuento.
+ *              aprobarRecuento → boton Aprobar propio del recuento: abre el
+ *                             Suitelet, que deja la aprobacion en la cola y
+ *                             lleva a la solicitud. Un segundo clic mientras
+ *                             sale de la pagina no hace nada.
  *
  *              Lo que pasa despues de enviar se ve en la solicitud de la cola.
  *              Marcar un articulo de la lista no pasa por el client script: es
@@ -25,7 +29,10 @@
  * @NScriptType ClientScript
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.8.0
+ * @version 1.9.0
+ *
+ * CHANGELOG
+ * 1.9.0 [FEAT] aprobarRecuento, el boton Aprobar propio.
  */
 define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInventarioManualConstants'],
     (currentRecord, url, message, CONSTANTES) => {
@@ -33,6 +40,7 @@ define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInve
     let ubicacionDibujada = '';
     let generando         = false;
     let avisoSinArticulos = null;
+    let aprobando         = false;
 
     function pageInit(context) {
         ubicacionDibujada = context.currentRecord.getValue({ fieldId: CONSTANTES.CAMPOS.UBICACION });
@@ -133,11 +141,22 @@ define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInve
         });
     }
 
+    function aprobarRecuento() {
+        if (aprobando) return;
+        aprobando = true;
+        window.location.href = url.resolveScript({
+            scriptId    : CONSTANTES.SCRIPT.ID,
+            deploymentId: CONSTANTES.SCRIPT.DEPLOYMENT,
+            params      : { [CONSTANTES.CAMPOS.APROBAR]: currentRecord.get().id },
+        });
+    }
+
     return {
-        pageInit    : pageInit,
-        fieldChanged: fieldChanged,
-        saveRecord  : saveRecord,
-        descargarTxt: descargarTxt,
-        abrirCarga  : abrirCarga,
+        pageInit       : pageInit,
+        fieldChanged   : fieldChanged,
+        saveRecord     : saveRecord,
+        descargarTxt   : descargarTxt,
+        abrirCarga     : abrirCarga,
+        aprobarRecuento: aprobarRecuento,
     };
 });
