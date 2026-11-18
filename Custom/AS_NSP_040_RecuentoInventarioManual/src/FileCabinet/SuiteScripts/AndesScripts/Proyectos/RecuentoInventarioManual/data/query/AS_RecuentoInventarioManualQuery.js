@@ -11,8 +11,7 @@
  *              Articulos
  *                - obtenerArticulosUbicacion: los articulos activos que tienen
  *                  o tuvieron stock en la ubicacion, con su unidad y su stock
- *                  (0 si hoy no tienen), sin los que tienen cantidad
- *                  comprometida en la ubicacion.
+ *                  (0 si hoy no tienen).
  *              Recuento
  *                - obtenerCantidadesRecuento: por articulo, su id, su nombre,
  *                  su codigo de barras, la cantidad del recuento, la de
@@ -39,9 +38,11 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.11.0
+ * @version 1.12.0
  *
  * CHANGELOG
+ * 1.12.0 [FIX] obtenerArticulosUbicacion vuelve a traer los articulos con
+ *              cantidad comprometida: se quita el filtro temporal de 1.10.0.
  * 1.11.0 [FEAT] obtenerSolicitudes y contarSolicitudesAntes por tipos (cada
  *               deployment del Scheduled atiende los suyos) y
  *               obtenerAprobacionEnCurso.
@@ -87,13 +88,6 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         return filas.map((fila) => ({ subsidiaria: String(fila.subsidiaria), id: String(fila.id), nombre: fila.nombre }));
     }
 
-    /**
-     * TEMPORAL, SOLO PARA PRUEBAS EN QA: quitar antes de pasar a produccion.
-     * Deja fuera los articulos con cantidad comprometida en la ubicacion (una
-     * orden de traslado sin ejecutar, por ejemplo): al aprobar, el recuento
-     * vacia sus lotes para pasarlos al lote configurado, y NetSuite no deja
-     * sacar lo comprometido ("Solo hay N disponibles").
-     */
     function obtenerArticulosUbicacion(ubicacionId) {
         const articulos = [];
         let ultimoId    = 0;
@@ -107,11 +101,9 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
                       + ' JOIN item i ON i.id = a.item'
                       + " WHERE a.location = ? AND i.isinactive = 'F' AND i.itemtype = 'InvtPart'"
                       + ' AND a.quantityonhand IS NOT NULL AND a.item > ?'
-                      + ' AND a.item NOT IN (SELECT tl.item FROM transactionline tl'
-                      + ' WHERE tl.location = ? AND tl.quantitycommitted > 0 AND tl.item IS NOT NULL)'
                       + ' ORDER BY a.item'
                       + ' FETCH FIRST 1000 ROWS ONLY',
-                params: [ubicacionId, ultimoId, ubicacionId],
+                params: [ubicacionId, ultimoId],
             }).asMappedResults();
             pagina.forEach((fila) => {
                 articulos.push({ id: String(fila.id), nombre: fila.nombre, unidad: fila.unidad || '', stock: fila.stock || 0 });
