@@ -7,14 +7,52 @@
  * @NScriptType ClientScript
  * @NModuleScope Public
  */
-define(['N/currentRecord', 'N/url'], function (currentRecord, url) {
+define(['N/currentRecord', 'N/url', 'N/ui/message'], function (currentRecord, url, message) {
+
+    const FLD_OMITIR_NETO_CERO = 'custpage_fil_omit_net_cero';
+
+    /* Banner de advertencia activo (null si no se muestra) */
+    let bannerOmitir = null;
 
     /* ─────────────────────────────────────────────────────────────── */
     /*  pageInit — Se ejecuta al cargar el formulario                  */
     /* ─────────────────────────────────────────────────────────────── */
     function pageInit(scriptContext) {
-        // TODO: Agregar lógica de inicialización si se requiere.
-        // Ejemplo: tooltips, validaciones dinámicas, pre-populate de campos.
+        _actualizarAdvertenciaOmitir(scriptContext.currentRecord);
+    }
+
+    /* ─────────────────────────────────────────────────────────────── */
+    /*  fieldChanged — Advertencia al desmarcar Omitir Neto Cero       */
+    /* ─────────────────────────────────────────────────────────────── */
+    function fieldChanged(scriptContext) {
+        if (scriptContext.fieldId === FLD_OMITIR_NETO_CERO) {
+            _actualizarAdvertenciaOmitir(scriptContext.currentRecord);
+        }
+    }
+
+    /**
+     * Muestra un banner WARNING cuando Omitir Neto Cero está desmarcado
+     * y lo oculta cuando está marcado. Es solo informativo: no bloquea el envío.
+     * @param {Record} rec  currentRecord del formulario
+     */
+    function _actualizarAdvertenciaOmitir(rec) {
+        const omitir = rec.getValue({ fieldId: FLD_OMITIR_NETO_CERO });
+
+        if (omitir === false || omitir === 'F') {
+            if (!bannerOmitir) {
+                bannerOmitir = message.create({
+                    type   : message.Type.WARNING,
+                    title  : 'Omitir Neto Cero desmarcado',
+                    message: 'El reporte incluirá también las partidas ya pagadas o aplicadas y las compensadas por folio, con saldo 0. '
+                           + 'Puede tardar más y generar un archivo de mayor tamaño. '
+                           + 'Se recomienda filtrar por Cuenta Contable o RUT.',
+                });
+                bannerOmitir.show();
+            }
+        } else if (bannerOmitir) {
+            bannerOmitir.hide();
+            bannerOmitir = null;
+        }
     }
 
     /* ─────────────────────────────────────────────────────────────── */
@@ -58,6 +96,7 @@ define(['N/currentRecord', 'N/url'], function (currentRecord, url) {
 
     return {
         pageInit,
+        fieldChanged,
         // saveRecord,  // Descomentar al activar validación
     };
 });

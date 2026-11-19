@@ -468,17 +468,63 @@ define(['N/file'], function (file) {
 
     /* ──────────────────────────────────────────────────────────────────── */
     /**
-     * Genera el nombre de archivo estándar del reporte.
+     * Genera el nombre de archivo del reporte a partir de TODOS los filtros
+     * que alteran su contenido. Dos ejecuciones con exactamente los mismos
+     * filtros producen el mismo nombre (y por tanto sobrescriben el archivo,
+     * evitando acumular archivos pesados en el File Cabinet); cualquier
+     * diferencia de filtros produce un archivo distinto.
      *
-     * @param   {string|null} subsidiariaId  Internal ID de la subsidiaria (o null para ALL)
-     * @param   {string|null} fechaCorte     Fecha en formato NS (MM/DD/YYYY), o null
-     * @param   {string}      [extension]    Extensión del archivo: 'csv' (default) | 'xls'
-     * @returns {string}  Ej: "ReporteAnaliticoCuentas_3_01-31-2025.csv"
+     * Formato:
+     *   RAC_S{sub}_[{fechaIni}-]{fechaCorte}[_C{cuenta}][_D{depto}][_R{rut}]_{N0|CN}.{ext}
+     *
+     *   - Fechas normalizadas a YYYYMMDD (entrada DD/MM/YYYY).
+     *   - Cuenta, Departamento y RUT solo se incluyen si fueron informados.
+     *   - N0 = Omitir Neto Cero activo · CN = Con Neto cero (incluidos).
+     *   - Todos los valores se sanean a [A-Za-z0-9] (RUT sin puntos ni guion).
+     *
+     * Ejemplos:
+     *   RAC_S3_20261031_N0.xls
+     *   RAC_S3_20260101-20261031_C245_D12_R761234567_CN.xls
+     *
+     * @param   {Object}          opts
+     * @param   {string|number}   opts.subsidiariaId    Internal ID de subsidiaria
+     * @param   {string}          [opts.fechaInicio]    DD/MM/YYYY (opcional)
+     * @param   {string}          opts.fechaCorte       DD/MM/YYYY
+     * @param   {string|number}   [opts.cuentaContable] Internal ID de cuenta (opcional)
+     * @param   {string|number}   [opts.departamento]   Internal ID de departamento (opcional)
+     * @param   {string}          [opts.rut]            RUT de la entidad (opcional)
+     * @param   {boolean|string}  [opts.omitirNetoCero] true | 'T' → N0; otro valor → CN
+     * @param   {string}          [extension]           'csv' (default) | 'xls'
+     * @returns {string}
      */
-    function generarNombreArchivo(subsidiariaId, fechaCorte, extension) {
-        const ext = extension || 'csv';
-        const tag = fechaCorte ? fechaCorte.replace(/\//g, '-') : 'SFECHA';
-        return 'ReporteAnaliticoCuentas_' + (subsidiariaId || 'ALL') + '_' + tag + '.' + ext;
+    function generarNombreArchivo(opts, extension) {
+        opts = opts || {};
+        var ext = extension || 'csv';
+
+        var ini   = _toYYYYMMDD(opts.fechaInicio);
+        var corte = _toYYYYMMDD(opts.fechaCorte);
+
+        var partes = ['RAC'];
+        partes.push('S' + (_sanearSegmento(opts.subsidiariaId) || 'ALL'));
+        partes.push((ini ? ini + '-' : '') + (corte || 'SFECHA'));
+
+        var cuenta = _sanearSegmento(opts.cuentaContable);
+        var depto  = _sanearSegmento(opts.departamento);
+        var rut    = _sanearSegmento(opts.rut);
+        if (cuenta) partes.push('C' + cuenta);
+        if (depto)  partes.push('D' + depto);
+        if (rut)    partes.push('R' + rut);
+
+        var omitir = opts.omitirNetoCero === true || opts.omitirNetoCero === 'T';
+        partes.push(omitir ? 'N0' : 'CN');
+
+        return partes.join('_') + '.' + ext;
+    }
+
+    /** Deja solo caracteres alfanuméricos (para segmentos del nombre de archivo) */
+    function _sanearSegmento(val) {
+        if (val === null || val === undefined) return '';
+        return String(val).replace(/[^A-Za-z0-9]/g, '').toUpperCase();
     }
 
     /* ═══ Lógica de Agrupación y Compensación (XLS) ════════════════════ */

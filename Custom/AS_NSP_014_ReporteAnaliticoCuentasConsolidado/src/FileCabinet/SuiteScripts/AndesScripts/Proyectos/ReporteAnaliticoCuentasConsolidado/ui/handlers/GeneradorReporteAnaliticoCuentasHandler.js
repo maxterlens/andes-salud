@@ -8,6 +8,9 @@
  *  Flujo del POST (modo SuiteQL — por defecto):
  *    1. Crea el registro de log (estado: "En Proceso").
  *    2. Construye la query SuiteQL con los filtros dinámicos.
+ *       - Omitir Neto Cero = T → filtro completo de partidas abiertas.
+ *       - Omitir Neto Cero = F → solo excluye líneas con monto 0; incluye
+ *         partidas ya pagadas/aplicadas en NetSuite (saldo 0).
  *    3. Crea un archivo CSV temporal en el File Cabinet (destino del SuiteQLTask).
  *    4. Configura el SS como inboundDependency del SuiteQLTask,
  *       pasándole todos los parámetros necesarios para la generación del reporte.
@@ -29,7 +32,8 @@ define([
     'N/redirect',
     '../forms/GeneradorReporteAnaliticoCuentasForm',
     '../../repositories/LogReporteAnaliticoCuentasRepository',
-], function (url, task, file, search, runtime, redirect, formModule, repository) {
+    '../../services/ReporteAnaliticoCuentasCsvService',
+], function (url, task, file, search, runtime, redirect, formModule, repository, csvService) {
 
     /* ─── Identificadores del Suitelet ──────────────────────────── */
     const SL_SCRIPT_ID = 'customscript_as_rpt_anlt_cuenta_cons_sl';
@@ -158,11 +162,20 @@ define([
              *  Comentar este bloque y descomentar el [AUDIT] para auditoría.
              * ══════════════════════════════════════════════════════════ */
             // [SUITEQL] 3. Construir query SuiteQL con filtros dinámicos
-            const qlQuery = _buildSuiteQLQuery(subsidiaria, fecha, cuentaContable, rut);
+            const qlQuery = _buildSuiteQLQuery(subsidiaria, fecha, cuentaContable, rut, omitirNetoCero);
 
             /* ── 4. Crear archivo CSV en el File Cabinet ─────────────── */
-            const nombreTmp = 'DataReporteAnalitico' + logId
-                            + '_sub' + (subsidiaria || 'ALL') + '.csv';
+            /* Mismo nombre que el XLS (distinta extensión): filtros idénticos
+             * sobrescriben el CSV anterior en lugar de acumular archivos. */
+            const nombreTmp = csvService.generarNombreArchivo({
+                subsidiariaId : subsidiaria,
+                fechaInicio   : fechaInicio,
+                fechaCorte    : fecha,
+                cuentaContable: cuentaContable,
+                departamento  : departamento,
+                rut           : rut,
+                omitirNetoCero: omitirNetoCero,
+            }, 'csv');
             const tmpFile   = file.create({
                 name    : nombreTmp,
                 fileType: file.Type.CSV,
@@ -245,15 +258,79 @@ define([
      * @param {string} subsidiaria     Internal ID numérico de la subsidiaria
      * @param {string} fecha           Fecha de corte en formato DD/MM/YYYY
      * @param {string} cuentaContable  Internal ID de la cuenta contable (opcional; '' = sin filtro)
+     * @param {string} rut             RUT de la entidad (opcional; '' = sin filtro)
+     * @param {string} omitirNetoCero  'T' → filtro completo de partidas abiertas (solo lo pendiente).
+     *                                 'F' → condición mínima: excluye solo líneas con monto 0;
+     *                                       incluye partidas ya pagadas/aplicadas (saldo 0).
      * @returns {string}  Query SuiteQL lista para asignar a SuiteQLTask.query
      */
-    function _buildSuiteQLQuery(subsidiaria, fecha, cuentaContable, rut) {
+    function _buildSuiteQLQuery(subsidiaria, fecha, cuentaContable, rut, omitirNetoCero) {
         var filtroCuenta = cuentaContable
             ? '\n\tAND tal.account = ' + cuentaContable
             : '';
         var filtroRut = rut
             ? "\n\tAND NVL(e.custentity_2wrut, c.custentity_2wrut) = '" + rut + "'"
             : '';
+
+        /* Entidad efectiva: en facturas, boletas y notas de crédito
+         * (VendBill, CustInvc, CustCred, VendCred) las líneas de impuesto
+         * (taxline = 'T') y las líneas sin entidad heredan la entidad de la
+         * cabecera (t.entity). El resto conserva la entidad de la línea.
+         * Se usa en idEntidad, entidad (nombre) y en los JOIN vendor/customer
+         * (RUT y filtro por RUT); SuiteQL no permite reutilizar el alias. */
+        var condHeredaEntidad = "t.type IN ('VendBill','CustInvc','CustCred','VendCred')"
+                              + " AND (tl.taxline = 'T' OR tl.entity IS NULL)";
+        var exprEntidad       = 'CASE WHEN ' + condHeredaEntidad
+                              + ' THEN t.entity ELSE tl.entity END';
+        var exprNombreEntidad = 'CASE WHEN ' + condHeredaEntidad
+                              + ' THEN BUILTIN.DF(t.entity) ELSE BUILTIN.DF(tl.entity) END';
+
+        /* Filtro de partidas abiertas según Omitir Neto Cero:
+         *  T → solo líneas con saldo pendiente según su tipo de transacción.
+         *  F → condición mínima: toda línea con monto; las ya aplicadas
+         *      llegan con saldo 0 y se muestran como filas neutras. */
+        var omitir = (omitirNetoCero === 'T' || omitirNetoCero === true);
+        var filtroPartidas = omitir
+            ? [
+                '\tAND CASE',
+                "\t        WHEN t.recordtype IN ('invoice','vendorbill','creditmemo','vendorcredit') THEN",
+                '\t            CASE',
+                "\t                WHEN tl.mainline = 'T'",
+                '\t                     AND CASE',
+                "\t                             WHEN t.recordtype IN ('invoice','vendorbill')      THEN NVL(tal.amountunpaid, 0)",
+                "\t                             WHEN t.recordtype IN ('creditmemo','vendorcredit') THEN NVL(tal.paymentamountunused, 0)",
+                '\t                             ELSE 0',
+                '\t                         END > 0',
+                '\t                THEN 1',
+                "\t                WHEN tl.mainline != 'T'",
+                '\t                     AND (NVL(tal.debit, 0) + NVL(tal.credit, 0)) != 0',
+                '\t                THEN 1',
+                '\t                ELSE 0',
+                '\t            END',
+                "\t        WHEN t.recordtype IN ('customerdeposit','vendorprepayment','customerpayment','vendorpayment') THEN",
+                '\t            CASE',
+                "\t                WHEN tl.mainline = 'T'",
+                '\t                THEN 1',
+                "\t                WHEN tl.mainline != 'T'",
+                '\t                     AND CASE',
+                "\t                             WHEN t.recordtype IN ('customerdeposit','customerpayment','vendorpayment') THEN NVL(tal.paymentamountused, 0)",
+                "\t                             WHEN t.recordtype = 'vendorprepayment'                                     THEN NVL(tal.amountlinked, 0)",
+                '\t                             ELSE 0',
+                '\t                         END != (NVL(tal.debit, 0) + NVL(tal.credit, 0))',
+                '\t                THEN 1',
+                '\t                ELSE 0',
+                '\t            END',
+                "\t        WHEN t.recordtype IN ('journalentry','advintercompanyjournalentry') THEN",
+                '\t            CASE',
+                '\t                WHEN NVL(COALESCE(tal.amountpaid, tal.paymentamountused), 0)',
+                '\t                     != (NVL(tal.debit, 0) + NVL(tal.credit, 0))',
+                '\t                THEN 1',
+                '\t                ELSE 0',
+                '\t            END',
+                '\t        ELSE 0',
+                '\t    END = 1',
+              ].join('\n')
+            : '\tAND (NVL(tal.debit, 0) + NVL(tal.credit, 0)) != 0';
 
         return [
             'SELECT',
@@ -262,8 +339,8 @@ define([
             '\ts.name as subsidiaria,',
             '\tt.type as tipo,',
             '\tt.recordtype as tipoRegistro,',
-            '\ttl.entity as idEntidad,',
-            '\tBUILTIN.DF(tl.entity) as entidad,',
+            '\t' + exprEntidad + ' as idEntidad,',
+            '\t' + exprNombreEntidad + ' as entidad,',
             '\tNVL(e.custentity_2wrut, c.custentity_2wrut) as rut,',
             '\tBUILTIN.DF(t.postingperiod) as periodo,',
             "\tTO_CHAR(t.trandate, 'DD/MM/YYYY') as fecha,",
@@ -308,8 +385,8 @@ define([
             '\t\tAND tal.transactionline = tl.id',
             '\t\tAND tal.accountingbook = 1',
             '\tJOIN subsidiary s ON s.id = tl.subsidiary',
-            '\tLEFT JOIN vendor e ON e.id = tl.entity',
-            '\tLEFT JOIN customer c ON c.id = tl.entity',
+            '\tLEFT JOIN vendor e ON e.id = ' + exprEntidad,
+            '\tLEFT JOIN customer c ON c.id = ' + exprEntidad,
             '\tJOIN account a ON a.id = tal.account',
             'WHERE',
             "\tt.posting = 'T'",
@@ -318,43 +395,11 @@ define([
             "\tAND t.type IN ('VendBill','CustInvc','CustCred','VendCred','CustDep','VPrep','CustPymt','VendPymt','Journal')",
             '\tAND tl.subsidiary = ' + subsidiaria,
             "\tAND t.trandate <= TO_DATE('" + fecha + "', 'DD/MM/YYYY')" + filtroCuenta + filtroRut,
-            '\tAND CASE',
-            "\t        WHEN t.recordtype IN ('invoice','vendorbill','creditmemo','vendorcredit') THEN",
-            '\t            CASE',
-            "\t                WHEN tl.mainline = 'T'",
-            '\t                     AND CASE',
-            "\t                             WHEN t.recordtype IN ('invoice','vendorbill')      THEN NVL(tal.amountunpaid, 0)",
-            "\t                             WHEN t.recordtype IN ('creditmemo','vendorcredit') THEN NVL(tal.paymentamountunused, 0)",
-            '\t                             ELSE 0',
-            '\t                         END > 0',
-            '\t                THEN 1',
-            "\t                WHEN tl.mainline != 'T'",
-            '\t                     AND (NVL(tal.debit, 0) + NVL(tal.credit, 0)) != 0',
-            '\t                THEN 1',
-            '\t                ELSE 0',
-            '\t            END',
-            "\t        WHEN t.recordtype IN ('customerdeposit','vendorprepayment','customerpayment','vendorpayment') THEN",
-            '\t            CASE',
-            "\t                WHEN tl.mainline = 'T'",
-            '\t                THEN 1',
-            "\t                WHEN tl.mainline != 'T'",
-            '\t                     AND CASE',
-            "\t                             WHEN t.recordtype IN ('customerdeposit','customerpayment','vendorpayment') THEN NVL(tal.paymentamountused, 0)",
-            "\t                             WHEN t.recordtype = 'vendorprepayment'                                     THEN NVL(tal.amountlinked, 0)",
-            '\t                             ELSE 0',
-            '\t                         END != (NVL(tal.debit, 0) + NVL(tal.credit, 0))',
-            '\t                THEN 1',
-            '\t                ELSE 0',
-            '\t            END',
-            "\t        WHEN t.recordtype IN ('journalentry','advintercompanyjournalentry') THEN",
-            '\t            CASE',
-            '\t                WHEN NVL(COALESCE(tal.amountpaid, tal.paymentamountused), 0)',
-            '\t                     != (NVL(tal.debit, 0) + NVL(tal.credit, 0))',
-            '\t                THEN 1',
-            '\t                ELSE 0',
-            '\t            END',
-            '\t        ELSE 0',
-            '\t    END = 1',
+            filtroPartidas,
+            /* Orden determinístico (FIFO): la compensación waterfall por folio
+             * depende del orden de llegada de las filas. */
+            'ORDER BY',
+            '\tt.trandate, t.id, tl.id',
         ].join('\n');
     }
 

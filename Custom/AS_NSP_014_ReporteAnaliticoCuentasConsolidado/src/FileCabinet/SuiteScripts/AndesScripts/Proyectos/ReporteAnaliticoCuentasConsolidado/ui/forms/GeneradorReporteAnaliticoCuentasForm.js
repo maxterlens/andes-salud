@@ -7,7 +7,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
-define(['N/ui/serverWidget'], function (serverWidget) {
+define(['N/ui/serverWidget', 'N/ui/message'], function (serverWidget, message) {
 
     /* ─── IDs de campos de filtro ────────────────────────────────── */
     const FILTROS = Object.freeze({
@@ -65,18 +65,19 @@ define(['N/ui/serverWidget'], function (serverWidget) {
 
         /* ── Banners de estado ─────────────────────────────────────── */
         if (mensajeExito) {
-            form.addField({
-                id   : 'custpage_banner_ok',
-                type : serverWidget.FieldType.INLINEHTML,
-                label: ' ',
-            }).defaultValue = _banner(mensajeExito, 'success');
+            form.addPageInitMessage({
+                type    : message.Type.CONFIRMATION,
+                title   : 'Solicitud recibida',
+                message : mensajeExito,
+                duration: 10000,   /* se oculta a los 10 s */
+            });
         }
         if (mensajeError) {
-            form.addField({
-                id   : 'custpage_banner_err',
-                type : serverWidget.FieldType.INLINEHTML,
-                label: ' ',
-            }).defaultValue = _banner(mensajeError, 'error');
+            form.addPageInitMessage({
+                type   : message.Type.ERROR,
+                title  : 'Error',
+                message: mensajeError,   /* queda fijo */
+            });
         }
 
         /* ── Grupo de filtros ──────────────────────────────────────── */
@@ -128,12 +129,18 @@ define(['N/ui/serverWidget'], function (serverWidget) {
             label    : 'RUT',
             container: 'custpage_grp_filtros',
         }).updateDisplaySize({ height: 60, width: 20 });
-        _addField(form, {
+        const fldOmitir = _addField(form, {
             id       : FILTROS.OMITIR_NETO_CERO,
             type     : serverWidget.FieldType.CHECKBOX,
             label    : 'Omitir Neto Cero',
             container: 'custpage_grp_filtros',
-        }).defaultValue = 'T';
+        });
+        fldOmitir.defaultValue = 'T';
+        fldOmitir.setHelpText({
+            help: 'Marcado: el reporte muestra solo las partidas con saldo pendiente; se excluyen las ya pagadas o aplicadas en NetSuite y las que se compensan entre sí por folio. '
+                + 'Desmarcado: incluye además las partidas ya pagadas o aplicadas y las compensadas por folio, con Saldo Debe y Saldo Haber en 0 (conservan sus montos originales de Debe y Haber). '
+                + 'El modo desmarcado puede tardar más y generar archivos de mayor tamaño.',
+        });
         /*_addField(form, {
             id       : FILTROS.CLIENTE,
             type     : serverWidget.FieldType.SELECT,
@@ -225,15 +232,6 @@ define(['N/ui/serverWidget'], function (serverWidget) {
         const fld = form.addField(opts);
         if (p.value) fld.defaultValue = p.value;
         return fld;
-    }
-
-    function _banner(mensaje, tipo) {
-        const estilos = {
-            success: 'color:#155724;background:#d4edda;border:1px solid #c3e6cb;',
-            error  : 'color:#721c24;background:#f8d7da;border:1px solid #f5c6cb;',
-        };
-        const icono = tipo === 'success' ? '&#10003;' : '&#9888;';
-        return `<div style="${estilos[tipo] || estilos.error}padding:10px 16px;border-radius:4px;margin-bottom:4px;">${icono} ${mensaje}</div>`;
     }
 
     return { FILTROS, COLS, SUBLIST_ID, buildForm };

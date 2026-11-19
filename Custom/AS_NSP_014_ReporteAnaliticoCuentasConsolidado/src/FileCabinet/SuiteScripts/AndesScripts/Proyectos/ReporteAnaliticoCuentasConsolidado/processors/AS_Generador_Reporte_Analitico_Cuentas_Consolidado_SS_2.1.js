@@ -36,10 +36,11 @@
 define([
     'N/runtime',
     'N/file',
+    'N/search',
     '../repositories/LogReporteAnaliticoCuentasRepository',
     '../repositories/EntidadRepository',
     '../services/ReporteAnaliticoCuentasCsvService',
-], function (runtime, file, logRepo, entidadRepo, csvService) {
+], function (runtime, file, search, logRepo, entidadRepo, csvService) {
 
     /* ─── IDs de parámetros del script ──────────────────────────────── */
     const PARAM = {
@@ -64,6 +65,7 @@ define([
         const subsidiariaId   = script.getParameter({ name: PARAM.SUBSIDIARIA });
         const fechaInicio     = script.getParameter({ name: PARAM.FECHA_INICIO });
         const fechaCorte      = script.getParameter({ name: PARAM.FECHA_CORTE });
+        const cuentaContable  = script.getParameter({ name: PARAM.CUENTA_CONTABLE }) || '';
         const folderId        = script.getParameter({ name: PARAM.FOLDER_ID });
         const logId           = script.getParameter({ name: PARAM.LOG_ID });
         const csvFileId       = script.getParameter({ name: PARAM.CSV_FILE_ID });
@@ -79,7 +81,7 @@ define([
 
         log.error({
             title  : 'execute — Parámetros recibidos',
-            details: JSON.stringify({ subsidiariaId, fechaInicio, fechaCorte, folderId, logId, csvFileId, omitirNetoCero, departamento, rut, usarQL }),
+            details: JSON.stringify({ subsidiariaId, fechaInicio, fechaCorte, cuentaContable, folderId, logId, csvFileId, omitirNetoCero, departamento, rut, usarQL }),
         });
 
         try {
@@ -117,9 +119,13 @@ define([
             });
 
             /* ── 4. Generar archivo XLS ──────────────────────────────── */
-            const nombreXls  = csvService.generarNombreArchivo(subsidiariaId, fechaCorte, 'xls');
+            const nombreXls  = csvService.generarNombreArchivo({
+                subsidiariaId, fechaInicio, fechaCorte, cuentaContable, departamento, rut, omitirNetoCero,
+            }, 'xls');
+            log.error('nombreXls', nombreXls);
             const xlsId      = csvService.crearArchivoXls({ rows, nombre: nombreXls, folderId, fechaInicio, omitirNetoCero, departamento, rut });
-            const archivoXls = file.load({ id: xlsId });
+            log.error('xlsId', xlsId);
+            const urlXls     = _obtenerUrlArchivo(xlsId);
 
             log.error({
                 title  : 'execute — XLS guardado',
@@ -129,7 +135,7 @@ define([
             logRepo.marcarXlsGenerado(logId, {
                 nombreArchivo: nombreXls,
                 fileId       : xlsId,
-                fileUrl      : archivoXls.url,
+                fileUrl      : urlXls,
             });
 
             /* ── 4. Registrar CSV temporal como CSV del reporte ─────── */
@@ -150,6 +156,36 @@ define([
         }
     }
     
+    /* ═══════════════════════════════════════════════════════════════════
+     *  _obtenerUrlArchivo
+     *  Obtiene la URL de un archivo del File Cabinet mediante una búsqueda
+     *  de carpetas con join a file (evita file.load sobre archivos pesados).
+     *  @param   {number|string} fileId  Internal ID del archivo
+     *  @returns {string}  URL del archivo, o '' si no se encuentra
+     * ═══════════════════════════════════════════════════════════════════ */
+    function _obtenerUrlArchivo(fileId) {
+        let urlArchivo = '';
+
+        const folderSearchObj = search.create({
+            type   : 'folder',
+            filters: [
+                ['file.internalidnumber', 'equalto', fileId],
+            ],
+            columns: [
+                search.createColumn({ name: 'internalid', join: 'file', label: 'ID interno' }),
+                search.createColumn({ name: 'name',       join: 'file', label: 'Nombre'     }),
+                search.createColumn({ name: 'url',        join: 'file', label: 'URL'        }),
+            ],
+        });
+
+        folderSearchObj.run().each(function (result) {
+            urlArchivo = result.getValue({ name: 'url', join: 'file' }) || '';
+            return false; /* solo se espera un resultado */
+        });
+
+        return urlArchivo;
+    }
+
     /* ═══════════════════════════════════════════════════════════════════
      *  _parseCsvLine
      *  Parser CSV que respeta campos entre comillas dobles,
