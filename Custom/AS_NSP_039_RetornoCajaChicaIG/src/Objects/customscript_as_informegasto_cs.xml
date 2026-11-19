@@ -1,0 +1,22 @@
+<clientscript scriptid="customscript_as_informegasto_cs">
+  <description>AS_NSP_039 - Marca "Con reposición" según el anticipo a aplicar del informe de gastos.</description>
+  <isinactive>F</isinactive>
+  <name>AS Informe Gasto CS</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <notifyuser>F</notifyuser>
+  <scriptfile>[/SuiteScripts/AndesScripts/Transacciones/AS_InformeGasto_CS_2.1.js]</scriptfile>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_informegasto_cs">
+      <allemployees>F</allemployees>
+      <alllocalizationcontexts>T</alllocalizationcontexts>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <isdeployed>T</isdeployed>
+      <loglevel>DEBUG</loglevel>
+      <recordtype>EXPENSEREPORT</recordtype>
+      <status>RELEASED</status>
+    </scriptdeployment>
+  </scriptdeployments>
+</clientscript>

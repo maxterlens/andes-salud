@@ -1,0 +1,57 @@
+<mapreducescript scriptid="customscript_as_faov_mr">
+  <description>AS_NSP_037 - Aplica un proceso validado de FixArticuloOrdenVenta: ajusta Ejecuciones y Órdenes de Venta línea a línea y registra el detalle en customrecord_as_faov_detalle.</description>
+  <isinactive>F</isinactive>
+  <name>AS MR Fix Articulo Orden Venta</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/AndesScripts/Proyectos/FixArticuloOrdenVenta/processors/AS_FixArticuloOrdenVenta_MR_2.1.js]</scriptfile>
+  <scriptcustomfields>
+    <scriptcustomfield scriptid="custscript_as_faov_proceso">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>ID interno del registro customrecord_as_faov_proceso a ejecutar. Lo informa el Suitelet al presionar Procesar.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>INTEGER</fieldtype>
+      <help>ID interno del registro customrecord_as_faov_proceso a ejecutar. Lo informa el Suitelet al presionar Procesar.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Proceso</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+  </scriptcustomfields>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_faov_mr">
+      <buffersize>1</buffersize>
+      <concurrencylimit>1</concurrencylimit>
+      <custscript_as_faov_proceso></custscript_as_faov_proceso>
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <queueallstagesatonce>T</queueallstagesatonce>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>NOTSCHEDULED</status>
+      <title>AS MR Fix Articulo Orden Venta</title>
+      <yieldaftermins>60</yieldaftermins>
+      <recurrence>
+        <single>
+          <repeat></repeat>
+          <startdate>2026-11-10</startdate>
+          <starttime>05:00:00Z</starttime>
+        </single>
+      </recurrence>
+    </scriptdeployment>
+  </scriptdeployments>
+</mapreducescript>

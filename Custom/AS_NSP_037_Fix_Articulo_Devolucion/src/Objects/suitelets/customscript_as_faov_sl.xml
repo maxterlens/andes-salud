@@ -1,0 +1,51 @@
+<suitelet scriptid="customscript_as_faov_sl">
+  <description>AS_NSP_037 - Ajuste de artículos en Órdenes de Venta desde un CSV: carga, validación, proceso (Map/Reduce), historial y detalle.</description>
+  <isinactive>F</isinactive>
+  <name>AS SL Fix Articulo Orden Venta</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/AndesScripts/Proyectos/FixArticuloOrdenVenta/ui/AS_FixArticuloOrdenVenta_SL_2.1.js]</scriptfile>
+  <scriptcustomfields>
+    <scriptcustomfield scriptid="custscript_as_faov_carpeta">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>ID interno de la carpeta del File Cabinet donde se guardan los CSV y el JSON de cada proceso. Obligatorio: sin este parámetro el Suitelet no permite validar ni descargar.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>INTEGER</fieldtype>
+      <help>ID interno de la carpeta del File Cabinet donde se guardan los CSV y el JSON de cada proceso. Obligatorio: sin este parámetro el Suitelet no permite validar ni descargar.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Carpeta de archivos</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+  </scriptcustomfields>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_faov_sl">
+      <allemployees>F</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
+      <custscript_as_faov_carpeta></custscript_as_faov_carpeta>
+      <isdeployed>T</isdeployed>
+      <isonline>F</isonline>
+      <loglevel>DEBUG</loglevel>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>RELEASED</status>
+      <title>AS SL Fix Articulo Orden Venta</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>

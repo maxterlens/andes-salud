@@ -1,0 +1,29 @@
+<customlist scriptid="customlist_as_adfv_estado_proceso">
+  <description>AS_NSP_038 - Estados del proceso ActualizarDescuentoFarmaciaVP.</description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>AS Estado Proceso ADFV</name>
+  <customvalues>
+    <customvalue scriptid="val_as_adfv_ep_en_proceso">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>En proceso</value>
+    </customvalue>
+    <customvalue scriptid="val_as_adfv_ep_completado">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Completado</value>
+    </customvalue>
+    <customvalue scriptid="val_as_adfv_ep_completado_err">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Completado con errores</value>
+    </customvalue>
+    <customvalue scriptid="val_as_adfv_ep_error">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Error</value>
+    </customvalue>
+  </customvalues>
+</customlist>

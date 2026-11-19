@@ -1,0 +1,21 @@
+<transactionbodycustomfield scriptid="custbody_as_asiento_caja_chica">
+  <accesslevel>2</accesslevel>
+  <applyformatting>F</applyformatting>
+  <bodyexpensereport>T</bodyexpensereport>
+  <checkspelling>F</checkspelling>
+  <defaultchecked>F</defaultchecked>
+  <description>AS_NSP_039 - Asiento contable de rendición de caja chica generado al aprobar el informe de gastos.</description>
+  <displaytype>LOCKED</displaytype>
+  <encryptatrest>F</encryptatrest>
+  <fieldtype>SELECT</fieldtype>
+  <globalsearch>F</globalsearch>
+  <isformula>F</isformula>
+  <ismandatory>F</ismandatory>
+  <isparent>F</isparent>
+  <label>Asiento Rendición Caja Chica</label>
+  <searchlevel>2</searchlevel>
+  <selectrecordtype>-30</selectrecordtype>
+  <showhierarchy>F</showhierarchy>
+  <showinlist>F</showinlist>
+  <storevalue>T</storevalue>
+</transactionbodycustomfield>

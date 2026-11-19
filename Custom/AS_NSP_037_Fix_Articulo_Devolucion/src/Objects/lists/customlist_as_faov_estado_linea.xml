@@ -1,0 +1,34 @@
+<customlist scriptid="customlist_as_faov_estado_linea">
+  <description>AS_NSP_037 - Estados de línea del proceso FixArticuloOrdenVenta.</description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>AS Estado Linea FAOV</name>
+  <customvalues>
+    <customvalue scriptid="val_as_faov_el_procesada">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Procesada</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_el_sin_cambio">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Sin cambio</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_el_omitida">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Omitida</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_el_no_procesable">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>No procesable</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_el_error">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Error</value>
+    </customvalue>
+  </customvalues>
+</customlist>

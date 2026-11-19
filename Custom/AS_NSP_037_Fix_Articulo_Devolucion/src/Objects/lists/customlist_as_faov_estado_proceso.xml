@@ -1,0 +1,39 @@
+<customlist scriptid="customlist_as_faov_estado_proceso">
+  <description>AS_NSP_037 - Estados del proceso FixArticuloOrdenVenta.</description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>AS Estado Proceso FAOV</name>
+  <customvalues>
+    <customvalue scriptid="val_as_faov_ep_validado">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Validado</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_ep_en_proceso">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>En proceso</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_ep_completado">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Completado</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_ep_completado_err">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Completado con errores</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_ep_error">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Error</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_ep_anulado">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Anulado</value>
+    </customvalue>
+  </customvalues>
+</customlist>

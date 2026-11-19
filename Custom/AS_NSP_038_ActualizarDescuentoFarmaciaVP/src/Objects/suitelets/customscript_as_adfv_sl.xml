@@ -1,0 +1,181 @@
+<suitelet scriptid="customscript_as_adfv_sl">
+  <description>AS_NSP_038 - Actualizar la cantidad del descuento en facturas de venta de Farmacia Venta Público: parámetros, validación, proceso (Map/Reduce), historial y detalle.</description>
+  <isinactive>F</isinactive>
+  <name>AS SL Actualizar Descuento Farmacia VP</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/AndesScripts/Proyectos/ActualizarDescuentoFarmaciaVP/ui/AS_ActualizarDescuentoFarmaciaVP_SL_2.1.js]</scriptfile>
+  <scriptcustomfields>
+    <scriptcustomfield scriptid="custscript_as_adfv_carpeta">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>ID interno de la carpeta del File Cabinet donde se guarda el JSON de cada proceso y los Excel temporales. Obligatorio: sin este parámetro el Suitelet no permite buscar ni descargar.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>INTEGER</fieldtype>
+      <help>ID interno de la carpeta del File Cabinet donde se guarda el JSON de cada proceso y los Excel temporales. Obligatorio: sin este parámetro el Suitelet no permite buscar ni descargar.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Carpeta de archivos</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_adfv_departamentos">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue>136</defaultvalue>
+      <description>IDs internos de los centros de costo (departamentos) de las facturas a revisar, separados por coma. Por defecto 136 (FARMACIA : FARMACIA VENTA PUBLICO).</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>TEXT</fieldtype>
+      <help>IDs internos de los centros de costo (departamentos) de las facturas a revisar, separados por coma. Por defecto 136 (FARMACIA : FARMACIA VENTA PUBLICO).</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Centros de costo</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_adfv_ubic_excluidas">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue>511</defaultvalue>
+      <description>IDs internos de las ubicaciones que no se revisan, separados por coma.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>TEXT</fieldtype>
+      <help>IDs internos de las ubicaciones que no se revisan, separados por coma.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Ubicaciones excluidas</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_adfv_restante_min">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue>9</defaultvalue>
+      <description>Solo se revisan las facturas con importe restante mayor a este valor.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>FLOAT</fieldtype>
+      <help>Solo se revisan las facturas con importe restante mayor a este valor.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Importe restante mínimo</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_adfv_tolerancia">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue>5</defaultvalue>
+      <description>Diferencia máxima (en pesos) aceptada entre el ajuste del descuento con IVA y el importe restante para que la factura sea procesable.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>FLOAT</fieldtype>
+      <help>Diferencia máxima (en pesos) aceptada entre el ajuste del descuento con IVA y el importe restante para que la factura sea procesable.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Tolerancia de cuadre</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_adfv_iva">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue>19</defaultvalue>
+      <description>Porcentaje de IVA con el que se calcula el ajuste esperado del descuento.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>FLOAT</fieldtype>
+      <help>Porcentaje de IVA con el que se calcula el ajuste esperado del descuento.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>IVA (%)</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+  </scriptcustomfields>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_adfv_sl">
+      <allemployees>F</allemployees>
+      <allpartners>F</allpartners>
+      <allroles>T</allroles>
+      <audslctrole></audslctrole>
+      <custscript_as_adfv_carpeta></custscript_as_adfv_carpeta>
+      <custscript_as_adfv_departamentos>136</custscript_as_adfv_departamentos>
+      <custscript_as_adfv_ubic_excluidas>511</custscript_as_adfv_ubic_excluidas>
+      <custscript_as_adfv_restante_min>9</custscript_as_adfv_restante_min>
+      <custscript_as_adfv_tolerancia>5</custscript_as_adfv_tolerancia>
+      <custscript_as_adfv_iva>19</custscript_as_adfv_iva>
+      <isdeployed>T</isdeployed>
+      <isonline>F</isonline>
+      <loglevel>DEBUG</loglevel>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>RELEASED</status>
+      <title>AS SL Actualizar Descuento Farmacia VP</title>
+    </scriptdeployment>
+  </scriptdeployments>
+</suitelet>

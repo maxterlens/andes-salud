@@ -1,0 +1,44 @@
+<customlist scriptid="customlist_as_faov_accion">
+  <description>AS_NSP_037 - Acciones por línea del proceso FixArticuloOrdenVenta.</description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>AS Accion Fix Articulo OV</name>
+  <customvalues>
+    <customvalue scriptid="val_as_faov_ac_eliminar">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Eliminar línea</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_ac_reducir">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Reducir cantidad</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_ac_aumentar">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Aumentar cantidad</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_ac_reemplazar">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Reemplazar artículo</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_ac_precio">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Actualizar precio</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_ac_sin_cambio">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Sin cambio</value>
+    </customvalue>
+    <customvalue scriptid="val_as_faov_ac_no_procesable">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>No procesable</value>
+    </customvalue>
+  </customvalues>
+</customlist>
