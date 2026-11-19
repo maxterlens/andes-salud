@@ -15,5 +15,11 @@
       <linklabel>Nóminas de Reembolso</linklabel>
       <shortlist>F</shortlist>
     </link>
+    <link>
+      <linkobject>[scriptid=customrecord_as_plant_banco]</linkobject>
+      <linktasktype>LIST</linktasktype>
+      <linklabel>Plantillas de Banco</linklabel>
+      <shortlist>F</shortlist>
+    </link>
   </links>
 </centercategory>
