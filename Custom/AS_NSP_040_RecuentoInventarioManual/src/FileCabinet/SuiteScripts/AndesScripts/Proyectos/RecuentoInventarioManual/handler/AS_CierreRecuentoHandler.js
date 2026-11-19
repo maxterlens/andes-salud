@@ -23,8 +23,6 @@
  * @author Andes Salud
  * @version 1.3.0
  *
- * CHANGELOG
- * 1.3.0 [FEAT] Aprobar propio por la cola y bloqueo con una aprobacion en curso.
  */
 define(['N/runtime', 'N/url', 'N/ui/message', '../data/query/AS_RecuentoInventarioManualQuery',
         '../constants/AS_RecuentoInventarioManualConstants'],

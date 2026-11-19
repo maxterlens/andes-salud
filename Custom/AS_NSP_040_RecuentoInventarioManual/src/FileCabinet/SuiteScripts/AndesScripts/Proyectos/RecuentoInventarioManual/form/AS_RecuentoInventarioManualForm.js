@@ -6,10 +6,16 @@
  *              con la ubicacion elegida, la lista de articulos para marcar y el
  *              boton Generar recuento. El boton Cargar CSV abre la pantalla de
  *              carga, para elegir el recuento.
+ *
+ *              La lista va tapada con el aviso Cargando articulos: NetSuite
+ *              dibuja la tabla antes de terminar de armarla, y un check marcado
+ *              en ese rato se ve pero no se envia. El client script quita el
+ *              aviso en pageInit, cuando la lista ya esta armada.
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.2.0
+ * @version 1.3.0
+ *
  */
 define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_RecuentoInventarioManualConstants'],
     (serverWidget, message, format, CONSTANTES) => {
@@ -132,6 +138,19 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Recuen
             label: 'Articulos (' + articulos.length + ' en la ubicacion)',
         });
         sublista.addMarkAllButtons();
+        const campoCargando = form.addField({
+            id   : CONSTANTES.CAMPOS.CARGANDO,
+            type : serverWidget.FieldType.INLINEHTML,
+            label: 'Cargando',
+        });
+        campoCargando.defaultValue = '<div id="' + CONSTANTES.FORMULARIO.CARGANDO_ID + '" style="position:fixed;inset:0;'
+                                   + 'z-index:9999;background:rgba(255,255,255,.5);display:flex;align-items:center;'
+                                   + 'justify-content:center">'
+                                   + '<div style="background:#d8e6f4;border:1px solid #a9c4e0;border-radius:3px;'
+                                   + 'padding:12px 20px;min-width:360px;font-size:10pt;color:#222">'
+                                   + '<div style="font-weight:bold;margin-bottom:4px">&#9432; ' + CONSTANTES.FORMULARIO.CARGANDO_TITULO + '</div>'
+                                   + CONSTANTES.FORMULARIO.CARGANDO_TEXTO
+                                   + '</div></div>';
         sublista.addField({
             id   : columnas.CONTAR,
             type : serverWidget.FieldType.CHECKBOX,

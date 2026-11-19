@@ -18,9 +18,8 @@
  * @author Andes Salud
  * @version 1.3.0
  *
- * CHANGELOG
- * 1.3.0 [FEAT] Textos de la aprobacion: Aprobando y Recuento aprobado.
  */
+
 define(['N/ui/serverWidget', 'N/ui/message', 'N/url', 'N/format', '../constants/AS_RecuentoInventarioManualConstants'],
     (serverWidget, message, url, format, CONSTANTES) => {
 

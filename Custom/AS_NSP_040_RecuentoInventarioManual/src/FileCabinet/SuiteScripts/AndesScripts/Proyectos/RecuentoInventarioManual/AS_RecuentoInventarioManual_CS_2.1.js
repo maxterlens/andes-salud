@@ -2,7 +2,10 @@
  * AS_NSP_040 — Recuento de Inventario Manual
  * @description Client script de la pantalla del recuento.
  *
- *              pageInit     → guarda la ubicacion con la que se dibujo la lista y
+ *              pageInit     → quita el aviso Cargando articulos que tapa la
+ *                             lista: recien aqui NetSuite la tiene armada y un
+ *                             check marcado se envia. Guarda la ubicacion con
+ *                             la que se dibujo la lista y
  *                             escucha el envio del formulario: Generar recuento
  *                             avisa que se esta enviando y bloquea un segundo
  *                             envio, que dejaria otra solicitud en la cola.
@@ -14,6 +17,8 @@
  *                             aviso rojo arriba, sin recargar la pagina.
  *              descargarTxt → boton de la vista del recuento: abre el Suitelet
  *                             con el id del recuento y baja el TXT.
+ *              descargarDetalle → boton Detalle de conteo de la vista del
+ *                             recuento: abre el Suitelet y baja el CSV.
  *              abrirCarga   → boton de la pantalla del recuento: abre la
  *                             pantalla de carga para elegir el recuento.
  *              aprobarRecuento → boton Aprobar propio del recuento: abre el
@@ -29,10 +34,8 @@
  * @NScriptType ClientScript
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.9.0
+ * @version 1.11.0
  *
- * CHANGELOG
- * 1.9.0 [FEAT] aprobarRecuento, el boton Aprobar propio.
  */
 define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInventarioManualConstants'],
     (currentRecord, url, message, CONSTANTES) => {
@@ -43,6 +46,8 @@ define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInve
     let aprobando         = false;
 
     function pageInit(context) {
+        const avisoCargando = document.getElementById(CONSTANTES.FORMULARIO.CARGANDO_ID);
+        if (avisoCargando) avisoCargando.remove();
         ubicacionDibujada = context.currentRecord.getValue({ fieldId: CONSTANTES.CAMPOS.UBICACION });
         document.forms.main_form.addEventListener('submit', avisarGenerando);
     }
@@ -128,10 +133,14 @@ define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInve
         });
     }
 
-    /**
-     * Boton de la pantalla del recuento: la carga sin recuento elegido. Lo
-     * marcado en la lista se pierde, igual que al cambiar la ubicacion.
-     */
+    function descargarDetalle() {
+        window.location.href = url.resolveScript({
+            scriptId    : CONSTANTES.SCRIPT.ID,
+            deploymentId: CONSTANTES.SCRIPT.DEPLOYMENT,
+            params      : { [CONSTANTES.CAMPOS.DETALLE]: currentRecord.get().id },
+        });
+    }
+
     function abrirCarga() {
         window.onbeforeunload = null;
         window.location.href  = url.resolveScript({
@@ -152,11 +161,12 @@ define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInve
     }
 
     return {
-        pageInit       : pageInit,
-        fieldChanged   : fieldChanged,
-        saveRecord     : saveRecord,
-        descargarTxt   : descargarTxt,
-        abrirCarga     : abrirCarga,
-        aprobarRecuento: aprobarRecuento,
+        pageInit        : pageInit,
+        fieldChanged    : fieldChanged,
+        saveRecord      : saveRecord,
+        descargarTxt    : descargarTxt,
+        descargarDetalle: descargarDetalle,
+        abrirCarga      : abrirCarga,
+        aprobarRecuento : aprobarRecuento,
     };
 });

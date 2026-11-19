@@ -1,26 +1,29 @@
 /**
  * AS_NSP_040 — Recuento de Inventario Manual
- * @description Lo que ve el usuario del TXT del recuento: el boton en la vista y
- *              el archivo. No busca ni guarda records.
+ * @description Lo que ve el usuario de los archivos del recuento: los botones en
+ *              la vista, el TXT y el CSV Detalle de conteo. No busca ni guarda
+ *              records. Los dos archivos se crean en memoria para responderlos
+ *              como descarga, en Windows-1252 como los TXT del AS_NSP_036.
  *
- *              El archivo se crea en memoria para responderlo como descarga:
- *              una fila de encabezado y una fila por articulo del recuento,
- *              separadas por coma. Windows-1252, como los TXT del AS_NSP_036.
- *              PRO_CORREL lleva el id interno del articulo y COD_BARRA va
- *              vacio; PRO_CORREL1 sigue con el correlativo de la fila.
- *              COD 3 lleva el id de la ubicacion del recuento en todas las filas.
- *              El nombre sale como se ve en NetSuite (< en vez de &lt;), con
- *              las comas cambiadas por punto.
+ *              TXT     → una fila de encabezado y una por articulo, separadas
+ *                        por coma. PRO_CORREL lleva el id interno del articulo
+ *                        y COD_BARRA va vacio; PRO_CORREL1 sigue con el
+ *                        correlativo de la fila. COD 3 lleva el id de la
+ *                        ubicacion del recuento en todas las filas. El nombre
+ *                        sale como se ve en NetSuite (< en vez de &lt;), con
+ *                        las comas cambiadas por punto.
+ *              Detalle → las columnas de la sublista Articulos: articulo,
+ *                        unidades, cantidad de instantanea, del recuento y
+ *                        ajustada, tarifa y nota. CSV estandar: separado por
+ *                        coma y con punto decimal. El nombre y la nota van
+ *                        entre comillas, para que sus comas no partan la fila.
+ *                        Una cantidad vacia sale vacia.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.7.0
+ * @version 1.8.0
  *
- * CHANGELOG
- * 1.7.0 [FEAT] COD 3 con el id de la ubicacion del recuento.
- * 1.6.0 [FIX] El nombre del articulo sin &lt; &gt; &amp;: sale como en NetSuite.
- * 1.5.0 [FEAT] PRO_CORREL con el id interno del articulo y COD_BARRA vacio.
  */
 define(['N/file', '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_RecuentoInventarioManualConstants'],
     (file, UTILS, CONSTANTES) => {
@@ -29,16 +32,22 @@ define(['N/file', '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    function agregarBoton(form) {
+    function agregarBotones(form, conDetalle) {
         form.clientScriptModulePath = CONSTANTES.FORMULARIO.CLIENT_SCRIPT;
         form.addButton({
             id          : CONSTANTES.BOTONES.TXT,
             label       : CONSTANTES.BOTONES.TXT_LABEL,
             functionName: 'descargarTxt',
         });
+        if (!conDetalle) return;
+        form.addButton({
+            id          : CONSTANTES.BOTONES.DETALLE,
+            label       : CONSTANTES.BOTONES.DETALLE_LABEL,
+            functionName: 'descargarDetalle',
+        });
     }
 
-    function construirArchivo(recuentoId, articulos, ubicacionId) {
+    function construirTxt(recuentoId, articulos, ubicacionId) {
         const archivo = CONSTANTES.ARCHIVO;
         const filas   = [archivo.ENCABEZADO.join(archivo.SEPARADOR)];
         articulos.forEach((articulo, indice) => {
@@ -56,8 +65,36 @@ define(['N/file', '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_
         });
     }
 
+    function construirCsv(recuentoId, articulos) {
+        const detalle = CONSTANTES.DETALLE;
+        const filas   = [detalle.ENCABEZADO.join(detalle.SEPARADOR)];
+        articulos.forEach((articulo) => {
+            const nombre = encerrarEntreComillas(UTILS.convertirEntidadesHtmlATexto(articulo.nombre));
+            const nota   = encerrarEntreComillas(articulo.nota);
+            filas.push([nombre, articulo.unidad, convertirNuloAVacio(articulo.instantanea),
+                        convertirNuloAVacio(articulo.recuento), convertirNuloAVacio(articulo.ajustada),
+                        convertirNuloAVacio(articulo.tarifa), nota].join(detalle.SEPARADOR));
+        });
+
+        return file.create({
+            name    : detalle.PREFIJO + '-' + recuentoId + '.csv',
+            fileType: file.Type.CSV,
+            contents: filas.join('\r\n'),
+            encoding: file.Encoding.WINDOWS_1252,
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Secundarias — Detalle de conteo
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function encerrarEntreComillas(texto) { return '"' + texto.replace(/"/g, '""') + '"'; }
+
+    function convertirNuloAVacio(valor) { return valor === null ? '' : valor; }
+
     return {
-        agregarBoton    : agregarBoton,
-        construirArchivo: construirArchivo,
+        agregarBotones: agregarBotones,
+        construirTxt  : construirTxt,
+        construirCsv  : construirCsv,
     };
 });

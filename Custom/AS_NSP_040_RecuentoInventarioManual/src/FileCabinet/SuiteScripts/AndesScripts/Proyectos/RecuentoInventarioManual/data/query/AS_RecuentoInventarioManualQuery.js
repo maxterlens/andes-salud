@@ -14,8 +14,8 @@
  *                  (0 si hoy no tienen).
  *              Recuento
  *                - obtenerCantidadesRecuento: por articulo, su id, su nombre,
- *                  su codigo de barras, la cantidad del recuento, la de
- *                  instantanea, la ajustada y la tarifa.
+ *                  su codigo de barras, su unidad, la cantidad del recuento,
+ *                  la de instantanea, la ajustada, la tarifa y la nota.
  *                - obtenerRecuentosIniciados: los recuentos del modulo que
  *                  aceptan cantidades, para el select de la carga.
  *                - obtenerUbicacionRecuento: el id y el nombre de la ubicacion
@@ -38,22 +38,8 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.12.0
+ * @version 1.15.0
  *
- * CHANGELOG
- * 1.12.0 [FIX] obtenerArticulosUbicacion vuelve a traer los articulos con
- *              cantidad comprometida: se quita el filtro temporal de 1.10.0.
- * 1.11.0 [FEAT] obtenerSolicitudes y contarSolicitudesAntes por tipos (cada
- *               deployment del Scheduled atiende los suyos) y
- *               obtenerAprobacionEnCurso.
- * 1.10.0 [TEMP] SOLO PRUEBAS, QUITAR: obtenerArticulosUbicacion deja fuera los articulos con cantidad
- *               comprometida en la ubicacion.
- * 1.9.0 [FEAT] obtenerLotesRecuento para el select Lote de la carga, y
- *              obtenerLoteRecuento recibe el lote elegido.
- * 1.8.0 [FEAT] obtenerUbicacionRecuento devuelve { id, nombre }: el CSV trae la
- *              ubicacion por id interno.
- * 1.7.0 [FEAT] obtenerLoteRecuento: el lote configurado para la subsidiaria del
- *              recuento, con el que se cargan las cantidades.
  */
 define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
     (query, CONSTANTES) => {
@@ -122,7 +108,7 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         do {
             pagina = query.runSuiteQL({
                 query : 'SELECT tl.linesequencenumber AS linea, tl.item AS id, BUILTIN.DF(tl.item) AS nombre, i.upccode AS codigobarra,'
-                      + ' tl.quantity, tl.rate'
+                      + ' tl.quantity, tl.rate, BUILTIN.DF(tl.units) AS unidad, tl.memo AS nota'
                       + ' FROM transactionline tl'
                       + ' JOIN item i ON i.id = tl.item'
                       + " WHERE tl.transaction = ? AND tl.mainline = 'F' AND tl.item IS NOT NULL AND tl.linesequencenumber > ?"
@@ -140,10 +126,12 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
                 id         : String(filas[fila].id),
                 nombre     : filas[fila].nombre,
                 codigoBarra: filas[fila].codigobarra || '',
-                recuento: filas[fila].quantity,
+                unidad     : filas[fila].unidad || '',
+                recuento   : filas[fila].quantity,
                 instantanea: filas[fila + 1].quantity,
                 ajustada   : filas[fila + 2].quantity,
                 tarifa     : filas[fila].rate,
+                nota       : filas[fila].nota || '',
             });
         }
 

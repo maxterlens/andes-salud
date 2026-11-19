@@ -18,8 +18,6 @@
  * @author Andes Salud
  * @version 1.3.0
  *
- * CHANGELOG
- * 1.3.0 [FEAT] La aprobacion lanza su deployment y cuenta solo su fila.
  */
 define(['../form/AS_ColaForm', '../data/query/AS_RecuentoInventarioManualQuery',
         '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_RecuentoInventarioManualConstants'],

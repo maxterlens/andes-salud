@@ -14,8 +14,6 @@
  * @author Andes Salud
  * @version 1.2.0
  *
- * CHANGELOG
- * 1.2.0 [FEAT] Segundo deployment para las aprobaciones.
  */
 define(['./handler/AS_ColaHandler'],
     (colaHandler) => {

@@ -14,6 +14,10 @@
  *                         → en vista, agrega el boton Descargar TXT. Las
  *                           cantidades se cargan desde la pantalla Cargar CSV
  *                           del Suitelet, no desde el recuento.
+ *                         → en vista, con el recuento Iniciado, en Aprobacion
+ *                           pendiente o Aprobado,
+ *                           agrega el boton Detalle de conteo: el CSV de la
+ *                           sublista Articulos.
  *
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
@@ -21,10 +25,8 @@
  * @scriptid     customscript_as_rec_inv_cierre_ue
  * @deploymentid customdeploy_as_rec_inv_cierre_ue
  * @author Andes Salud
- * @version 1.5.0
+ * @version 1.6.0
  *
- * CHANGELOG
- * 1.5.0 [FEAT] Aprobar propio por la cola (prepararAprobacion).
  */
 define(['./handler/AS_CierreRecuentoHandler', './handler/AS_ImporteRecuentoHandler', './handler/AS_ArchivoRecuentoHandler'],
     (cierreRecuentoHandler, importeRecuentoHandler, archivoRecuentoHandler) => {
@@ -50,7 +52,7 @@ define(['./handler/AS_CierreRecuentoHandler', './handler/AS_ImporteRecuentoHandl
             });
         }
         try {
-            archivoRecuentoHandler.agregarBoton(context.form);
+            archivoRecuentoHandler.agregarBotones(context.form, context.newRecord);
         } catch (fallo) {
             log.error({
                 title  : 'RECUENTO INVENTARIO TXT ERROR',

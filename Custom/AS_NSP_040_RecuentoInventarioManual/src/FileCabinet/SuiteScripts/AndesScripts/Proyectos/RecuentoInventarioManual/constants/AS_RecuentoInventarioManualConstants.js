@@ -7,9 +7,12 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.11.0
+ * @version 1.13.0
  *
  * CHANGELOG
+ * 1.13.0 [FIX] Aviso Cargando articulos sobre la lista hasta el pageInit.
+ * 1.12.0 [FEAT] Detalle de conteo: su boton, su parametro, el estado Aprobado
+ *               y el CSV.
  * 1.11.0 [FEAT] Aprobacion por la cola: tipo APROBACION, su deployment, su
  *               boton y sus textos.
  * 1.10.0 [FEAT] CARGA: el select Lote con los lotes configurados.
@@ -22,6 +25,9 @@ define([], () => {
         BOTON_GENERAR             : 'Generar recuento',
         GENERANDO_TITULO          : 'Enviando recuento',
         GENERANDO_TEXTO           : 'Se esta enviando el recuento a generar. No cierre ni recargue la pagina.',
+        CARGANDO_ID               : 'as_rec_inv_cargando',
+        CARGANDO_TITULO           : 'Información',
+        CARGANDO_TEXTO            : 'Cargando artículos. Espere a que termine para marcar.',
         ALERTA_TITULO             : 'No se pudo generar el recuento',
         SIN_ARTICULOS             : 'Marque al menos un articulo.',
         GENERACION_PENDIENTE      : 'Ya hay un recuento en cola o generandose para esta ubicacion (solicitud ',
@@ -121,8 +127,10 @@ define([], () => {
         LOTE_CARGA       : 'custpage_lote_carga',
         CARGA            : 'custpage_carga',
         APROBAR          : 'custpage_aprobar',
+        DETALLE          : 'custpage_detalle',
         ARCHIVO          : 'custpage_archivo',
         REFRESCO         : 'custpage_refresco',
+        CARGANDO         : 'custpage_cargando',
     };
 
     const BOTONES = {
@@ -132,6 +140,8 @@ define([], () => {
         CSV_LABEL    : 'Cargar CSV',
         APROBAR      : 'custpage_as_rec_inv_aprobar',
         APROBAR_LABEL: 'Aprobar',
+        DETALLE      : 'custpage_as_rec_inv_detalle',
+        DETALLE_LABEL: 'Detalle de conteo',
     };
 
     const CARGA = {
@@ -153,6 +163,13 @@ define([], () => {
                      'PRO_CORREL1', '', '', '', '', 'Cantidad'],
     };
 
+    const DETALLE = {
+        PREFIJO   : 'DetalleConteo',
+        SEPARADOR : ',',
+        ENCABEZADO: ['Articulo', 'Unidades', 'Cantidad de instantanea', 'Cantidad del recuento',
+                     'Cantidad ajustada', 'Tarifa', 'Nota'],
+    };
+
     const RECUENTO = {
         TIPO                       : 'inventorycount',
         CAMPO_CARGA                : 'custbody_as_rec_inv_carga',
@@ -167,6 +184,7 @@ define([], () => {
         ESTADO_INVENTARIO          : '1',
         DETALLE_CANTIDAD           : 'quantity',
         ESTADO_PENDIENTE_APROBACION: 'C',
+        ESTADO_APROBADO            : 'D',
         BOTON_APROBAR              : 'approve',
         BOTON_RECHAZAR             : 'reject',
     };
@@ -199,6 +217,7 @@ define([], () => {
         BOTONES          : BOTONES,
         CARGA            : CARGA,
         ARCHIVO          : ARCHIVO,
+        DETALLE          : DETALLE,
         RECUENTO         : RECUENTO,
         IMPORTES         : IMPORTES,
         ROLES_AUTORIZADOS: ROLES_AUTORIZADOS,

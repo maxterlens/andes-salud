@@ -16,11 +16,8 @@
  * @author Andes Salud
  * @version 1.3.0
  *
- * CHANGELOG
- * 1.3.0 [FEAT] convertirEntidadesHtmlATexto, para el nombre del articulo en el TXT.
- * 1.2.0 [FIX] Se quita pasarAMayusculasSinEspaciosExtra: la ubicacion del CSV
- *             ya no se compara por nombre.
  */
+
 define(['N/encode', 'N/format', 'N/task'],
     (encode, format, task) => {
 
@@ -44,11 +41,6 @@ define(['N/encode', 'N/format', 'N/task'],
         return format.format({ value: valor, type: format.Type.CURRENCY });
     }
 
-    /**
-     * NetSuite guarda algunos simbolos del nombre como HTML (&lt; en vez de <)
-     * y una query los devuelve asi; la pantalla los muestra convertidos. &amp;
-     * va al final para no convertir dos veces un "&amp;lt;".
-     */
     function convertirEntidadesHtmlATexto(texto) {
         return texto.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
     }

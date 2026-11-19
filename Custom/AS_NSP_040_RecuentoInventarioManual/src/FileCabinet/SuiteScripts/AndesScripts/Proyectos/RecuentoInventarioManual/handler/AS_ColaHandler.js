@@ -38,8 +38,6 @@
  * @author Andes Salud
  * @version 1.1.0
  *
- * CHANGELOG
- * 1.1.0 [FEAT] Tipo APROBACION y una fila por deployment.
  */
 define(['N/runtime', '../data/record/AS_ColaRecord', '../data/record/AS_RecuentoInventarioRecord',
         '../data/query/AS_RecuentoInventarioManualQuery', '../utils/AS_RecuentoInventarioManualUtils',

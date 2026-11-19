@@ -24,8 +24,6 @@
  * @author Andes Salud
  * @version 1.8.0
  *
- * CHANGELOG
- * 1.8.0 [FEAT] aprobarRecuento, para la aprobacion por la cola.
  */
 define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventarioManualConstants'],
     (record, action, format, CONSTANTES) => {

@@ -10,8 +10,6 @@
  * @author Andes Salud
  * @version 1.4.0
  *
- * CHANGELOG
- * 1.4.0 [FEAT] Select Lote con los lotes de Lote Predeterminado de Recuento.
  */
 define(['N/ui/serverWidget', 'N/ui/message', '../constants/AS_RecuentoInventarioManualConstants'],
     (serverWidget, message, CONSTANTES) => {

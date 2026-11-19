@@ -33,11 +33,6 @@
  * @author Andes Salud
  * @version 1.10.0
  *
- * CHANGELOG
- * 1.10.0 [FEAT] El lote se elige en la pantalla (select Lote).
- * 1.9.0 [FEAT] UBICACION viene por id interno (609), no por nombre.
- * 1.8.0 [FEAT] El CSV ya no trae LOTE: las cantidades van al lote configurado
- *              para la subsidiaria del recuento (Lote Predeterminado de Recuento).
  */
 define(['N/redirect', '../form/AS_CargaCantidadesForm', '../data/query/AS_RecuentoInventarioManualQuery',
         '../data/record/AS_ColaRecord', '../utils/AS_RecuentoInventarioManualUtils',
