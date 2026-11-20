@@ -2,7 +2,9 @@
  * AS_NSP_036 — Nomina de Reembolso al Cliente
  * @description Proceso de la pantalla Generar Nomina de Reembolso. Replica el
  *              Suitelet de Nomina de Pago de AS_NSP_026 con los Reembolsos al
- *              cliente (CustRfnd) en vez de los pagos a proveedor.
+ *              cliente (CustRfnd) en vez de los pagos a proveedor, y desde
+ *              v1.2.0 tambien las devoluciones por asiento (lineas a credito
+ *              de la 2120021): las dos se pagan en la misma nomina.
  *
  *              mostrarFormulario → la pantalla vacia (GET).
  *              buscarReembolsos  → al elegir la Cuenta Banco, lista los
@@ -21,24 +23,16 @@
  *              hija de la nomina: con isparent T desde el primer deploy la
  *              sublista no existe y NetSuite descarta las lineas sin error
  *              (QA, 2026-11-12, nominas 4 y 5).
- *
- * CHANGELOG v1.1.0 (2026-11-12):
- * - [FEAT] Tope de reembolsos por nomina, con alerta en la pantalla.
- * - [FEAT] La pantalla recibe los bancos con plantilla para el select Banco.
- *
- * CHANGELOG v1.0.0 (2026-11-10):
- * - [FEAT] Mostrar, buscar reembolsos y generar la nomina.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.1.0
+ * @version 1.3.0
  *
  */
 define(['N/redirect', '../form/AS_NominaReembolsoForm', '../data/search/AS_NominaReembolsoSearch',
-        '../data/record/AS_NominaReembolsoRecord', '../data/record/AS_NominaReembolsoDetalleRecord',
-        '../constants/AS_NominaReembolsoConstants'],
-    (redirect, nominaReembolsoForm, nominaReembolsoSearch, nominaReembolsoRecord, nominaReembolsoDetalleRecord, CONSTANTES) => {
+        '../data/query/AS_NominaReembolsoQuery', '../data/record/AS_NominaReembolsoRecord',
+        '../data/record/AS_NominaReembolsoDetalleRecord', '../constants/AS_NominaReembolsoConstants'],
+    (redirect, nominaReembolsoForm, nominaReembolsoSearch, nominaReembolsoQuery, nominaReembolsoRecord, nominaReembolsoDetalleRecord, CONSTANTES) => {
 
     // ─────────────────────────────────────────────────────────────────────────
     // Principales
@@ -50,19 +44,19 @@ define(['N/redirect', '../form/AS_NominaReembolsoForm', '../data/search/AS_Nomin
 
     function buscarReembolsos(context) {
         const parametros = obtenerParametros(context.request);
-        const reembolsos = nominaReembolsoSearch.buscarReembolsosPendientes(parametros.cabecera.subsidiaria, parametros.cabecera.cuentaBanco);
+        const reembolsos = buscarPendientes(parametros.cabecera);
         responderConFormulario(context, parametros.cabecera, reembolsos, []);
     }
 
     function generarNomina(context) {
         const parametros = obtenerParametros(context.request);
         const cabecera   = parametros.cabecera;
-        const pendientes = nominaReembolsoSearch.buscarReembolsosPendientes(cabecera.subsidiaria, cabecera.cuentaBanco);
+        const pendientes = buscarPendientes(cabecera);
         if (!parametros.marcados.length) {
             responderConFormulario(context, cabecera, pendientes, parametros.marcados, 'Debe marcar al menos un reembolso.');
             return;
         }
-        const reembolsos = pendientes.filter((reembolso) => parametros.marcados.indexOf(reembolso.id) >= 0);
+        const reembolsos = pendientes.filter((reembolso) => parametros.marcados.indexOf(reembolso.clave) >= 0);
         if (!reembolsos.length) {
             responderConFormulario(context, cabecera, pendientes, [], 'Los reembolsos marcados ya no estan pendientes: entraron en otra nomina mientras la pantalla estaba abierta.');
             return;
@@ -89,16 +83,19 @@ define(['N/redirect', '../form/AS_NominaReembolsoForm', '../data/search/AS_Nomin
     // Secundarias
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Los tres procesos terminan aqui: los select Banco y Cuenta Banco
-     * necesitan sus listas cada vez que se dibuja la pantalla. reembolsos en null es que
-     * todavia no se busco (la pantalla recien abierta). El total es el de lo
-     * que ya venia marcado, al volver con un error.
-     */
+    function buscarPendientes(cabecera) {
+        const inicio       = Date.now();
+        const reembolsos   = nominaReembolsoSearch.buscarReembolsosPendientes(cabecera.subsidiaria, cabecera.cuentaBanco, cabecera.desde);
+        const medio        = Date.now();
+        const devoluciones = nominaReembolsoQuery.buscarDevolucionesPendientes(cabecera.subsidiaria, cabecera.desde);
+        log.audit({ title: 'NOMINA REEMBOLSO TIEMPOS TEMPORAL', details: 'reembolsos: ' + (medio - inicio) + ' ms | devoluciones: ' + (Date.now() - medio) + ' ms' });
+        return reembolsos.concat(devoluciones);
+    }
+
     function responderConFormulario(context, cabecera, reembolsos, marcados, alerta) {
         const bancos  = nominaReembolsoSearch.buscarBancosConPlantilla();
         const cuentas = nominaReembolsoSearch.buscarCuentasBanco();
-        const total   = sumarMontos((reembolsos || []).filter((reembolso) => marcados.indexOf(reembolso.id) >= 0));
+        const total   = sumarMontos((reembolsos || []).filter((reembolso) => marcados.indexOf(reembolso.clave) >= 0));
         context.response.writePage(nominaReembolsoForm.construirFormulario(cabecera, bancos, cuentas, reembolsos, marcados, total, alerta));
     }
 
@@ -118,6 +115,7 @@ define(['N/redirect', '../form/AS_NominaReembolsoForm', '../data/search/AS_Nomin
                 subsidiaria: valores[campos.SUBSIDIARIA],
                 banco      : valores[campos.BANCO],
                 cuentaBanco: valores[campos.CUENTA_BANCO],
+                desde      : valores[campos.DESDE],
                 fecha      : valores[campos.FECHA],
                 descripcion: valores[campos.DESCRIPCION],
             },

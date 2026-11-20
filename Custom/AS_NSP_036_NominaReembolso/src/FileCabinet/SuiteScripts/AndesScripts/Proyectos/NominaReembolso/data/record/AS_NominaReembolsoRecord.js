@@ -2,9 +2,6 @@
  * AS_NSP_036 — Nomina de Reembolso al Cliente
  * @description Crea la cabecera AS Nomina Reembolso (customrecord_as_nom_reemb).
  *
- * CHANGELOG v1.0.0 (2026-11-10):
- * - [FEAT] crearNomina.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud

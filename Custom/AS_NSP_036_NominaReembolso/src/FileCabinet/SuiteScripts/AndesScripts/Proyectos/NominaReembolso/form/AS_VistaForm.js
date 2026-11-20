@@ -6,17 +6,10 @@
  *              boton Descargar TXT con el client script que lo atiende. La
  *              ficha Detalle es la de AS_NSP_018.
  *
- * CHANGELOG v1.2.0 (2026-11-12):
- * CHANGELOG v1.1.0 (2026-11-11):
- * - [FEAT] ajustarVista y la ficha Detalle con los reembolsos.
- *
- * CHANGELOG v1.0.0 (2026-11-11):
- * - [FEAT] agregarBotonTxt.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.2.0
+ * @version 1.3.0
  *
  */
 define(['N/ui/serverWidget', '../constants/AS_NominaReembolsoConstants'],
@@ -26,10 +19,6 @@ define(['N/ui/serverWidget', '../constants/AS_NominaReembolsoConstants'],
     // Principales
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Inactivo se oculta: inactivar la nomina no libera sus reembolsos (el
-     * detalle sigue), asi que no sirve para anularla.
-     */
     function ajustarVista(form, reembolsos) {
         form.getField({ id: 'isinactive' }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
         agregarDetalle(form, reembolsos);
@@ -63,12 +52,14 @@ define(['N/ui/serverWidget', '../constants/AS_NominaReembolsoConstants'],
             label: CONSTANTES.VISTA.LABEL + ' (' + reembolsos.length + ')',
             tab  : CONSTANTES.VISTA.TAB,
         });
+        sublista.addField({ id: columnas.TIPO,    type: serverWidget.FieldType.TEXT,     label: 'Tipo' });
         sublista.addField({ id: columnas.FECHA,   type: serverWidget.FieldType.TEXT,     label: 'Fecha' });
         sublista.addField({ id: columnas.CLIENTE, type: serverWidget.FieldType.TEXT,     label: 'Cliente' });
         sublista.addField({ id: columnas.NUMERO,  type: serverWidget.FieldType.TEXT,     label: 'N Transaccion' });
         sublista.addField({ id: columnas.MONTO,   type: serverWidget.FieldType.CURRENCY, label: 'Monto' });
 
         reembolsos.forEach((reembolso, fila) => {
+            sublista.setSublistValue({ id: columnas.TIPO,   line: fila, value: reembolso.tipo });
             sublista.setSublistValue({ id: columnas.FECHA,  line: fila, value: '<a href="/app/accounting/transactions/transaction.nl?id=' + reembolso.id + '" target="_blank">' + reembolso.fecha + '</a>' });
             sublista.setSublistValue({ id: columnas.NUMERO, line: fila, value: reembolso.numero });
             sublista.setSublistValue({ id: columnas.MONTO,  line: fila, value: String(reembolso.monto) });

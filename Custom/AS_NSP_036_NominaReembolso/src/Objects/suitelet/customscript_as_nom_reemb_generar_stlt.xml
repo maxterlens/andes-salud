@@ -1,5 +1,5 @@
 <suitelet scriptid="customscript_as_nom_reemb_generar_stlt">
-  <description>Pantalla Generar Nomina de Reembolso: lista los Reembolsos al cliente pendientes de una cuenta banco y crea la nomina con los marcados (AS_NSP_036).</description>
+  <description></description>
   <isinactive>F</isinactive>
   <name>AS Nomina Reembolso Generar STLT</name>
   <notifyadmins>F</notifyadmins>

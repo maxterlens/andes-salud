@@ -10,7 +10,7 @@
   <allowquicksearch>T</allowquicksearch>
   <allowuiaccess>T</allowuiaccess>
   <customsegment></customsegment>
-  <description>Un reembolso al cliente dentro de una AS Nomina Reembolso. Tener un detalle saca al reembolso de los pendientes (AS_NSP_036)</description>
+  <description>Un reembolso al cliente o una linea de devolucion (asiento a la 2120021) dentro de una AS Nomina Reembolso. Tener un detalle la saca de los pendientes (AS_NSP_036)</description>
   <enabledle>F</enabledle>
   <enablekeywords>F</enablekeywords>
   <enablemailmerge>F</enablemailmerge>
@@ -30,7 +30,7 @@
   <numberingmindigits></numberingmindigits>
   <numberingprefix></numberingprefix>
   <numberingsuffix></numberingsuffix>
-  <recordname>AS Nomina Reembolso Detalle</recordname>
+  <recordname>Detalle de Nómina de Reembolso</recordname>
   <showcreationdate>T</showcreationdate>
   <showcreationdateonlist>T</showcreationdateonlist>
   <showid>T</showid>
@@ -88,7 +88,7 @@
       <defaultchecked>F</defaultchecked>
       <defaultselection></defaultselection>
       <defaultvalue></defaultvalue>
-      <description>Reembolso al cliente incluido en la nomina</description>
+      <description>Reembolso al cliente o asiento de devolucion incluido en la nomina</description>
       <displayheight></displayheight>
       <displaytype>NORMAL</displaytype>
       <displaywidth></displaywidth>
@@ -100,7 +100,7 @@
       <isformula>F</isformula>
       <ismandatory>T</ismandatory>
       <isparent>T</isparent>
-      <label>Reembolso</label>
+      <label>Transaccion</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>
@@ -140,6 +140,45 @@
       <ismandatory>F</ismandatory>
       <isparent>F</isparent>
       <label>Monto a Pagar</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete>NO_ACTION</onparentdelete>
+      <parentsubtab></parentsubtab>
+      <rolerestrict>F</rolerestrict>
+      <searchcomparefield></searchcomparefield>
+      <searchdefault></searchdefault>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <showinlist>T</showinlist>
+      <sourcefilterby></sourcefilterby>
+      <sourcefrom></sourcefrom>
+      <sourcelist></sourcelist>
+      <storevalue>T</storevalue>
+      <subtab></subtab>
+    </customrecordcustomfield>
+    <customrecordcustomfield scriptid="custrecord_as_nom_reemb_det_linea">
+      <accesslevel>2</accesslevel>
+      <allowquickadd>F</allowquickadd>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Clave unica de la linea del asiento de devolucion (lineuniquekey). Vacio en un reembolso al cliente</description>
+      <displayheight></displayheight>
+      <displaytype>NORMAL</displaytype>
+      <displaywidth></displaywidth>
+      <dynamicdefault></dynamicdefault>
+      <encryptatrest>F</encryptatrest>
+      <fieldtype>INTEGER</fieldtype>
+      <globalsearch>F</globalsearch>
+      <help></help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <isparent>F</isparent>
+      <label>Linea</label>
       <linktext></linktext>
       <maxlength></maxlength>
       <maxvalue></maxvalue>

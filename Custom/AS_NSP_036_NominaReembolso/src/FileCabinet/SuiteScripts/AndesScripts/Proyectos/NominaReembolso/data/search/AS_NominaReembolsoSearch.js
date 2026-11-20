@@ -31,40 +31,10 @@
  *              primer deploy, y devuelve vacio sin error. Caso real: QA,
  *              2026-11-12, al borrar y volver a desplegar los records.
  *
- * CHANGELOG v1.6.0 (2026-11-13):
- * - [REFACTOR] buscarPagosNomina pasa a buscarReembolsosConCliente: solo el
- *              monto y la fecha son del reembolso, lo demas es del cliente.
- *
- * CHANGELOG v1.5.0 (2026-11-12):
- * - [FEAT] buscarBancosConPlantilla.
- *
- * CHANGELOG v1.4.0 (2026-11-12):
- * - [FIX] buscarReembolsos y buscarReembolsosDetalle con runPaged: each()
- *         corta en 4.000 filas sin avisar y el historico de la cuenta crece.
- * - [FIX] Pendientes resta el detalle entero en vez de un anyof con todos
- *         los ids de la cuenta, que con miles de reembolsos no escala.
- *
- * CHANGELOG v1.3.0 (2026-11-12):
- * - [FIX] Pendientes, ficha Detalle y TXT leen el cruce desde el detalle: el
- *         join inverso desde el reembolso quedaba vacio tras recrear los
- *         records (la ficha salia en 0 y los reembolsos volvian a pendientes).
- *
- * CHANGELOG v1.2.0 (2026-11-11):
- * - [FEAT] buscarReembolsosNomina.
- * - [FIX] buscarReembolsosConCliente: el nombre va sin el ID del cliente.
- * - [REFACTOR] Pendientes y los de la nomina comparten buscarReembolsos:
- *              solo cambia el filtro.
- *
- * CHANGELOG v1.1.0 (2026-11-11):
- * - [FEAT] buscarNomina, buscarPlantilla y buscarReembolsosConCliente.
- *
- * CHANGELOG v1.0.0 (2026-11-10):
- * - [FEAT] Cuentas banco y reembolsos pendientes.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.6.0
+ * @version 1.8.0
  *
  */
 define(['N/search', '../../constants/AS_NominaReembolsoConstants'],
@@ -127,9 +97,10 @@ define(['N/search', '../../constants/AS_NominaReembolsoConstants'],
      * nomina. Los dos lados crecen con el historico: el detalle se lee entero
      * en vez de armar un anyof con miles de ids.
      */
-    function buscarReembolsosPendientes(subsidiaria, cuentaBanco) {
+    function buscarReembolsosPendientes(subsidiaria, cuentaBanco, desde) {
         const reembolsos = buscarReembolsos([
             ['voided',     'is',    'F'],                                            'AND',
+            ['trandate',   'onorafter', desde],                                      'AND',
             ['subsidiary', 'anyof', subsidiaria],                                    'AND',
             ['account',    'anyof', cuentaBanco],                                    'AND',
             ['account.' + CONSTANTES.CUENTA_BANCO.NUMERO_BANCARIO, 'isnotempty', ''],
@@ -236,14 +207,7 @@ define(['N/search', '../../constants/AS_NominaReembolsoConstants'],
     // ─────────────────────────────────────────────────────────────────────────
     // Secundarias
     // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Los Reembolsos al cliente con el filtro de quien llama: la pantalla
-     * (pendientes) y la vista (los de una nomina) muestran lo mismo. El monto
-     * sale negativo en la linea principal (es un egreso del banco): se trae en
-     * positivo, que es lo que se paga. runPaged: con los pendientes trae todo
-     * el historico de la cuenta, que pasa de las 4.000 filas de each().
-     */
+    
     function buscarReembolsos(filtros) {
         const reembolsos = [];
         const paginado   = search.create({
@@ -264,7 +228,10 @@ define(['N/search', '../../constants/AS_NominaReembolsoConstants'],
         paginado.pageRanges.forEach((rango) => {
             paginado.fetch({ index: rango.index }).data.forEach((resultado) => {
                 reembolsos.push({
+                    clave  : resultado.id,
                     id     : resultado.id,
+                    linea  : '',
+                    tipo   : CONSTANTES.REEMBOLSO.TEXTO,
                     numero : resultado.getValue('tranid'),
                     fecha  : resultado.getValue('trandate'),
                     cliente: resultado.getText('entity'),

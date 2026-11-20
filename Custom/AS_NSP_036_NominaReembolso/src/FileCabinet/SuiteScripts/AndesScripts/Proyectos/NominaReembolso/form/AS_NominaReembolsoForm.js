@@ -15,16 +15,10 @@
  *              completa viaja en un LONGTEXT oculto en JSON para que el client
  *              script la vuelva a filtrar al cambiar cualquiera de los dos.
  *
- * CHANGELOG v1.2.0 (2026-11-12):
- * - [FEAT] El select Banco muestra solo los bancos con plantilla activa.
- *
- * CHANGELOG v1.0.0 (2026-11-10):
- * - [FEAT] Pantalla con cabecera, datos adicionales y reembolsos pendientes.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.2.0
+ * @version 1.4.0
  *
  */
 define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_NominaReembolsoConstants'],
@@ -94,6 +88,14 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Nomina
             campoCuentaBanco.addSelectOption({ value: cuenta.id, text: cuenta.nombre });
         });
         campoCuentaBanco.defaultValue = cabecera.cuentaBanco || '';
+        const campoDesde = form.addField({
+            id       : CONSTANTES.CAMPOS.DESDE,
+            type     : serverWidget.FieldType.DATE,
+            label    : 'Desde',
+            container: grupo,
+        });
+        campoDesde.isMandatory  = true;
+        campoDesde.defaultValue = cabecera.desde || '';
         const campoCuentasData = form.addField({
             id   : CONSTANTES.CAMPOS.CUENTAS_DATA,
             type : serverWidget.FieldType.LONGTEXT,
@@ -137,11 +139,6 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Nomina
         campoTotal.updateDisplayType({ displayType: serverWidget.FieldDisplayType.INLINE });
     }
 
-    /**
-     * La fecha va como enlace al reembolso, para revisarlo sin salir de la
-     * pantalla. NetSuite no acepta un valor vacio en setSublistValue: el
-     * cliente se escribe solo si el reembolso lo tiene.
-     */
     function agregarReembolsos(form, reembolsos, marcados) {
         const columnas = CONSTANTES.SUBLISTA.COLUMNAS;
 
@@ -151,6 +148,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Nomina
             label: CONSTANTES.SUBLISTA.LABEL + ' (' + reembolsos.length + ')',
         });
         sublista.addField({ id: columnas.INCLUIR, type: serverWidget.FieldType.CHECKBOX, label: 'Incluir' });
+        sublista.addField({ id: columnas.TIPO,    type: serverWidget.FieldType.TEXT,     label: 'Tipo' });
         sublista.addField({ id: columnas.FECHA,   type: serverWidget.FieldType.TEXT,     label: 'Fecha' });
         sublista.addField({ id: columnas.CLIENTE, type: serverWidget.FieldType.TEXT,     label: 'Cliente' });
         sublista.addField({ id: columnas.NUMERO,  type: serverWidget.FieldType.TEXT,     label: 'N Transaccion' });
@@ -159,12 +157,13 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Nomina
             .updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN });
 
         reembolsos.forEach((reembolso, fila) => {
-            sublista.setSublistValue({ id: columnas.ID,     line: fila, value: reembolso.id });
+            sublista.setSublistValue({ id: columnas.ID,     line: fila, value: reembolso.clave });
+            sublista.setSublistValue({ id: columnas.TIPO,   line: fila, value: reembolso.tipo });
             sublista.setSublistValue({ id: columnas.FECHA,  line: fila, value: '<a href="/app/accounting/transactions/transaction.nl?id=' + reembolso.id + '" target="_blank">' + reembolso.fecha + '</a>' });
             sublista.setSublistValue({ id: columnas.NUMERO, line: fila, value: reembolso.numero });
             sublista.setSublistValue({ id: columnas.MONTO,  line: fila, value: String(reembolso.monto) });
             if (reembolso.cliente) sublista.setSublistValue({ id: columnas.CLIENTE, line: fila, value: reembolso.cliente });
-            if (marcados.indexOf(reembolso.id) >= 0) sublista.setSublistValue({ id: columnas.INCLUIR, line: fila, value: 'T' });
+            if (marcados.indexOf(reembolso.clave) >= 0) sublista.setSublistValue({ id: columnas.INCLUIR, line: fila, value: 'T' });
         });
     }
 

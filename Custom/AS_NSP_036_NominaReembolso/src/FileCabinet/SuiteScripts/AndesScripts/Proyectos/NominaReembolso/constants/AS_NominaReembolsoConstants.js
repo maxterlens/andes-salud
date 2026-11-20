@@ -3,26 +3,10 @@
  * @description Valores fijos del modulo: ids de los campos, la sublista y los
  *              textos de la pantalla, y los ids de la nomina y su detalle.
  *
- * CHANGELOG v1.3.0 (2026-11-12):
- * - [FEAT] NOMINA.MAXIMO_REEMBOLSOS: tope de reembolsos por nomina.
- * - [REFACTOR] El select Banco ya no usa la lista de bancos de 2WIN: sale de
- *              las AS Plantilla Banco activas.
- *
- * CHANGELOG v1.2.0 (2026-11-11):
- * - [FEAT] VISTA: la ficha Detalle de la nomina con sus reembolsos.
- *
- * CHANGELOG v1.1.0 (2026-11-11):
- * - [FEAT] Boton Descargar TXT, el Suitelet que lo atiende, la AS Plantilla
- *          Banco y los campos bancarios del cliente.
- *
- * CHANGELOG v1.0.0 (2026-11-10):
- * - [FEAT] Constantes de la pantalla Generar Nomina de Reembolso y de los
- *          records AS Nomina Reembolso y su detalle.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.3.0
+ * @version 1.5.0
  *
  */
 define([], () => {
@@ -34,7 +18,9 @@ define([], () => {
         BOTON_DESMARCAR     : 'Desmarcar Todo',
         ALERTA_TITULO       : 'No se pudo generar la nomina de reembolso',
         SIN_REEMBOLSOS      : 'Sin reembolsos pendientes',
-        SIN_REEMBOLSOS_TEXTO: 'No hay reembolsos al cliente pendientes para esta Subsidiaria y Cuenta Banco.',
+        SIN_REEMBOLSOS_TEXTO: 'No hay reembolsos ni devoluciones pendientes para esta Subsidiaria y Cuenta Banco desde la fecha indicada.',
+        BUSCANDO_TITULO     : 'Buscando pendientes',
+        BUSCANDO_TEXTO      : 'Se estan buscando los reembolsos y devoluciones pendientes. No cierre ni recargue la pagina.',
         CLIENT_SCRIPT       : '/SuiteScripts/AndesScripts/Proyectos/NominaReembolso/AS_NominaReembolso_CS_2.1.js',
     };
 
@@ -47,6 +33,7 @@ define([], () => {
         SUBSIDIARIA  : 'custpage_subsidiaria',
         BANCO        : 'custpage_banco',
         CUENTA_BANCO : 'custpage_cuenta_banco',
+        DESDE        : 'custpage_desde',
         CUENTAS_DATA : 'custpage_cuentas_data',
         FECHA        : 'custpage_fecha',
         DESCRIPCION  : 'custpage_descripcion',
@@ -77,6 +64,7 @@ define([], () => {
         LABEL   : 'Reembolsos Pendientes',
         COLUMNAS: {
             INCLUIR: 'custpage_col_incluir',
+            TIPO   : 'custpage_col_tipo',
             FECHA  : 'custpage_col_fecha',
             CLIENTE: 'custpage_col_cliente',
             NUMERO : 'custpage_col_numero',
@@ -92,10 +80,6 @@ define([], () => {
         LABEL    : 'Reembolsos de la Nomina',
     };
 
-    /**
-     * MAXIMO_REEMBOLSOS: cada linea de detalle cuesta 6 unidades y el Suitelet
-     * tiene 1.000; 150 lineas son 900 y dejan margen a las busquedas.
-     */
     const NOMINA = {
         TIPO             : 'customrecord_as_nom_reemb',
         MAXIMO_REEMBOLSOS: 150,
@@ -115,6 +99,7 @@ define([], () => {
             NOMINA     : 'custrecord_as_nom_reemb_det_nomina',
             TRANSACCION: 'custrecord_as_nom_reemb_det_transaccion',
             MONTO      : 'custrecord_as_nom_reemb_det_monto',
+            LINEA      : 'custrecord_as_nom_reemb_det_linea',
         },
     };
 
@@ -125,7 +110,16 @@ define([], () => {
     };
 
     const REEMBOLSO = {
-        TIPO: 'CustRfnd',
+        TIPO : 'CustRfnd',
+        TEXTO: 'Reembolso',
+    };
+
+    const DEVOLUCION = {
+        TIPO  : 'Journal',
+        TEXTO : 'Devolucion',
+        CUENTA: '2120021',
+        FECHA : 'custcol8',
+        FOLIO : 'custcol_2w_folio',
     };
 
     const PLANTILLA = {
@@ -162,6 +156,7 @@ define([], () => {
         DETALLE     : DETALLE,
         CUENTA_BANCO: CUENTA_BANCO,
         REEMBOLSO   : REEMBOLSO,
+        DEVOLUCION  : DEVOLUCION,
         PLANTILLA   : PLANTILLA,
         ARCHIVO     : ARCHIVO,
         CLIENTE     : CLIENTE,

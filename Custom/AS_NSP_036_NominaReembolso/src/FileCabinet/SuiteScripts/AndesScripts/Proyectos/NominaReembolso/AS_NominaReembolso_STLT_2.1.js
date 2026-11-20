@@ -10,12 +10,6 @@
  *                                    reembolsos pendientes.
  *              POST (por defecto)  → Generar: crea la nomina con los marcados.
  *
- * CHANGELOG v1.1.0 (2026-11-11):
- * - [FEAT] GET con custpage_nomina: descarga el TXT del banco.
- *
- * CHANGELOG v1.0.0 (2026-11-10):
- * - [FEAT] Mostrar, buscar reembolsos y generar la nomina.
- *
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  * @NModuleScope Public

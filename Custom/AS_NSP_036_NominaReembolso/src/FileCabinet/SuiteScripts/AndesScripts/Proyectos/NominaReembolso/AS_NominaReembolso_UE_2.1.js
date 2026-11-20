@@ -5,9 +5,6 @@
  *              beforeLoad → AS_VistaHandler: la ficha Detalle y el boton
  *                           Descargar TXT.
  *
- * CHANGELOG v1.0.0 (2026-11-11):
- * - [FEAT] beforeLoad con el boton Descargar TXT.
- *
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
  * @NModuleScope Public
@@ -15,7 +12,7 @@
  * @deploymentid customdeploy_as_nom_reemb_vista_ue
  * @recordtype   customrecord_as_nom_reemb
  * @author Andes Salud
- * @version 1.0.0
+ * @version 1.0.1
  *
  */
 define(['./handler/AS_VistaHandler'],
@@ -23,7 +20,7 @@ define(['./handler/AS_VistaHandler'],
 
     function beforeLoad(context) {
         try {
-            vistaHandler.construirVista(context);
+            vistaHandler.agregarDetalleYBotonTxt(context);
         } catch (fallo) {
             log.error({
                 title  : 'NOMINA REEMBOLSO ERROR',

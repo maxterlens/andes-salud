@@ -5,7 +5,7 @@
  *              - Subsidiaria o Banco: rehace las opciones de Cuenta Banco con
  *                las cuentas de los dos, sacadas del JSON oculto que dejo el
  *                servidor (como AS_NSP_032).
- *              - Cuenta Banco: envia el formulario con la operacion buscar para
+ *              - Cuenta Banco o Desde, con los dos llenos: envia el formulario con la operacion buscar para
  *                que el servidor liste los reembolsos pendientes.
  *              - Incluir: recalcula el Importe Total a Pagar.
  *              - Marcar Todo / Desmarcar Todo: marcan todas las lineas.
@@ -14,21 +14,15 @@
  *              - Descargar TXT: abre el Suitelet con el id de la nomina, que
  *                responde el archivo del banco como descarga.
  *
- * CHANGELOG v1.1.0 (2026-11-11):
- * - [FEAT] descargarTxt para el boton de la vista de la nomina.
- *
- * CHANGELOG v1.0.0 (2026-11-10):
- * - [FEAT] Filtro de Cuenta Banco, busqueda al elegirla, total y marcar todo.
- *
  * @NApiVersion 2.1
  * @NScriptType ClientScript
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.1.0
+ * @version 1.2.0
  *
  */
-define(['N/currentRecord', 'N/url', './constants/AS_NominaReembolsoConstants'],
-    (currentRecord, url, CONSTANTES) => {
+define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_NominaReembolsoConstants'],
+    (currentRecord, url, message, CONSTANTES) => {
 
     function fieldChanged(context) {
         const campos   = CONSTANTES.CAMPOS;
@@ -39,7 +33,8 @@ define(['N/currentRecord', 'N/url', './constants/AS_NominaReembolsoConstants'],
             return;
         }
         if (context.fieldId === campos.SUBSIDIARIA || context.fieldId === campos.BANCO) filtrarCuentasBanco(registro);
-        if (context.fieldId === campos.CUENTA_BANCO && registro.getValue({ fieldId: campos.CUENTA_BANCO })) buscarReembolsos(registro);
+        if (context.fieldId !== campos.CUENTA_BANCO && context.fieldId !== campos.DESDE) return;
+        if (registro.getValue({ fieldId: campos.CUENTA_BANCO }) && registro.getValue({ fieldId: campos.DESDE })) buscarReembolsos(registro);
     }
 
     /**
@@ -66,6 +61,11 @@ define(['N/currentRecord', 'N/url', './constants/AS_NominaReembolsoConstants'],
      * recibe la cabecera y vuelve a dibujar la pantalla con los reembolsos.
      */
     function buscarReembolsos(registro) {
+        message.create({
+            type   : message.Type.INFORMATION,
+            title  : CONSTANTES.FORMULARIO.BUSCANDO_TITULO,
+            message: CONSTANTES.FORMULARIO.BUSCANDO_TEXTO,
+        }).show();
         registro.setValue({ fieldId: CONSTANTES.CAMPOS.OPERACION, value: CONSTANTES.OPERACIONES.BUSCAR });
         document.getElementById('submitter').click();
     }

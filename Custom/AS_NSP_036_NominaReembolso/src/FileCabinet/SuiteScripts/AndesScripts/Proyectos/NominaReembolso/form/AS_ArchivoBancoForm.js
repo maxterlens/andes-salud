@@ -8,9 +8,6 @@
  *              como descarga. Windows-1252, el encoding de los archivos que
  *              hoy reciben los bancos (2WIN).
  *
- * CHANGELOG v1.0.0 (2026-11-11):
- * - [FEAT] construirArchivo.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
