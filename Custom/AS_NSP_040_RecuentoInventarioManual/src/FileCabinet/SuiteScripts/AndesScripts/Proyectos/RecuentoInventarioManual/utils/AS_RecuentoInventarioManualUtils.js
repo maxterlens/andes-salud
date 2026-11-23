@@ -8,6 +8,11 @@
  *                                                 moneda del usuario.
  *              convertirEntidadesHtmlATexto     → &lt; &gt; &amp; de vuelta a
  *                                                 < > &.
+ *              encerrarEntreComillas            → un texto entre comillas para
+ *                                                 CSV, con sus comillas dobladas.
+ *              convertirNuloAVacio              → null como texto vacio.
+ *              redondearADosDecimales           → un numero redondeado a 2
+ *                                                 decimales.
  *              lanzarScheduledSiEstaLibre       → lanza un Scheduled; si ya
  *                                                 esta corriendo, no hace nada.
  *
@@ -45,6 +50,12 @@ define(['N/encode', 'N/format', 'N/task'],
         return texto.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
     }
 
+    function encerrarEntreComillas(texto) { return '"' + texto.replace(/"/g, '""') + '"'; }
+
+    function convertirNuloAVacio(valor) { return valor === null ? '' : valor; }
+
+    function redondearADosDecimales(valor) { return Math.round(valor * 100) / 100; }
+
 
     function lanzarScheduledSiEstaLibre(scriptId, deploymentId) {
         try {
@@ -60,6 +71,9 @@ define(['N/encode', 'N/format', 'N/task'],
         convertirArchivoATexto          : convertirArchivoATexto,
         formatearMoneda                 : formatearMoneda,
         convertirEntidadesHtmlATexto    : convertirEntidadesHtmlATexto,
+        encerrarEntreComillas           : encerrarEntreComillas,
+        convertirNuloAVacio             : convertirNuloAVacio,
+        redondearADosDecimales          : redondearADosDecimales,
         lanzarScheduledSiEstaLibre      : lanzarScheduledSiEstaLibre,
     };
 });

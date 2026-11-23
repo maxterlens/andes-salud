@@ -12,6 +12,11 @@
  *              En Iniciado el form muestra solo el Importe Recuento: la variacion
  *              la calcula NetSuite al completar. Una linea sin contar va en blanco.
  *
+ *              mostrarImportes   → la ficha en la vista del recuento, con el
+ *                                  boton Importes del recuento (User Event).
+ *              descargarImportes → boton Importes del recuento: los mismos
+ *                                  importes en CSV para Excel (Suitelet, GET).
+ *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
@@ -34,6 +39,20 @@ define(['../data/query/AS_RecuentoInventarioManualQuery', '../form/AS_ImporteRec
         importeRecuentoForm.agregarImportes(form, lineas, totales, iniciado);
     }
 
+    function descargarImportes(context, recuentoId) {
+        const iniciado = recuentoInventarioManualQuery.obtenerEstadoRecuento(recuentoId) === CONSTANTES.RECUENTO.ESTADO_INICIADO;
+        const lineas   = armarLineas(recuentoInventarioManualQuery.obtenerCantidadesRecuento(recuentoId));
+        const totales  = sumarImportes(lineas);
+        const archivo  = importeRecuentoForm.construirCsv(recuentoId, lineas, totales, iniciado);
+
+        log.audit({
+            title  : 'RECUENTO INVENTARIO IMPORTES DESCARGADOS',
+            details: 'recuento: ' + recuentoId + ' | filas: ' + lineas.length + ' | archivo: ' + archivo.name,
+        });
+
+        context.response.writeFile({ file: archivo, isInline: false });
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Secundarias
     // ─────────────────────────────────────────────────────────────────────────
@@ -45,6 +64,7 @@ define(['../data/query/AS_RecuentoInventarioManualQuery', '../form/AS_ImporteRec
     function armarLineas(cantidades) {
         return cantidades.map((cantidad) => {
             return {
+                id                : cantidad.id,
                 nombre            : cantidad.nombre,
                 contado           : cantidad.recuento !== null,
                 instantanea       : cantidad.instantanea,
@@ -75,6 +95,7 @@ define(['../data/query/AS_RecuentoInventarioManualQuery', '../form/AS_ImporteRec
     }
 
     return {
-        mostrarImportes: mostrarImportes,
+        mostrarImportes  : mostrarImportes,
+        descargarImportes: descargarImportes,
     };
 });

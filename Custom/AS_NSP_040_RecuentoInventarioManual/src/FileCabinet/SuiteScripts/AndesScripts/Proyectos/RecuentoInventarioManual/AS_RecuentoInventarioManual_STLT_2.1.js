@@ -16,6 +16,9 @@
  *                                          ella.
  *                custpage_detalle        → boton Detalle de conteo del
  *                                          recuento: baja el CSV.
+ *                custpage_importes       → boton Importes del recuento del
+ *                                          recuento: baja el CSV de la ficha
+ *                                          Importes del recuento.
  *                custpage_txt_maestro    → boton Descargar TXT maestro de esta
  *                                          pantalla: la pantalla para elegir
  *                                          la subsidiaria; con
@@ -45,8 +48,9 @@
 
 define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRecuentoHandler',
         './handler/AS_CargaCantidadesHandler', './handler/AS_AprobacionRecuentoHandler',
-        './constants/AS_RecuentoInventarioManualConstants'],
-    (recuentoInventarioManualHandler, archivoRecuentoHandler, cargaCantidadesHandler, aprobacionRecuentoHandler, CONSTANTES) => {
+        './handler/AS_ImporteRecuentoHandler', './constants/AS_RecuentoInventarioManualConstants'],
+    (recuentoInventarioManualHandler, archivoRecuentoHandler, cargaCantidadesHandler, aprobacionRecuentoHandler,
+     importeRecuentoHandler, CONSTANTES) => {
 
     function onRequest(context) {
         const parametros = obtenerParametros(context);
@@ -61,6 +65,8 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
                     aprobacionRecuentoHandler.solicitarAprobacion(parametros.aprobarId);
                 } else if (parametros.detalleId) {
                     archivoRecuentoHandler.descargarDetalle(context, parametros.detalleId);
+                } else if (parametros.importesId) {
+                    importeRecuentoHandler.descargarImportes(context, parametros.importesId);
                 } else if (parametros.txtMaestro) {
                     archivoRecuentoHandler.mostrarFormularioMaestro(context, parametros.subsidiariaMaestro);
                 } else if (parametros.maestroId) {
@@ -80,7 +86,7 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
                 title  : 'RECUENTO INVENTARIO MANUAL ERROR',
                 details: 'metodo: ' + context.request.method
                        + ' | recuento: ' + (parametros.recuentoId || parametros.recuentoCargaId || parametros.aprobarId
-                                        || parametros.detalleId || parametros.maestroId || '')
+                                        || parametros.detalleId || parametros.importesId || parametros.maestroId || '')
                        + ' | motivo: ' + (fallo.message || fallo),
             });
 
@@ -96,6 +102,7 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
             carga          : context.request.parameters[CONSTANTES.CAMPOS.CARGA],
             aprobarId      : context.request.parameters[CONSTANTES.CAMPOS.APROBAR],
             detalleId      : context.request.parameters[CONSTANTES.CAMPOS.DETALLE],
+            importesId     : context.request.parameters[CONSTANTES.CAMPOS.IMPORTES],
             txtMaestro        : context.request.parameters[CONSTANTES.CAMPOS.TXT_MAESTRO],
             subsidiariaMaestro: context.request.parameters[CONSTANTES.CAMPOS.SUBSIDIARIA_MAESTRO],
             maestroId      : context.request.parameters[CONSTANTES.CAMPOS.MAESTRO],

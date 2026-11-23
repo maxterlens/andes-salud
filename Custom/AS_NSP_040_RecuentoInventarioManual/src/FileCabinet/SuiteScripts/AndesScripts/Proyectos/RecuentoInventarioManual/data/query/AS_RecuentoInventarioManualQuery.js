@@ -20,6 +20,8 @@
  *                - obtenerCantidadesRecuento: por articulo, su id, su nombre,
  *                  su codigo de barras, su unidad, la cantidad del recuento,
  *                  la de instantanea, la ajustada, la tarifa y la nota.
+ *                - obtenerEstadoRecuento: la letra del estado del recuento
+ *                  (B Iniciado), para el CSV de importes.
  *                - obtenerRecuentosIniciados: los recuentos del modulo que
  *                  aceptan cantidades, con su subsidiaria, para el select
  *                  de la carga.
@@ -175,6 +177,15 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         return cantidades;
     }
 
+    function obtenerEstadoRecuento(recuentoId) {
+        const fila = query.runSuiteQL({
+            query : 'SELECT t.status AS estado FROM transaction t WHERE t.id = ?',
+            params: [recuentoId],
+        }).asMappedResults()[0];
+
+        return fila ? fila.estado : '';
+    }
+
     function obtenerRecuentosIniciados() {
         const filas = query.runSuiteQL({
             query: 'SELECT t.id, t.tranid AS numero, t.status AS estado, t.custbody_as_rec_inv_carga AS carga'
@@ -290,6 +301,7 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         obtenerArticulosUbicacion  : obtenerArticulosUbicacion,
         obtenerArticulosSubsidiaria: obtenerArticulosSubsidiaria,
         obtenerCantidadesRecuento  : obtenerCantidadesRecuento,
+        obtenerEstadoRecuento      : obtenerEstadoRecuento,
         obtenerRecuentosIniciados  : obtenerRecuentosIniciados,
         obtenerUbicacionRecuento   : obtenerUbicacionRecuento,
         obtenerLoteRecuento        : obtenerLoteRecuento,

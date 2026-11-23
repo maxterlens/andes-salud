@@ -21,6 +21,9 @@
  *                             con el id del recuento y baja el TXT.
  *              descargarDetalle → boton Detalle de conteo de la vista del
  *                             recuento: abre el Suitelet y baja el CSV.
+ *              descargarImportes → boton Importes del recuento de la vista del
+ *                             recuento: abre el Suitelet y baja el CSV de los
+ *                             importes.
  *              abrirCarga   → boton de la pantalla del recuento: abre la
  *                             pantalla de carga para elegir el recuento.
  *              abrirTxtMaestro → boton Descargar TXT maestro de la pantalla
@@ -162,6 +165,14 @@ define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInve
         });
     }
 
+    function descargarImportes() {
+        window.location.href = url.resolveScript({
+            scriptId    : CONSTANTES.SCRIPT.ID,
+            deploymentId: CONSTANTES.SCRIPT.DEPLOYMENT,
+            params      : { [CONSTANTES.CAMPOS.IMPORTES]: currentRecord.get().id },
+        });
+    }
+
     function abrirCarga() {
         window.onbeforeunload = null;
         window.location.href  = url.resolveScript({
@@ -216,6 +227,7 @@ define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInve
         saveRecord         : saveRecord,
         descargarTxt       : descargarTxt,
         descargarDetalle   : descargarDetalle,
+        descargarImportes  : descargarImportes,
         abrirCarga         : abrirCarga,
         abrirTxtMaestro    : abrirTxtMaestro,
         descargarTxtMaestro: descargarTxtMaestro,

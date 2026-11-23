@@ -73,11 +73,11 @@ define(['N/file', '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_
         const detalle = CONSTANTES.DETALLE;
         const filas   = [detalle.ENCABEZADO.join(detalle.SEPARADOR)];
         articulos.forEach((articulo) => {
-            const nombre = encerrarEntreComillas(UTILS.convertirEntidadesHtmlATexto(articulo.nombre));
-            const nota   = encerrarEntreComillas(articulo.nota);
-            filas.push([articulo.id, nombre, articulo.unidad, convertirNuloAVacio(articulo.instantanea),
-                        convertirNuloAVacio(articulo.recuento), convertirNuloAVacio(articulo.ajustada),
-                        convertirNuloAVacio(articulo.tarifa), nota].join(detalle.SEPARADOR));
+            const nombre = UTILS.encerrarEntreComillas(UTILS.convertirEntidadesHtmlATexto(articulo.nombre));
+            const nota   = UTILS.encerrarEntreComillas(articulo.nota);
+            filas.push([articulo.id, nombre, articulo.unidad, UTILS.convertirNuloAVacio(articulo.instantanea),
+                        UTILS.convertirNuloAVacio(articulo.recuento), UTILS.convertirNuloAVacio(articulo.ajustada),
+                        UTILS.convertirNuloAVacio(articulo.tarifa), nota].join(detalle.SEPARADOR));
         });
 
         return file.create({
@@ -87,14 +87,6 @@ define(['N/file', '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_
             encoding: file.Encoding.WINDOWS_1252,
         });
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Secundarias — Detalle de conteo
-    // ─────────────────────────────────────────────────────────────────────────
-
-    function encerrarEntreComillas(texto) { return '"' + texto.replace(/"/g, '""') + '"'; }
-
-    function convertirNuloAVacio(valor) { return valor === null ? '' : valor; }
 
     return {
         agregarBotones: agregarBotones,

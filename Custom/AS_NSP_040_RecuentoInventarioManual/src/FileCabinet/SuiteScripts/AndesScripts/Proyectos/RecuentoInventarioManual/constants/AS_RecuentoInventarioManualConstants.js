@@ -130,6 +130,7 @@ define([], () => {
         CARGA            : 'custpage_carga',
         APROBAR          : 'custpage_aprobar',
         DETALLE          : 'custpage_detalle',
+        IMPORTES         : 'custpage_importes',
         TXT_MAESTRO      : 'custpage_txt_maestro',
         MAESTRO          : 'custpage_maestro',
         ARCHIVO          : 'custpage_archivo',
@@ -146,6 +147,8 @@ define([], () => {
         APROBAR_LABEL: 'Aprobar',
         DETALLE      : 'custpage_as_rec_inv_detalle',
         DETALLE_LABEL: 'Detalle de conteo',
+        IMPORTES      : 'custpage_as_rec_inv_importes_csv',
+        IMPORTES_LABEL: 'Importes del recuento',
         MAESTRO      : 'custpage_as_rec_inv_maestro',
         MAESTRO_LABEL: 'Descargar TXT maestro',
         MAESTRO_DESCARGAR      : 'custpage_as_rec_inv_maestro_txt',
@@ -203,6 +206,11 @@ define([], () => {
         FICHA      : 'custpage_as_rec_inv_importes_ficha',
         FICHA_LABEL: 'Importes del recuento',
         CAMPO      : 'custpage_as_rec_inv_importes',
+        PREFIJO    : 'ImportesRecuento',
+        SEPARADOR  : ',',
+        ENCABEZADO : ['ID interno', 'Articulo', 'Cantidad de instantanea', 'Cantidad del recuento', 'Cantidad ajustada',
+                      'Tarifa', 'Importe instantanea', 'Importe recuento', 'Importe variacion'],
+        TOTAL      : 'Total',
     };
 
     const ROLES_AUTORIZADOS = [3, 1455];

@@ -9,8 +9,6 @@
  *                           sea Contable (o Administrador). Farmacia cuenta y
  *                           completa; solo Contable aprueba o rechaza. Con una
  *                           aprobacion en curso, no deja ninguno de los dos.
- *                         → en vista, agrega la ficha informativa "Importes del
- *                           recuento" (cantidad x tarifa). En edicion no sale.
  *                         → en vista, agrega el boton Descargar TXT. Las
  *                           cantidades se cargan desde la pantalla Cargar CSV
  *                           del Suitelet, no desde el recuento.
@@ -18,6 +16,9 @@
  *                           pendiente o Aprobado,
  *                           agrega el boton Detalle de conteo: el CSV de la
  *                           sublista Articulos.
+ *                         → en vista, agrega la ficha informativa "Importes del
+ *                           recuento" (cantidad x tarifa) y su boton, el ultimo
+ *                           de los tres. En edicion no sale.
  *
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
@@ -25,7 +26,7 @@
  * @scriptid     customscript_as_rec_inv_cierre_ue
  * @deploymentid customdeploy_as_rec_inv_cierre_ue
  * @author Andes Salud
- * @version 1.6.0
+ * @version 1.6.1
  *
  */
 define(['./handler/AS_CierreRecuentoHandler', './handler/AS_ImporteRecuentoHandler', './handler/AS_ArchivoRecuentoHandler'],
@@ -43,19 +44,19 @@ define(['./handler/AS_CierreRecuentoHandler', './handler/AS_ImporteRecuentoHandl
         }
         if (context.type !== context.UserEventType.VIEW) return;
         try {
-            importeRecuentoHandler.mostrarImportes(context.form, context.newRecord);
+            archivoRecuentoHandler.agregarBotones(context.form, context.newRecord);
         } catch (fallo) {
             log.error({
-                title  : 'RECUENTO INVENTARIO IMPORTES ERROR',
+                title  : 'RECUENTO INVENTARIO TXT ERROR',
                 details: 'recuento: ' + context.newRecord.id
                        + ' | motivo: ' + (fallo.message || fallo),
             });
         }
         try {
-            archivoRecuentoHandler.agregarBotones(context.form, context.newRecord);
+            importeRecuentoHandler.mostrarImportes(context.form, context.newRecord);
         } catch (fallo) {
             log.error({
-                title  : 'RECUENTO INVENTARIO TXT ERROR',
+                title  : 'RECUENTO INVENTARIO IMPORTES ERROR',
                 details: 'recuento: ' + context.newRecord.id
                        + ' | motivo: ' + (fallo.message || fallo),
             });
