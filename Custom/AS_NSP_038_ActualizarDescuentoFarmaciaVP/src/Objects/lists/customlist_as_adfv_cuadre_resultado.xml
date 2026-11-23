@@ -1,0 +1,39 @@
+<customlist scriptid="customlist_as_adfv_cuadre_resultado">
+  <description>AS_NSP_038 - Resultado del cuadre de cada factura (CuadreFacturaJson).</description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>AS Resultado Cuadre JSON</name>
+  <customvalues>
+    <customvalue scriptid="val_as_adfv_cr_corregida">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Corregida</value>
+    </customvalue>
+    <customvalue scriptid="val_as_adfv_cr_simulada">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Simulada</value>
+    </customvalue>
+    <customvalue scriptid="val_as_adfv_cr_sin_cambio">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Sin cambio</value>
+    </customvalue>
+    <customvalue scriptid="val_as_adfv_cr_omitida">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Omitida</value>
+    </customvalue>
+    <customvalue scriptid="val_as_adfv_cr_revision">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Revisión manual</value>
+    </customvalue>
+    <customvalue scriptid="val_as_adfv_cr_error">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Error</value>
+    </customvalue>
+  </customvalues>
+</customlist>

@@ -1,0 +1,34 @@
+<customlist scriptid="customlist_as_adfv_cuadre_tipo">
+  <description>AS_NSP_038 - Tipo de cambio aplicado a la factura (CuadreFacturaJson).</description>
+  <isinactive>F</isinactive>
+  <ismatrixoption>F</ismatrixoption>
+  <isordered>T</isordered>
+  <name>AS Tipo Cambio Cuadre JSON</name>
+  <customvalues>
+    <customvalue scriptid="val_as_adfv_ct_cant_desc">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>A - Cantidad del descuento</value>
+    </customvalue>
+    <customvalue scriptid="val_as_adfv_ct_imp_desc">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>B - Impuesto de la línea de descuento</value>
+    </customvalue>
+    <customvalue scriptid="val_as_adfv_ct_imp_art">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>B - Impuesto de la línea del artículo</value>
+    </customvalue>
+    <customvalue scriptid="val_as_adfv_ct_redondeo">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>C - Línea de redondeo</value>
+    </customvalue>
+    <customvalue scriptid="val_as_adfv_ct_ninguno">
+      <abbreviation></abbreviation>
+      <isinactive>F</isinactive>
+      <value>Sin cambio en la factura</value>
+    </customvalue>
+  </customvalues>
+</customlist>

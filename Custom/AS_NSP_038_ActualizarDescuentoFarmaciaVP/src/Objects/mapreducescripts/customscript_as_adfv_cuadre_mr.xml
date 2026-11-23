@@ -1,0 +1,239 @@
+<mapreducescript scriptid="customscript_as_adfv_cuadre_mr">
+  <description>AS_NSP_038 - Cuadra facturas de venta de Farmacia Venta Público contra el JSON de la integración y lo pagado: corrige la cantidad del descuento, ajusta el impuesto por línea y carga el redondeo de efectivo. Resultado en el log de ejecución.</description>
+  <isinactive>F</isinactive>
+  <name>AS MR Cuadre Factura JSON Farmacia VP</name>
+  <notifyadmins>F</notifyadmins>
+  <notifyemails></notifyemails>
+  <notifyowner>T</notifyowner>
+  <scriptfile>[/SuiteScripts/AndesScripts/Proyectos/ActualizarDescuentoFarmaciaVP/processors/AS_CuadreFacturaJson_MR_2.1.js]</scriptfile>
+  <scriptcustomfields>
+    <scriptcustomfield scriptid="custscript_as_adfv_cuadre_archivo">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>ID interno del archivo CSV en el File Cabinet con las columnas ID interno, Factura y Json (un CSV por casuística).</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>INTEGER</fieldtype>
+      <help>ID interno del archivo CSV en el File Cabinet con las columnas ID interno, Factura y Json (un CSV por casuística).</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Archivo CSV</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_adfv_cuadre_simulacion">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>T</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Marcado: calcula todo y lo deja en el log de ejecución sin guardar las facturas. Desmarcar para corregir.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>CHECKBOX</fieldtype>
+      <help>Marcado: calcula todo y lo deja en el log de ejecución sin guardar las facturas. Desmarcar para corregir.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Modo simulación</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_adfv_cuadre_limite">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Cantidad máxima de facturas del CSV a procesar (vacío o 0 = todas). Útil para probar con pocas facturas.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>INTEGER</fieldtype>
+      <help>Cantidad máxima de facturas del CSV a procesar (vacío o 0 = todas). Útil para probar con pocas facturas.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Máximo de facturas</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_adfv_cuadre_art_redondeo">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>ID interno del artículo al que se carga la diferencia por ley de redondeo (pagado en efectivo vs total del JSON). Obligatorio para la casuística C.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>INTEGER</fieldtype>
+      <help>ID interno del artículo al que se carga la diferencia por ley de redondeo (pagado en efectivo vs total del JSON). Obligatorio para la casuística C.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Artículo de redondeo</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_adfv_cuadre_imp_redondeo">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>ID interno del código de impuesto de la línea de redondeo (por ejemplo, exento). Vacío = el que traiga el artículo.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>INTEGER</fieldtype>
+      <help>ID interno del código de impuesto de la línea de redondeo (por ejemplo, exento). Vacío = el que traiga el artículo.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Código de impuesto de redondeo</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_adfv_cuadre_tope_iva">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue>100</defaultvalue>
+      <description>Ajuste máximo del importe de impuesto en una línea. Si un producto necesita más, la factura queda en revisión manual y no se modifica.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>FLOAT</fieldtype>
+      <help>Ajuste máximo del importe de impuesto en una línea. Si un producto necesita más, la factura queda en revisión manual y no se modifica.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Tope de ajuste de IVA por línea</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_adfv_cuadre_rango_red">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>F</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue>5</defaultvalue>
+      <description>Diferencia máxima (en pesos, positiva o negativa) entre lo pagado y el total del JSON aceptada como redondeo de efectivo.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>FLOAT</fieldtype>
+      <help>Diferencia máxima (en pesos, positiva o negativa) entre lo pagado y el total del JSON aceptada como redondeo de efectivo.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Rango de redondeo de efectivo</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+    <scriptcustomfield scriptid="custscript_as_adfv_cuadre_registrar">
+      <accesslevel>2</accesslevel>
+      <applyformatting>F</applyformatting>
+      <checkspelling>F</checkspelling>
+      <defaultchecked>T</defaultchecked>
+      <defaultselection></defaultselection>
+      <defaultvalue></defaultvalue>
+      <description>Marcado: crea un registro de ejecución (AS Ejecucion Cuadre Factura JSON) y un detalle por cada cambio en las facturas (AS Detalle Cuadre Factura JSON), también en simulación. Desmarcado: solo deja el log de ejecución.</description>
+      <displaytype>NORMAL</displaytype>
+      <dynamicdefault></dynamicdefault>
+      <fieldtype>CHECKBOX</fieldtype>
+      <help>Marcado: crea un registro de ejecución (AS Ejecucion Cuadre Factura JSON) y un detalle por cada cambio en las facturas (AS Detalle Cuadre Factura JSON), también en simulación. Desmarcado: solo deja el log de ejecución.</help>
+      <isformula>F</isformula>
+      <ismandatory>F</ismandatory>
+      <label>Registrar trazabilidad</label>
+      <linktext></linktext>
+      <maxlength></maxlength>
+      <maxvalue></maxvalue>
+      <minvalue></minvalue>
+      <onparentdelete></onparentdelete>
+      <searchlevel>2</searchlevel>
+      <selectrecordtype></selectrecordtype>
+      <setting></setting>
+      <storevalue>T</storevalue>
+    </scriptcustomfield>
+  </scriptcustomfields>
+  <scriptdeployments>
+    <scriptdeployment scriptid="customdeploy_as_adfv_cuadre_mr">
+      <buffersize>1</buffersize>
+      <concurrencylimit>1</concurrencylimit>
+      <custscript_as_adfv_cuadre_archivo></custscript_as_adfv_cuadre_archivo>
+      <custscript_as_adfv_cuadre_simulacion>T</custscript_as_adfv_cuadre_simulacion>
+      <custscript_as_adfv_cuadre_limite></custscript_as_adfv_cuadre_limite>
+      <custscript_as_adfv_cuadre_art_redondeo></custscript_as_adfv_cuadre_art_redondeo>
+      <custscript_as_adfv_cuadre_imp_redondeo></custscript_as_adfv_cuadre_imp_redondeo>
+      <custscript_as_adfv_cuadre_tope_iva>100</custscript_as_adfv_cuadre_tope_iva>
+      <custscript_as_adfv_cuadre_rango_red>5</custscript_as_adfv_cuadre_rango_red>
+      <custscript_as_adfv_cuadre_registrar>T</custscript_as_adfv_cuadre_registrar>
+      <isdeployed>T</isdeployed>
+      <loglevel>AUDIT</loglevel>
+      <queueallstagesatonce>T</queueallstagesatonce>
+      <runasrole>ADMINISTRATOR</runasrole>
+      <status>NOTSCHEDULED</status>
+      <title>AS MR Cuadre Factura JSON Farmacia VP</title>
+      <yieldaftermins>60</yieldaftermins>
+      <recurrence>
+        <single>
+          <repeat></repeat>
+          <startdate>2026-11-20</startdate>
+          <starttime>05:00:00Z</starttime>
+        </single>
+      </recurrence>
+    </scriptdeployment>
+  </scriptdeployments>
+</mapreducescript>
