@@ -10,6 +10,16 @@
  *              descargarTxt     → arma el TXT con una fila por articulo del
  *                                 recuento, con o sin stock, y lo responde como
  *                                 descarga (Suitelet, GET).
+ *              mostrarFormularioMaestro → boton Descargar TXT maestro de la
+ *                                 pantalla del recuento: abre la pantalla
+ *                                 para elegir la subsidiaria y, con ella
+ *                                 elegida, muestra el total de articulos
+ *                                 distintos que lleva el TXT (Suitelet,
+ *                                 GET).
+ *              descargarTxtMaestro → boton Descargar TXT de esa pantalla: el
+ *                                 mismo TXT con una fila por articulo activo y
+ *                                 ubicacion de la subsidiaria, sin recuento
+ *                                 (Suitelet, GET).
  *              descargarDetalle → arma el CSV con una fila por articulo de la
  *                                 sublista Articulos y lo responde como
  *                                 descarga (Suitelet, GET).
@@ -26,12 +36,13 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.5.0
+ * @version 1.6.0
  *
  */
-define(['../form/AS_ArchivoRecuentoForm', '../data/query/AS_RecuentoInventarioManualQuery',
+
+define(['../form/AS_ArchivoRecuentoForm', '../form/AS_TxtMaestroForm', '../data/query/AS_RecuentoInventarioManualQuery',
         '../constants/AS_RecuentoInventarioManualConstants'],
-    (archivoRecuentoForm, recuentoInventarioManualQuery, CONSTANTES) => {
+    (archivoRecuentoForm, txtMaestroForm, recuentoInventarioManualQuery, CONSTANTES) => {
 
     // ─────────────────────────────────────────────────────────────────────────
     // Principales
@@ -47,11 +58,30 @@ define(['../form/AS_ArchivoRecuentoForm', '../data/query/AS_RecuentoInventarioMa
     function descargarTxt(context, recuentoId) {
         const articulos = recuentoInventarioManualQuery.obtenerCantidadesRecuento(recuentoId);
         const ubicacion = recuentoInventarioManualQuery.obtenerUbicacionRecuento(recuentoId);
-        const archivo   = archivoRecuentoForm.construirTxt(recuentoId, articulos, ubicacion.id);
+        articulos.forEach((articulo) => { articulo.ubicacionId = ubicacion.id; });
+        const archivo   = archivoRecuentoForm.construirTxt(CONSTANTES.ARCHIVO.PREFIJO + '-' + recuentoId + '.txt', articulos);
 
         log.audit({
             title  : 'RECUENTO INVENTARIO TXT DESCARGADO',
             details: 'recuento: ' + recuentoId + ' | filas: ' + articulos.length + ' | archivo: ' + archivo.name,
+        });
+
+        context.response.writeFile({ file: archivo, isInline: false });
+    }
+
+    function mostrarFormularioMaestro(context, subsidiariaId) {
+        const articulos      = subsidiariaId ? recuentoInventarioManualQuery.obtenerArticulosSubsidiaria(subsidiariaId) : [];
+        const totalArticulos = new Set(articulos.map((articulo) => articulo.id)).size;
+        context.response.writePage(txtMaestroForm.construirFormulario(subsidiariaId, totalArticulos));
+    }
+
+    function descargarTxtMaestro(context, subsidiariaId) {
+        const articulos = recuentoInventarioManualQuery.obtenerArticulosSubsidiaria(subsidiariaId);
+        const archivo   = archivoRecuentoForm.construirTxt(CONSTANTES.ARCHIVO.PREFIJO_MAESTRO + '-' + subsidiariaId + '.txt', articulos);
+
+        log.audit({
+            title  : 'RECUENTO INVENTARIO TXT MAESTRO DESCARGADO',
+            details: 'subsidiaria: ' + subsidiariaId + ' | filas: ' + articulos.length + ' | archivo: ' + archivo.name,
         });
 
         context.response.writeFile({ file: archivo, isInline: false });
@@ -70,8 +100,10 @@ define(['../form/AS_ArchivoRecuentoForm', '../data/query/AS_RecuentoInventarioMa
     }
 
     return {
-        agregarBotones  : agregarBotones,
-        descargarTxt    : descargarTxt,
-        descargarDetalle: descargarDetalle,
+        agregarBotones          : agregarBotones,
+        descargarTxt            : descargarTxt,
+        mostrarFormularioMaestro: mostrarFormularioMaestro,
+        descargarTxtMaestro     : descargarTxtMaestro,
+        descargarDetalle        : descargarDetalle,
     };
 });

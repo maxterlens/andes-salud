@@ -7,17 +7,10 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.13.0
+ * @version 1.16.0
  *
- * CHANGELOG
- * 1.13.0 [FIX] Aviso Cargando articulos sobre la lista hasta el pageInit.
- * 1.12.0 [FEAT] Detalle de conteo: su boton, su parametro, el estado Aprobado
- *               y el CSV.
- * 1.11.0 [FEAT] Aprobacion por la cola: tipo APROBACION, su deployment, su
- *               boton y sus textos.
- * 1.10.0 [FEAT] CARGA: el select Lote con los lotes configurados.
- * 1.9.0 [FEAT] CARGA: el CSV sin LOTE en el label y el aviso SIN_LOTE.
  */
+
 define([], () => {
 
     const FORMULARIO = {
@@ -31,6 +24,9 @@ define([], () => {
         ALERTA_TITULO             : 'No se pudo generar el recuento',
         SIN_ARTICULOS             : 'Marque al menos un articulo.',
         GENERACION_PENDIENTE      : 'Ya hay un recuento en cola o generandose para esta ubicacion (solicitud ',
+        MAESTRO_TITULO            : 'Descargar TXT maestro',
+        MAESTRO_ALERTA_TITULO     : 'No se pudo descargar el TXT maestro',
+        SIN_SUBSIDIARIA           : 'Seleccione la subsidiaria.',
         CLIENT_SCRIPT             : '/SuiteScripts/AndesScripts/Proyectos/RecuentoInventarioManual/AS_RecuentoInventarioManual_CS_2.1.js',
     };
 
@@ -110,10 +106,13 @@ define([], () => {
     const GRUPOS = {
         CABECERA: 'custpage_grp_cabecera',
         CARGA   : 'custpage_grp_carga',
+        MAESTRO : 'custpage_grp_maestro',
     };
 
     const CAMPOS = {
         SUBSIDIARIA      : 'custpage_subsidiaria',
+        SUBSIDIARIA_MAESTRO: 'custpage_subsidiaria_maestro',
+        TOTAL_ARTICULOS  : 'custpage_total_articulos',
         UBICACION        : 'custpage_ubicacion',
         DEPARTAMENTO     : 'custpage_departamento',
         CLASE            : 'custpage_clase',
@@ -123,11 +122,16 @@ define([], () => {
         CUENTAS_DATA     : 'custpage_cuentas_data',
         UBICACIONES_DATA : 'custpage_ubicaciones_data',
         RECUENTO         : 'custpage_recuento',
+        SUBSIDIARIA_CARGA: 'custpage_subsidiaria_carga',
         RECUENTO_CARGA   : 'custpage_recuento_carga',
+        RECUENTOS_DATA   : 'custpage_recuentos_data',
         LOTE_CARGA       : 'custpage_lote_carga',
+        LOTES_DATA       : 'custpage_lotes_data',
         CARGA            : 'custpage_carga',
         APROBAR          : 'custpage_aprobar',
         DETALLE          : 'custpage_detalle',
+        TXT_MAESTRO      : 'custpage_txt_maestro',
+        MAESTRO          : 'custpage_maestro',
         ARCHIVO          : 'custpage_archivo',
         REFRESCO         : 'custpage_refresco',
         CARGANDO         : 'custpage_cargando',
@@ -142,10 +146,15 @@ define([], () => {
         APROBAR_LABEL: 'Aprobar',
         DETALLE      : 'custpage_as_rec_inv_detalle',
         DETALLE_LABEL: 'Detalle de conteo',
+        MAESTRO      : 'custpage_as_rec_inv_maestro',
+        MAESTRO_LABEL: 'Descargar TXT maestro',
+        MAESTRO_DESCARGAR      : 'custpage_as_rec_inv_maestro_txt',
+        MAESTRO_DESCARGAR_LABEL: 'Descargar TXT',
     };
 
     const CARGA = {
         TITULO        : 'Cargar cantidades del recuento',
+        CLIENT_SCRIPT : '/SuiteScripts/AndesScripts/Proyectos/RecuentoInventarioManual/AS_RecuentoInventarioManualCarga_CS_2.1.js',
         BOTON_CARGAR  : 'Cargar',
         RECUENTO_LABEL: 'Recuento',
         LOTE_LABEL    : 'Lote',
@@ -157,16 +166,17 @@ define([], () => {
     };
 
     const ARCHIVO = {
-        PREFIJO   : 'RecuentoInventario',
-        SEPARADOR : ',',
-        ENCABEZADO: ['PRO_CORREL', 'PRO_CODIGO', 'COD_BARRA', 'COD 3', 'COD 4', 'COD 5', 'pro_nombre', '',
-                     'PRO_CORREL1', '', '', '', '', 'Cantidad'],
+        PREFIJO        : 'RecuentoInventario',
+        PREFIJO_MAESTRO: 'MaestroArticulos',
+        SEPARADOR      : ',',
+        ENCABEZADO     : ['PRO_CORREL', 'PRO_CODIGO', 'COD_BARRA', 'COD 3', 'COD 4', 'COD 5', 'pro_nombre', '',
+                          'PRO_CORREL1', '', '', '', '', 'Cantidad'],
     };
 
     const DETALLE = {
         PREFIJO   : 'DetalleConteo',
         SEPARADOR : ',',
-        ENCABEZADO: ['Articulo', 'Unidades', 'Cantidad de instantanea', 'Cantidad del recuento',
+        ENCABEZADO: ['ID interno', 'Articulo', 'Unidades', 'Cantidad de instantanea', 'Cantidad del recuento',
                      'Cantidad ajustada', 'Tarifa', 'Nota'],
     };
 

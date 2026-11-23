@@ -13,6 +13,8 @@
  *                             oculto, como el AS_NSP_032.
  *                             Ubicacion: recarga el Suitelet con la cabecera en
  *                             la URL, para traer los articulos de la ubicacion.
+ *                             Subsidiaria del TXT maestro: recarga esa
+ *                             pantalla con su total de articulos.
  *              saveRecord   → sin ningun articulo marcado no envia: muestra el
  *                             aviso rojo arriba, sin recargar la pagina.
  *              descargarTxt → boton de la vista del recuento: abre el Suitelet
@@ -21,6 +23,11 @@
  *                             recuento: abre el Suitelet y baja el CSV.
  *              abrirCarga   → boton de la pantalla del recuento: abre la
  *                             pantalla de carga para elegir el recuento.
+ *              abrirTxtMaestro → boton Descargar TXT maestro de la pantalla
+ *                             del recuento: abre la pantalla del TXT maestro.
+ *              descargarTxtMaestro → boton Descargar TXT de esa pantalla: con
+ *                             la subsidiaria elegida abre el Suitelet y baja
+ *                             el TXT maestro; sin ella muestra el aviso rojo.
  *              aprobarRecuento → boton Aprobar propio del recuento: abre el
  *                             Suitelet, que deja la aprobacion en la cola y
  *                             lleva a la solicitud. Un segundo clic mientras
@@ -34,16 +41,18 @@
  * @NScriptType ClientScript
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.11.0
+ * @version 1.12.0
  *
  */
+
 define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInventarioManualConstants'],
     (currentRecord, url, message, CONSTANTES) => {
 
-    let ubicacionDibujada = '';
-    let generando         = false;
-    let avisoSinArticulos = null;
-    let aprobando         = false;
+    let ubicacionDibujada   = '';
+    let generando           = false;
+    let avisoSinArticulos   = null;
+    let aprobando           = false;
+    let avisoSinSubsidiaria = null;
 
     function pageInit(context) {
         const avisoCargando = document.getElementById(CONSTANTES.FORMULARIO.CARGANDO_ID);
@@ -73,6 +82,7 @@ define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInve
             return;
         }
         if (context.fieldId === CONSTANTES.CAMPOS.UBICACION) recargarConUbicacion(context.currentRecord);
+        if (context.fieldId === CONSTANTES.CAMPOS.SUBSIDIARIA_MAESTRO) recargarConSubsidiariaMaestro(context.currentRecord);
     }
 
     function filtrarPorSubsidiaria(registroActual, campoId, datosId) {
@@ -106,6 +116,17 @@ define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInve
             scriptId    : CONSTANTES.SCRIPT.ID,
             deploymentId: CONSTANTES.SCRIPT.DEPLOYMENT,
             params      : parametros,
+        });
+    }
+
+    function recargarConSubsidiariaMaestro(registroActual) {
+        const subsidiaria = registroActual.getValue({ fieldId: CONSTANTES.CAMPOS.SUBSIDIARIA_MAESTRO });
+        if (!subsidiaria) return;
+        window.onbeforeunload = null;
+        window.location.href  = url.resolveScript({
+            scriptId    : CONSTANTES.SCRIPT.ID,
+            deploymentId: CONSTANTES.SCRIPT.DEPLOYMENT,
+            params      : { [CONSTANTES.CAMPOS.TXT_MAESTRO]: 'T', [CONSTANTES.CAMPOS.SUBSIDIARIA_MAESTRO]: subsidiaria },
         });
     }
 
@@ -150,6 +171,35 @@ define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInve
         });
     }
 
+    function abrirTxtMaestro() {
+        window.onbeforeunload = null;
+        window.location.href  = url.resolveScript({
+            scriptId    : CONSTANTES.SCRIPT.ID,
+            deploymentId: CONSTANTES.SCRIPT.DEPLOYMENT,
+            params      : { [CONSTANTES.CAMPOS.TXT_MAESTRO]: 'T' },
+        });
+    }
+
+    function descargarTxtMaestro() {
+        const subsidiaria = currentRecord.get().getValue({ fieldId: CONSTANTES.CAMPOS.SUBSIDIARIA_MAESTRO });
+        if (avisoSinSubsidiaria) avisoSinSubsidiaria.hide();
+        if (!subsidiaria) {
+            avisoSinSubsidiaria = message.create({
+                type   : message.Type.ERROR,
+                title  : CONSTANTES.FORMULARIO.MAESTRO_ALERTA_TITULO,
+                message: CONSTANTES.FORMULARIO.SIN_SUBSIDIARIA,
+            });
+            avisoSinSubsidiaria.show();
+            return;
+        }
+        window.onbeforeunload = null;
+        window.location.href  = url.resolveScript({
+            scriptId    : CONSTANTES.SCRIPT.ID,
+            deploymentId: CONSTANTES.SCRIPT.DEPLOYMENT,
+            params      : { [CONSTANTES.CAMPOS.MAESTRO]: subsidiaria },
+        });
+    }
+
     function aprobarRecuento() {
         if (aprobando) return;
         aprobando = true;
@@ -161,12 +211,14 @@ define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInve
     }
 
     return {
-        pageInit        : pageInit,
-        fieldChanged    : fieldChanged,
-        saveRecord      : saveRecord,
-        descargarTxt    : descargarTxt,
-        descargarDetalle: descargarDetalle,
-        abrirCarga      : abrirCarga,
-        aprobarRecuento : aprobarRecuento,
+        pageInit           : pageInit,
+        fieldChanged       : fieldChanged,
+        saveRecord         : saveRecord,
+        descargarTxt       : descargarTxt,
+        descargarDetalle   : descargarDetalle,
+        abrirCarga         : abrirCarga,
+        abrirTxtMaestro    : abrirTxtMaestro,
+        descargarTxtMaestro: descargarTxtMaestro,
+        aprobarRecuento    : aprobarRecuento,
     };
 });

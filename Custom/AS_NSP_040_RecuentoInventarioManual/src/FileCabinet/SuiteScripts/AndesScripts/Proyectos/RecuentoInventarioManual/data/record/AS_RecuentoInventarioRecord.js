@@ -11,6 +11,7 @@
  *              cargarRecuento: lo abre para escribirle las cantidades.
  *              escribirCantidades: escribe la Cantidad del recuento y su
  *              detalle por lote en las lineas de los articulos recibidos.
+ *              Vacio o 0 van sin detalle de lotes.
  *              Cargar, escribir y guardar van separados para medir cada paso.
  *
  *              Se crea en modo estandar, no dinamico como el AS_NSP_032: en
@@ -22,9 +23,10 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.8.0
+ * @version 1.9.0
  *
  */
+
 define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventarioManualConstants'],
     (record, action, format, CONSTANTES) => {
 
@@ -77,8 +79,8 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
         for (let linea = 0; linea < lineas; linea++) {
             const cantidad = cantidades[String(recuento.getSublistValue({ sublistId: 'item', fieldId: 'item', line: linea }))];
             if (!cantidad) continue;
-            if (cantidad.total === null) {
-                vaciarLinea(recuento, linea);
+            if (!cantidad.total) {
+                escribirSinLotes(recuento, linea, cantidad.total === null ? '' : 0);
             } else {
                 recuento.setSublistValue({ sublistId: 'item', fieldId: CONSTANTES.RECUENTO.CAMPO_CANTIDAD, line: linea, value: cantidad.total });
                 escribirDetalle(recuento.getSublistSubrecord({ sublistId: 'item', fieldId: CONSTANTES.RECUENTO.CAMPO_DETALLE, line: linea }), cantidad.lotes);
@@ -89,9 +91,9 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
         return actualizadas;
     }
 
-    function vaciarLinea(recuento, linea) {
+    function escribirSinLotes(recuento, linea, valor) {
         const detalle = { sublistId: 'item', fieldId: CONSTANTES.RECUENTO.CAMPO_DETALLE, line: linea };
-        recuento.setSublistValue({ sublistId: 'item', fieldId: CONSTANTES.RECUENTO.CAMPO_CANTIDAD, line: linea, value: '' });
+        recuento.setSublistValue({ sublistId: 'item', fieldId: CONSTANTES.RECUENTO.CAMPO_CANTIDAD, line: linea, value: valor });
         if (recuento.hasSublistSubrecord(detalle)) recuento.removeSublistSubrecord(detalle);
     }
 

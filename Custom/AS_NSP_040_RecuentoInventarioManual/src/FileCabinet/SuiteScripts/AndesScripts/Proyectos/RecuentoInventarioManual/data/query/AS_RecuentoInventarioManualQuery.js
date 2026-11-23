@@ -12,19 +12,24 @@
  *                - obtenerArticulosUbicacion: los articulos activos que tienen
  *                  o tuvieron stock en la ubicacion, con su unidad y su stock
  *                  (0 si hoy no tienen).
+ *                - obtenerArticulosSubsidiaria: para el total y el TXT
+ *                  maestro, una fila por articulo activo y ubicacion de la
+ *                  subsidiaria donde tiene o tuvo stock, ordenadas por
+ *                  ubicacion y articulo.
  *              Recuento
  *                - obtenerCantidadesRecuento: por articulo, su id, su nombre,
  *                  su codigo de barras, su unidad, la cantidad del recuento,
  *                  la de instantanea, la ajustada, la tarifa y la nota.
  *                - obtenerRecuentosIniciados: los recuentos del modulo que
- *                  aceptan cantidades, para el select de la carga.
+ *                  aceptan cantidades, con su subsidiaria, para el select
+ *                  de la carga.
  *                - obtenerUbicacionRecuento: el id y el nombre de la ubicacion
- *                  del recuento.
+ *                  del recuento, y su subsidiaria.
  *                - obtenerLoteRecuento: el lote elegido en la carga, si esta
  *                  configurado para la subsidiaria del recuento.
  *              Lotes
  *                - obtenerLotesRecuento: los lotes activos de Lote
- *                  Predeterminado de Recuento.
+ *                  Predeterminado de Recuento, con su subsidiaria.
  *              Cola
  *                - obtenerSolicitudes: las solicitudes de unos tipos en un
  *                  estado, la mas antigua primero.
@@ -38,9 +43,10 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.15.0
+ * @version 1.18.0
  *
  */
+
 define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
     (query, CONSTANTES) => {
 
@@ -100,6 +106,37 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         return articulos.sort((primero, segundo) => primero.nombre.localeCompare(segundo.nombre));
     }
 
+    function obtenerArticulosSubsidiaria(subsidiariaId) {
+        const articulos   = [];
+        const ubicaciones = obtenerUbicaciones().filter((ubicacion) => ubicacion.subsidiaria === String(subsidiariaId));
+
+        ubicaciones.forEach((ubicacion) => {
+            const articulosUbicacion = [];
+            let ultimoId = 0;
+            let pagina   = [];
+            do {
+                pagina = query.runSuiteQL({
+                    query : 'SELECT a.item AS id, BUILTIN.DF(a.item) AS nombre, i.upccode AS codigobarra'
+                          + ' FROM aggregateitemlocation a'
+                          + ' JOIN item i ON i.id = a.item'
+                          + " WHERE a.location = ? AND i.isinactive = 'F' AND i.itemtype = 'InvtPart'"
+                          + ' AND a.quantityonhand IS NOT NULL AND a.item > ?'
+                          + ' ORDER BY a.item'
+                          + ' FETCH FIRST 1000 ROWS ONLY',
+                    params: [ubicacion.id, ultimoId],
+                }).asMappedResults();
+                pagina.forEach((fila) => {
+                    articulosUbicacion.push({ id: String(fila.id), nombre: fila.nombre, codigoBarra: fila.codigobarra || '', ubicacionId: String(ubicacion.id) });
+                });
+                if (pagina.length) ultimoId = pagina[pagina.length - 1].id;
+            } while (pagina.length === 1000);
+            articulosUbicacion.sort((primero, segundo) => primero.nombre.localeCompare(segundo.nombre));
+            articulosUbicacion.forEach((articulo) => articulos.push(articulo));
+        });
+
+        return articulos;
+    }
+
     function obtenerCantidadesRecuento(recuentoId) {
         const filas = [];
         let ultimaLinea = -1;
@@ -149,20 +186,23 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
 
         return filas
             .filter((fila) => fila.estado === 'B' && fila.carga === 'T')
-            .map((fila) => ({ id: String(fila.id), nombre: fila.numero + ' - ' + obtenerUbicacionRecuento(fila.id).nombre }));
+            .map((fila) => {
+                const ubicacion = obtenerUbicacionRecuento(fila.id);
+                return { subsidiaria: ubicacion.subsidiaria, id: String(fila.id), nombre: fila.numero + ' - ' + ubicacion.nombre };
+            });
     }
 
 
     function obtenerUbicacionRecuento(recuentoId) {
         const fila = query.runSuiteQL({
-            query : 'SELECT tl.location AS id, BUILTIN.DF(tl.location) AS nombre'
+            query : 'SELECT tl.location AS id, BUILTIN.DF(tl.location) AS nombre, tl.subsidiary AS subsidiaria'
                   + ' FROM transactionline tl'
                   + " WHERE tl.transaction = ? AND tl.mainline = 'F' AND tl.location IS NOT NULL"
                   + ' FETCH FIRST 1 ROWS ONLY',
             params: [recuentoId],
         }).asMappedResults()[0];
 
-        return fila ? { id: String(fila.id), nombre: fila.nombre } : { id: '', nombre: '' };
+        return fila ? { id: String(fila.id), nombre: fila.nombre, subsidiaria: String(fila.subsidiaria) } : { id: '', nombre: '', subsidiaria: '' };
     }
 
     /**
@@ -183,14 +223,14 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
 
     function obtenerLotesRecuento() {
         const filas = query.runSuiteQL({
-            query : 'SELECT l.id, l.custrecord_as_rec_inv_man_lote_lote AS lote'
+            query : 'SELECT l.id, l.custrecord_as_rec_inv_man_lote_lote AS lote, l.custrecord_as_rec_inv_man_lote_subsid AS subsidiaria'
                   + ' FROM customrecord_as_rec_inv_man_lote l'
                   + ' WHERE l.isinactive = ?'
                   + ' ORDER BY l.custrecord_as_rec_inv_man_lote_lote',
             params: ['F'],
         }).asMappedResults();
 
-        return filas.map((fila) => ({ id: String(fila.id), nombre: fila.lote }));
+        return filas.map((fila) => ({ subsidiaria: String(fila.subsidiaria), id: String(fila.id), nombre: fila.lote }));
     }
 
     function obtenerSolicitudes(estado, tipos) {
@@ -245,17 +285,18 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
     }
 
     return {
-        obtenerCuentasRecuento   : obtenerCuentasRecuento,
-        obtenerUbicaciones       : obtenerUbicaciones,
-        obtenerArticulosUbicacion: obtenerArticulosUbicacion,
-        obtenerCantidadesRecuento: obtenerCantidadesRecuento,
-        obtenerRecuentosIniciados: obtenerRecuentosIniciados,
-        obtenerUbicacionRecuento : obtenerUbicacionRecuento,
-        obtenerLoteRecuento      : obtenerLoteRecuento,
-        obtenerLotesRecuento     : obtenerLotesRecuento,
-        obtenerSolicitudes       : obtenerSolicitudes,
-        contarSolicitudesAntes   : contarSolicitudesAntes,
-        obtenerAprobacionEnCurso : obtenerAprobacionEnCurso,
-        obtenerGeneracionEnCurso : obtenerGeneracionEnCurso,
+        obtenerCuentasRecuento     : obtenerCuentasRecuento,
+        obtenerUbicaciones         : obtenerUbicaciones,
+        obtenerArticulosUbicacion  : obtenerArticulosUbicacion,
+        obtenerArticulosSubsidiaria: obtenerArticulosSubsidiaria,
+        obtenerCantidadesRecuento  : obtenerCantidadesRecuento,
+        obtenerRecuentosIniciados  : obtenerRecuentosIniciados,
+        obtenerUbicacionRecuento   : obtenerUbicacionRecuento,
+        obtenerLoteRecuento        : obtenerLoteRecuento,
+        obtenerLotesRecuento       : obtenerLotesRecuento,
+        obtenerSolicitudes         : obtenerSolicitudes,
+        contarSolicitudesAntes     : contarSolicitudesAntes,
+        obtenerAprobacionEnCurso   : obtenerAprobacionEnCurso,
+        obtenerGeneracionEnCurso   : obtenerGeneracionEnCurso,
     };
 });

@@ -16,6 +16,14 @@
  *                                          ella.
  *                custpage_detalle        → boton Detalle de conteo del
  *                                          recuento: baja el CSV.
+ *                custpage_txt_maestro    → boton Descargar TXT maestro de esta
+ *                                          pantalla: la pantalla para elegir
+ *                                          la subsidiaria; con
+ *                                          custpage_subsidiaria_maestro, su
+ *                                          total de articulos.
+ *                custpage_maestro        → boton Descargar TXT de esa
+ *                                          pantalla: baja el TXT de todos los
+ *                                          articulos de la subsidiaria.
  *              POST
  *                sin parametros          → Generar recuento: deja la solicitud
  *                                          de generacion en la cola y lleva a
@@ -31,7 +39,7 @@
  * @scriptid     customscript_as_rec_inv_man_stlt
  * @deploymentid customdeploy_as_rec_inv_man_stlt
  * @author Andes Salud
- * @version 1.9.0
+ * @version 1.10.0
  *
  */
 
@@ -53,6 +61,10 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
                     aprobacionRecuentoHandler.solicitarAprobacion(parametros.aprobarId);
                 } else if (parametros.detalleId) {
                     archivoRecuentoHandler.descargarDetalle(context, parametros.detalleId);
+                } else if (parametros.txtMaestro) {
+                    archivoRecuentoHandler.mostrarFormularioMaestro(context, parametros.subsidiariaMaestro);
+                } else if (parametros.maestroId) {
+                    archivoRecuentoHandler.descargarTxtMaestro(context, parametros.maestroId);
                 } else {
                     recuentoInventarioManualHandler.mostrarFormulario(context);
                 }
@@ -68,7 +80,7 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
                 title  : 'RECUENTO INVENTARIO MANUAL ERROR',
                 details: 'metodo: ' + context.request.method
                        + ' | recuento: ' + (parametros.recuentoId || parametros.recuentoCargaId || parametros.aprobarId
-                                        || parametros.detalleId || '')
+                                        || parametros.detalleId || parametros.maestroId || '')
                        + ' | motivo: ' + (fallo.message || fallo),
             });
 
@@ -84,6 +96,9 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
             carga          : context.request.parameters[CONSTANTES.CAMPOS.CARGA],
             aprobarId      : context.request.parameters[CONSTANTES.CAMPOS.APROBAR],
             detalleId      : context.request.parameters[CONSTANTES.CAMPOS.DETALLE],
+            txtMaestro        : context.request.parameters[CONSTANTES.CAMPOS.TXT_MAESTRO],
+            subsidiariaMaestro: context.request.parameters[CONSTANTES.CAMPOS.SUBSIDIARIA_MAESTRO],
+            maestroId      : context.request.parameters[CONSTANTES.CAMPOS.MAESTRO],
         };
     }
 

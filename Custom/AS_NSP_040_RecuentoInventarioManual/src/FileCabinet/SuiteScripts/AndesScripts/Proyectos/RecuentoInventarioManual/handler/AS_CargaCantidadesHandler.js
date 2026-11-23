@@ -3,8 +3,8 @@
  * @description Proceso de la pantalla Cargar CSV: sube las cantidades contadas
  *              y las manda a escribir en el recuento, todas al lote configurado.
  *
- *              mostrarFormulario → la pantalla para elegir el recuento, el
- *                                  lote y el archivo (GET).
+ *              mostrarFormulario → la pantalla para elegir la subsidiaria,
+ *                                  el recuento, el lote y el archivo (GET).
  *              cargarCantidades  → lee el CSV, valida cada fila, deja las
  *                                  cantidades en la cola, lanza el Scheduled si
  *                                  esta libre y lleva al usuario a la solicitud
@@ -23,7 +23,7 @@
  *              recuento no se carga nada. Si un articulo viene en varias
  *              filas, se suman. Una fila con RECUENTO vacio deja el articulo
  *              vacio en el recuento (sin cantidad ni lotes): vacio es "no se
- *              conto", no 0. Un articulo que no viene en el CSV no se toca.
+ *              conto", no 0. Un 0 se escribe 0, sin lote. Un articulo que no viene en el CSV no se toca.
  *              ARTICULO es solo para leerlo. Si una fila no pasa la validacion
  *              no se carga nada, como en el AS_NSP_032. Si NetSuite rechaza el
  *              guardado, la solicitud queda en Error con su mensaje.
@@ -31,9 +31,10 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.10.0
+ * @version 1.11.0
  *
  */
+
 define(['N/redirect', '../form/AS_CargaCantidadesForm', '../data/query/AS_RecuentoInventarioManualQuery',
         '../data/record/AS_ColaRecord', '../utils/AS_RecuentoInventarioManualUtils',
         '../constants/AS_RecuentoInventarioManualConstants'],
@@ -76,9 +77,11 @@ define(['N/redirect', '../form/AS_CargaCantidadesForm', '../data/query/AS_Recuen
     // ─────────────────────────────────────────────────────────────────────────
 
     function responderConFormulario(context, recuentoId, loteId, alerta) {
-        const recuentos = recuentoInventarioManualQuery.obtenerRecuentosIniciados();
-        const lotes     = recuentoInventarioManualQuery.obtenerLotesRecuento();
-        context.response.writePage(cargaCantidadesForm.construirFormulario(recuentoId, recuentos, loteId, lotes, alerta));
+        const recuentos     = recuentoInventarioManualQuery.obtenerRecuentosIniciados();
+        const lotes         = recuentoInventarioManualQuery.obtenerLotesRecuento();
+        const recuento      = recuentos.find((opcion) => opcion.id === String(recuentoId));
+        const subsidiariaId = recuento ? recuento.subsidiaria : '';
+        context.response.writePage(cargaCantidadesForm.construirFormulario(subsidiariaId, recuentoId, recuentos, loteId, lotes, alerta));
     }
 
     function leerArchivo(request) {

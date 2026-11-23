@@ -5,7 +5,9 @@
  *              construirFormulario se lee como indice: formulario, cabecera y,
  *              con la ubicacion elegida, la lista de articulos para marcar y el
  *              boton Generar recuento. El boton Cargar CSV abre la pantalla de
- *              carga, para elegir el recuento.
+ *              carga, para elegir el recuento. El boton Descargar TXT maestro
+ *              esta siempre y abre su propia pantalla (AS_TxtMaestroForm),
+ *              para bajar el TXT de toda una subsidiaria sin ubicacion.
  *
  *              La lista va tapada con el aviso Cargando articulos: NetSuite
  *              dibuja la tabla antes de terminar de armarla, y un check marcado
@@ -14,9 +16,10 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.3.0
+ * @version 1.4.0
  *
  */
+
 define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_RecuentoInventarioManualConstants'],
     (serverWidget, message, format, CONSTANTES) => {
 
@@ -30,6 +33,7 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/format', '../constants/AS_Recuen
         form.clientScriptModulePath = CONSTANTES.FORMULARIO.CLIENT_SCRIPT;
         if (alerta) form.addPageInitMessage({ type: message.Type.ERROR, title: CONSTANTES.FORMULARIO.ALERTA_TITULO, message: alerta });
         form.addButton({ id: CONSTANTES.BOTONES.CSV, label: CONSTANTES.BOTONES.CSV_LABEL, functionName: 'abrirCarga' });
+        form.addButton({ id: CONSTANTES.BOTONES.MAESTRO, label: CONSTANTES.BOTONES.MAESTRO_LABEL, functionName: 'abrirTxtMaestro' });
         agregarCabecera(form, cabecera, cuentas, ubicaciones);
         if (!cabecera.ubicacion) return form;
         agregarArticulos(form, articulos, seleccionados);

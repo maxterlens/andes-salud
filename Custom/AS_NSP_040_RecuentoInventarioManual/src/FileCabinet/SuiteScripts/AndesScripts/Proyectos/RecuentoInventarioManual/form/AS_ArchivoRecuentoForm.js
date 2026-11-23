@@ -9,22 +9,26 @@
  *                        por coma. PRO_CORREL lleva el id interno del articulo
  *                        y COD_BARRA va vacio; PRO_CORREL1 sigue con el
  *                        correlativo de la fila. COD 3 lleva el id de la
- *                        ubicacion del recuento en todas las filas. El nombre
- *                        sale como se ve en NetSuite (< en vez de &lt;), con
- *                        las comas cambiadas por punto.
- *              Detalle → las columnas de la sublista Articulos: articulo,
- *                        unidades, cantidad de instantanea, del recuento y
- *                        ajustada, tarifa y nota. CSV estandar: separado por
- *                        coma y con punto decimal. El nombre y la nota van
- *                        entre comillas, para que sus comas no partan la fila.
+ *                        ubicacion de cada fila: en el del recuento es la
+ *                        misma en todas, en el maestro la de cada articulo. El
+ *                        nombre del archivo lo da el handler. El nombre del
+ *                        articulo sale como se ve en NetSuite (< en vez de
+ *                        &lt;), con las comas cambiadas por punto.
+ *              Detalle → el id interno del articulo y las columnas de la
+ *                        sublista Articulos: articulo, unidades, cantidad
+ *                        de instantanea, del recuento y ajustada, tarifa y
+ *                        nota. CSV estandar: separado por coma y con punto
+ *                        decimal. El nombre y la nota van entre comillas,
+ *                        para que sus comas no partan la fila.
  *                        Una cantidad vacia sale vacia.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.8.0
+ * @version 1.10.0
  *
  */
+
 define(['N/file', '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_RecuentoInventarioManualConstants'],
     (file, UTILS, CONSTANTES) => {
 
@@ -47,18 +51,18 @@ define(['N/file', '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_
         });
     }
 
-    function construirTxt(recuentoId, articulos, ubicacionId) {
+    function construirTxt(nombreArchivo, articulos) {
         const archivo = CONSTANTES.ARCHIVO;
         const filas   = [archivo.ENCABEZADO.join(archivo.SEPARADOR)];
         articulos.forEach((articulo, indice) => {
             const correlativo = indice + 1;
             const nombre      = UTILS.convertirEntidadesHtmlATexto(articulo.nombre).replace(/,/g, '.');
-            filas.push([articulo.id, articulo.codigoBarra, '', ubicacionId, '', '', nombre, '',
+            filas.push([articulo.id, articulo.codigoBarra, '', articulo.ubicacionId, '', '', nombre, '',
                         correlativo, '', '', '', '', ''].join(archivo.SEPARADOR));
         });
 
         return file.create({
-            name    : archivo.PREFIJO + '-' + recuentoId + '.txt',
+            name    : nombreArchivo,
             fileType: file.Type.PLAINTEXT,
             contents: filas.join('\r\n'),
             encoding: file.Encoding.WINDOWS_1252,
@@ -71,7 +75,7 @@ define(['N/file', '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_
         articulos.forEach((articulo) => {
             const nombre = encerrarEntreComillas(UTILS.convertirEntidadesHtmlATexto(articulo.nombre));
             const nota   = encerrarEntreComillas(articulo.nota);
-            filas.push([nombre, articulo.unidad, convertirNuloAVacio(articulo.instantanea),
+            filas.push([articulo.id, nombre, articulo.unidad, convertirNuloAVacio(articulo.instantanea),
                         convertirNuloAVacio(articulo.recuento), convertirNuloAVacio(articulo.ajustada),
                         convertirNuloAVacio(articulo.tarifa), nota].join(detalle.SEPARADOR));
         });
