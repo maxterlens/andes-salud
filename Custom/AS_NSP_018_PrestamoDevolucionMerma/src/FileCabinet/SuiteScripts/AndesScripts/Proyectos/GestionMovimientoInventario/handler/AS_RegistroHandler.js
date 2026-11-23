@@ -1,8 +1,9 @@
 /**
  * AS_NSP_018 — Prestamo, Devolucion y Merma
  * @description El registro de la solicitud: el control de rol, guardar la
- *              cabecera y su detalle, anularla, responder el stock que consulta
- *              la pantalla y mostrar el formulario de captura.
+ *              cabecera y su detalle, anularla, responder el stock y los
+ *              articulos sin la subsidiaria que consulta la pantalla y mostrar
+ *              el formulario de captura.
  *
  *              Al guardar, el detalle se rehace mientras no haya transaccion
  *              generada: se borran las lineas y se vuelven a crear con lo que
@@ -12,6 +13,7 @@
  *              guardado, o de la devolucion de un prestamo, sale del registro y
  *              pisa los checks del request. El de uno nuevo sale de los checks.
  *
+
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -77,6 +79,13 @@ define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../constants/AS_Movim
             disponible: stock[articulo].disponible,
             lotes     : lotes.map((lote) => ({ nombre: lote.nombreLote, enMano: lote.enMano })),
         }));
+    }
+
+    function consultarArticulosSinSubsidiaria(context) {
+        const articulos   = context.request.parameters.articulos.split(',');
+        const subsidiaria = context.request.parameters.subsidiaria;
+
+        context.response.write(JSON.stringify(movimientoQuery.obtenerArticulosSinSubsidiaria(articulos, subsidiaria)));
     }
 
     /**
@@ -425,10 +434,11 @@ define(['N/redirect', 'N/error', 'N/runtime', 'N/format', '../constants/AS_Movim
     }
 
     return {
-        validarPermisoEscritura: validarPermisoEscritura,
-        guardarMovimiento      : guardarMovimiento,
-        anularMovimiento       : anularMovimiento,
-        consultarDisponible    : consultarDisponible,
-        mostrarFormulario      : mostrarFormulario,
+        validarPermisoEscritura         : validarPermisoEscritura,
+        guardarMovimiento               : guardarMovimiento,
+        anularMovimiento                : anularMovimiento,
+        consultarDisponible             : consultarDisponible,
+        consultarArticulosSinSubsidiaria: consultarArticulosSinSubsidiaria,
+        mostrarFormulario               : mostrarFormulario,
     };
 });

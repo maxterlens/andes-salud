@@ -7,6 +7,7 @@
  *              Cabecera del registro → funciones de los botones Nuevo, Imprimir,
  *              Anular, Procesar y Devolver, referenciadas por nombre desde el
  *              User Event.
+ *
  * @NApiVersion 2.1
  * @NScriptType ClientScript
  * @NModuleScope Public
@@ -153,6 +154,21 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './constants/AS_M
                     }
                 }
             }
+
+            if (esALaClinica) {
+                const sinSubsidiaria = obtenerArticulosSinSubsidiaria(registroActual, totalLineas);
+
+                if (sinSubsidiaria.length > 0) {
+                    const subsidiaria = registroActual.getText({ fieldId: 'custpage_subsidiaria' }).split(' : ').pop();
+
+                    alert('No se puede guardar la solicitud.\n\n'
+                        + 'Estos articulos no estan habilitados para ' + subsidiaria + ':\n\n'
+                        + '- ' + sinSubsidiaria.map((articulo) => articulo.nombre).join('\n- ') + '\n\n'
+                        );
+
+                    return false;
+                }
+            }
         }
 
         if (esDevolucion(registroActual)) {
@@ -281,6 +297,7 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './constants/AS_M
             sublistId: 'custpage_sl_detalle',
             fieldId  : 'custpage_col_articulo',
         });
+        if (!articulo) return;
 
         const stock = consultarStock(articulo, ubicacion);
 
@@ -471,6 +488,33 @@ define(['N/url', 'N/https', 'N/currentRecord', 'N/ui/message', './constants/AS_M
             deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
             params      : parametros,
         });
+    }
+
+  
+    function obtenerArticulosSinSubsidiaria(registroActual, totalLineas) {
+        const articulos = [];
+
+        for (let i = 0; i < totalLineas; i++) {
+            articulos.push(registroActual.getSublistValue({
+                sublistId: 'custpage_sl_detalle',
+                fieldId  : 'custpage_col_articulo',
+                line     : i,
+            }));
+        }
+
+        const respuesta = https.get({
+            url: url.resolveScript({
+                scriptId    : CONSTANTES.SUITELET.SCRIPT,
+                deploymentId: CONSTANTES.SUITELET.DEPLOYMENT,
+                params      : {
+                    op         : CONSTANTES.OPERACIONES.ARTICULOS_SIN_SUBSIDIARIA,
+                    articulos  : articulos.join(','),
+                    subsidiaria: registroActual.getValue({ fieldId: 'custpage_subsidiaria' }),
+                },
+            }),
+        });
+
+        return JSON.parse(respuesta.body);
     }
 
     function esDevolucion(registroActual) {

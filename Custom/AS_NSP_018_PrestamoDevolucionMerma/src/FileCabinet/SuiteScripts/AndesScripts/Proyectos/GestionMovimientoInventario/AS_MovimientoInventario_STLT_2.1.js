@@ -9,6 +9,7 @@
  *              POST                         → AS_RegistroHandler.guardarMovimiento
  *              GET op=anular                → AS_RegistroHandler.anularMovimiento
  *              GET op=disponible            → AS_RegistroHandler.consultarDisponible (JSON)
+ *              GET op=articulos_sin_subsidiaria → AS_RegistroHandler.consultarArticulosSinSubsidiaria (JSON)
  *              GET op=procesar_prestamo     → AS_PrestamoHandler.procesarPrestamo
  *              GET op=procesar_devolucion   → AS_DevolucionHandler.procesarDevolucion
  *              GET op=procesar_merma        → AS_MermaHandler.procesarMerma
@@ -46,6 +47,8 @@ define(['./constants/AS_MovimientoInventarioConstants', './handler/AS_RegistroHa
                 registroHandler.anularMovimiento(context);
             } else if (parametros.operacion === OPERACIONES.DISPONIBLE) {
                 registroHandler.consultarDisponible(context);
+            } else if (parametros.operacion === OPERACIONES.ARTICULOS_SIN_SUBSIDIARIA) {
+                registroHandler.consultarArticulosSinSubsidiaria(context);
             } else if (parametros.operacion === OPERACIONES.PROCESAR_PRESTAMO) {
                 registroHandler.validarPermisoEscritura();
                 prestamoHandler.procesarPrestamo(context);

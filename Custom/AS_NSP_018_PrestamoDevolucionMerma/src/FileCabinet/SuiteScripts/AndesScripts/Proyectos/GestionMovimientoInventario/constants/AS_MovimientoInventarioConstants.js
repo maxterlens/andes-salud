@@ -2,7 +2,6 @@
  * AS_NSP_018 — Prestamo, Devolucion y Merma
  * @description Valores fijos del modulo: ids de records, listas y scripts,
  *              estados, etiquetas y rutas del File Cabinet.
- *
  * @NApiVersion 2.1
  * @NModuleScope Public
  */
@@ -104,14 +103,15 @@ define([], () => {
     };
 
     const OPERACIONES = {
-        FORMULARIO         : 'formulario',
-        GUARDADO           : 'guardado',
-        PROCESAR_PRESTAMO  : 'procesar_prestamo',
-        PROCESAR_DEVOLUCION: 'procesar_devolucion',
-        PROCESAR_MERMA     : 'procesar_merma',
-        ANULAR             : 'anular',
-        IMPRIMIR           : 'imprimir',
-        DISPONIBLE         : 'disponible',
+        FORMULARIO               : 'formulario',
+        GUARDADO                 : 'guardado',
+        PROCESAR_PRESTAMO        : 'procesar_prestamo',
+        PROCESAR_DEVOLUCION      : 'procesar_devolucion',
+        PROCESAR_MERMA           : 'procesar_merma',
+        ANULAR                   : 'anular',
+        IMPRIMIR                 : 'imprimir',
+        DISPONIBLE               : 'disponible',
+        ARTICULOS_SIN_SUBSIDIARIA: 'articulos_sin_subsidiaria',
     };
 
     const SUITELET = {

@@ -9,6 +9,7 @@
  *              COMBOS       obtenerCuentasAjuste, obtenerEntidadesPorSubsidiaria,
  *                           obtenerUbicacionesPorSubsidiaria
  *              CORRELATIVO  obtenerFilaCorrelativo
+ *              SUBSIDIARIA  obtenerArticulosSinSubsidiaria
  *
  *              AggregateItemLocation da el stock por articulo y ubicacion.
  *              InventoryBalance e InventoryNumberLocation dan los lotes
@@ -299,6 +300,35 @@ define(['N/query', '../../constants/AS_MovimientoInventarioConstants', '../../ut
         return filas.length ? filas[0].id : null;
     }
 
+    function obtenerArticulosSinSubsidiaria(articulos, subsidiaria) {
+        if (articulos.length === 0) return [];
+
+        const filas = query.runSuiteQL({
+            query: [
+                'SELECT i.id AS articulo,',
+                '       i.itemid AS nombre,',
+                '       i.subsidiary AS subsidiarias,',
+                '       i.includechildren AS incluyehijos,',
+                '       s.parent AS madre,',
+                '       p.parent AS abuela',
+                'FROM item i',
+                'INNER JOIN subsidiary s ON s.id = ?',
+                'LEFT JOIN subsidiary p ON p.id = s.parent',
+                'WHERE i.id IN (' + articulos.map(Number).join(',') + ')',
+            ].join(' '),
+            params: [Number(subsidiaria)],
+        }).asMappedResults();
+
+        return filas.filter((fila) => {
+            const asignadas = String(fila.subsidiarias).split(',').map((id) => id.trim());
+
+            if (asignadas.includes(String(subsidiaria))) return false;
+            if (fila.incluyehijos !== 'T') return true;
+
+            return !asignadas.includes(String(fila.madre)) && !asignadas.includes(String(fila.abuela));
+        }).map((fila) => ({ articulo: String(fila.articulo), nombre: fila.nombre }));
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // Secundarias
     // ─────────────────────────────────────────────────────────────────────────
@@ -346,5 +376,6 @@ define(['N/query', '../../constants/AS_MovimientoInventarioConstants', '../../ut
         obtenerEntidadesPorSubsidiaria  : obtenerEntidadesPorSubsidiaria,
         obtenerUbicacionesPorSubsidiaria: obtenerUbicacionesPorSubsidiaria,
         obtenerFilaCorrelativo          : obtenerFilaCorrelativo,
+        obtenerArticulosSinSubsidiaria  : obtenerArticulosSinSubsidiaria,
     };
 });

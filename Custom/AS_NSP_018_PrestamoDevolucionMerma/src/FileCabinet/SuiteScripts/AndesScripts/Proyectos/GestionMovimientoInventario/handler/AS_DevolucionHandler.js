@@ -8,8 +8,10 @@
  *                               volvio en devoluciones anteriores, y los vuelve a
  *                               su origen con un Inventory Transfer.
  *              A la Clinica   → el material sale de Andes con un Inventory
- *                               Adjustment negativo contra la cuenta del prestamo,
- *                               con el lote escrito en la linea del prestamo.
+ *                               Adjustment negativo contra la cuenta del prestamo.
+ *                               Sale el lote de la linea del prestamo si cubre
+ *                               la cantidad; si no, de cualquier lote que haya
+ *                               en la ubicacion (del mas antiguo al mas nuevo).
  *
  *              En los dos: no deja devolver mas de lo pendiente, descuenta lo
  *              devuelto de cada linea del prestamo, deja la devolucion Procesada y
@@ -101,12 +103,20 @@ define(['N/redirect', 'N/runtime', 'N/error', '../constants/AS_MovimientoInventa
 
     /**
      * A la Clinica: el material sale de Andes con un ajuste negativo contra la
-     * cuenta del prestamo, con el lote escrito en la linea del prestamo.
+     * cuenta del prestamo. Se usa el lote de la linea del prestamo solo si la
+     * ubicacion lo tiene completo; si no, la linea queda sin lote y se mide
+     * contra el stock del articulo, saliendo de los lotes que haya.
      */
     function crearAjusteDeSalida(devolucion) {
         const cabecera = devolucion.cabecera;
+        const lotesEnLaUbicacion = movimientoQuery.obtenerLotesPorArticulo(devolucion.lineas.map((linea) => linea.articulo), devolucion.ubicacion);
 
-        devolucion.lineas.forEach((linea) => { linea.lote = devolucion.lineaPrestamo[linea.lineaPrestamo].lote; });
+        devolucion.lineas.forEach((linea) => {
+            const loteDelPrestamo = devolucion.lineaPrestamo[linea.lineaPrestamo].lote;
+            const cubreLaCantidad = lotesEnLaUbicacion[linea.articulo].some((lote) => lote.nombreLote === loteDelPrestamo && lote.enMano >= linea.cantidad);
+
+            linea.lote = cubreLaCantidad ? loteDelPrestamo : '';
+        });
         validarStock(devolucion.lineas, devolucion.ubicacion, devolucion.nombreUbicacion);
 
         return ajusteRecord.crearAjusteSalida({
