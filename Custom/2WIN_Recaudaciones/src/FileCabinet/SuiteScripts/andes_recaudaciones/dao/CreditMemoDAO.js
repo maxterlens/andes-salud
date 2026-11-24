@@ -34,7 +34,10 @@ define(["N/record", "N/search", "N/log", "N/query", "./SalesOrderDAO"], function
                 }
             } else if (data.esAnticipo === "N") {
                 nLog.debug("Creando NC a partir de factura", `Folio de referencia: ${data.folioRef}`);
-                const invoiceId = getInvoiceIdByFolio(data.folioRef);
+                const invoiceId = getInvoiceIdByFolio(data.folioRef, data.customerId, data.razonSocialCobro);
+                if (!invoiceId) {
+                    throw new Error(`No se encontró factura asociada al folio ${data.folioRef} para el cliente ID ${data.customerId} y subsidiaria ID ${data.razonSocialCobro}`);
+                }
 
                 // Cargar la factura para copiar sus datos
                 const invoiceRecord = record.load({
@@ -457,7 +460,12 @@ define(["N/record", "N/search", "N/log", "N/query", "./SalesOrderDAO"], function
             throw e;
         }
     }
-    function getInvoiceIdByFolio(folio) {
+    function getInvoiceIdByFolio(folio, customerId, subsidiariaId) {
+        nLog.audit("getInvoiceIdByFolio - parametros", {
+            folio: folio,
+            customerId: customerId,
+            subsidiariaId: subsidiariaId
+        });
         const results = query
             .runSuiteQL({
                 query: `
@@ -465,12 +473,14 @@ define(["N/record", "N/search", "N/log", "N/query", "./SalesOrderDAO"], function
                     transaction.id
                 from
                     transaction
+                    inner join transactionline tl on tl.transaction = transaction.id and tl.mainline = 'T'
                 where
                     transaction.custbody_2winfolioacepta is not null
                     and
                     transaction.custbody_2winfolioacepta = ?
+                    and transaction.entity = ? and tl.subsidiary = ?
                     and transaction.type = 'CustInvc'`,
-                params: [folio]
+                params: [folio, customerId, subsidiariaId]
             })
             .asMappedResults();
         if (results && results.length > 0) {
@@ -479,7 +489,12 @@ define(["N/record", "N/search", "N/log", "N/query", "./SalesOrderDAO"], function
             throw new Error(`No se encontró factura con folio ${folio}`);
         }
     }
-    function getCreditIdByFolio(folio) {
+    function getCreditIdByFolio(folio, customerId, subsidiariaId) {
+        nLog.audit("findCreditMemoByFolio - parametros", {
+            folio: folio,
+            customerId: customerId,
+            subsidiariaId: subsidiariaId
+        });
         const results = query
             .runSuiteQL({
                 query: `
@@ -487,12 +502,14 @@ define(["N/record", "N/search", "N/log", "N/query", "./SalesOrderDAO"], function
                     transaction.id
                 from
                     transaction
+                    inner join transactionline tl on tl.transaction = transaction.id and tl.mainline = 'T'
                 where
                     transaction.custbody_2winfolioacepta is not null
                     and
                     transaction.custbody_2winfolioacepta = ?
-                    and transaction.type = 'CustCred'`,
-                params: [folio]
+                    and transaction.type = 'CustCred'
+                    and transaction.entity = ? and tl.subsidiary = ?`,
+                params: [folio, customerId, subsidiariaId]
             })
             .asMappedResults();
         if (results && results.length > 0) {

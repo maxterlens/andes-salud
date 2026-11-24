@@ -69,9 +69,14 @@ define(["N/ui/serverWidget", "N/search", "N/record", "N/query", "N/log", "../dao
      */
     function buscarTransaccionesFacturacion(params) {
         const transacciones = [];
-        const { folioDoc, tipoDoc, rutCliente, fechaDoc } = params;
+        const { folioDoc, tipoDoc, rutCliente, fechaDoc, subsidiaria } = params;
 
         nLog.debug("params facturacion", params);
+
+        // La subsidiaria es obligatoria para no mezclar documentos de distintas razones sociales
+        if (!subsidiaria) {
+            throw new Error("Debe seleccionar la Subsidiaria para buscar transacciones de Facturación.");
+        }
 
         try {
             let queryStr = `
@@ -84,15 +89,17 @@ define(["N/ui/serverWidget", "N/search", "N/record", "N/query", "N/log", "../dao
                     transaction.tranDate,
                     transaction.custbody_2wintipodtesii,
                     transaction.custbody_2winfolioacepta,
+                    BUILTIN.DF(transactionLine.subsidiary) as subsidiarianombre,
                     NVL(transaction.foreignAmountUnpaid + transaction.foreignAmountPaid, 0) as amount
                 FROM
                     transaction
                     inner join transactionLine on transactionLine.transaction = transaction.id and transactionLine.mainLine = 'T'
                 WHERE
                     transaction.custbody_2win_created_from_income_flow = 'T'
+                    AND transactionLine.subsidiary = ?
             `;
 
-            const queryParams = [];
+            const queryParams = [subsidiaria];
 
             // Construir query dinámica según filtros proporcionados
             if (folioDoc) {
@@ -150,11 +157,19 @@ define(["N/ui/serverWidget", "N/search", "N/record", "N/query", "N/log", "../dao
         const { caja, fechaCaja, aperturaCaja, razonSocialCaja, numeroMovimiento, cajero } = params;
         nLog.debug("params", params);
         try {
+            // La fecha llega como texto en el formato del usuario (ej. dd/mm/aaaa).
+            // Se convierte una sola vez con format.parse y al DAO se le pasa el objeto Date,
+            // porque el DAO usa new Date(), que no reconoce el formato dd/mm/aaaa.
+            const fechaCajaDate = format.parse({
+                value: fechaCaja,
+                type: "date"
+            });
+
             // Buscar transacciones por movimiento específico o todas las de la caja
             if (numeroMovimiento) {
                 const transMovimiento = searchTransactionByMovementNumber({
                     caja: caja,
-                    fechaCaja: fechaCaja,
+                    fechaCaja: fechaCajaDate,
                     aperturaCaja: aperturaCaja,
                     razonSocialCaja: razonSocialCaja,
                     movementNumber: numeroMovimiento
@@ -162,11 +177,7 @@ define(["N/ui/serverWidget", "N/search", "N/record", "N/query", "N/log", "../dao
                 transacciones.push(...transMovimiento);
             } else {
                 // Si no hay número de movimiento, buscar todos los movimientos de la caja
-                const dateObj = format.parse({
-                    value: fechaCaja,
-                    type: "date"
-                });
-                const fechaFormateada = dateObj.toLocaleDateString("en-GB");
+                const fechaFormateada = fechaCajaDate.toLocaleDateString("en-GB");
                 nLog.debug("buscarTransacciones", [caja, fechaFormateada, aperturaCaja, razonSocialCaja]);
                 const results = query
                     .runSuiteQL({
@@ -205,7 +216,7 @@ define(["N/ui/serverWidget", "N/search", "N/record", "N/query", "N/log", "../dao
             if (cajero) {
                 const cierres = searchCierreCaja({
                     caja: caja,
-                    fechaCaja: fechaCaja,
+                    fechaCaja: fechaCajaDate,
                     aperturaCaja: aperturaCaja,
                     razonSocialCaja: razonSocialCaja,
                     cajeroRut: cajero
@@ -326,6 +337,15 @@ define(["N/ui/serverWidget", "N/search", "N/record", "N/query", "N/log", "../dao
             });
         } else if (flujoSeleccionado === "facturacion") {
             // Campos de filtro para flujo Facturación
+            // Subsidiaria obligatoria: evita mezclar documentos de distintas razones sociales
+            form.addField({
+                id: "custpage_subsidiaria",
+                type: serverWidget.FieldType.SELECT,
+                label: "Subsidiaria",
+                source: "subsidiary",
+                container: "custpage_filters"
+            }).isMandatory = true;
+
             form.addField({
                 id: "custpage_folio_doc",
                 type: serverWidget.FieldType.TEXT,
@@ -397,6 +417,7 @@ define(["N/ui/serverWidget", "N/search", "N/record", "N/query", "N/log", "../dao
                 valores.custpage_numero_movimiento = request.parameters.custpage_numero_movimiento;
                 valores.custpage_cajero = request.parameters.custpage_cajero;
             } else if (flujoSeleccionado === "facturacion") {
+                valores.custpage_subsidiaria = request.parameters.custpage_subsidiaria;
                 valores.custpage_folio_doc = request.parameters.custpage_folio_doc;
                 valores.custpage_tipo_doc = request.parameters.custpage_tipo_doc;
                 valores.custpage_rut_cliente = request.parameters.custpage_rut_cliente;
@@ -491,8 +512,26 @@ define(["N/ui/serverWidget", "N/search", "N/record", "N/query", "N/log", "../dao
             label: "Movimiento"
         });
 
+        // Columna Subsidiaria: solo cuando la búsqueda la trae (flujo Facturación)
+        const mostrarSubsidiaria = transacciones.some((t) => t.subsidiarianombre);
+        if (mostrarSubsidiaria) {
+            sublist.addField({
+                id: "custpage_subsidiaria_linea",
+                type: serverWidget.FieldType.TEXT,
+                label: "Subsidiaria"
+            });
+        }
+
         // Agregar datos a la sublist con validación de valores
         transacciones.forEach((transaccion, index) => {
+            if (transaccion.subsidiarianombre) {
+                sublist.setSublistValue({
+                    id: "custpage_subsidiaria_linea",
+                    line: index,
+                    value: String(transaccion.subsidiarianombre).substring(0, 300)
+                });
+            }
+
             if (transaccion.id !== null && transaccion.id !== undefined) {
                 sublist.setSublistValue({
                     id: "custpage_id",
@@ -748,7 +787,17 @@ define(["N/ui/serverWidget", "N/search", "N/record", "N/query", "N/log", "../dao
         });
 
         const flujo = request.parameters.custpage_flujo || "caja";
+        const subsidiaria = request.parameters.custpage_subsidiaria || "";
         const registrosAEliminar = [];
+
+        if (flujo === "facturacion" && !subsidiaria) {
+            form.addField({
+                id: "custpage_mensaje",
+                type: serverWidget.FieldType.HELP,
+                label: "Debe seleccionar la Subsidiaria antes de eliminar transacciones de Facturación."
+            });
+            return;
+        }
 
         // Recopilar los IDs seleccionados
         for (let i = 0; i < numLineas; i++) {
@@ -777,11 +826,14 @@ define(["N/ui/serverWidget", "N/search", "N/record", "N/query", "N/log", "../dao
                     });
                 }
 
-                registrosAEliminar.push({
+                const registro = {
                     id: parseInt(id),
                     tipoRegistro: tipoRegistro,
                     flujo: flujo
-                });
+                };
+                // En Facturación el MR valida que el documento sea de esta subsidiaria antes de eliminar
+                if (flujo === "facturacion") registro.subsidiaria = subsidiaria;
+                registrosAEliminar.push(registro);
             }
         }
 
@@ -910,7 +962,8 @@ define(["N/ui/serverWidget", "N/search", "N/record", "N/query", "N/log", "../dao
                             folioDoc: request.parameters.custpage_folio_doc,
                             tipoDoc: request.parameters.custpage_tipo_doc,
                             rutCliente: request.parameters.custpage_rut_cliente,
-                            fechaDoc: request.parameters.custpage_fecha_doc
+                            fechaDoc: request.parameters.custpage_fecha_doc,
+                            subsidiaria: request.parameters.custpage_subsidiaria
                         };
                         registros = buscarTransaccionesFacturacion(paramsFacturacion);
                         nLog.audit("Búsqueda de facturación completada", `Flujo: Facturación, Transacciones encontradas: ${registros.length}`);

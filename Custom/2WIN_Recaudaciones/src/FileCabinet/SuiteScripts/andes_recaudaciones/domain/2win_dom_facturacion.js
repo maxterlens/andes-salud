@@ -30,6 +30,25 @@ define([
     libAuditoria
 ) {
 
+    function consultarAsientosPorDetalleEnLotes(foliosPorDetalle) {
+        const foliosUnicos = [...new Set(foliosPorDetalle.reduce((folios, detalle) => folios.concat(detalle), []))];
+        const resultado = JournalEntryDAO.getJournalEntriesByFolioEnLotes({ folios: foliosUnicos });
+        const asientosPorFolio = Object.create(null);
+        resultado.asientos.forEach((asiento) => {
+            // Usar la misma comparación numérica de folios que la selección del copago.
+            const folio = Number(asiento.custcol_2w_folio);
+            if (Number.isNaN(folio)) return;
+            if (!asientosPorFolio[folio]) asientosPorFolio[folio] = [];
+            asientosPorFolio[folio].push(asiento);
+        });
+        const asientosPorDetalle = foliosPorDetalle.map((folios) => {
+            const foliosNumericos = [...new Set(folios.map(Number))];
+            return foliosNumericos.reduce((asientos, folio) => asientos.concat(asientosPorFolio[folio] || []), [])
+                .sort((a, b) => Number(b.id) - Number(a.id));
+        });
+        return { asientosPorDetalle: asientosPorDetalle, folios: foliosUnicos.length, consultas: resultado.consultas };
+    }
+
     function precargarAsientosFactura(detalles, folioDoc, processKey, inicioPreparacion) {
         const inicioConsulta = Date.now();
         const unidadesIniciales = runtime.getCurrentScript().getRemainingUsage();
@@ -40,30 +59,8 @@ define([
             if (Number(detalle.montoExcedente) > 0) folios.push(detalle.folioExcedente);
             return [...new Set(folios)];
         });
-        const foliosUnicos = [...new Set(foliosPorDetalle.reduce((folios, detalle) => folios.concat(detalle), []))];
-        const esFolioCanonico = (folio) => Number.isSafeInteger(Number(folio)) && String(folio) === String(Number(folio));
-        var resultado = { asientos: [], consultas: 0 };
-        var asientosPorDetalle;
-        if (foliosUnicos.every(esFolioCanonico)) {
-            resultado = JournalEntryDAO.getJournalEntriesByFolioEnLotes({ folios: foliosUnicos });
-            if (resultado.asientos.every((asiento) => esFolioCanonico(asiento.custcol_2w_folio))) {
-                const asientosPorFolio = Object.create(null);
-                resultado.asientos.forEach((asiento) => {
-                    const folio = Number(asiento.custcol_2w_folio);
-                    if (!asientosPorFolio[folio]) asientosPorFolio[folio] = [];
-                    asientosPorFolio[folio].push(asiento);
-                });
-                asientosPorDetalle = foliosPorDetalle.map((folios) => folios.reduce((asientos, folio) => asientos.concat(asientosPorFolio[Number(folio)] || []), []));
-            }
-        }
-        if (!asientosPorDetalle) {
-            // Conservar la búsqueda original para folios con ceros iniciales u otras representaciones.
-            asientosPorDetalle = foliosPorDetalle.map((folios) => {
-                if (!folios.length) return [];
-                resultado.consultas++;
-                return JournalEntryDAO.getJournalEntriesByFolio({ folios: folios, registrarError: false });
-            });
-        }
+        const resultado = consultarAsientosPorDetalleEnLotes(foliosPorDetalle);
+        const asientosPorDetalle = resultado.asientosPorDetalle;
         const faltantes = [];
         foliosPorDetalle.forEach((folios, indice) => {
             folios.forEach((folio) => {
@@ -81,7 +78,7 @@ define([
             duracionMs: Date.now() - inicioConsulta,
             acumuladoMs: Date.now() - inicioPreparacion,
             detalles: detalles.length,
-            folios: foliosUnicos.length,
+            folios: resultado.folios,
             consultas: resultado.consultas,
             faltantes: foliosFaltantes.length,
             unidadesConsumidas: unidadesIniciales - unidadesRestantes,
@@ -104,47 +101,14 @@ define([
             if (Number(detalle.montoExcedente) > 0) folios.push(detalle.folioExcedente);
             return [...new Set(folios)];
         });
-        const foliosUnicos = [...new Set(foliosPorDetalle.reduce((folios, detalle) => folios.concat(detalle), []))];
-        const esFolioCanonico = (folio) => Number.isSafeInteger(Number(folio)) && String(folio) === String(Number(folio));
-        var consultas = 0;
-        var consultasIndividuales = 0;
-        var asientosPorFolio = null;
-        if (foliosUnicos.length && foliosUnicos.every(esFolioCanonico)) {
-            const resultado = JournalEntryDAO.getJournalEntriesByFolioEnLotes({ folios: foliosUnicos });
-            consultas += resultado.consultas;
-            if (resultado.asientos.every((asiento) => esFolioCanonico(asiento.custcol_2w_folio))) {
-                asientosPorFolio = Object.create(null);
-                resultado.asientos.forEach((asiento) => {
-                    const folio = Number(asiento.custcol_2w_folio);
-                    if (!asientosPorFolio[folio]) asientosPorFolio[folio] = [];
-                    asientosPorFolio[folio].push(asiento);
-                });
-                Object.keys(asientosPorFolio).forEach((folio) => {
-                    asientosPorFolio[folio].sort((a, b) => Number(b.id) - Number(a.id));
-                });
-            }
-        }
-        const asientosPorDetalle = foliosPorDetalle.map((folios, indice) => {
-            if (!folios.length) return [];
-            // Conservar la consulta original cuando el lote no garantiza la misma selección.
-            const ambiguo = asientosPorFolio && folios.some((folio) => {
-                const asientos = asientosPorFolio[Number(folio)] || [];
-                return asientos.some((asiento, posicion) => !Number.isSafeInteger(Number(asiento.id)) ||
-                    (posicion > 0 && Number(asiento.id) === Number(asientos[posicion - 1].id)));
-            });
-            if (!asientosPorFolio || ambiguo) {
-                consultas++;
-                consultasIndividuales++;
-                return JournalEntryDAO.getJournalEntriesByFolio({ folios: folios, tipoDocumento: detalles[indice].tipoDocumento });
-            }
-            return folios.reduce((asientos, folio) => asientos.concat(asientosPorFolio[Number(folio)] || []), []);
-        });
+        const resultado = consultarAsientosPorDetalleEnLotes(foliosPorDetalle);
+        const asientosPorDetalle = resultado.asientosPorDetalle;
         const unidadesRestantes = runtime.getCurrentScript().getRemainingUsage();
         nLog.audit("precargarAsientosNotas - consumo", {
             fase: tipo, folio: folioDoc, processKey: processKey, etapa: "precargaAsientos",
             duracionMs: Date.now() - inicio, detalles: detalles.length,
             detallesElegibles: foliosPorDetalle.filter((folios) => folios.length).length,
-            folios: foliosUnicos.length, consultas: consultas, consultasIndividuales: consultasIndividuales,
+            folios: resultado.folios, consultas: resultado.consultas, consultasIndividuales: 0,
             unidadesConsumidas: unidadesIniciales - unidadesRestantes, unidadesRestantes: unidadesRestantes
         });
         return asientosPorDetalle;
@@ -520,7 +484,12 @@ define([
                     memo: `Nota de Credito asociada folio ${folioDoc}`
                 });
             }
-            const invoiceId = InvoiceDAO.findInvoiceByFolio(folioRef);
+            const customerId = CustomerDAO.getByRut(utils.formatearRut(RutCliente));
+            const subsidiariaId = subsidiaria.getSubsidiaria(utils.formatearRut(razonSocial));
+            const invoiceId = InvoiceDAO.findInvoiceByFolio(folioRef, customerId, subsidiariaId);
+            if (!invoiceId) {
+                throw new Error(`No se encontró factura asociada al folio ${folioRef} para el cliente ID ${customerId} y subsidiaria ID ${subsidiariaId}`);
+            }
             const journals = InvoiceDAO.findAppliedJournals(invoiceId);
             if (lineas.length > 0) {
                 if (existingId) {
@@ -528,9 +497,9 @@ define([
                 } else {
                     datosCreacion = {
                         processKey: processKey,
-                        customerId: CustomerDAO.getByRut(utils.formatearRut(RutCliente)),
+                        customerId: customerId,
                         account: 457,
-                        razonSocialCobro: subsidiaria.getSubsidiaria(utils.formatearRut(razonSocial)),
+                        razonSocialCobro: subsidiariaId,
                         fechaTransaccion: FechaDocumento,
                         condicionesPago: CondicionPago,
                         tipoFacturacion: TipoFacturacion,
@@ -888,7 +857,9 @@ define([
             }
             if (DebitNoteId && (!etapaAplicacion || etapaAplicacion === "NOTA_CREDITO")) {
                 // Aplicar DebitMemo a CreditMemo (folioRef)
-                const creditMemoId = CreditMemoDAO.getCreditIdByFolio(folioRef);
+                const creditMemoId = CreditMemoDAO.getCreditIdByFolio(folioRef,
+                    CustomerDAO.getByRut(utils.formatearRut(RutCliente)),
+                    subsidiaria.getSubsidiaria(utils.formatearRut(razonSocial)));
                 if (creditMemoId) {
                     // nLog.debug("procesarDocumentos", `Aplicando DebitMemo ${DebitNoteId} a CreditMemo ${creditMemoId} (folioRef: ${folioRef})`);
                     CreditMemoDAO.applyCreditMemo(creditMemoId, DebitNoteId, true);
@@ -918,12 +889,17 @@ define([
                 if (etapaAplicacion === "ASIENTO") return idJournal;
 
                 // Aplicar journal al invoice folioDoc
-                const invoiceIdToApply = InvoiceDAO.findInvoiceByFolio(folioDoc);
+                const customerId = CustomerDAO.getByRut(utils.formatearRut(RutCliente));
+                const subsidiariaId = subsidiaria.getSubsidiaria(utils.formatearRut(razonSocial));
+                const invoiceIdToApply = InvoiceDAO.findInvoiceByFolio(folioDoc, customerId, subsidiariaId);
+                if (!invoiceIdToApply) {
+                    throw new Error(`No se encontró factura asociada al folio ${folioDoc} para el cliente ID ${customerId} y subsidiaria ID ${subsidiariaId}`);
+                }
 
                 const idPayment = existingPaymentId || PaymentDAO.createPayment({
                     processKey: `${processKey}:payment`,
-                    customerId: CustomerDAO.getByRut(utils.formatearRut(RutCliente)),
-                    subsidiaria: subsidiaria.getSubsidiaria(utils.formatearRut(razonSocial)),
+                    customerId: customerId,
+                    subsidiaria: subsidiariaId,
                     fechaTransaccion: FechaDocumento,
                     memo: `Pago Nota de Debito asociada folio ${folioDoc}`,
                     invoicesToPay: [{ id: invoiceIdToApply, amount: diferencia }],

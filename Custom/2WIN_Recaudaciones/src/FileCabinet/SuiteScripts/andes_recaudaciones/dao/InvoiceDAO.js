@@ -348,8 +348,13 @@ define(["N/record", "N/log", "N/search", "N/query", "./SalesOrderDAO"], function
         }
     }
 
-    function findInvoiceByFolio(folio) {
+    function findInvoiceByFolio(folio, customerId, subsidiariaId) {
         try {
+            nLog.audit("findInvoiceByFolio - parametros", {
+                folio: folio,
+                customerId: customerId,
+                subsidiariaId: subsidiariaId
+            });
             const results = query
                 .runSuiteQL({
                     query: `
@@ -358,11 +363,14 @@ define(["N/record", "N/log", "N/search", "N/query", "./SalesOrderDAO"], function
                     BUILTIN.DF(transaction.entity)
                     from
                     transaction
+                    inner join transactionline tl on tl.transaction = transaction.id and tl.mainline = 'T'
                     where
                     transaction.custbody_2winfolioacepta is not null
                     and transaction.custbody_2winfolioacepta = ?
+                    and transaction.entity = ?
+                    and tl.subsidiary = ?
                     and transaction.type = 'CustInvc'`,
-                    params: [folio]
+                    params: [folio, customerId, subsidiariaId]
                 })
                 .asMappedResults();
             if (results.length > 0) return results[0].id;

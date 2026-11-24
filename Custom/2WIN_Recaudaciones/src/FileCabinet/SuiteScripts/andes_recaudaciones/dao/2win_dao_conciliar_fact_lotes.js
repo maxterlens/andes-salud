@@ -4,7 +4,7 @@
  * @NModuleScope SameAccount
  */
 define(["N/record", "./2win_dao_recaudaciones_fact_lotes", "./CreditMemoDAO", "./InvoiceDAO",
-    "../libs/2win_lib_recaudaciones_fact_lotes", "./2win_dao_recaudaciones_nc_rma"], function (record, daoLotes, CreditMemoDAO, InvoiceDAO, lib, daoRma) {
+    "../libs/2win_lib_recaudaciones_fact_lotes", "./2win_dao_recaudaciones_nc_rma", "./CustomerDAO", "../libs/subsidiaria", "../libs/utils"], function (record, daoLotes, CreditMemoDAO, InvoiceDAO, lib, daoRma, CustomerDAO, subsidiaria, utils) {
     function iguales(actual, esperado, campo) {
         if (String(actual == null ? "" : actual) !== String(esperado == null ? "" : esperado)) throw new Error(`Resultado incompatible: ${campo}`);
     }
@@ -110,7 +110,12 @@ define(["N/record", "./2win_dao_recaudaciones_fact_lotes", "./CreditMemoDAO", ".
                 ...(conCopago ? [{ id: journalId }] : [])]);
             aplicaciones(r, "credit", [documento.documentoId, ...(conCopago ? estado.journalIds : [])].map(id => ({ id: id })));
         } else {
-            const invoiceId = tarea.tipo === "NOTA_DEBITO" ? InvoiceDAO.findInvoiceByFolio(preparado.documento.folioDoc) : documento.documentoId;
+            const customerId = CustomerDAO.getByRut(utils.formatearRut(preparado.documento.RutCliente));
+            const subsidiariaId = subsidiaria.getSubsidiaria(utils.formatearRut(preparado.documento.razonSocial));
+            const invoiceId = tarea.tipo === "NOTA_DEBITO" ? InvoiceDAO.findInvoiceByFolio(preparado.documento.folioDoc, customerId, subsidiariaId) : documento.documentoId;
+            if (tarea.tipo === "NOTA_DEBITO" && !invoiceId) {
+                throw new Error(`No se encontró factura asociada al folio ${preparado.documento.folioDoc} para el cliente ID ${customerId} y subsidiaria ID ${subsidiariaId}`);
+            }
             aplicaciones(r, "apply", [{ id: invoiceId, amount: estado.diferencia }]);
             aplicaciones(r, "credit", [{ id: journalId }]);
         }
@@ -118,8 +123,12 @@ define(["N/record", "./2win_dao_recaudaciones_fact_lotes", "./CreditMemoDAO", ".
     }
     function confirmarNotaCredito(preparado, documento) {
         if (!documento.documentoId) return {}; // Condición original de la aplicación ND.
-        const id = CreditMemoDAO.getCreditIdByFolio(preparado.documento.folioRef);
-        if (!id) return {};
+        const customerId = CustomerDAO.getByRut(utils.formatearRut(preparado.documento.RutCliente));
+        const subsidiariaId = subsidiaria.getSubsidiaria(utils.formatearRut(preparado.documento.razonSocial));
+        const id = CreditMemoDAO.getCreditIdByFolio(preparado.documento.folioRef, customerId, subsidiariaId);
+        if (!id) {
+            throw new Error(`No se encontró NC asociada al folio ${preparado.documento.folioRef} para el cliente ID ${customerId} y subsidiaria ID ${subsidiariaId}`);
+        }
         const r = record.load({ type: "creditmemo", id: id, isDynamic: true });
         const destino = record.load({ type: "invoice", id: documento.documentoId, isDynamic: true });
         iguales(r.getValue({ fieldId: "entity" }), destino.getValue({ fieldId: "entity" }), "cliente de NC/ND");

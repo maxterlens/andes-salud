@@ -212,6 +212,7 @@ define(["N/record", "N/log", "N/search", "N/query"], function (record, nLog, sea
                         t.recordtype = 'journalentry' 
                         OR t.recordtype = 'advintercompanyjournalentry'
                     )
+                    AND t.custbody_2win_created_from_income_flow = 'T'
                     AND t.isreversal = 'F'
                     AND t.reversaldate IS NULL
                     AND tl.custcol_2w_folio IN (${placeholders})
