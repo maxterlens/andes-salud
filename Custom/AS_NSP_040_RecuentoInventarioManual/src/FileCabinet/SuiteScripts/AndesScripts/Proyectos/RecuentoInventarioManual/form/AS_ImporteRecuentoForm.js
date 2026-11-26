@@ -3,7 +3,9 @@
  * @description Dibuja la ficha "Importes del recuento" en la vista del recuento:
  *              una tabla por articulo con sus cantidades, la tarifa y los tres
  *              importes, y la fila de totales, con el boton Importes del recuento.
- *              construirCsv arma lo mismo en CSV, para abrirlo en Excel. No
+ *              construirCsv arma lo mismo en CSV, para abrirlo en Excel, con
+ *              la tarifa y los importes con punto y 2 decimales, cortados
+ *              sin redondear. No
  *              busca ni guarda records.
  *
  *              Va como HTML en una ficha propia: la sublista Articulos del
@@ -12,7 +14,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.0.1
+ * @version 1.0.2
  */
 define(['N/ui/serverWidget', 'N/file', '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_RecuentoInventarioManualConstants'],
     (serverWidget, file, UTILS, CONSTANTES) => {
@@ -41,27 +43,24 @@ define(['N/ui/serverWidget', 'N/file', '../utils/AS_RecuentoInventarioManualUtil
         });
     }
 
-    /**
-     * Los mismos blancos que la ficha: sin contar no lleva importes y en
-     * Iniciado solo va el Importe Recuento. Numeros con punto decimal y sin
-     * separador de miles, como el Detalle de conteo.
-     */
     function construirCsv(recuentoId, lineas, totales, iniciado) {
         const importes = CONSTANTES.IMPORTES;
         const filas    = [importes.ENCABEZADO.join(importes.SEPARADOR)];
         lineas.forEach((linea) => {
             const conVariacion = linea.contado && !iniciado;
             const nombre       = UTILS.encerrarEntreComillas(UTILS.convertirEntidadesHtmlATexto(linea.nombre));
-            filas.push([linea.id, nombre, UTILS.convertirNuloAVacio(linea.instantanea), UTILS.convertirNuloAVacio(linea.recuento),
-                        conVariacion ? UTILS.convertirNuloAVacio(linea.ajustada) : '', UTILS.convertirNuloAVacio(linea.tarifa),
-                        conVariacion ? UTILS.redondearADosDecimales(linea.importeInstantanea) : '',
-                        linea.contado ? UTILS.redondearADosDecimales(linea.importeRecuento) : '',
-                        conVariacion ? UTILS.redondearADosDecimales(linea.importeVariacion) : ''].join(importes.SEPARADOR));
+            filas.push([linea.id, nombre, linea.codigoBarra,
+                        UTILS.convertirNuloAVacio(linea.instantanea), UTILS.convertirNuloAVacio(linea.recuento),
+                        conVariacion ? UTILS.convertirNuloAVacio(linea.ajustada) : '',
+                        linea.tarifa === null ? '' : UTILS.truncarATextoConDosDecimales(linea.tarifa),
+                        conVariacion ? UTILS.truncarATextoConDosDecimales(linea.importeInstantanea) : '',
+                        linea.contado ? UTILS.truncarATextoConDosDecimales(linea.importeRecuento) : '',
+                        conVariacion ? UTILS.truncarATextoConDosDecimales(linea.importeVariacion) : ''].join(importes.SEPARADOR));
         });
-        filas.push(['', importes.TOTAL, '', '', '', '',
-                    iniciado ? '' : UTILS.redondearADosDecimales(totales.importeInstantanea),
-                    UTILS.redondearADosDecimales(totales.importeRecuento),
-                    iniciado ? '' : UTILS.redondearADosDecimales(totales.importeVariacion)].join(importes.SEPARADOR));
+        filas.push(['', importes.TOTAL, '', '', '', '', '',
+                    iniciado ? '' : UTILS.truncarATextoConDosDecimales(totales.importeInstantanea),
+                    UTILS.truncarATextoConDosDecimales(totales.importeRecuento),
+                    iniciado ? '' : UTILS.truncarATextoConDosDecimales(totales.importeVariacion)].join(importes.SEPARADOR));
 
         return file.create({
             name    : importes.PREFIJO + '-' + recuentoId + '.csv',

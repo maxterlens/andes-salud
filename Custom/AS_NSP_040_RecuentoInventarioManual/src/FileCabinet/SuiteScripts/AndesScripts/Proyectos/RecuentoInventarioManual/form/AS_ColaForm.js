@@ -1,22 +1,23 @@
 /**
  * AS_NSP_040 — Recuento de Inventario Manual
  * @description Lo que ve el usuario en la vista de una solicitud de la cola: el
- *              mensaje arriba con el estado y un solo grupo, AS - Espera de
- *              Recuento de Inventario, con el recuento, el tipo de proceso y la
- *              fecha y hora de inicio y de fin. Los campos propios del record e
+ *              mensaje arriba con el estado y el enlace a cada recuento con su
+ *              numero, y un solo grupo, Historial de Recuento, con el tipo de
+ *              proceso y la fecha y hora de inicio y de fin. Los campos propios del record e
  *              Inactivo se ocultan. Mientras no termine, la pagina se recarga
  *              sola. No busca ni guarda records.
  *
  *              Pendiente  → en cola, con cuantas solicitudes van antes.
  *              Procesando → que se esta haciendo y que tarda.
- *              Listo      → el enlace al recuento; en una aprobacion, que
- *                           quedo aprobado.
+ *              Listo      → que termino; en una aprobacion, que quedo
+ *                           aprobado. En una generacion partida, un enlace
+ *                           por parte.
  *              Error      → el mensaje de NetSuite.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.3.0
+ * @version 1.5.0
  *
  */
 
@@ -34,7 +35,8 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/url', 'N/format', '../constants/
         form.addPageInitMessage({
             type   : obtenerTipoMensaje(solicitud.estado),
             title  : CONSTANTES.COLA.TITULOS[solicitud.estado],
-            message: armarTexto(solicitud) + (terminada ? '' : ' ' + CONSTANTES.COLA.TEXTOS.REFRESCO),
+            message: armarTexto(solicitud) + (terminada ? '' : ' ' + CONSTANTES.COLA.TEXTOS.REFRESCO)
+                   + armarEnlaces(solicitud.recuentos),
         });
         ocultarCamposDelRecord(form);
         agregarEspera(form, solicitud);
@@ -52,21 +54,35 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/url', 'N/format', '../constants/
     }
 
     function armarTexto(solicitud) {
-        const estados = CONSTANTES.COLA.ESTADOS;
+        const estados    = CONSTANTES.COLA.ESTADOS;
         const textos     = CONSTANTES.COLA.TEXTOS;
         const aprobacion = solicitud.tipo === CONSTANTES.COLA.TIPOS.APROBACION;
         if (solicitud.estado === estados.PENDIENTE) return textos.PENDIENTE + solicitud.antes + '.';
         if (solicitud.estado === estados.PROCESANDO) return aprobacion ? textos.APROBANDO : textos.PROCESANDO;
         if (solicitud.estado === estados.ERROR) return textos.ERROR + solicitud.error;
-        const direccion = url.resolveRecord({ recordType: CONSTANTES.RECUENTO.TIPO, recordId: solicitud.recuentoId });
-        return (aprobacion ? textos.APROBADO : textos.LISTO) + ' <a href="' + direccion + '">' + textos.ABRIR + '</a>';
+        return aprobacion ? textos.APROBADO : textos.LISTO;
+    }
+
+    /**
+     * Un enlace por recuento, con su numero. En una generacion partida, cada
+     * uno dice que parte es.
+     */
+    function armarEnlaces(recuentos) {
+        return recuentos.map((recuento, indice) => {
+            const direccion = url.resolveRecord({ recordType: CONSTANTES.RECUENTO.TIPO, recordId: recuento.id });
+            const parte     = CONSTANTES.FORMULARIO.PARTE + (indice + 1) + CONSTANTES.FORMULARIO.PARTE_DE + recuentos.length + ': ';
+            const texto     = recuentos.length > 1 ? parte + recuento.numero : CONSTANTES.COLA.TEXTOS.ABRIR + ' ' + recuento.numero;
+            return '<br><a href="' + direccion + '">' + texto + '</a>';
+        }).join('');
     }
 
     function ocultarCamposDelRecord(form) {
         const campos = CONSTANTES.COLA.CAMPOS;
         [CONSTANTES.COLA.CAMPO_INACTIVO, campos.TIPO, campos.ESTADO, campos.RECUENTO, campos.UBICACION, campos.ERROR,
          campos.TIEMPOS, campos.INICIO, campos.FIN]
-            .forEach((campoId) => form.getField({ id: campoId }).updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN }));
+            .map((campoId) => form.getField({ id: campoId }))
+            .filter((campo) => campo)
+            .forEach((campo) => campo.updateDisplayType({ displayType: serverWidget.FieldDisplayType.HIDDEN }));
     }
 
     function agregarEspera(form, solicitud) {
@@ -74,15 +90,6 @@ define(['N/ui/serverWidget', 'N/ui/message', 'N/url', 'N/format', '../constants/
 
         form.addFieldGroup({ id: vista.GRUPO, label: vista.TITULO });
 
-        const campoRecuento = form.addField({
-            id       : vista.RECUENTO,
-            type     : serverWidget.FieldType.SELECT,
-            label    : 'Recuento de inventario',
-            source   : 'transaction',
-            container: vista.GRUPO,
-        });
-        campoRecuento.defaultValue = solicitud.recuentoId;
-        campoRecuento.updateDisplayType({ displayType: serverWidget.FieldDisplayType.INLINE });
         const campoInicio = form.addField({
             id       : vista.INICIO,
             type     : serverWidget.FieldType.TEXT,

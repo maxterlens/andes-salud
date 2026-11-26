@@ -1,5 +1,5 @@
 <scheduledscript scriptid="customscript_as_rec_inv_man_ss">
-  <description>Procesa la cola AS Recuento Inventario Manual Cola de a una solicitud, en orden: Generar recuento crea el Recuento de inventario y lo deja Iniciado; Cargar CSV escribe las cantidades en el recuento; Aprobar ejecuta la aprobacion del recuento. Dos deployments: uno para generacion y carga, otro solo para aprobaciones. Sin programacion: lo lanzan el Suitelet y la vista de la solicitud.</description>
+  <description>Procesa la cola AS Recuento Inventario Manual Cola de a una solicitud, en orden: Cargar CSV escribe las cantidades en el recuento; Aprobar ejecuta la aprobacion del recuento. Generar recuento no pasa por aqui: lo procesa AS Recuento Inventario Manual Gen MR. Dos deployments: uno para carga, otro solo para aprobaciones. Sin programacion: lo lanzan el Suitelet y la vista de la solicitud.</description>
   <isinactive>F</isinactive>
   <name>AS Recuento Inventario Manual SS</name>
   <notifyadmins>F</notifyadmins>

@@ -22,6 +22,8 @@
  *                  la de instantanea, la ajustada, la tarifa y la nota.
  *                - obtenerEstadoRecuento: la letra del estado del recuento
  *                  (B Iniciado), para el CSV de importes.
+ *                - obtenerNumerosRecuento: el numero (RI-...) de cada
+ *                  recuento, por id, para los enlaces de la vista de la cola.
  *                - obtenerRecuentosIniciados: los recuentos del modulo que
  *                  aceptan cantidades, con su subsidiaria, para el select
  *                  de la carga.
@@ -45,7 +47,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.18.0
+ * @version 1.19.0
  *
  */
 
@@ -186,6 +188,19 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         return fila ? fila.estado : '';
     }
 
+    function obtenerNumerosRecuento(recuentoIds) {
+        if (!recuentoIds.length) return {};
+        const filas = query.runSuiteQL({
+            query : 'SELECT t.id, t.tranid AS numero FROM transaction t'
+                  + ' WHERE t.id IN (' + recuentoIds.map(() => '?').join(', ') + ')',
+            params: recuentoIds,
+        }).asMappedResults();
+        const numeros = {};
+        filas.forEach((fila) => { numeros[String(fila.id)] = fila.numero; });
+
+        return numeros;
+    }
+
     function obtenerRecuentosIniciados() {
         const filas = query.runSuiteQL({
             query: 'SELECT t.id, t.tranid AS numero, t.status AS estado, t.custbody_as_rec_inv_carga AS carga'
@@ -302,6 +317,7 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         obtenerArticulosSubsidiaria: obtenerArticulosSubsidiaria,
         obtenerCantidadesRecuento  : obtenerCantidadesRecuento,
         obtenerEstadoRecuento      : obtenerEstadoRecuento,
+        obtenerNumerosRecuento     : obtenerNumerosRecuento,
         obtenerRecuentosIniciados  : obtenerRecuentosIniciados,
         obtenerUbicacionRecuento   : obtenerUbicacionRecuento,
         obtenerLoteRecuento        : obtenerLoteRecuento,

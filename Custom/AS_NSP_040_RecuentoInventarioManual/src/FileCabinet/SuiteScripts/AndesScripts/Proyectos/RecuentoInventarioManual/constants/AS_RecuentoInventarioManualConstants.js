@@ -7,7 +7,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.16.0
+ * @version 1.17.0
  *
  */
 
@@ -24,6 +24,8 @@ define([], () => {
         ALERTA_TITULO             : 'No se pudo generar el recuento',
         SIN_ARTICULOS             : 'Marque al menos un articulo.',
         GENERACION_PENDIENTE      : 'Ya hay un recuento en cola o generandose para esta ubicacion (solicitud ',
+        PARTE                     : 'Parte ',
+        PARTE_DE                  : ' de ',
         MAESTRO_TITULO            : 'Descargar TXT maestro',
         MAESTRO_ALERTA_TITULO     : 'No se pudo descargar el TXT maestro',
         SIN_SUBSIDIARIA           : 'Seleccione la subsidiaria.',
@@ -62,7 +64,6 @@ define([], () => {
         VISTA                : {
             GRUPO    : 'custpage_grp_cola',
             TITULO   : 'Historial de Recuento',
-            RECUENTO : 'custpage_cola_recuento',
             TIPO     : 'custpage_cola_tipo',
             INICIO   : 'custpage_cola_inicio',
             FIN      : 'custpage_cola_fin',
@@ -76,6 +77,9 @@ define([], () => {
         PROCESADOR           : 'customscript_as_rec_inv_man_ss',
         DEPLOYMENT           : 'customdeploy_as_rec_inv_man_ss',
         DEPLOYMENT_APROBACION: 'customdeploy_as_rec_inv_man_ss_aprob',
+        GENERADOR            : 'customscript_as_rec_inv_man_gen_mr',
+        DEPLOYMENT_GENERACION: 'customdeploy_as_rec_inv_man_gen_mr',
+        LINEAS_POR_RECUENTO  : 1500,
         UNIDADES_MINIMAS     : 500,
         MINUTOS_MAXIMOS      : 30,
         REFRESCO_SEGUNDOS    : 15,
@@ -100,6 +104,7 @@ define([], () => {
                         + 'o con las cantidades antes de volver a enviar.',
             EN_CURSO    : 'Aprobacion en proceso: no apruebe ni rechace hasta que termine. ',
             SOLICITUD   : 'Ver la solicitud',
+            CREADOS     : ' Recuentos que si se crearon: ',
         },
     };
 
@@ -208,7 +213,7 @@ define([], () => {
         CAMPO      : 'custpage_as_rec_inv_importes',
         PREFIJO    : 'ImportesRecuento',
         SEPARADOR  : ',',
-        ENCABEZADO : ['ID interno', 'Articulo', 'Cantidad de instantanea', 'Cantidad del recuento', 'Cantidad ajustada',
+        ENCABEZADO : ['ID interno', 'Articulo', 'UPC', 'Cantidad de instantanea', 'Cantidad del recuento', 'Cantidad ajustada',
                       'Tarifa', 'Importe instantanea', 'Importe recuento', 'Importe variacion'],
         TOTAL      : 'Total',
     };

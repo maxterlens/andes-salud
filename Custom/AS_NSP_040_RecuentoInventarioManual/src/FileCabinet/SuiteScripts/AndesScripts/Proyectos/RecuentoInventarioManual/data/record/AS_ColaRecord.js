@@ -8,13 +8,14 @@
  *                                  recuento, para procesarla.
  *              marcarProcesando  → el Scheduled la tomo: la hora de inicio.
  *              marcarListo       → termino: el recuento, los tiempos y la hora
- *                                  de fin.
+ *                                  de fin; en una generacion, tambien los
+ *                                  recuentos de todas las partes en los datos.
  *              marcarError       → fallo o se interrumpio: el mensaje y la hora
  *                                  de fin.
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.1.0
+ * @version 1.2.0
  */
 define(['N/record', '../../constants/AS_RecuentoInventarioManualConstants'],
     (record, CONSTANTES) => {
@@ -56,14 +57,20 @@ define(['N/record', '../../constants/AS_RecuentoInventarioManualConstants'],
         });
     }
 
-    function marcarListo(solicitudId, recuentoId, tiempos) {
-        const campos = CONSTANTES.COLA.CAMPOS;
-        actualizarSolicitud(solicitudId, {
+    /**
+     * datos solo en una generacion: los mismos datos con los recuentos que
+     * creo cada parte, para que la vista los enlace a todos.
+     */
+    function marcarListo(solicitudId, recuentoId, tiempos, datos) {
+        const campos  = CONSTANTES.COLA.CAMPOS;
+        const valores = {
             [campos.ESTADO]  : CONSTANTES.COLA.ESTADOS.LISTO,
             [campos.RECUENTO]: recuentoId,
             [campos.TIEMPOS] : tiempos,
             [campos.FIN]     : new Date(),
-        });
+        };
+        if (datos) valores[campos.DATOS] = JSON.stringify(datos);
+        actualizarSolicitud(solicitudId, valores);
     }
 
     function marcarError(solicitudId, mensaje) {

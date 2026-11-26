@@ -66,7 +66,8 @@ define(['../data/query/AS_RecuentoInventarioManualQuery', '../form/AS_ImporteRec
             return {
                 id                : cantidad.id,
                 nombre            : cantidad.nombre,
-                contado           : cantidad.recuento !== null,
+                codigoBarra       : cantidad.codigoBarra,
+                contado          : cantidad.recuento !== null,
                 instantanea       : cantidad.instantanea,
                 recuento          : cantidad.recuento,
                 ajustada          : cantidad.ajustada,

@@ -7,8 +7,10 @@
  *                                  con ubicacion, la lista de sus articulos
  *                                  para marcar (GET).
  *              generarRecuento   → con los articulos marcados, deja la solicitud
- *                                  en la cola, lanza el Scheduled si esta libre
- *                                  y lleva al usuario a la solicitud (POST). Si
+ *                                  en la cola, lanza el Map/Reduce de generacion
+ *                                  si esta libre y lleva al usuario a la
+ *                                  solicitud (POST). El Map/Reduce la parte en
+ *                                  recuentos de 1500 lineas. Si
  *                                  la ubicacion ya tiene una generacion sin
  *                                  terminar, vuelve a dibujar la pantalla con
  *                                  el aviso y lo marcado. Que haya algo marcado
@@ -16,14 +18,15 @@
  *
  *              El recuento no se crea aqui: con miles de lineas, guardarlo y
  *              tomar la instantanea pasa el tiempo de un Suitelet. Lo crea
- *              AS_ColaHandler desde el Scheduled. Llevar al usuario a la
- *              solicitud (y no dibujar un aviso) hace que recargar la pagina
- *              solo vuelva a mostrarla, sin reenviar el formulario.
+ *              AS_GeneracionRecuentoHandler desde el Map/Reduce. Llevar al
+ *              usuario a la solicitud (y no dibujar un aviso) hace que
+ *              recargar la pagina solo vuelva a mostrarla, sin reenviar el
+ *              formulario.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.3.0
+ * @version 1.4.0
  */
 define(['N/redirect', '../form/AS_RecuentoInventarioManualForm', '../data/query/AS_RecuentoInventarioManualQuery',
         '../data/record/AS_ColaRecord', '../utils/AS_RecuentoInventarioManualUtils',
@@ -44,7 +47,7 @@ define(['N/redirect', '../form/AS_RecuentoInventarioManualForm', '../data/query/
         const enCursoId  = recuentoInventarioManualQuery.obtenerGeneracionEnCurso(cabecera.ubicacion);
         if (enCursoId) return responderConFormulario(context, cabecera, parametros.articulos, CONSTANTES.FORMULARIO.GENERACION_PENDIENTE + enCursoId + ').');
         const solicitudId = colaRecord.crearSolicitud(CONSTANTES.COLA.TIPOS.GENERACION, { ubicacion: cabecera.ubicacion, datos: parametros });
-        UTILS.lanzarScheduledSiEstaLibre(CONSTANTES.COLA.PROCESADOR, CONSTANTES.COLA.DEPLOYMENT);
+        UTILS.lanzarMapReduceSiEstaLibre(CONSTANTES.COLA.GENERADOR, CONSTANTES.COLA.DEPLOYMENT_GENERACION);
 
         log.audit({
             title  : 'RECUENTO INVENTARIO MANUAL ENVIADO',
