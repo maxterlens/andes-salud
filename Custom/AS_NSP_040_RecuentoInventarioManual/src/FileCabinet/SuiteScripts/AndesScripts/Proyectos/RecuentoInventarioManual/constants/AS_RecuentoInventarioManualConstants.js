@@ -7,7 +7,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.17.0
+ * @version 1.18.0
  *
  */
 
@@ -29,6 +29,13 @@ define([], () => {
         MAESTRO_TITULO            : 'Descargar TXT maestro',
         MAESTRO_ALERTA_TITULO     : 'No se pudo descargar el TXT maestro',
         SIN_SUBSIDIARIA           : 'Seleccione la subsidiaria.',
+        REVISANDO_TITULO          : 'Revisando el recuento',
+        REVISANDO_TEXTO           : 'Buscando movimientos de los articulos despues del recuento.',
+        MOVIMIENTOS_TITULO        : 'Articulos con movimiento despues del recuento',
+        MOVIMIENTOS_TEXTO         : 'Estos articulos tuvieron salidas despues de crear el recuento y puede que NetSuite '
+                                  + 'no lo apruebe. Quite esas lineas o vuelva a contarlas.',
+        MOVIMIENTOS_MAXIMO        : 15,
+        MOVIMIENTOS_MAS           : 'Y otros ',
         CLIENT_SCRIPT             : '/SuiteScripts/AndesScripts/Proyectos/RecuentoInventarioManual/AS_RecuentoInventarioManual_CS_2.1.js',
     };
 
@@ -100,6 +107,9 @@ define([], () => {
             REFRESCO    : 'Esta pagina se actualiza sola mientras la solicitud no termine. Puede cerrarla: '
                         + 'la solicitud sigue igual.',
             ABRIR       : 'Abrir el recuento',
+            NO_APROBADO : 'NetSuite no aprobo el recuento: ',
+            NO_APROBADO_CAUSA: '. Revise si algun articulo tuvo una merma, un traslado o un despacho despues '
+                        + 'del recuento.',
             INTERRUMPIDA: 'El proceso se interrumpio antes de terminar. Revise si el recuento quedo creado '
                         + 'o con las cantidades antes de volver a enviar.',
             EN_CURSO    : 'Aprobacion en proceso: no apruebe ni rechace hasta que termine. ',
@@ -134,6 +144,7 @@ define([], () => {
         LOTES_DATA       : 'custpage_lotes_data',
         CARGA            : 'custpage_carga',
         APROBAR          : 'custpage_aprobar',
+        REVISAR          : 'custpage_revisar',
         DETALLE          : 'custpage_detalle',
         IMPORTES         : 'custpage_importes',
         TXT_MAESTRO      : 'custpage_txt_maestro',
@@ -166,10 +177,10 @@ define([], () => {
         BOTON_CARGAR  : 'Cargar',
         RECUENTO_LABEL: 'Recuento',
         LOTE_LABEL    : 'Lote',
-        ARCHIVO_LABEL : 'Archivo CSV (UBICACION;ID;ARTICULO;RECUENTO)',
+        ARCHIVO_LABEL : 'Archivo CSV (UPC;RECUENTO)',
         ALERTA_TITULO : 'No se pudieron cargar las cantidades',
         SIN_ARCHIVO   : 'Seleccione el archivo CSV',
-        SIN_FILAS     : 'El archivo no trae ninguna fila con ID',
+        SIN_FILAS     : 'El archivo no trae ninguna fila con UPC',
         SIN_LOTE      : 'El lote elegido no esta configurado para la subsidiaria del recuento',
     };
 

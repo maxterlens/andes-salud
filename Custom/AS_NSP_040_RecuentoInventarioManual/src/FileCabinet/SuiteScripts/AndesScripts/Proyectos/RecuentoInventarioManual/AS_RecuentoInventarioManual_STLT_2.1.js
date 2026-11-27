@@ -14,6 +14,10 @@
  *                custpage_aprobar        → boton Aprobar del recuento: deja la
  *                                          aprobacion en la cola y lleva a
  *                                          ella.
+ *                custpage_revisar        → boton Aprobar del recuento, antes
+ *                                          de aprobar: responde en JSON las
+ *                                          salidas de sus articulos despues
+ *                                          del recuento.
  *                custpage_detalle        → boton Detalle de conteo del
  *                                          recuento: baja el CSV.
  *                custpage_importes       → boton Importes del recuento del
@@ -42,7 +46,7 @@
  * @scriptid     customscript_as_rec_inv_man_stlt
  * @deploymentid customdeploy_as_rec_inv_man_stlt
  * @author Andes Salud
- * @version 1.10.0
+ * @version 1.11.0
  *
  */
 
@@ -63,6 +67,8 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
                     cargaCantidadesHandler.mostrarFormulario(context);
                 } else if (parametros.aprobarId) {
                     aprobacionRecuentoHandler.solicitarAprobacion(parametros.aprobarId);
+                } else if (parametros.revisarId) {
+                    aprobacionRecuentoHandler.revisarMovimientos(context, parametros.revisarId);
                 } else if (parametros.detalleId) {
                     archivoRecuentoHandler.descargarDetalle(context, parametros.detalleId);
                 } else if (parametros.importesId) {
@@ -85,7 +91,7 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
             log.error({
                 title  : 'RECUENTO INVENTARIO MANUAL ERROR',
                 details: 'metodo: ' + context.request.method
-                       + ' | recuento: ' + (parametros.recuentoId || parametros.recuentoCargaId || parametros.aprobarId
+                       + ' | recuento: ' + (parametros.recuentoId || parametros.recuentoCargaId || parametros.aprobarId || parametros.revisarId
                                         || parametros.detalleId || parametros.importesId || parametros.maestroId || '')
                        + ' | motivo: ' + (fallo.message || fallo),
             });
@@ -101,6 +107,7 @@ define(['./handler/AS_RecuentoInventarioManualHandler', './handler/AS_ArchivoRec
             loteCargaId    : context.request.parameters[CONSTANTES.CAMPOS.LOTE_CARGA],
             carga          : context.request.parameters[CONSTANTES.CAMPOS.CARGA],
             aprobarId      : context.request.parameters[CONSTANTES.CAMPOS.APROBAR],
+            revisarId      : context.request.parameters[CONSTANTES.CAMPOS.REVISAR],
             detalleId      : context.request.parameters[CONSTANTES.CAMPOS.DETALLE],
             importesId     : context.request.parameters[CONSTANTES.CAMPOS.IMPORTES],
             txtMaestro        : context.request.parameters[CONSTANTES.CAMPOS.TXT_MAESTRO],

@@ -31,6 +31,9 @@
  *                  del recuento, y su subsidiaria.
  *                - obtenerLoteRecuento: el lote elegido en la carga, si esta
  *                  configurado para la subsidiaria del recuento.
+ *                - obtenerMovimientosPosteriores: las salidas de los articulos
+ *                  del recuento en su ubicacion creadas despues del recuento,
+ *                  para avisar antes de aprobar.
  *              Lotes
  *                - obtenerLotesRecuento: los lotes activos de Lote
  *                  Predeterminado de Recuento, con su subsidiaria.
@@ -47,7 +50,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.19.0
+ * @version 1.20.0
  *
  */
 
@@ -247,6 +250,30 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         return fila ? fila.lote : '';
     }
 
+    /**
+     * Una merma, un traslado o un despacho de los articulos del recuento
+     * despues de crearlo puede dejar un lote con menos de lo que tenia en la
+     * instantanea, y entonces NetSuite no aprueba (RI-MONTT27, prod,
+     * 2026-11-26). No mira si al lote todavia le alcanza: cruzar todos los
+     * lotes con el stock tardo 38 s con 1500 lineas (QA, 2026-11-26). Los
+     * otros recuentos no cuentan: sus lineas no mueven stock, lo mueve el
+     * ajuste que crean al aprobarse. La ubicacion va como valor y no como
+     * subconsulta: con subconsulta la consulta no termina.
+     */
+    function obtenerMovimientosPosteriores(recuentoId, ubicacionId) {
+        return query.runSuiteQL({
+            query : 'SELECT DISTINCT BUILTIN.DF(tl.item) AS articulo, m.tranid AS transaccion'
+                  + ' FROM transactionline tl'
+                  + ' JOIN transaction m ON m.id = tl.transaction'
+                  + ' WHERE tl.location = ?'
+                  + ' AND tl.item IN (SELECT y.item FROM transactionline y WHERE y.transaction = ? AND y.item IS NOT NULL)'
+                  + ' AND m.createddate > (SELECT r.createddate FROM transaction r WHERE r.id = ?)'
+                  + " AND tl.quantity < 0 AND tl.mainline = 'F' AND m.type <> 'InvCount'"
+                  + ' ORDER BY articulo',
+            params: [ubicacionId, recuentoId, recuentoId],
+        }).asMappedResults();
+    }
+
     function obtenerLotesRecuento() {
         const filas = query.runSuiteQL({
             query : 'SELECT l.id, l.custrecord_as_rec_inv_man_lote_lote AS lote, l.custrecord_as_rec_inv_man_lote_subsid AS subsidiaria'
@@ -321,6 +348,7 @@ define(['N/query', '../../constants/AS_RecuentoInventarioManualConstants'],
         obtenerRecuentosIniciados  : obtenerRecuentosIniciados,
         obtenerUbicacionRecuento   : obtenerUbicacionRecuento,
         obtenerLoteRecuento        : obtenerLoteRecuento,
+        obtenerMovimientosPosteriores: obtenerMovimientosPosteriores,
         obtenerLotesRecuento       : obtenerLotesRecuento,
         obtenerSolicitudes         : obtenerSolicitudes,
         contarSolicitudesAntes     : contarSolicitudesAntes,

@@ -21,7 +21,9 @@
  *              Una aprobacion de media hora no frena una carga, y cada uno
  *              cierra como interrumpidas solo las suyas.
  *              Si NetSuite la rechaza, queda en Error con su mensaje y la cola
- *              sigue con la siguiente.
+ *              sigue con la siguiente. Aprobar no lanza error cuando NetSuite
+ *              no aprueba: devuelve el mensaje, y la solicitud queda en Error
+ *              igual.
  *
  *              Los tiempos de cada paso quedan en la solicitud y en el log,
  *              para saber donde se va el tiempo (el guardado tardo entre 10 y 15
@@ -34,7 +36,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.2.0
+ * @version 1.3.0
  *
  */
 define(['N/runtime', '../data/record/AS_ColaRecord', '../data/record/AS_RecuentoInventarioRecord',
@@ -136,7 +138,8 @@ define(['N/runtime', '../data/record/AS_ColaRecord', '../data/record/AS_Recuento
 
     function aprobarRecuento(recuentoId) {
         const inicio  = Date.now();
-        recuentoInventarioRecord.aprobarRecuento(recuentoId);
+        const fallo   = recuentoInventarioRecord.aprobarRecuento(recuentoId);
+        if (fallo) throw new Error(CONSTANTES.COLA.TEXTOS.NO_APROBADO + fallo + CONSTANTES.COLA.TEXTOS.NO_APROBADO_CAUSA);
         const tiempos = 'aprobar: ' + convertirASegundos(Date.now() - inicio);
 
         log.audit({

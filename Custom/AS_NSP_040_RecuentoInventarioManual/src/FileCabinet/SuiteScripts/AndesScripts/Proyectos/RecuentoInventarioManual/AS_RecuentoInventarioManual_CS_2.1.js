@@ -31,10 +31,14 @@
  *              descargarTxtMaestro → boton Descargar TXT de esa pantalla: con
  *                             la subsidiaria elegida abre el Suitelet y baja
  *                             el TXT maestro; sin ella muestra el aviso rojo.
- *              aprobarRecuento → boton Aprobar propio del recuento: abre el
- *                             Suitelet, que deja la aprobacion en la cola y
- *                             lleva a la solicitud. Un segundo clic mientras
- *                             sale de la pagina no hace nada.
+ *              aprobarRecuento → boton Aprobar propio del recuento: primero
+ *                             pregunta al Suitelet si sus articulos tuvieron
+ *                             salidas despues del recuento; si tuvieron, las
+ *                             muestra en un aviso y aprueba solo si el usuario
+ *                             acepta. Para aprobar abre el Suitelet, que deja
+ *                             la aprobacion en la cola y lleva a la solicitud.
+ *                             Un segundo clic mientras revisa o sale de la
+ *                             pagina no hace nada.
  *
  *              Lo que pasa despues de enviar se ve en la solicitud de la cola.
  *              Marcar un articulo de la lista no pasa por el client script: es
@@ -44,12 +48,12 @@
  * @NScriptType ClientScript
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.12.0
+ * @version 1.13.0
  *
  */
 
-define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInventarioManualConstants'],
-    (currentRecord, url, message, CONSTANTES) => {
+define(['N/currentRecord', 'N/url', 'N/https', 'N/ui/message', 'N/ui/dialog', './constants/AS_RecuentoInventarioManualConstants'],
+    (currentRecord, url, https, message, dialog, CONSTANTES) => {
 
     let ubicacionDibujada   = '';
     let generando           = false;
@@ -214,11 +218,51 @@ define(['N/currentRecord', 'N/url', 'N/ui/message', './constants/AS_RecuentoInve
     function aprobarRecuento() {
         if (aprobando) return;
         aprobando = true;
+        const recuentoId = currentRecord.get().id;
+        const aviso      = message.create({
+            type   : message.Type.INFORMATION,
+            title  : CONSTANTES.FORMULARIO.REVISANDO_TITULO,
+            message: CONSTANTES.FORMULARIO.REVISANDO_TEXTO,
+        });
+        aviso.show();
+
+        https.get.promise({
+            url: url.resolveScript({
+                scriptId    : CONSTANTES.SCRIPT.ID,
+                deploymentId: CONSTANTES.SCRIPT.DEPLOYMENT,
+                params      : { [CONSTANTES.CAMPOS.REVISAR]: recuentoId },
+            }),
+        }).then((respuesta) => {
+            aviso.hide();
+            const movimientos = JSON.parse(respuesta.body);
+            if (!movimientos.length) return enviarAprobacion(recuentoId);
+            return dialog.confirm({
+                title  : CONSTANTES.FORMULARIO.MOVIMIENTOS_TITULO,
+                message: armarListaMovimientos(movimientos),
+            }).then((aceptado) => {
+                if (aceptado) return enviarAprobacion(recuentoId);
+                aprobando = false;
+            });
+        });
+    }
+
+    function enviarAprobacion(recuentoId) {
         window.location.href = url.resolveScript({
             scriptId    : CONSTANTES.SCRIPT.ID,
             deploymentId: CONSTANTES.SCRIPT.DEPLOYMENT,
-            params      : { [CONSTANTES.CAMPOS.APROBAR]: currentRecord.get().id },
+            params      : { [CONSTANTES.CAMPOS.APROBAR]: recuentoId },
         });
+    }
+
+    function armarListaMovimientos(movimientos) {
+        const formulario = CONSTANTES.FORMULARIO;
+        const visibles   = movimientos.slice(0, formulario.MOVIMIENTOS_MAXIMO);
+        const restantes  = movimientos.length - visibles.length;
+        const filas      = visibles.map((movimiento) => '<li>' + movimiento.articulo + ' — ' + movimiento.transaccion + '</li>');
+        if (restantes > 0) filas.push('<li>' + formulario.MOVIMIENTOS_MAS + restantes + '</li>');
+
+        return formulario.MOVIMIENTOS_TEXTO
+             + '<ul style="margin:8px 0 8px 16px">' + filas.join('') + '</ul>';
     }
 
     return {

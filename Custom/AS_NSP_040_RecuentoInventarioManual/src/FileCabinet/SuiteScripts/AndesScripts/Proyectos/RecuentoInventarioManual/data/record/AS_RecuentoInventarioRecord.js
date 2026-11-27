@@ -7,7 +7,8 @@
  *              guardarRecuento: lo guarda; va aparte para medir cada paso.
  *              comenzarRecuento: lo pasa de Abierto a Iniciado.
  *              aprobarRecuento: la accion nativa Aprobar; NetSuite crea los
- *              ajustes de inventario.
+ *              ajustes de inventario. Devuelve el mensaje si NetSuite no
+ *              aprobo, vacio si aprobo.
  *              cargarRecuento: lo abre para escribirle las cantidades.
  *              escribirCantidades: escribe la Cantidad del recuento y su
  *              detalle por lote en las lineas de los articulos recibidos.
@@ -23,7 +24,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.9.0
+ * @version 1.10.0
  *
  */
 
@@ -62,12 +63,20 @@ define(['N/record', 'N/action', 'N/format', '../../constants/AS_RecuentoInventar
         });
     }
 
+    /**
+     * action.execute no lanza error si NetSuite no aprueba: devuelve una
+     * notificacion FAILURE ("Fallo inesperado") y el recuento sigue sin
+     * aprobar (RI-MONTT27, prod, 2026-11-26).
+     */
     function aprobarRecuento(recuentoId) {
-        action.execute({
+        const resultado = action.execute({
             recordType: CONSTANTES.RECUENTO.TIPO,
             id        : CONSTANTES.RECUENTO.ACCION_APROBAR,
             params    : { recordId: recuentoId },
         });
+        const fallo = (resultado.notifications || []).find((aviso) => aviso.title === 'FAILURE');
+
+        return fallo ? fallo.message : '';
     }
 
     function cargarRecuento(recuentoId) { return record.load({ type: CONSTANTES.RECUENTO.TIPO, id: recuentoId }); }

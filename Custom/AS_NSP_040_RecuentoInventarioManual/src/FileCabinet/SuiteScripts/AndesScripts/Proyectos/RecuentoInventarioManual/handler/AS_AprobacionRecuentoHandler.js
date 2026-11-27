@@ -7,6 +7,11 @@
  *                                    si no, deja una nueva, lanza el deployment
  *                                    de aprobaciones del Scheduled y lleva al
  *                                    usuario a ella (Suitelet, GET).
+ *              revisarMovimientos  → antes de aprobar, responde en JSON las
+ *                                    salidas de los articulos del recuento
+ *                                    en su ubicacion despues de crearlo; el
+ *                                    client script las muestra en un aviso
+ *                                    (Suitelet, GET).
  *
  *              El recuento no se aprueba aqui: el Aprobar nativo con miles de
  *              lineas tarda media hora y el navegador corta a los 14 minutos
@@ -19,7 +24,7 @@
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.0.0
+ * @version 1.1.0
  */
 define(['N/redirect', '../data/query/AS_RecuentoInventarioManualQuery', '../data/record/AS_ColaRecord',
         '../utils/AS_RecuentoInventarioManualUtils', '../constants/AS_RecuentoInventarioManualConstants'],
@@ -43,7 +48,19 @@ define(['N/redirect', '../data/query/AS_RecuentoInventarioManualQuery', '../data
         redirect.toRecord({ type: CONSTANTES.COLA.TIPO, id: solicitudId });
     }
 
+    function revisarMovimientos(context, recuentoId) {
+        const ubicacion   = recuentoInventarioManualQuery.obtenerUbicacionRecuento(recuentoId);
+        const movimientos = recuentoInventarioManualQuery.obtenerMovimientosPosteriores(recuentoId, ubicacion.id).map((movimiento) => ({
+            articulo   : UTILS.convertirEntidadesHtmlATexto(movimiento.articulo),
+            transaccion: movimiento.transaccion,
+        }));
+
+        context.response.setHeader({ name: 'Content-Type', value: 'application/json' });
+        context.response.write(JSON.stringify(movimientos));
+    }
+
     return {
         solicitarAprobacion: solicitarAprobacion,
+        revisarMovimientos : revisarMovimientos,
     };
 });

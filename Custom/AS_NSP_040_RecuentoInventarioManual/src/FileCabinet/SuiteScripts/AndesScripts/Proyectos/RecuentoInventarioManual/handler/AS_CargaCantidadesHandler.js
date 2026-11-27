@@ -16,22 +16,25 @@
  *              pagina. Dos cargas del mismo recuento no chocan: la cola las
  *              procesa en orden y la segunda solo pisa los articulos que trae.
  *
- *              El CSV trae UBICACION;ID;ARTICULO;RECUENTO, con UBICACION y ID
- *              por id interno, una fila por articulo, sin lote: todo el
+ *              El CSV trae UPC;RECUENTO, una fila por articulo, sin lote:
+ *              el UPC se busca entre los articulos del recuento (la ubicacion
+ *              no va: es la del recuento elegido en la pantalla) y todo el
  *              RECUENTO va al lote elegido en la pantalla, uno de Lote
  *              Predeterminado de Recuento. Si no es de la subsidiaria del
- *              recuento no se carga nada. Si un articulo viene en varias
- *              filas, se suman. Una fila con RECUENTO vacio deja el articulo
- *              vacio en el recuento (sin cantidad ni lotes): vacio es "no se
- *              conto", no 0. Un 0 se escribe 0, sin lote. Un articulo que no viene en el CSV no se toca.
- *              ARTICULO es solo para leerlo. Si una fila no pasa la validacion
- *              no se carga nada, como en el AS_NSP_032. Si NetSuite rechaza el
- *              guardado, la solicitud queda en Error con su mensaje.
+ *              recuento no se carga nada. Un UPC que no esta en el recuento,
+ *              o que esta en mas de un articulo, rechaza la carga. Si un
+ *              articulo viene en varias filas, se suman. Una fila con RECUENTO
+ *              vacio deja el articulo vacio en el recuento (sin cantidad ni
+ *              lotes): vacio es "no se conto", no 0. Un 0 se escribe 0, sin
+ *              lote. Un articulo que no viene en el CSV no se toca. Si una fila
+ *              no pasa la validacion no se carga nada, como en el AS_NSP_032.
+ *              Si NetSuite rechaza el guardado, la solicitud queda en Error con
+ *              su mensaje.
  *
  * @NApiVersion 2.1
  * @NModuleScope Public
  * @author Andes Salud
- * @version 1.11.0
+ * @version 1.12.0
  *
  */
 
@@ -55,11 +58,10 @@ define(['N/redirect', '../form/AS_CargaCantidadesForm', '../data/query/AS_Recuen
         if (!filas.length) return responderConFormulario(context, recuentoId, loteId, CONSTANTES.CARGA.SIN_FILAS);
         const lote = recuentoInventarioManualQuery.obtenerLoteRecuento(recuentoId, loteId);
         if (!lote) return responderConFormulario(context, recuentoId, loteId, CONSTANTES.CARGA.SIN_LOTE);
-        const ubicacion = recuentoInventarioManualQuery.obtenerUbicacionRecuento(recuentoId);
-        const articulos = recuentoInventarioManualQuery.obtenerCantidadesRecuento(recuentoId).map((cantidad) => cantidad.id);
-        const errores   = filas.map((fila) => validarFila(fila, ubicacion, articulos)).filter((error) => error);
+        const articulosPorUpc = agruparPorUpc(recuentoInventarioManualQuery.obtenerCantidadesRecuento(recuentoId));
+        const errores         = filas.map((fila) => validarFila(fila, articulosPorUpc)).filter((error) => error);
         if (errores.length) return responderConFormulario(context, recuentoId, loteId, errores.join('<br>'));
-        const cantidades  = agruparPorArticulo(filas, lote);
+        const cantidades  = agruparPorArticulo(filas, articulosPorUpc, lote);
         const solicitudId = colaRecord.crearSolicitud(CONSTANTES.COLA.TIPOS.CARGA, { recuento: recuentoId, datos: { cantidades: cantidades } });
         UTILS.lanzarScheduledSiEstaLibre(CONSTANTES.COLA.PROCESADOR, CONSTANTES.COLA.DEPLOYMENT);
 
@@ -97,38 +99,54 @@ define(['N/redirect', '../form/AS_CargaCantidadesForm', '../data/query/AS_Recuen
             .map((fila, posicion) => {
                 const columnas = fila.split(separador);
                 return {
-                    numero   : posicion + 1,
-                    ubicacion: (columnas[0] || '').trim(),
-                    id       : (columnas[1] || '').trim(),
-                    recuento : (columnas[3] || '').trim().replace(',', '.'),
+                    numero  : posicion + 1,
+                    upc     : (columnas[0] || '').trim(),
+                    recuento: (columnas[1] || '').trim().replace(',', '.'),
                 };
             })
             .slice(1)
-            .filter((fila) => fila.id);
+            .filter((fila) => fila.upc);
     }
 
-    function validarFila(fila, ubicacion, articulos) {
-        const prefijo = 'Fila ' + fila.numero + ': ';
-        if (!articulos.includes(fila.id)) return prefijo + 'el ID ' + fila.id + ' no es un articulo de este recuento';
-        if (fila.ubicacion !== ubicacion.id) {
-            return prefijo + 'la ubicacion "' + fila.ubicacion + '" no es la del recuento (' + ubicacion.id + ' - ' + ubicacion.nombre + ')';
+    /**
+     * Los articulos del recuento por su UPC. Un articulo sin UPC no entra:
+     * no se puede cargar por CSV.
+     */
+    function agruparPorUpc(articulos) {
+        const articulosPorUpc = {};
+        articulos.filter((articulo) => articulo.codigoBarra).forEach((articulo) => {
+            if (!articulosPorUpc[articulo.codigoBarra]) articulosPorUpc[articulo.codigoBarra] = [];
+            articulosPorUpc[articulo.codigoBarra].push(articulo);
+        });
+
+        return articulosPorUpc;
+    }
+
+    function validarFila(fila, articulosPorUpc) {
+        const prefijo   = 'Fila ' + fila.numero + ': ';
+        const articulos = articulosPorUpc[fila.upc];
+        if (!articulos) return prefijo + 'el UPC ' + fila.upc + ' no es de ningun articulo de este recuento';
+        if (articulos.length > 1) {
+            const nombres = articulos.map((articulo) => UTILS.convertirEntidadesHtmlATexto(articulo.nombre)).join(', ');
+            return prefijo + 'el UPC ' + fila.upc + ' esta en mas de un articulo del recuento (' + nombres + ')';
         }
         if (fila.recuento === '') return '';
         if (isNaN(Number(fila.recuento)) || Number(fila.recuento) < 0) return prefijo + 'el RECUENTO "' + fila.recuento + '" no es una cantidad valida';
         return '';
     }
 
-    function agruparPorArticulo(filas, lote) {
+    function agruparPorArticulo(filas, articulosPorUpc, lote) {
         const cantidades = {};
 
         filas.forEach((fila) => {
+            const id = articulosPorUpc[fila.upc][0].id;
             if (fila.recuento === '') {
-                if (!cantidades[fila.id]) cantidades[fila.id] = { total: null, lotes: [] };
+                if (!cantidades[id]) cantidades[id] = { total: null, lotes: [] };
                 return;
             }
-            if (!cantidades[fila.id] || cantidades[fila.id].total === null) cantidades[fila.id] = { total: 0, lotes: [{ lote: lote, cantidad: 0 }] };
-            cantidades[fila.id].total += Number(fila.recuento);
-            cantidades[fila.id].lotes[0].cantidad += Number(fila.recuento);
+            if (!cantidades[id] || cantidades[id].total === null) cantidades[id] = { total: 0, lotes: [{ lote: lote, cantidad: 0 }] };
+            cantidades[id].total += Number(fila.recuento);
+            cantidades[id].lotes[0].cantidad += Number(fila.recuento);
         });
 
         return cantidades;
