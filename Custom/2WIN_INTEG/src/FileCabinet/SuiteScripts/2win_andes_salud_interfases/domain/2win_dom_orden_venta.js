@@ -14,6 +14,7 @@ define([
     "../dao/2win_dao_producto",
     "../dao/2win_dao_static_params_operacion",
     "../dao/2win_dao_agregar_lineas_queue",
+    "./2win_dom_autopicking",
     "N/cache",
     "N/crypto/random",
     "N/file",
@@ -31,6 +32,7 @@ define([
     daoProducto,
     daoParametrosOperacion,
     daoAgregarLineasQueue,
+    domAutopicking,
     cache,
     random,
     file,
@@ -413,6 +415,58 @@ define([
     }
 
     /**
+     * @function liberarEjecucionesLineas - Antes del upsert de SEND^IN, revierte la Ejecución (Item Fulfillment)
+     * de las líneas existentes de la OV que serán reemplazadas (identificador = CrgCorrel del mensaje) y que ya
+     * están ejecutadas. NetSuite no permite eliminar una línea ejecutada sin antes quitarla de su Ejecución,
+     * y lo que envía Andes es lo que debe quedar en la OV.
+     * Solo se procesan las líneas que coinciden con el mensaje; en cada Ejecución solo se desmarca esa línea
+     * (si la Ejecución queda sin líneas, se elimina). Reutiliza la lógica de la devolución de farmacia.
+     * @param {object} camposMapeados - Datos mapeados del paciente (cuenta, subsidiaria e items).
+     * @returns {{liberadas: Array<object>, noLiberadas: Map<string, string>}} - noLiberadas: identificador → motivo.
+     */
+    function liberarEjecucionesLineas(camposMapeados) {
+        const resultado = { liberadas: [], noLiberadas: new Map() };
+        const identificadores = (camposMapeados.item || [])
+            .map((linea) => linea.custcol_2win_as_identificador_fila)
+            .filter((id) => id !== undefined && id !== null && String(id).trim() !== "");
+        if (identificadores.length === 0) return resultado;
+
+        const { idOrdenVenta, lineas } = daoOrdenVenta.obtenerLineasEjecutadasPorIdentificador(
+            {
+                custbody_2win_nro_cuenta_paciente: camposMapeados.custbody_2win_nro_cuenta_paciente,
+                subsidiary: camposMapeados.subsidiary
+            },
+            identificadores
+        );
+        if (!idOrdenVenta || lineas.length === 0) return resultado;
+
+        const autopicking = new domAutopicking();
+        lineas.forEach((linea) => {
+            try {
+                const idEjecucion = autopicking.deleteLineOnFulfillments(idOrdenVenta, linea.lineaId);
+                if (!idEjecucion) throw new Error("no se encontró la Ejecución asociada a la línea");
+                resultado.liberadas.push({ identificador: linea.identificador, item: linea.item, despachada: linea.despachada, idEjecucion });
+            } catch (error) {
+                nLog.error("liberarEjecucionesLineas - Ejecución no revertida", {
+                    idOrdenVenta,
+                    identificador: linea.identificador,
+                    item: linea.item,
+                    error: error.message
+                });
+                resultado.noLiberadas.set(
+                    linea.identificador,
+                    `CrgCorrel ${linea.identificador} (${linea.item}): no se pudo revertir la Ejecución de la línea existente en la orden de venta ${idOrdenVenta} (${error.message}). El cargo no fue actualizado.`
+                );
+            }
+        });
+
+        if (resultado.liberadas.length > 0) {
+            nLog.audit("liberarEjecucionesLineas - Ejecuciones revertidas", { idOrdenVenta, liberadas: resultado.liberadas });
+        }
+        return resultado;
+    }
+
+    /**
      * @function agregarLineasRegistroNetsuite - Función para editar un registro en netsuite.
      * @param {object} parametro - Parametro para ejecucion.
      * @returns {Object} - Datos de ejecucion.
@@ -420,6 +474,38 @@ define([
     function agregarLineasRegistroNetsuite(parametro) {
         try {
             nLog.audit("agregarLineasRegistroNetsuite - parametro", parametro);
+
+            // Liberar Ejecuciones de las líneas existentes que serán reemplazadas (lo enviado por Andes es lo que debe quedar)
+            let liberacion = { liberadas: [], noLiberadas: new Map() };
+            try {
+                liberacion = liberarEjecucionesLineas(parametro.camposMapeados);
+            } catch (errorLiberacion) {
+                // Si falla la revisión previa se mantiene el comportamiento original (el guardado informará el error)
+                nLog.error("agregarLineasRegistroNetsuite - error al liberar ejecuciones", errorLiberacion);
+            }
+
+            // Cargos cuya línea existente no se pudo liberar: se informan y se excluyen para no bloquear al resto del paciente
+            if (liberacion.noLiberadas.size > 0) {
+                parametro.datosEntrada.detallePrestaciones.forEach((detalle) => {
+                    const motivo = liberacion.noLiberadas.get(String(detalle.CrgCorrel));
+                    if (motivo) {
+                        detalle.procesado = false;
+                        detalle.error = motivo;
+                    }
+                });
+                parametro.camposMapeados.item = parametro.camposMapeados.item.filter(
+                    (linea) => !liberacion.noLiberadas.has(String(linea.custcol_2win_as_identificador_fila))
+                );
+
+                // Sin líneas por procesar: no se modifica la OV
+                if (parametro.camposMapeados.item.length === 0) {
+                    nLog.audit("agregarLineasRegistroNetsuite - sin líneas por procesar", {
+                        cuenta: parametro.camposMapeados.custbody_2win_nro_cuenta_paciente,
+                        noLiberadas: [...liberacion.noLiberadas.keys()]
+                    });
+                    return { datosEntrada: parametro.datosEntrada, camposMapeados: parametro.camposMapeados };
+                }
+            }
 
             // Editar registro
             proceso.datos = parametro.camposMapeados;

@@ -1252,6 +1252,68 @@ define([
     }
 
     /**
+     * @function obtenerLineasEjecutadasPorIdentificador - Busca la OV de la cuenta con el mismo criterio que
+     * agregarLineasRegistro (cuenta + subsidiaria) y retorna sus líneas ejecutadas (cantidad despachada distinta de 0)
+     * cuyo identificador de fila viene en el mensaje. Solo lectura: no modifica registros.
+     * @param {object} parametro - { custbody_2win_nro_cuenta_paciente, subsidiary }
+     * @param {Array<string>} identificadores - Identificadores de fila (CrgCorrel) del mensaje.
+     * @return {{idOrdenVenta: ?string, lineas: Array<{lineaId: number, identificador: string, item: string, cantidad: number, despachada: number}>}}
+     */
+    function obtenerLineasEjecutadasPorIdentificador(parametro, identificadores) {
+        try {
+            const resultado = { idOrdenVenta: null, lineas: [] };
+            const ids = [...new Set((identificadores || []).map((id) => String(id).trim()).filter((id) => id !== ""))];
+            if (ids.length === 0) return resultado;
+
+            // Misma búsqueda de OV que agregarLineasRegistro
+            const ordenVenta = busquedaRegistroPorCuenta({
+                custbody_2win_nro_cuenta_paciente: parametro.custbody_2win_nro_cuenta_paciente,
+                subsidiary: parametro.subsidiary
+            });
+            if (!ordenVenta || ordenVenta.length === 0) return resultado;
+            resultado.idOrdenVenta = ordenVenta[0].internalid;
+
+            resultado.lineas = query
+                .runSuiteQL({
+                    query: `
+                    SELECT
+                        tl.id AS lineaid,
+                        TO_CHAR(tl.custcol_2win_as_identificador_fila) AS identificador,
+                        BUILTIN.DF(tl.item) AS item,
+                        ABS(tl.quantity) AS cantidad,
+                        ABS(NVL(tl.quantityshiprecv, 0)) AS despachada
+                    FROM
+                        transactionline tl
+                    WHERE
+                        tl.transaction = ?
+                        AND tl.mainline = 'F'
+                        AND NVL(tl.quantityshiprecv, 0) <> 0
+                        AND TO_CHAR(tl.custcol_2win_as_identificador_fila) IN (${ids.map(() => "?").join(",")})
+                    `,
+                    params: [resultado.idOrdenVenta, ...ids]
+                })
+                .asMappedResults()
+                .map((r) => ({
+                    lineaId: r.lineaid,
+                    identificador: String(r.identificador),
+                    item: r.item,
+                    cantidad: r.cantidad,
+                    despachada: r.despachada
+                }));
+
+            nLog.audit("obtenerLineasEjecutadasPorIdentificador - resultado", {
+                idOrdenVenta: resultado.idOrdenVenta,
+                identificadores: ids.length,
+                lineasEjecutadas: resultado.lineas
+            });
+            return resultado;
+        } catch (error) {
+            nLog.error("obtenerLineasEjecutadasPorIdentificador - error", error);
+            throw error;
+        }
+    }
+
+    /**
      * @function agregarLineasRegistro - Editar registro existente usando record estático para mejor rendimiento.
      * @param {object} parametro - Datos para los campos del registro.
      * @return {object} - Datos generados en la ejecucion.
@@ -2060,6 +2122,7 @@ define([
         formatearRut: formatearRut,
         getTipoAtencion: getTipoAtencion,
         agregarLineasRegistro: agregarLineasRegistro,
+        obtenerLineasEjecutadasPorIdentificador: obtenerLineasEjecutadasPorIdentificador,
         eliminarLineasRegistro: eliminarLineasRegistro,
         actualizarLineasRegistro: actualizarLineasRegistro,
         agregarLineaFarmacia: agregarLineaFarmacia,

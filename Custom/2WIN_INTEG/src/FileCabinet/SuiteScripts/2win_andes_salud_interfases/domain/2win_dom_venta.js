@@ -320,7 +320,7 @@ define([
                         
                         datosLineas.push({
                             articulo: articuloDeDescuento.text,
-                            cantidad: 1,
+                            cantidad: producto.cantidad, // Misma cantidad del producto: el descuento aplica a todas sus unidades //1,
                             valorUnitarioNeto: -Math.abs(producto.descuento)*producto.valorUnitarioNeto/100,
                             codIVA: producto.codIVA == null || producto.codIVA == "" ? 0 : producto.codIVA,
                             //total: discount

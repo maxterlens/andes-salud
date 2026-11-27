@@ -438,21 +438,38 @@ define([
                             cuerpoPeticionArchivo: cuerpoPeticionArchivo
                         });
                     } else {
-                        // Parsear cuerpo respuesta
-                        let bodyParseado = JSON.parse(respuesta.body);
-                        nLog.debug("summarize - bodyParseado", {
-                            archivo: resultado.archivoId,
-                            bodyParseado: bodyParseado
-                        });
+                        // Respuesta cruda de Andes al aviso de resultado (código 200)
+                        nLog.audit(`summarize - Respuesta Andes 200 | archivo ${resultado.archivoId} | idproceso ${resultado.uuid}`, JSON.stringify(respuesta).substring(0, 3900));
 
-                        // Validar que el cuerpo de la respuesta contenga datos
-                        if (bodyParseado.length > 0) {
-                            // Validar propiedades en cuerpo de respuesta
-                            if (bodyParseado[0].tipoMensaje !== "RECEPCION^EXITOSA" || !bodyParseado[0].estado.success || bodyParseado[0].estado.codigo !== 200) {
-                                nLog.error("summarize - Respuesta no exitosa", {
+                        const cuerpoRespuesta = respuesta.body ? String(respuesta.body).trim() : "";
+                        if (!cuerpoRespuesta) {
+                            // 200 sin cuerpo: Andes recibió el aviso; no hay confirmación que validar
+                        } else {
+                            try {
+                                // Parsear cuerpo respuesta
+                                let bodyParseado = JSON.parse(cuerpoRespuesta);
+                                nLog.debug("summarize - bodyParseado", {
                                     archivo: resultado.archivoId,
-                                    codigo: respuesta.code,
-                                    cuerpoPeticionArchivo: cuerpoPeticionArchivo
+                                    bodyParseado: bodyParseado
+                                });
+
+                                // Validar que el cuerpo de la respuesta contenga datos
+                                if (bodyParseado.length > 0) {
+                                    // Validar propiedades en cuerpo de respuesta
+                                    if (bodyParseado[0].tipoMensaje !== "RECEPCION^EXITOSA" || !bodyParseado[0].estado.success || bodyParseado[0].estado.codigo !== 200) {
+                                        nLog.error("summarize - Respuesta no exitosa", {
+                                            archivo: resultado.archivoId,
+                                            codigo: respuesta.code,
+                                            cuerpoPeticionArchivo: cuerpoPeticionArchivo
+                                        });
+                                    }
+                                }
+                            } catch (errorRespuesta) {
+                                // Cuerpo no es JSON válido: se registra y se continúa con el siguiente archivo
+                                nLog.error("summarize - Respuesta Andes no es JSON válido", {
+                                    archivo: resultado.archivoId,
+                                    idproceso: resultado.uuid,
+                                    error: errorRespuesta.message
                                 });
                             }
                         }
